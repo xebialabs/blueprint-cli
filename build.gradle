@@ -1,0 +1,23 @@
+plugins {
+    id 'com.github.blindpirate.gogradle' version '0.10'
+}
+
+golang {
+    packagePath = 'github.com/xebialabs/xl-cli' // go import path of project to be built, NOT local file system path!
+}
+
+dependencies {
+    golang {
+        build(['name': 'github.com/mitchellh/go-homedir'])
+        build(['name': 'github.com/spf13/cobra'])
+        build(['name': 'github.com/spf13/viper'])
+    }
+}
+
+build {
+    go 'build -o build/output/xl cmd/xl/main.go'
+}
+
+clean.doFirst {
+    delete 'build'
+}

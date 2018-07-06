@@ -23,3 +23,8 @@ debug
 build/
 release/
 scanning/
+
+#gradle, gogradle and dependencies output
+.gogradle/
+.gradle/
+vendor/
