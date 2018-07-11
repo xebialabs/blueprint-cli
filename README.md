@@ -18,4 +18,4 @@ To build the project, run:
 ```
 ./gradlew clean build
 ```
-The xl binary is then created in the folder `xl-cli/build/output`
+The xl binary is then created in the folder `xl-cli/build/${GOOS}_${GOARCH}`

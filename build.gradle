@@ -15,7 +15,13 @@ dependencies {
 }
 
 build {
-    go 'build -o build/output/xl cmd/xl/main.go'
+    // Cross-compile platforms, update as necessary.
+    targetPlatform = [
+            'darwin-amd64', 'linux-amd64', 'windows-amd64'
+    ]
+
+    // The ${} placeholder will be rendered in cross-compile
+    go 'build -o ./build/${GOOS}_${GOARCH}/xl${GOEXE} cmd/xl/main.go'
 }
 
 clean.doFirst {
