@@ -1,25 +1,22 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/xebialabs/xl-cli/internal/app/xl"
 )
-
-var filename []string
 
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply",
-	Short: "Apply a configuration change",
-	Long:  `Apply a configuration change to XebiaLabs products from a YAML file.`,
+	Short: "Apply configuration changes",
+	Long:  `Apply configuration changes to XebiaLabs products from YAML files.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("apply called. args:", args, "filename:", filename)
+		xl.Apply(filename, url)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(applyCmd)
 
-	applyCmd.Flags().StringArrayVarP(&filename, "filename", "f", []string{}, "Filename that contains the configuration change eg. ./xld.yaml")
+	applyCmd.Flags().StringArrayVarP(&filename, "filename", "f", []string{}, "Filename that contains the configuration change eg. xld.yaml")
 }

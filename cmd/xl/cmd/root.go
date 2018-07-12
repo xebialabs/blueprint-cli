@@ -2,14 +2,17 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
 )
 
-var cfgFile string
+var (
+	cfgFile  string
+	filename []string
+	url      string
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -36,6 +39,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.xl.yaml)")
+	rootCmd.PersistentFlags().StringVar(&url, "url", "", "complete API target URL (eg http://admin:admin@localhost:4516/deployit/ascode)")
 }
 
 // initConfig reads in config file and ENV variables if set.
