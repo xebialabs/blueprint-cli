@@ -18,5 +18,6 @@ var applyCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(applyCmd)
 
-	applyCmd.Flags().StringArrayVarP(&filename, "filename", "f", []string{}, "Filename that contains the configuration change eg. xld.yaml")
+	applyCmd.Flags().StringArrayVarP(&filename, "filename", "f", []string{}, "Filename that contains the configuration change eg. xld.yaml (required)")
+	applyCmd.MarkFlagRequired("filename")
 }
