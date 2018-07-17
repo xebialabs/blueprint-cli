@@ -2,6 +2,8 @@ plugins {
     id 'com.github.blindpirate.gogradle' version '0.10'
 }
 
+apply plugin: 'maven-publish'
+
 golang {
     packagePath = 'github.com/xebialabs/xl-cli' // go import path of project to be built, NOT local file system path!
 }
@@ -14,6 +16,10 @@ dependencies {
     }
 }
 
+repositories {
+    mavenCentral()
+}
+
 build {
     // Cross-compile platforms, update as necessary.
     targetPlatform = [
@@ -21,9 +27,40 @@ build {
     ]
 
     // The ${} placeholder will be rendered in cross-compile
-    go 'build -o ./build/${GOOS}_${GOARCH}/xl${GOEXE} cmd/xl/main.go'
+    go 'build -o ./build/xl-${GOOS}-${GOARCH}${GOEXE} cmd/xl/main.go'
 }
 
 clean.doFirst {
     delete 'build'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'com.xebialabs.xlcli'
+            artifactId 'xl-cli'
+            version '8.2.0-alpha.2'
+            artifact("./build/xl-darwin-amd64") {
+                classifier = 'xl-darwin-amd64'
+                extension = 'bin'
+            }
+            artifact("./build/xl-linux-amd64") {
+                classifier = 'xl-linux-amd64'
+                extension = 'bin'
+            }
+            artifact("./build/xl-windows-amd64.exe") {
+                classifier = 'xl-windows-amd64'
+                extension = 'exe'
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "${nexusBaseUrl}/repositories/alphas/"
+            credentials {
+                username nexusUserName
+                password nexusPassword
+            }
+        }
+    }
 }
