@@ -41,15 +41,15 @@ publishing {
             artifactId 'xl-cli'
             version '8.2.0-alpha.2'
             artifact("./build/xl-darwin-amd64") {
-                classifier = 'xl-darwin-amd64'
+                classifier = 'darwin-amd64'
                 extension = 'bin'
             }
             artifact("./build/xl-linux-amd64") {
-                classifier = 'xl-linux-amd64'
+                classifier = 'linux-amd64'
                 extension = 'bin'
             }
             artifact("./build/xl-windows-amd64.exe") {
-                classifier = 'xl-windows-amd64'
+                classifier = 'windows-amd64'
                 extension = 'exe'
             }
         }
