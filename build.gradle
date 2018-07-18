@@ -27,7 +27,7 @@ build {
     ]
 
     // The ${} placeholder will be rendered in cross-compile
-    go 'build -o ./build/xl-${GOOS}-${GOARCH}${GOEXE} cmd/xl/main.go'
+    go 'build -o ./build/${GOOS}-${GOARCH}/xl${GOEXE} cmd/xl/main.go'
 }
 
 clean.doFirst {
@@ -37,18 +37,18 @@ clean.doFirst {
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId 'com.xebialabs.xlcli'
-            artifactId 'xl-cli'
+            groupId 'com.xebialabs.xlclient'
+            artifactId 'xl-client'
             version '8.2.0-alpha.2'
-            artifact("./build/xl-darwin-amd64") {
+            artifact("./build/darwin-amd64/xl") {
                 classifier = 'darwin-amd64'
                 extension = 'bin'
             }
-            artifact("./build/xl-linux-amd64") {
+            artifact("./build/linux-amd64/xl") {
                 classifier = 'linux-amd64'
                 extension = 'bin'
             }
-            artifact("./build/xl-windows-amd64.exe") {
+            artifact("./build/windows-amd64/xl.exe") {
                 classifier = 'windows-amd64'
                 extension = 'exe'
             }
