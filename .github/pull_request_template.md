@@ -6,6 +6,7 @@
  - [ ] Code is reviewed and tested by someone else in the team
 
 **Testing**
+- [ ] Works on Linux, Windows and Mac
 - [ ] Functionality is manually tested with dockerised instances of our products
 - [ ] Automated unit tests added and are green
 - [ ] Automated integration tests added where needed and are green
