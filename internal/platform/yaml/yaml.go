@@ -73,7 +73,7 @@ func ParseFile(f *os.File) ([]Yaml, error) {
 	return Parse(string(bs))
 }
 
-func ToString(ys []Yaml) (string, error) {
+func String(ys []Yaml) (string, error) {
 	s := ""
 
 	for i, y := range ys {

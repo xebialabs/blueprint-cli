@@ -1,0 +1,71 @@
+package cmd
+
+import "github.com/spf13/pflag"
+
+const (
+	usageFilename       = "a filename for processing in YAML format (e.g.: xld.yaml)"
+	usageSkipOptional   = "skip asking for optional fields when true (default: false)"
+	usageSrvContextRoot = "application context root (optional)"
+	usageSrvHost        = "server hostname or IP address"
+	usageSrvName        = "server name, which is an identifier and must be unique"
+	usageSrvPassword    = "password for server access"
+	usageSrvPort        = "server port"
+	usageSrvSsl         = "server protocol (1: http or 2: https)"
+	usageSrvType        = "server type (1: xl-deploy or 2: xl-release)"
+	usageSrvUsername    = "username for server access"
+	usageUrlComplete    = "complete API target URL (optional; e.g.: http://admin:admin@localhost:4516/deployit/ascode)"
+	usageXldDefault     = "name of the XL Deploy server to use"
+	usageXlrDefault     = "name of the XL Release server to use"
+)
+
+var (
+	cfgFile      string
+	filename     []string
+	skipOptional bool
+	url          string
+	xld          string
+	xlr          string
+)
+
+//Server fields
+var (
+	srvName        string
+	srvType        string
+	srvHost        string
+	srvPort        string
+	srvUsername    string
+	srvPassword    string
+	srvSsl         string
+	srvContextRoot string
+)
+
+func setFilenameFlags(set *pflag.FlagSet) {
+	set.StringArrayVarP(&filename, "filename", "f", []string{}, usageFilename)
+}
+
+//Set flags for specifying a server for the provided command (set *pflag.FlagSet).
+//Default flags are: --name (-n), --type (-t), --host, --port (-p),
+//--username (-u), --password, --ssl, --context
+func setServerFlags(set *pflag.FlagSet) {
+	set.StringVarP(&srvName, "name", "n", "", usageSrvName)
+	set.StringVarP(&srvType, "type", "t", "", usageSrvType)
+	set.StringVar(&srvHost, "host", "", usageSrvHost)
+	set.StringVarP(&srvPort, "port", "p", "", usageSrvPort)
+	set.StringVarP(&srvUsername, "username", "u", "", usageSrvUsername)
+	set.StringVar(&srvPassword, "password", "", usageSrvPassword)
+	set.StringVar(&srvSsl, "ssl", "", usageSrvSsl)
+	set.StringVar(&srvContextRoot, "context", "", usageSrvContextRoot)
+}
+
+func setServerNameFlags(set *pflag.FlagSet) {
+	set.StringVar(&xld, "xld", "default", usageXldDefault)
+	set.StringVar(&xlr, "xlr", "default", usageXlrDefault)
+}
+
+func setSkipOptionalFlags(set *pflag.FlagSet) {
+	set.BoolVar(&skipOptional, "skip-optional", false, usageSkipOptional)
+}
+
+func setUrlFlags(set *pflag.FlagSet, usage string) {
+	set.StringVar(&url, "url", "", usage)
+}

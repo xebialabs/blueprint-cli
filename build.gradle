@@ -30,6 +30,8 @@ build {
     go 'build -o ./build/${GOOS}-${GOARCH}/xl${GOEXE} cmd/xl/main.go'
 }
 
+build.dependsOn test
+
 clean.doFirst {
     delete 'build'
 }

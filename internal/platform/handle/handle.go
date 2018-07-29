@@ -15,7 +15,7 @@ func BasicError(pre string, err error) {
 	}
 }
 
-func BasicPanicAsLog() {
+func BasicPanicLog() {
 	if r := recover(); r != nil {
 		log.Println(r)
 	}

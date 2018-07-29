@@ -9,15 +9,20 @@ import (
 var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Apply configuration changes",
-	Long:  `Apply configuration changes to XebiaLabs products from YAML files.`,
+	Long: `Apply configuration changes to XebiaLabs products from YAML files.
+Flag url takes precedence over xld and xlr. Setting url disregards xld and xlr.
+Omitting xld and xlr defaults to using "default" as the server name.
+The configuration of these preconfigured default servers is possible with the login command.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		xl.Apply(filename, url)
+		xl.Apply(filename, url, xld, xlr)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(applyCmd)
 
-	applyCmd.Flags().StringArrayVarP(&filename, "filename", "f", []string{}, "Filename that contains the configuration change eg. xld.yaml (required)")
+	setUrlFlags(applyCmd.Flags(), usageUrlComplete)
+	setServerNameFlags(applyCmd.Flags())
+	setFilenameFlags(applyCmd.Flags())
 	applyCmd.MarkFlagRequired("filename")
 }

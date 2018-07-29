@@ -7,8 +7,8 @@ import (
 	"github.com/xebialabs/xl-cli/internal/servers"
 )
 
-func Apply(fs []string, url string) {
-	defer handle.BasicPanicAsLog()
+func Apply(fs []string, url string, xld string, xlr string) {
+	defer handle.BasicPanicLog()
 
 	fls, err := files.Open(fs...)
 
@@ -21,20 +21,24 @@ func Apply(fs []string, url string) {
 	yg := yaml.Group(ys, "apiVersion")
 
 	for key, val := range yg {
-		s, err := yaml.ToString(val)
+		s, err := yaml.String(val)
 
 		handle.BasicError("error converting YAML to string", err)
 
-		srv, err := servers.FromApiVersion(key.(string))
+		if url == "" {
+			k := servers.ParseApiVersion(key.(string))
+			srvN := map[string]string{
+				servers.XldId: xld,
+				servers.XlrId: xlr,
+			}
 
-		handle.BasicError("error retrieving server", err)
+			srv, err := servers.FromApiVersionAndName(k, srvN[k])
 
-		u := url
+			handle.BasicError("error retrieving server", err)
 
-		if u == "" {
-			u = srv.Url
+			newBasicServerRequest(srv, methodPost, s, contentTypeYaml)
+		} else {
+			newBasicUrlRequest(url, methodPost, s, contentTypeYaml)
 		}
-
-		postStringUrlAuth(u, s, "text/vnd.yaml")
 	}
 }
