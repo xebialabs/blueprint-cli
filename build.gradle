@@ -10,9 +10,9 @@ golang {
 
 dependencies {
     golang {
-        build(['name': 'github.com/mitchellh/go-homedir'])
-        build(['name': 'github.com/spf13/cobra'])
-        build(['name': 'github.com/spf13/viper'])
+        build 'name': 'github.com/mitchellh/go-homedir'
+        build 'name': 'github.com/spf13/cobra'
+        build 'name': 'github.com/spf13/viper'
     }
 }
 
