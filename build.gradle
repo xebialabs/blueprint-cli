@@ -42,7 +42,7 @@ publishing {
         maven(MavenPublication) {
             groupId 'com.xebialabs.xlclient'
             artifactId 'xl-client'
-            version '8.2.0-alpha.3'
+            version '8.2.0-alpha.4'
             artifact("./build/darwin-amd64/xl") {
                 classifier = 'darwin-amd64'
                 extension = 'bin'
