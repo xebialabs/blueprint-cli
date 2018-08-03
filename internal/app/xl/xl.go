@@ -6,9 +6,9 @@ import (
 	"github.com/xebialabs/xl-cli/internal/platform/handle"
 )
 
-func Apply(fs []string, url string, xld string, xlr string) {
+func Apply(fs []string, xld string, xlr string) {
 	defer handle.BasicPanicLog()
-	handle.BasicError("error executing apply", apply.Execute(fs, url, xld, xlr))
+	handle.BasicError("error executing apply", apply.Execute(fs, xld, xlr))
 }
 
 func Login(skipO bool, n string, t string, host string, p string, u string, pwd string, ssl string, ctx string, xldAppHome string, xldCfgHome string, xldEnvHome string, xldInfHome string, xlrHome string) {

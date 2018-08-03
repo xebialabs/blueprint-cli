@@ -18,7 +18,6 @@ const (
 	usageSrvSsl                   = "server protocol (1: http or 2: https)"
 	usageSrvType                  = "server type (1: xl-deploy or 2: xl-release)"
 	usageSrvUsername              = "username for server access"
-	usageUrlComplete              = "complete API target URL (optional; e.g.: http://admin:admin@localhost:4516/deployit/ascode)"
 	usageXldDefault               = "name of the XL Deploy server to use"
 	usageXlrDefault               = "name of the XL Release server to use"
 )
@@ -79,8 +78,4 @@ func setServerNameFlags(set *pflag.FlagSet) {
 
 func setSkipOptionalFlags(set *pflag.FlagSet) {
 	set.BoolVar(&skipOptional, "skip-optional", false, usageSkipOptional)
-}
-
-func setUrlFlags(set *pflag.FlagSet, usage string) {
-	set.StringVar(&url, "url", "", usage)
 }

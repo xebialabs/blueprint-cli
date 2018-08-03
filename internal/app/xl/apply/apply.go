@@ -8,7 +8,7 @@ import (
 	"github.com/xebialabs/xl-cli/internal/servers"
 )
 
-func Execute(fs []string, url string, xld string, xlr string) error {
+func Execute(fs []string, xld string, xlr string) error {
 	fls, err := files.Open(fs...)
 
 	defer handle.CloseFiles(fls)
@@ -26,46 +26,36 @@ func Execute(fs []string, url string, xld string, xlr string) error {
 	yg := yaml.Group(ys, "apiVersion")
 
 	for key, val := range yg {
-		if url == "" {
-			k := servers.ParseApiVersion(key.(string))
-			srvN := map[string]string{
-				servers.XldId: xld,
-				servers.XlrId: xlr,
-			}
+		k := servers.ParseApiVersion(key.(string))
+		srvN := map[string]string{
+			servers.XldId: xld,
+			servers.XlrId: xlr,
+		}
 
-			srv, err := servers.FromApiVersionAndName(k, srvN[k])
+		srv, err := servers.FromApiVersionAndName(k, srvN[k])
 
-			if err != nil {
-				return fmt.Errorf("error retrieving server: %v", err)
-			}
+		if err != nil {
+			return fmt.Errorf("error retrieving server: %v", err)
+		}
 
-			if k == servers.XldId || k == servers.XlrId {
-				for _, y := range val {
-					if m, ok := y.Values["metadata"]; ok {
-						meta := m.(map[interface{}]interface{})
-						processServerMetadata(meta, srv)
-					} else {
-						meta := make(map[interface{}]interface{})
-						processServerMetadata(meta, srv)
-						y.Values["metadata"] = meta
-					}
+		if k == servers.XldId || k == servers.XlrId {
+			for _, y := range val {
+				if m, ok := y.Values["metadata"]; ok {
+					meta := m.(map[interface{}]interface{})
+					processServerMetadata(meta, srv)
+				} else {
+					meta := make(map[interface{}]interface{})
+					processServerMetadata(meta, srv)
+					y.Values["metadata"] = meta
 				}
 			}
+		}
 
-			if s, err := yamlToString(val); err != nil {
-				return err
-			} else {
-				if _, _, respErr := handle.NewBasicServerRequest(srv, handle.MethodPost, s, handle.ContentTypeYaml); respErr != nil {
-					return respErr
-				}
-			}
+		if s, err := yamlToString(val); err != nil {
+			return err
 		} else {
-			if s, err := yamlToString(val); err != nil {
-				return err
-			} else {
-				if _, _, respErr := handle.NewBasicUrlRequest(url, handle.MethodPost, s, handle.ContentTypeYaml); respErr != nil {
-					return respErr
-				}
+			if _, _, respErr := handle.NewServerRequest(srv, handle.MethodPost, s, handle.ContentTypeYaml); respErr != nil {
+				return respErr
 			}
 		}
 	}

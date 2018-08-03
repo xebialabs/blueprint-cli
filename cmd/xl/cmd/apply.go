@@ -14,14 +14,13 @@ Flag url takes precedence over xld and xlr. Setting url disregards xld and xlr.
 Omitting xld and xlr defaults to using "default" as the server name.
 The configuration of these preconfigured default servers is possible with the login command.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		xl.Apply(filename, url, xld, xlr)
+		xl.Apply(filename, xld, xlr)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(applyCmd)
 
-	setUrlFlags(applyCmd.Flags(), usageUrlComplete)
 	setServerNameFlags(applyCmd.Flags())
 	setFilenameFlags(applyCmd.Flags())
 	applyCmd.MarkFlagRequired("filename")

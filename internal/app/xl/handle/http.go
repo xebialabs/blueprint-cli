@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -16,7 +15,6 @@ const (
 )
 
 func serverResponse(reqM string, resp *http.Response, err error) (string, string, error) {
-	//TODO: remove credentials from err
 	if err != nil {
 		return "", "", fmt.Errorf("error sending %s request: %v", reqM, err)
 	}
@@ -50,18 +48,7 @@ func serverResponse(reqM string, resp *http.Response, err error) (string, string
 	return "", "", nil
 }
 
-func NewBasicServerRequest(srv *servers.Server, method string, body string, ctype string) (string, string, error) {
-	resp, err := srv.NewBasicRequest(method, strings.NewReader(body), ctype, len(body))
-	return serverResponse(method, resp, err)
-}
-
-func NewBasicUrlRequest(u string, method string, body string, ctype string) (string, string, error) {
-	up, err := url.Parse(u)
-
-	if err != nil {
-		return "", "", fmt.Errorf("error parsing url: %v", err)
-	}
-
-	resp, err := servers.NewBasicUrlRequest(method, up, strings.NewReader(body), ctype, len(body))
+func NewServerRequest(srv *servers.Server, method string, body string, ctype string) (string, string, error) {
+	resp, err := srv.NewRequest(method, strings.NewReader(body), ctype, len(body))
 	return serverResponse(method, resp, err)
 }

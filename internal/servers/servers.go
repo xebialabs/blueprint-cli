@@ -139,28 +139,6 @@ func LoadConfig(cfgKey string) error {
 	return fmt.Errorf("error loading servers from config: %v", err)
 }
 
-func NewBasicUrlRequest(method string, url *url.URL, body io.Reader, ctype string, clen int) (*http.Response, error) {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	req, err := http.NewRequest(method, url.String(), body)
-
-	if err != nil {
-		return &http.Response{}, err
-	}
-
-	req.Header.Add("Content-Type", ctype)
-	req.Header.Add("Content-Length", strconv.Itoa(clen))
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return &http.Response{}, err
-	}
-
-	return resp, nil
-}
-
 func ParseApiVersion(apiV string) string {
 	ks := strings.Split(apiV, "/")
 	k := ""
@@ -180,15 +158,33 @@ func (s *Server) Endpoint() string {
 	}
 }
 
-func (s *Server) NewBasicRequest(method string, body io.Reader, ctype string, clen int) (*http.Response, error) {
-	u := &url.URL{
+func (s *Server) NewRequest(method string, body io.Reader, ctype string, clen int) (*http.Response, error) {
+	url := &url.URL{
 		Scheme: s.Scheme(),
-		User:   url.UserPassword(s.Username, s.Password),
 		Host:   s.Endpoint(),
 		Path:   s.Pathname(),
 	}
 
-	return NewBasicUrlRequest(method, u, body, ctype, clen)
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	req, err := http.NewRequest(method, url.String(), body)
+
+	if err != nil {
+		return &http.Response{}, err
+	}
+
+	req.SetBasicAuth(s.Username, s.Password)
+	req.Header.Add("Content-Type", ctype)
+	req.Header.Add("Content-Length", strconv.Itoa(clen))
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return &http.Response{}, err
+	}
+
+	return resp, nil
 }
 
 func (s *Server) Pathname() string {
