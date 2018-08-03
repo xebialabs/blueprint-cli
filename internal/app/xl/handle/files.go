@@ -1,4 +1,4 @@
-package xl
+package handle
 
 import (
 	"github.com/xebialabs/xl-cli/internal/platform/files"
@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func closeFiles(fls []*os.File) {
+func CloseFiles(fls []*os.File) {
 	err := files.Close(fls)
 
 	if len(err) > 0 {

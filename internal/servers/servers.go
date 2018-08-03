@@ -12,9 +12,14 @@ import (
 )
 
 const (
-	SrvCfgKey = "xl.servers"
-	XldId     = "xl-deploy"
-	XlrId     = "xl-release"
+	SrvCfgKey        = "xl.servers"
+	XldId            = "xl-deploy"
+	XlrId            = "xl-release"
+	XldAppHomeDirKey = "Applications-home"
+	XldCfgHomeDirKey = "Configuration-home"
+	XldEnvHomeDirKey = "Environments-home"
+	XldInfHomeDirKey = "Infrastructure-home"
+	XlrHomeDirKey    = "home"
 )
 
 type Server struct {
@@ -27,6 +32,7 @@ type Server struct {
 	Ssl         bool
 	ContextRoot string `mapstructure:"context"`
 	HomeDir     string
+	Metadata    map[string]string
 }
 
 //serverConfig is the configuration struct of a server.
@@ -42,6 +48,7 @@ type serverConfig struct {
 	Ssl         bool
 	ContextRoot string `mapstructure:"context"`
 	HomeDir     string
+	Metadata    map[string]string
 }
 
 var (
@@ -59,8 +66,15 @@ var (
 		Username: "admin",
 		Password: "admin",
 		Ssl:      false,
+		Metadata: map[string]string{
+			XldAppHomeDirKey: "Applications",
+			XldCfgHomeDirKey: "Configuration",
+			XldEnvHomeDirKey: "Environments",
+			XldInfHomeDirKey: "Infrastructure",
+		},
 	}
 
+	//TODO: change home directory config for XLR
 	DefaultXlr = Server{
 		Name:     "default",
 		Type:     XlrId,
@@ -69,6 +83,9 @@ var (
 		Username: "admin",
 		Password: "admin",
 		Ssl:      false,
+		Metadata: map[string]string{
+			XlrHomeDirKey: "",
+		},
 	}
 )
 
@@ -80,17 +97,6 @@ func init() {
 
 	cfgLoaded = false
 	servers = make(map[string]map[string]*Server)
-
-	defXld := DefaultXld
-	defXlr := DefaultXlr
-
-	servers[XldId] = map[string]*Server{
-		defXld.Name: &defXld,
-	}
-
-	servers[XlrId] = map[string]*Server{
-		defXlr.Name: &defXlr,
-	}
 }
 
 func FromApiVersionAndName(apiV string, name string) (*Server, error) {
@@ -108,7 +114,7 @@ func FromApiVersionAndName(apiV string, name string) (*Server, error) {
 		}
 	}
 
-	return &Server{}, fmt.Errorf("no server found for apiVersion %s with name %s", apiV, name)
+	return &Server{}, fmt.Errorf("no server found for apiVersion %s with name %s. Configure a new server with the login command", apiV, name)
 }
 
 func LoadConfig(cfgKey string) error {
@@ -121,7 +127,9 @@ func LoadConfig(cfgKey string) error {
 		for t, ss := range srvs {
 			for _, s := range ss {
 				s.Type = t
-				servers[t][s.Name] = s
+				servers[t] = map[string]*Server{
+					s.Name: s,
+				}
 			}
 		}
 
@@ -204,7 +212,16 @@ func (s *Server) Save() error {
 		}
 	}
 
-	servers[s.Type][s.Name] = s
+	if srv, exist := servers[s.Type]; exist {
+		srv[s.Name] = s
+	} else {
+		srv = map[string]*Server{
+			s.Name: s,
+		}
+
+		servers[s.Type] = srv
+	}
+
 	scm := make(map[string][]*serverConfig)
 
 	for t, sm := range servers {
@@ -218,6 +235,7 @@ func (s *Server) Save() error {
 				Ssl:         v.Ssl,
 				ContextRoot: v.ContextRoot,
 				HomeDir:     v.HomeDir,
+				Metadata:    v.Metadata,
 			}
 
 			scm[t] = append(scm[t], srvC)

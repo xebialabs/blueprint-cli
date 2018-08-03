@@ -14,7 +14,7 @@ The default or provided configuration file is used to save the changes.
 Overriding occurs for an item with an existing identifier.
 The tool asks for missing flag values or flag values that are set invalid.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		xl.Login(srvName, srvType, srvHost, srvPort, srvUsername, srvPassword, srvSsl, srvContextRoot, skipOptional)
+		xl.Login(skipOptional, srvName, srvType, srvHost, srvPort, srvUsername, srvPassword, srvSsl, srvContextRoot, srvApplicationsHomeXld, srvConfigurationHomeXld, srvEnvironmentsHomeXld, srvInfrastructureHomeXld, srvXlrHome)
 	},
 }
 

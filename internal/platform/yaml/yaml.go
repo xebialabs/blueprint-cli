@@ -77,10 +77,16 @@ func String(ys []Yaml) (string, error) {
 	s := ""
 
 	for i, y := range ys {
-		s += fmt.Sprintf("%s", y.Source)
+		res, err := yaml.Marshal(y.Values)
+
+		if err != nil {
+			return "", err
+		}
+
+		s += fmt.Sprintf("%s", string(res))
 
 		if i < len(ys)-1 {
-			s += fmt.Sprintf("\n%s\n", sep)
+			s += fmt.Sprintf("%s\n", sep)
 		}
 	}
 

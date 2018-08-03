@@ -9,18 +9,35 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"github.com/xebialabs/xl-cli/internal/platform/pwdreader"
+	"io"
 )
 
 const (
-	srvPropName        = "name"
-	srvPropType        = "type"
-	srvPropHost        = "host"
-	srvPropPort        = "port"
-	srvPropUsername    = "username"
-	srvPropPassword    = "password"
-	srvPropSsl         = "ssl"
-	srvPropContextRoot = "contextRoot"
+	srvPropName                  = "name"
+	srvPropType                  = "type"
+	srvPropHost                  = "host"
+	srvPropPort                  = "port"
+	srvPropUsername              = "username"
+	srvPropPassword              = "password"
+	srvPropSsl                   = "ssl"
+	srvPropContextRoot           = "contextRoot"
+	srvPropApplicationsHomeXld   = "applicationsHomeXld"
+	srvPropConfigurationHomeXld  = "configurationHomeXld"
+	srvPropEnvironmentsHomeXld   = "environmentsHomeXld"
+	srvPropInfrastructureHomeXld = "infrastructureHomeXld"
+	srvPropXlrHome               = "xlrHome"
 )
+
+type TerminalPwdReader struct {
+}
+
+func (TerminalPwdReader) ReadPassword(fd int) ([]byte, error) {
+	return terminal.ReadPassword(fd)
+}
+
+var pwdReader pwdreader.PasswordReader = TerminalPwdReader{}
+var inputReader io.Reader = os.Stdin
 
 func checkRequired(inp string, prop string) (string, error) {
 	if strings.TrimSpace(inp) == "" {
@@ -30,9 +47,9 @@ func checkRequired(inp string, prop string) (string, error) {
 	return inp, nil
 }
 
-func ExecuteServer(n string, t string, host string, p string, u string, pwd string, ssl string, ctx string, skipO bool) error {
+func ExecuteServer(skipO bool, n string, t string, host string, p string, u string, pwd string, ssl string, ctx string, xldAppHome string, xldCfgHome string, xldEnvHome string, xldInfHome string, xlrHome string) error {
 	const freq = 3
-	srv := ParseServerFlags(n, t, host, p, u, pwd, ssl, ctx)
+	srv := ParseServerFlags(n, t, host, p, u, pwd, ssl, ctx, xldAppHome, xldCfgHome, xldEnvHome, xldInfHome, xlrHome)
 
 	if srv.Type == "" {
 		if err := ScanServerProp(srv, srvPropType, "", "Server type (1: xl-deploy or 2: xl-release)", freq, false); err != nil {
@@ -73,7 +90,7 @@ func ExecuteServer(n string, t string, host string, p string, u string, pwd stri
 	}
 
 	if srv.Password == "" {
-		if err := ScanServerProp(srv, srvPropPassword, defSrv.Password, fmt.Sprintf("Password [%v]", defSrv.Password), freq, true); err != nil {
+		if err := ScanServerProp(srv, srvPropPassword, "", "Password", freq, true); err != nil {
 			return err
 		}
 	}
@@ -98,10 +115,60 @@ func ExecuteServer(n string, t string, host string, p string, u string, pwd stri
 		}
 	}
 
+	if srv.Type == servers.XldId {
+		if srv.Metadata[servers.XldAppHomeDirKey] == "" {
+			if !skipO {
+				if err := ScanServerProp(srv, srvPropApplicationsHomeXld, defSrv.Metadata[servers.XldAppHomeDirKey], fmt.Sprintf("Applications home directory for XL Deploy [%v]", defSrv.Metadata[servers.XldAppHomeDirKey]), freq, false); err != nil {
+					return err
+				}
+			} else {
+				srv.Metadata[servers.XldAppHomeDirKey] = defSrv.Metadata[servers.XldAppHomeDirKey]
+			}
+		}
+
+		if srv.Metadata[servers.XldCfgHomeDirKey] == "" {
+			if !skipO {
+				if err := ScanServerProp(srv, srvPropConfigurationHomeXld, defSrv.Metadata[servers.XldCfgHomeDirKey], fmt.Sprintf("Configuration home directory for XL Deploy [%v]", defSrv.Metadata[servers.XldCfgHomeDirKey]), freq, false); err != nil {
+					return err
+				}
+			} else {
+				srv.Metadata[servers.XldCfgHomeDirKey] = defSrv.Metadata[servers.XldCfgHomeDirKey]
+			}
+		}
+
+		if srv.Metadata[servers.XldEnvHomeDirKey] == "" {
+			if !skipO {
+				if err := ScanServerProp(srv, srvPropEnvironmentsHomeXld, defSrv.Metadata[servers.XldEnvHomeDirKey], fmt.Sprintf("Environments home directory for XL Deploy [%v]", defSrv.Metadata[servers.XldEnvHomeDirKey]), freq, false); err != nil {
+					return err
+				}
+			} else {
+				srv.Metadata[servers.XldEnvHomeDirKey] = defSrv.Metadata[servers.XldEnvHomeDirKey]
+			}
+		}
+
+		if srv.Metadata[servers.XldInfHomeDirKey] == "" {
+			if !skipO {
+				if err := ScanServerProp(srv, srvPropInfrastructureHomeXld, defSrv.Metadata[servers.XldInfHomeDirKey], fmt.Sprintf("Infrastructure home directory for XL Deploy [%v]", defSrv.Metadata[servers.XldInfHomeDirKey]), freq, false); err != nil {
+					return err
+				}
+			} else {
+				srv.Metadata[servers.XldInfHomeDirKey] = defSrv.Metadata[servers.XldInfHomeDirKey]
+			}
+		}
+	} else if srv.Type == servers.XlrId {
+		if srv.Metadata[servers.XlrHomeDirKey] == "" {
+			if !skipO {
+				if err := ScanServerProp(srv, srvPropXlrHome, defSrv.Metadata[servers.XlrHomeDirKey], "Home directory for XL Release (optional)", freq, false); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return srv.Save()
 }
 
-func ParseServerFlags(n string, t string, host string, p string, u string, pwd string, ssl string, ctx string) *servers.Server {
+func ParseServerFlags(n string, t string, host string, p string, u string, pwd string, ssl string, ctx string, xldAppHome string, xldCfgHome string, xldEnvHome string, xldInfHome string, xlrHome string) *servers.Server {
 	srv := &servers.Server{}
 	srv.Name, _ = ParseServerName(n)
 	srv.Type, _ = ParseServerType(t)
@@ -110,7 +177,18 @@ func ParseServerFlags(n string, t string, host string, p string, u string, pwd s
 	srv.Username, _ = ParseServerUsername(u)
 	srv.Password, _ = ParseServerPassword(pwd)
 	srv.Ssl, _ = ParseServerSsl(ssl)
-	srv.ContextRoot = ctx
+	srv.ContextRoot = strings.TrimSpace(ctx)
+	srv.Metadata = make(map[string]string)
+
+	if srv.Type == servers.XldId {
+		srv.Metadata[servers.XldAppHomeDirKey], _ = ParseServerXldHomeDir(xldAppHome, servers.XldAppHomeDirKey, "applications")
+		srv.Metadata[servers.XldCfgHomeDirKey], _ = ParseServerXldHomeDir(xldCfgHome, servers.XldCfgHomeDirKey, "configuration")
+		srv.Metadata[servers.XldEnvHomeDirKey], _ = ParseServerXldHomeDir(xldEnvHome, servers.XldEnvHomeDirKey, "environments")
+		srv.Metadata[servers.XldInfHomeDirKey], _ = ParseServerXldHomeDir(xldInfHome, servers.XldInfHomeDirKey, "infrastructure")
+	} else if srv.Type == servers.XlrId {
+		srv.Metadata[servers.XlrHomeDirKey] = strings.TrimSpace(xlrHome)
+	}
+
 	return srv
 }
 
@@ -120,6 +198,23 @@ func ParseServerHost(inp string) (string, error) {
 
 func ParseServerInput(srv *servers.Server, prop string, defVal string, inp string) error {
 	const defErrFmt = "%v; default value error: %v"
+
+	parseServerXldHomeDir := func(key string, dirType string) error {
+		var s string
+
+		if inp != "" {
+			s = inp
+		} else {
+			s = defVal
+		}
+
+		if res, err := ParseServerXldHomeDir(s, key, dirType); err == nil {
+			srv.Metadata[key] = res
+			return nil
+		} else {
+			return err
+		}
+	}
 
 	switch prop {
 	case srvPropName:
@@ -221,6 +316,22 @@ func ParseServerInput(srv *servers.Server, prop string, defVal string, inp strin
 		}
 
 		return nil
+	case srvPropApplicationsHomeXld:
+		return parseServerXldHomeDir(servers.XldAppHomeDirKey, "applications")
+	case srvPropConfigurationHomeXld:
+		return parseServerXldHomeDir(servers.XldCfgHomeDirKey, "configuration")
+	case srvPropEnvironmentsHomeXld:
+		return parseServerXldHomeDir(servers.XldEnvHomeDirKey, "environments")
+	case srvPropInfrastructureHomeXld:
+		return parseServerXldHomeDir(servers.XldInfHomeDirKey, "infrastructure")
+	case srvPropXlrHome:
+		if inp != "" {
+			srv.Metadata[servers.XlrHomeDirKey] = strings.TrimSpace(inp)
+		} else {
+			srv.Metadata[servers.XlrHomeDirKey] = strings.TrimSpace(defVal)
+		}
+
+		return nil
 	}
 
 	return fmt.Errorf("%s is not a valid property to be parsed for server", prop)
@@ -294,16 +405,28 @@ func ParseServerUsername(inp string) (string, error) {
 	return checkRequired(inp, "username")
 }
 
-func scanDefault() (string, error) {
-	scnr := bufio.NewScanner(os.Stdin)
+func ParseServerXldHomeDir(inp string, key string, dirType string) (string, error) {
+	prefix := servers.DefaultXld.Metadata[key]
+	vldInp := []string{fmt.Sprintf("%s/", prefix), prefix}
+	s := strings.TrimSpace(inp)
+
+	if strings.HasPrefix(s, vldInp[0]) || strings.HasPrefix(s, vldInp[1]) {
+		return s, nil
+	}
+
+	return "", fmt.Errorf("%s home directory for XL Deploy must start with %s", dirType, prefix)
+}
+
+func scanDefault(r io.Reader) (string, error) {
+	scnr := bufio.NewScanner(r)
 	scnr.Scan()
 	inp := scnr.Text()
 	err := scnr.Err()
 	return inp, err
 }
 
-func scanSecure() (string, error) {
-	pwdB, err := terminal.ReadPassword(int(syscall.Stdin))
+func scanSecure(pr pwdreader.PasswordReader) (string, error) {
+	pwdB, err := pr.ReadPassword(int(syscall.Stdin))
 	pwd := string(pwdB)
 	fmt.Println()
 	return pwd, err
@@ -317,9 +440,9 @@ func ScanServerProp(srv *servers.Server, prop string, defVal string, out string,
 		fmt.Printf("%s: ", out)
 
 		if !secScan {
-			inp, err = scanDefault()
+			inp, err = scanDefault(inputReader)
 		} else {
-			inp, err = scanSecure()
+			inp, err = scanSecure(pwdReader)
 		}
 
 		if err == nil {

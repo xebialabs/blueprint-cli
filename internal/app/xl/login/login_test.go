@@ -1,12 +1,14 @@
-package login_test
+package login
 
 import (
 	"errors"
 	"fmt"
-	"github.com/xebialabs/xl-cli/internal/app/xl/login"
 	"github.com/xebialabs/xl-cli/internal/servers"
 	"reflect"
 	"testing"
+	"github.com/stretchr/testify/mock"
+	"strings"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -61,6 +63,7 @@ func TestParseServerFlags(t *testing.T) {
 				Username: "",
 				Password: "",
 				Ssl:      false,
+				Metadata: map[string]string{},
 			}},
 		{"validInput", "valid input with type 1 and ssl 1", defSrvName, vldSrvType1,
 			defSrvHost, defXldPort, defSrvUsername, defSrvPassword,
@@ -73,6 +76,12 @@ func TestParseServerFlags(t *testing.T) {
 				Username: defSrvUsername,
 				Password: defSrvPassword,
 				Ssl:      false,
+				Metadata: map[string]string{
+					servers.XldAppHomeDirKey: "",
+					servers.XldCfgHomeDirKey: "",
+					servers.XldEnvHomeDirKey: "",
+					servers.XldInfHomeDirKey: "",
+				},
 			}},
 		{"invalidInput", "invalid input", defSrvName, invSrvType1, defSrvHost,
 			invSrvPort1, defSrvUsername, defSrvPassword, invSrvSsl1,
@@ -85,6 +94,7 @@ func TestParseServerFlags(t *testing.T) {
 				Username: defSrvUsername,
 				Password: defSrvPassword,
 				Ssl:      false,
+				Metadata: map[string]string{},
 			}},
 	}
 
@@ -94,7 +104,7 @@ func TestParseServerFlags(t *testing.T) {
 			tf := func(at *testing.T) {
 				at.Logf("\tTest: %d\tWhen receiving %s as flags", i, tt.when)
 				{
-					srv := login.ParseServerFlags(tt.srvName, tt.srvType, tt.srvHost, tt.srvPort, tt.srvUsername, tt.srvPassword, tt.srvSsl, tt.srvContextRoot)
+					srv := ParseServerFlags(tt.srvName, tt.srvType, tt.srvHost, tt.srvPort, tt.srvUsername, tt.srvPassword, tt.srvSsl, tt.srvContextRoot, "", "", "", "", "")
 
 					if reflect.DeepEqual(srv, tt.server) {
 						at.Logf("\t%s\tShould return the expected server %#v", succeed, tt.server)
@@ -301,7 +311,7 @@ func TestParseServerInput(t *testing.T) {
 				at.Logf("\tTest: %d\tWhen receiving %#v as input and %#v as default for %s property", i, tt.inp, tt.defVal, tt.prop)
 				{
 					srv := &servers.Server{}
-					err := login.ParseServerInput(srv, tt.prop, tt.defVal, tt.inp)
+					err := ParseServerInput(srv, tt.prop, tt.defVal, tt.inp)
 
 					if reflect.DeepEqual(srv, tt.srv) {
 						at.Logf("\t%s\tShould expect the server %#v", succeed, tt.srv)
@@ -310,6 +320,132 @@ func TestParseServerInput(t *testing.T) {
 					}
 
 					if reflect.DeepEqual(err, tt.pErr) {
+						at.Logf("\t%s\tShould return the expected error \"%v\"", succeed, tt.pErr)
+					} else {
+						at.Errorf("\t%s\tShould return error \"%v\" : \"%v\"", failed, tt.pErr, err)
+					}
+				}
+			}
+
+			t.Run(tt.name, tf)
+		}
+	}
+}
+
+func TestScanServerProp(t *testing.T) {
+
+	pwdReader = MockedPwdReader{}
+	inputReader = strings.NewReader("How many times?")
+
+	tests := []struct {
+		name    string
+		srv     *servers.Server
+		prop    string
+		defVal  string
+		out     string
+		freq    int
+		secScan bool
+		pErr    error
+	}{
+		{"Test 1", &servers.Server{}, "unknown", "", "", 1, false,
+			errors.New("unknown is not a valid property to be parsed for server"),
+		},
+		{"Test 2", &servers.Server{}, "host", "localhost", "localhost", 1, false,
+			nil,
+		},
+		{"Test 3", &servers.Server{}, "host", "localhost", "localhost", 1, true,
+			nil,
+		},
+	}
+
+	t.Log("Given the need to test the scanning of server prop")
+	{
+		for i, tt := range tests {
+			tf := func(at *testing.T) {
+				at.Logf("\tTest: %d\tWhen scanning %#v as property and %#v as default", i, tt.prop, tt.defVal)
+				{
+					err := ScanServerProp(tt.srv, tt.prop, tt.defVal, tt.out, tt.freq, tt.secScan)
+
+					if reflect.DeepEqual(err, tt.pErr) {
+						at.Logf("\t%s\tShould return the expected error \"%v\"", succeed, tt.pErr)
+					} else {
+						at.Errorf("\t%s\tShould return error \"%v\" : \"%v\"", failed, tt.pErr, err)
+					}
+				}
+			}
+
+			t.Run(tt.name, tf)
+		}
+	}
+}
+
+type MockedPwdReader struct {
+	mock.Mock
+}
+
+func (MockedPwdReader) ReadPassword(fd int) ([]byte, error) {
+	return make([]byte, 5), nil
+}
+
+func TestExecuteServer(t *testing.T) {
+
+	pwdReader = MockedPwdReader{}
+	inputReader = strings.NewReader("1")
+
+	tests := []struct {
+		name       string
+		skipO      bool
+		n          string
+		t          string
+		host       string
+		p          string
+		u          string
+		pwd        string
+		ssl        string
+		ctx        string
+		xldAppHome string
+		xldCfgHome string
+		xldEnvHome string
+		xldInfHome string
+		xlrHome string
+		pErr       error
+	}{
+		{"Test with nothing predefined for xld", false, "", "1", "", "", "",
+			"", "", "", "", "", "", "",
+			"", viper.ConfigFileNotFoundError{},
+		},
+		{"Test with nothing predefined for xld and skipO", true, "", "1", "", "", "",
+			"", "", "", "", "", "", "",
+			"",  viper.ConfigFileNotFoundError{},
+		},
+		{"Test with everything defined for xld", false, "ascode", "1", "localhost", "21", "adsf",
+			"afds", "1", "fda", "Applications", "Configuration", "Environments", "Infrastructure",
+			"",  viper.ConfigFileNotFoundError{},
+		},
+		{"Test with nothing predefined for xlr", false, "", "2", "", "", "",
+			"", "", "", "", "", "", "",
+			"", viper.ConfigFileNotFoundError{},
+		},
+		{"Test with nothing predefined for xlr and skipO", true, "", "2", "", "", "",
+			"", "", "", "", "", "", "",
+			"", viper.ConfigFileNotFoundError{},
+		},
+		{"Test with everything defined for xlr", false, "fds", "2", "fa", "3", "as",
+			"fdsa", "2", "dsaf", "", "", "", "",
+			"fdsa", viper.ConfigFileNotFoundError{},
+		},
+	}
+
+	t.Log("Given the need to test the scanning of server prop")
+	{
+		for i, tt := range tests {
+			tf := func(at *testing.T) {
+				at.Logf("\tTest: %d\tExecuting login command with default properties", i)
+				{
+					err := ExecuteServer(tt.skipO, tt.n, tt.t, tt.host, tt.p, tt.u, tt.pwd, tt.ssl, tt.ctx,
+						tt.xldAppHome, tt.xldCfgHome, tt.xldEnvHome, tt.xldInfHome, tt.xlrHome)
+
+					if reflect.TypeOf(err) == reflect.TypeOf(tt.pErr) {
 						at.Logf("\t%s\tShould return the expected error \"%v\"", succeed, tt.pErr)
 					} else {
 						at.Errorf("\t%s\tShould return error \"%v\" : \"%v\"", failed, tt.pErr, err)
