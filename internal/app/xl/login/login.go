@@ -165,7 +165,7 @@ func ExecuteServer(skipO bool, n string, t string, host string, p string, u stri
 		}
 	}
 
-	return srv.Save()
+	return srv.AddToConfig()
 }
 
 func ParseServerFlags(n string, t string, host string, p string, u string, pwd string, ssl string, ctx string, xldAppHome string, xldCfgHome string, xldEnvHome string, xldInfHome string, xlrHome string) *servers.Server {

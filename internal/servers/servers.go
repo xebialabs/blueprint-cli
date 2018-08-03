@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/xebialabs/xl-cli/internal/platform/obfuscrypter"
 )
 
 const (
@@ -74,7 +75,6 @@ var (
 		},
 	}
 
-	//TODO: change home directory config for XLR
 	DefaultXlr = Server{
 		Name:     "default",
 		Type:     XlrId,
@@ -100,10 +100,9 @@ func init() {
 }
 
 func FromApiVersionAndName(apiV string, name string) (*Server, error) {
-	if !cfgLoaded {
-		if err := LoadConfig(SrvCfgKey); err != nil {
-			return &Server{}, err
-		}
+	err := loadConfig()
+	if err != nil {
+		return nil, err
 	}
 
 	k := ParseApiVersion(apiV)
@@ -114,29 +113,121 @@ func FromApiVersionAndName(apiV string, name string) (*Server, error) {
 		}
 	}
 
-	return &Server{}, fmt.Errorf("no server found for apiVersion %s with name %s. Configure a new server with the login command", apiV, name)
+	return nil, fmt.Errorf("no server found for apiVersion %s with name %s. Configure a new server with the login command", apiV, name)
 }
 
-func LoadConfig(cfgKey string) error {
-	srvs := make(map[string][]*Server)
-	err := viper.UnmarshalKey(cfgKey, &srvs)
 
-	if err == nil {
+func (s *Server) AddToConfig() error {
+	if !cfgLoaded {
+		if _, err := loadConfigAndCheckDirty(); err != nil {
+			return err
+		}
+	}
+
+	if srv, exist := servers[s.Type]; exist {
+		srv[s.Name] = s
+	} else {
+		srv = map[string]*Server{
+			s.Name: s,
+		}
+
+		servers[s.Type] = srv
+	}
+
+	err := saveConfig()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func loadConfig() (error) {
+	dirty, err := loadConfigAndCheckDirty();
+	if err != nil {
+		return err;
+	}
+
+	if dirty {
+		err := saveConfig()
+		if err != nil {
+			return err;
+		}
+	}
+
+	return nil;
+}
+
+func loadConfigAndCheckDirty() (bool, error) {
+	if !cfgLoaded {
+		srvs := make(map[string][]*Server)
+
+		err := viper.UnmarshalKey(SrvCfgKey, &srvs)
+		if err != nil {
+			return false, fmt.Errorf("error loading servers from config: %v", err)
+		}
+
 		cfgLoaded = true
+		var dirty= false
 
 		for t, ss := range srvs {
 			for _, s := range ss {
 				s.Type = t
-				servers[t] = map[string]*Server{
-					s.Name: s,
+
+				deobfuscryptedPassword, err := obfuscrypter.Deobfuscrypt(s.Password)
+				if err != nil {
+					dirty = true
+				} else {
+					s.Password = deobfuscryptedPassword
 				}
+
+				if servers[t] == nil {
+					servers[t] = make(map[string]*Server)
+				}
+				servers[t][s.Name] = s
 			}
 		}
 
-		return nil
+		return dirty, nil
+	} else {
+		return false, nil
+	}
+}
+
+func saveConfig() error {
+	scm := make(map[string][]*serverConfig)
+
+	for t, sm := range servers {
+		for _, v := range sm {
+			obfuscryptedPassword, err := obfuscrypter.Obfuscrypt(v.Password)
+			if err != nil {
+				panic(fmt.Sprintf("Cannot encrypt password for %s server %s: %s", v.Type, v.Name, err))
+			}
+
+			srvC := &serverConfig{
+				Name:        v.Name,
+				Host:        v.Host,
+				Port:        v.Port,
+				Username:    v.Username,
+				Password:    obfuscryptedPassword,
+				Ssl:         v.Ssl,
+				ContextRoot: v.ContextRoot,
+				Metadata:    v.Metadata,
+			}
+
+			scm[t] = append(scm[t], srvC)
+		}
 	}
 
-	return fmt.Errorf("error loading servers from config: %v", err)
+	viper.Set(SrvCfgKey, scm)
+
+	if err := viper.WriteConfig(); err != nil {
+		if swcErr := viper.SafeWriteConfig(); swcErr != nil {
+			return swcErr
+		}
+	}
+
+	return nil
 }
 
 func ParseApiVersion(apiV string) string {
@@ -199,54 +290,6 @@ func (s *Server) Pathname() string {
 	}
 
 	return p
-}
-
-func (s *Server) Save() error {
-	if !cfgLoaded {
-		if err := LoadConfig(SrvCfgKey); err != nil {
-			return err
-		}
-	}
-
-	if srv, exist := servers[s.Type]; exist {
-		srv[s.Name] = s
-	} else {
-		srv = map[string]*Server{
-			s.Name: s,
-		}
-
-		servers[s.Type] = srv
-	}
-
-	scm := make(map[string][]*serverConfig)
-
-	for t, sm := range servers {
-		for _, v := range sm {
-			srvC := &serverConfig{
-				Name:        v.Name,
-				Host:        v.Host,
-				Port:        v.Port,
-				Username:    v.Username,
-				Password:    v.Password,
-				Ssl:         v.Ssl,
-				ContextRoot: v.ContextRoot,
-				HomeDir:     v.HomeDir,
-				Metadata:    v.Metadata,
-			}
-
-			scm[t] = append(scm[t], srvC)
-		}
-	}
-
-	viper.Set(SrvCfgKey, scm)
-
-	if err := viper.WriteConfig(); err != nil {
-		if swcErr := viper.SafeWriteConfig(); swcErr != nil {
-			return swcErr
-		}
-	}
-
-	return nil
 }
 
 func (s *Server) Scheme() string {
