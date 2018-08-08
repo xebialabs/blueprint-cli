@@ -180,16 +180,20 @@ func ParseServerFlags(n string, t string, host string, p string, u string, pwd s
 	srv.ContextRoot = strings.TrimSpace(ctx)
 	srv.Metadata = make(map[string]string)
 
-	if srv.Type == servers.XldId {
-		srv.Metadata[servers.XldAppHomeDirKey], _ = ParseServerXldHomeDir(xldAppHome, servers.XldAppHomeDirKey, "applications")
-		srv.Metadata[servers.XldCfgHomeDirKey], _ = ParseServerXldHomeDir(xldCfgHome, servers.XldCfgHomeDirKey, "configuration")
-		srv.Metadata[servers.XldEnvHomeDirKey], _ = ParseServerXldHomeDir(xldEnvHome, servers.XldEnvHomeDirKey, "environments")
-		srv.Metadata[servers.XldInfHomeDirKey], _ = ParseServerXldHomeDir(xldInfHome, servers.XldInfHomeDirKey, "infrastructure")
-	} else if srv.Type == servers.XlrId {
-		srv.Metadata[servers.XlrHomeDirKey] = strings.TrimSpace(xlrHome)
-	}
+	PopulateMetadata(srv.Type, srv.Metadata, xldAppHome, xldCfgHome, xldEnvHome, xldInfHome, xlrHome)
 
 	return srv
+}
+
+func PopulateMetadata(srvType string, metadata map[string]string, xldAppHome string, xldCfgHome string, xldEnvHome string, xldInfHome string, xlrHome string) {
+	if srvType == servers.XldId {
+		metadata[servers.XldAppHomeDirKey], _ = ParseServerXldHomeDir(xldAppHome, servers.XldAppHomeDirKey, "applications")
+		metadata[servers.XldCfgHomeDirKey], _ = ParseServerXldHomeDir(xldCfgHome, servers.XldCfgHomeDirKey, "configuration")
+		metadata[servers.XldEnvHomeDirKey], _ = ParseServerXldHomeDir(xldEnvHome, servers.XldEnvHomeDirKey, "environments")
+		metadata[servers.XldInfHomeDirKey], _ = ParseServerXldHomeDir(xldInfHome, servers.XldInfHomeDirKey, "infrastructure")
+	} else if srvType == servers.XlrId {
+		metadata[servers.XlrHomeDirKey] = strings.TrimSpace(xlrHome)
+	}
 }
 
 func ParseServerHost(inp string) (string, error) {
@@ -414,7 +418,7 @@ func ParseServerXldHomeDir(inp string, key string, dirType string) (string, erro
 		return s, nil
 	}
 
-	return "", fmt.Errorf("%s home directory for XL Deploy must start with %s", dirType, prefix)
+	return prefix, fmt.Errorf("%s home directory for XL Deploy must start with %s", dirType, prefix)
 }
 
 func scanDefault(r io.Reader) (string, error) {

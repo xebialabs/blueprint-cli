@@ -34,6 +34,7 @@ type Server struct {
 	ContextRoot string `mapstructure:"context"`
 	HomeDir     string
 	Metadata    map[string]string
+	Url         string
 }
 
 //serverConfig is the configuration struct of a server.
@@ -116,7 +117,6 @@ func FromApiVersionAndName(apiV string, name string) (*Server, error) {
 	return nil, fmt.Errorf("no server found for apiVersion %s with name %s. Configure a new server with the login command", apiV, name)
 }
 
-
 func (s *Server) AddToConfig() error {
 	if !cfgLoaded {
 		if _, err := loadConfigAndCheckDirty(); err != nil {
@@ -143,19 +143,19 @@ func (s *Server) AddToConfig() error {
 }
 
 func loadConfig() (error) {
-	dirty, err := loadConfigAndCheckDirty();
+	dirty, err := loadConfigAndCheckDirty()
 	if err != nil {
-		return err;
+		return err
 	}
 
 	if dirty {
 		err := saveConfig()
 		if err != nil {
-			return err;
+			return err
 		}
 	}
 
-	return nil;
+	return nil
 }
 
 func loadConfigAndCheckDirty() (bool, error) {
@@ -168,7 +168,7 @@ func loadConfigAndCheckDirty() (bool, error) {
 		}
 
 		cfgLoaded = true
-		var dirty= false
+		var dirty = false
 
 		for t, ss := range srvs {
 			for _, s := range ss {
@@ -250,7 +250,7 @@ func (s *Server) Endpoint() string {
 }
 
 func (s *Server) NewRequest(method string, body io.Reader, ctype string, clen int) (*http.Response, error) {
-	url := &url.URL{
+	requestUrl := &url.URL{
 		Scheme: s.Scheme(),
 		Host:   s.Endpoint(),
 		Path:   s.Pathname(),
@@ -260,7 +260,13 @@ func (s *Server) NewRequest(method string, body io.Reader, ctype string, clen in
 		Timeout: 10 * time.Second,
 	}
 
-	req, err := http.NewRequest(method, url.String(), body)
+	var urlString string
+	if s.Url != "" {
+		urlString = s.Url + "/" + s.Pathname()
+	} else {
+		urlString = requestUrl.String()
+	}
+	req, err := http.NewRequest(method, urlString, body)
 
 	if err != nil {
 		return &http.Response{}, err

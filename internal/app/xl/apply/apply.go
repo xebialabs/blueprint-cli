@@ -6,9 +6,19 @@ import (
 	"github.com/xebialabs/xl-cli/internal/platform/files"
 	"github.com/xebialabs/xl-cli/internal/platform/yaml"
 	"github.com/xebialabs/xl-cli/internal/servers"
+	"github.com/xebialabs/xl-cli/internal/app/xl/login"
 )
 
-func Execute(fs []string, xld string, xlr string) error {
+func Execute(fs []string, xld string, xlr string, xldUrl string, xldUsername string, xldPassword string, xldApplicationsHome string, xldConfigurationHome string,
+	xldEnvironmentHome string, xldInfrastructureHome string, xlrUrl string, xlrUsername string, xlrPassword string, xlrHome string) error {
+
+	xld, xlr, xldServer, xlrServer, err := processFlags(xld, xlr, xldUrl, xldUsername, xldPassword, xldApplicationsHome,
+		xldConfigurationHome, xldEnvironmentHome, xldInfrastructureHome, xlrUrl, xlrUsername, xlrPassword, xlrHome)
+
+	if err != nil {
+		return err
+	}
+
 	fls, err := files.Open(fs...)
 
 	defer handle.CloseFiles(fls)
@@ -32,10 +42,16 @@ func Execute(fs []string, xld string, xlr string) error {
 			servers.XlrId: xlr,
 		}
 
-		srv, err := servers.FromApiVersionAndName(k, srvN[k])
-
-		if err != nil {
-			return fmt.Errorf("error retrieving server: %v", err)
+		var srv *servers.Server
+		if k == servers.XldId && xldServer != nil {
+			srv = xldServer
+		} else if k == servers.XlrId && xlrServer != nil {
+			srv = xlrServer
+		} else {
+			srv, err = servers.FromApiVersionAndName(k, srvN[k])
+			if err != nil {
+				return fmt.Errorf("error retrieving server: %v", err)
+			}
 		}
 
 		if k == servers.XldId || k == servers.XlrId {
@@ -77,4 +93,60 @@ func yamlToString(ys []yaml.Yaml) (string, error) {
 	} else {
 		return s, nil
 	}
+}
+
+func processFlags(xld string, xlr string, xldUrl string, xldUsername string, xldPassword string,
+	xldApplicationsHome string, xldConfigurationHome string, xldEnvironmentHome string, xldInfrastructureHome string,
+	xlrUrl string, xlrUsername string, xlrPassword string, xlrHome string) (string, string, *servers.Server, *servers.Server, error) {
+
+	xldParams := xldUrl != "" || xldUsername != "" || xldPassword != "" || xldApplicationsHome != "" || xldConfigurationHome != "" || xldEnvironmentHome != "" || xldInfrastructureHome != ""
+	if xld == "" && !xldParams {
+		xld = "default"
+	} else if xld != "" && xldParams {
+		return xld, xlr, &servers.Server{}, &servers.Server{}, fmt.Errorf("xld flag can't be combined with xld-* flags")
+	}
+
+	if xldParams && (xldUrl == "" || xldUsername == "" || xldPassword == ""){
+		return xld, xlr, &servers.Server{}, &servers.Server{}, fmt.Errorf("when using xld-* flags: xld-url, xld-username and xld-password are required")
+	}
+
+	xlrParams := xlrUrl != "" || xlrUsername != "" || xlrPassword != "" || xlrHome != ""
+	if xlr == "" && !xlrParams {
+		xlr = "default"
+	} else if xlr != "" && xlrParams {
+		return xld, xlr, &servers.Server{}, &servers.Server{}, fmt.Errorf("xlr flag can't be combined with xlr-* flags")
+	}
+
+	if xlrParams && (xlrUrl == "" || xlrUsername == "" || xlrPassword == ""){
+		return xld, xlr, &servers.Server{}, &servers.Server{}, fmt.Errorf("when using xlr-* flags: xlr-url, xlr-username and xlr-password are required")
+	}
+
+	var xldServer *servers.Server
+	var xlrServer *servers.Server
+
+	if xldParams {
+		xldMetadata := make(map[string]string)
+		login.PopulateMetadata(servers.XldId, xldMetadata, xldApplicationsHome, xldConfigurationHome, xldEnvironmentHome, xldInfrastructureHome, "")
+		xldServer = &servers.Server{
+			Url:      xldUrl,
+			Type:     servers.XldId,
+			Username: xldUsername,
+			Password: xldPassword,
+			Metadata: xldMetadata,
+		}
+	}
+
+	if xlrParams {
+		xlrMetadata := make(map[string]string)
+		login.PopulateMetadata(servers.XlrId, xlrMetadata, "", "", "", "", xlrHome)
+		xlrServer = &servers.Server{
+			Url:      xlrUrl,
+			Type:     servers.XlrId,
+			Username: xlrUsername,
+			Password: xlrPassword,
+			Metadata: xlrMetadata,
+		}
+	}
+
+	return xld, xlr, xldServer, xlrServer, nil
 }

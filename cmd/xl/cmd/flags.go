@@ -20,15 +20,31 @@ const (
 	usageSrvUsername              = "username for server access"
 	usageXldDefault               = "name of the XL Deploy server to use"
 	usageXlrDefault               = "name of the XL Release server to use"
+	usageXldUrl                   = "URL to access XL deploy (e.g.: http://path.to.xld.server/context-root)"
+	usageXldUsername              = "username for XL deploy server"
+	usageXldPassword              = "password for XL deploy server"
+	usageXlrUrl                   = "URL to access XL release (e.g.: http://path.to.xlr.server/context-root)"
+	usageXlrUsername              = "username for XL release server"
+	usageXlrPassword              = "password for XL release server"
 )
 
 var (
-	cfgFile      string
-	filename     []string
-	skipOptional bool
-	url          string
-	xld          string
-	xlr          string
+	cfgFile               string
+	filename              []string
+	skipOptional          bool
+	xld                   string
+	xlr                   string
+	xldUrl                string
+	xldUsername           string
+	xldPassword           string
+	xldApplicationsHome   string
+	xldConfigurationHome  string
+	xldEnvironmentHome    string
+	xldInfrastructureHome string
+	xlrUrl                string
+	xlrUsername           string
+	xlrPassword           string
+	xlrHome               string
 )
 
 //Server fields
@@ -71,9 +87,20 @@ func setServerFlags(set *pflag.FlagSet) {
 	set.StringVar(&srvXlrHome, "xlr-home", "", usageSrvXlrHome)
 }
 
-func setServerNameFlags(set *pflag.FlagSet) {
-	set.StringVar(&xld, "xld", "default", usageXldDefault)
-	set.StringVar(&xlr, "xlr", "default", usageXlrDefault)
+func setApplyFlags(set *pflag.FlagSet) {
+	set.StringVar(&xld, "xld", "", usageXldDefault)
+	set.StringVar(&xlr, "xlr", "", usageXlrDefault)
+	set.StringVar(&xldUrl, "xld-url", "", usageXldUrl)
+	set.StringVar(&xldUsername, "xld-username", "", usageXldUsername)
+	set.StringVar(&xldPassword, "xld-password", "", usageXldPassword)
+	set.StringVar(&xldApplicationsHome, "xld-applications-home", "", usageSrvApplicationsHomeXld)
+	set.StringVar(&xldConfigurationHome, "xld-configuration-home", "", usageSrvConfigurationHomeXld)
+	set.StringVar(&xldEnvironmentHome, "xld-environment-home", "", usageSrvEnvironmentsHomeXld)
+	set.StringVar(&xldInfrastructureHome, "xld-infrastructure-home", "", usageSrvInfrastructureHomeXld)
+	set.StringVar(&xlrUrl, "xlr-url", "", usageXlrUrl)
+	set.StringVar(&xlrUsername, "xlr-username", "", usageXlrUsername)
+	set.StringVar(&xlrPassword, "xlr-password", "", usageXlrPassword)
+	set.StringVar(&xlrHome, "xlr-home", "", usageSrvXlrHome)
 }
 
 func setSkipOptionalFlags(set *pflag.FlagSet) {
