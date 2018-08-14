@@ -1,28 +1,20 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
 	"os"
-	"path/filepath"
+	"strings"
+	"github.com/xebialabs/xl-cli/internal/pkg/lib"
 )
 
-const defCfgFile = "config"
-
-//default subdirectories of $HOME where the config is located
-var defCfgFilePath = []string{".xebialabs"}
-
-// default config path
-var defCfgPath = defCfgDir()
+var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "xl",
-	Short: "This tool interacts with XL Release and XL Deploy",
-	Long: `This CLI provides a fast and straightforward method for provisioning
+	Short: "The xl command line tool interacts with XL Release and XL Deploy",
+	Long: `The xl command line tool provides a fast and straightforward method for provisioning
 XL Release and XL Deploy with YAML files. The files can include items like
 releases, pipelines, applications and target environments.`,
 }
@@ -31,18 +23,15 @@ releases, pipelines, applications and target environments.`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		lib.Fatal("Error occurred when running apply: %s\n", err)
 	}
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", fmt.Sprintf("config file (default: %s)", defCfg()))
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default: $HOME/.xebialabs/config.yaml)")
+	rootCmd.PersistentFlags().BoolVarP(&lib.IsVerbose, "verbose", "v", false, "verbose output")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -50,39 +39,30 @@ func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
+	} else if envCfgFile := os.Getenv("XL_CONFIG"); envCfgFile != "" {
+		viper.SetConfigFile(envCfgFile)
 	} else {
-		//Use default config file
-		viper.SetConfigFile(defCfg())
+		viper.AddConfigPath("$HOME/.xebialabs")
+		viper.SetConfigName("config")
 	}
 
+	viper.SetEnvPrefix("CLI")
+	replacer := strings.NewReplacer("-", "_", ".", "_")
+	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv() // read in environment variables that match
 
+	viper.SetConfigType("yaml")
 	// If a config file is found, read it in.
-	// Otherwise, create the directory for it.
-	// The directory needs to exists in order to create the config file later on.
-	if _, err := os.Stat(viper.ConfigFileUsed()); os.IsNotExist(err) {
-		if dirErr := os.MkdirAll(filepath.Dir(viper.ConfigFileUsed()), 0755); dirErr != nil {
-			log.Fatalf("%v", dirErr)
-		}
+
+	err := viper.ReadInConfig()
+	if err == nil {
+		lib.Info("Using config file: %s\n", viper.ConfigFileUsed())
 	} else {
-		viper.ReadInConfig()
+		switch err.(type) {
+		case viper.ConfigFileNotFoundError:
+			lib.Info("No config file used\n")
+		default:
+			lib.Fatal("Cannot read config file %s: %s\n", viper.ConfigFileUsed(), err)
+		}
 	}
-}
-
-func defCfg() string {
-	return fmt.Sprintf("%s%s%s%s", defCfgPath, string(filepath.Separator), defCfgFile, ".yaml")
-}
-
-func defCfgDir() string {
-	// Find home directory.
-	home, err := homedir.Dir()
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	hs := []string{home}
-	ps := append(hs, defCfgFilePath...)
-	return filepath.Join(ps...)
 }

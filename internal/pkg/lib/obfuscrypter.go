@@ -1,4 +1,4 @@
-package obfuscrypter;
+package lib;
 
 import (
 	"crypto/aes"

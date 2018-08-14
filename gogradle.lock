@@ -604,4 +604,41 @@ dependencies:
       vcs: "git"
     vendorPath: "vendor/gopkg.in/yaml.v2"
     transitive: false
-  test: []
+  test:
+  - name: "github.com/davecgh/go-spew"
+    host:
+      name: "github.com/stretchr/testify"
+      commit: "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+      urls:
+      - "https://github.com/stretchr/testify.git"
+      - "git@github.com:stretchr/testify.git"
+      vcs: "git"
+    vendorPath: "vendor/github.com/davecgh/go-spew"
+    transitive: false
+  - name: "github.com/pmezard/go-difflib"
+    host:
+      name: "github.com/stretchr/testify"
+      commit: "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+      urls:
+      - "https://github.com/stretchr/testify.git"
+      - "git@github.com:stretchr/testify.git"
+      vcs: "git"
+    vendorPath: "vendor/github.com/pmezard/go-difflib"
+    transitive: false
+  - name: "github.com/stretchr/objx"
+    host:
+      name: "github.com/stretchr/testify"
+      commit: "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+      urls:
+      - "https://github.com/stretchr/testify.git"
+      - "git@github.com:stretchr/testify.git"
+      vcs: "git"
+    vendorPath: "vendor/github.com/stretchr/objx"
+    transitive: false
+  - urls:
+    - "https://github.com/stretchr/testify.git"
+    - "git@github.com:stretchr/testify.git"
+    vcs: "git"
+    name: "github.com/stretchr/testify"
+    commit: "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+    transitive: false
