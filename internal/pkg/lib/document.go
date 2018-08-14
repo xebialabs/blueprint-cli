@@ -8,8 +8,8 @@ import (
 type Document struct {
 	Kind       string
 	ApiVersion string `yaml:"apiVersion"`
-	Metadata   map[interface{}]interface{}
-	Spec       []map[interface{}]interface{}
+	Metadata   map[interface{}]interface{} `yaml:"metadata,omitempty"`
+	Spec       []map[interface{}]interface{} `yaml:"spec,omitempty"`
 }
 
 type DocumentReader struct {

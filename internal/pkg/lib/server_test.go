@@ -106,7 +106,7 @@ metadata:
 		assert.Equal(t, "Infrastructure/DoNotTouch", doc.Metadata["Infrastructure-home"])
 	})
 
-	t.Run("should not add homes if empty", func(t *testing.T) {
+	t.Run("should not spec and metadata if empty and homes are empty", func(t *testing.T) {
 		dummyServer := DummyHTTPServer{}
 		server := XLDeployServer{Server: &dummyServer,
 			ApplicationsHome:   "",
@@ -122,6 +122,7 @@ kind: Applications
 		doc, err := ParseYamlDocument(yaml)
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
+		assert.Nil(t, doc.Metadata)
 
 		err2 := server.SendDoc(doc)
 		assert.Nil(t, err2)
@@ -129,9 +130,7 @@ kind: Applications
 		doc, err = ParseYamlDocument(string(dummyServer.capturedBytes))
 		assert.Nil(t, err)
 
-		assert.Nil(t, doc.Metadata["Applications-home"])
-		assert.Nil(t, doc.Metadata["Environments-home"])
-		assert.Nil(t, doc.Metadata["Configuration-home"])
-		assert.Nil(t, doc.Metadata["Infrastructure-home"])
+		assert.Nil(t, doc.Metadata)
+		assert.Nil(t, doc.Spec)
 	})
 }
