@@ -1,6 +1,8 @@
 package lib
 
 type XLServer interface {
+	AcceptsDoc(doc *Document) bool
+	PreprocessDoc(doc *Document)
 	SendDoc(doc *Document) error
 }
 
@@ -17,6 +19,25 @@ type XLReleaseServer struct {
 	Home   string
 }
 
+func (server *XLDeployServer) AcceptsDoc(doc *Document) bool {
+	return doc.ApiVersion == "xl-deploy/v1alpha1"
+}
+
+func (server *XLReleaseServer) AcceptsDoc(doc *Document) bool {
+	return doc.ApiVersion == "xl-release/v1"
+}
+
+func (server *XLDeployServer) PreprocessDoc(doc *Document) {
+	addHomeIfMissing(doc, server.ApplicationsHome, "Applications-home")
+	addHomeIfMissing(doc, server.EnvironmentsHome, "Environments-home")
+	addHomeIfMissing(doc, server.InfrastructureHome, "Infrastructure-home")
+	addHomeIfMissing(doc, server.ConfigurationHome, "Configuration-home")
+}
+
+func (server *XLReleaseServer) PreprocessDoc(doc *Document) {
+	addHomeIfMissing(doc, server.Home, "home")
+}
+
 func addHomeIfMissing(doc *Document, home string, key string) {
 	if _, found := doc.Metadata[key]; home != "" && !found {
 		doc.Metadata[key] = home
@@ -24,34 +45,23 @@ func addHomeIfMissing(doc *Document, home string, key string) {
 }
 
 func (server *XLDeployServer) SendDoc(doc *Document) error {
-	if doc.Metadata == nil {
-		doc.Metadata = make(map[interface{}]interface{})
-	}
-
-	addHomeIfMissing(doc, server.ApplicationsHome, "Applications-home")
-	addHomeIfMissing(doc, server.EnvironmentsHome, "Environments-home")
-	addHomeIfMissing(doc, server.InfrastructureHome, "Infrastructure-home")
-	addHomeIfMissing(doc, server.ConfigurationHome, "Configuration-home")
-
-	documentBytes, err := doc.RenderYamlDocument()
-	if err != nil {
-		return err
-	}
-
-	return server.Server.PostYaml("deployit/ascode", documentBytes)
+	return sendDoc(server.Server, "deployit/ascode", doc)
 }
 
 func (server *XLReleaseServer) SendDoc(doc *Document) error {
-	if doc.Metadata == nil {
-		doc.Metadata = make(map[interface{}]interface{})
+	return sendDoc(server.Server, "ascode", doc)
+}
+
+func sendDoc(server HTTPServer, path string, doc *Document) error {
+	if doc.ApplyZip != "" {
+		Verbose("file references found, posting zip to server\n")
+		return server.PostYamlZip(path, doc.ApplyZip)
+	} else {
+		Verbose("no file references found, posting yaml to server\n")
+		documentBytes, err := doc.RenderYamlDocument()
+		if err != nil {
+			return err
+		}
+		return server.PostYamlDoc(path, documentBytes)
 	}
-
-	addHomeIfMissing(doc, server.Home, "home")
-
-	documentBytes, err := doc.RenderYamlDocument()
-	if err != nil {
-		return err
-	}
-
-	return server.Server.PostYaml("ascode", documentBytes)
 }

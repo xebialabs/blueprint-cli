@@ -11,7 +11,7 @@ pipeline {
     }
 
     stages {
-        stage('Build XL Cli') {
+        stage('Build XL CLI on Linux') {
             agent {
                 node {
                     label 'xld||xlr'
@@ -27,6 +27,7 @@ pipeline {
                 sh "./gradlew clean build"
             }
         }
+
     }
     post {
         success {

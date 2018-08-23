@@ -3,134 +3,100 @@ package lib
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 type DummyHTTPServer struct {
-	capturedBytes []byte
+	capturedPath     string
+	capturedBytes    []byte
+	capturedFilename string
 }
 
-func (d *DummyHTTPServer) PostYaml(path string, body []byte) error {
-	d.capturedBytes = body
+func (d *DummyHTTPServer) PostYamlDoc(path string, yamlDocBytes []byte) error {
+	d.capturedPath = path
+	d.capturedBytes = yamlDocBytes
+	d.capturedFilename = ""
+	return nil
+}
+
+func (d *DummyHTTPServer) PostYamlZip(path string, zipfilename string) error {
+	d.capturedPath = path
+	d.capturedBytes = nil
+	d.capturedFilename = zipfilename
 	return nil
 }
 
 func TestServer(t *testing.T) {
-	t.Run("should add xl-deploy homes if missing in yaml document", func(t *testing.T) {
+	t.Run("XL Deploy should accept xl-deploy/v1alpha1 documents", func(t *testing.T) {
+		doc := Document{unmarshalleddocument{"Applications", "xl-deploy/v1alpha1", nil, nil}, ""}
+		xlDeployServer := XLDeployServer{&DummyHTTPServer{}, "", "", "", ""}
 
-		dummyServer := DummyHTTPServer{}
-		server := XLDeployServer{Server: &dummyServer,
-			ApplicationsHome:   "Applications/MyHome",
-			EnvironmentsHome:   "Environments/MyHome",
-			ConfigurationHome:  "Configuration/MyHome",
-			InfrastructureHome: "Infrastructure/MyHome"}
-
-		yaml := `
-apiVersion: xl-deploy/v1
-kind: Applications
-`
-
-		doc, err := ParseYamlDocument(yaml)
-		assert.Nil(t, err)
-		assert.NotNil(t, doc)
-
-		err2 := server.SendDoc(doc)
-		assert.Nil(t, err2)
-
-		doc, err = ParseYamlDocument(string(dummyServer.capturedBytes))
-		assert.Nil(t, err)
-
-		// should not throw away existing fields
-		assert.Equal(t, "xl-deploy/v1", doc.ApiVersion)
-		assert.Equal(t, "Applications", doc.Kind)
-
-		assert.Equal(t, "Applications/MyHome", doc.Metadata["Applications-home"])
-		assert.Equal(t, "Environments/MyHome", doc.Metadata["Environments-home"])
-		assert.Equal(t, "Configuration/MyHome", doc.Metadata["Configuration-home"])
-		assert.Equal(t, "Infrastructure/MyHome", doc.Metadata["Infrastructure-home"])
+		assert.True(t, xlDeployServer.AcceptsDoc(&doc))
 	})
 
-	t.Run("should add xl-release home if missing in yaml document", func(t *testing.T) {
+	t.Run("XL Deploy should not accept xl-release/v1 documents", func(t *testing.T) {
+		doc := Document{unmarshalleddocument{"Applications", "xl-release/v1", nil, nil}, ""}
+		xlDeployServer := XLDeployServer{&DummyHTTPServer{}, "", "", "", ""}
 
-		dummyServer := DummyHTTPServer{}
-		server := XLReleaseServer{Server: &dummyServer, Home: "MyHome"}
-
-		yaml := `
-apiVersion: xl-release/v1
-kind: Templates
-`
-
-		doc, err := ParseYamlDocument(yaml)
-		assert.Nil(t, err)
-		assert.NotNil(t, doc)
-
-		err2 := server.SendDoc(doc)
-		assert.Nil(t, err2)
-
-		doc, err = ParseYamlDocument(string(dummyServer.capturedBytes))
-		assert.Nil(t, err)
-
-		assert.Equal(t, "MyHome", doc.Metadata["home"])
+		assert.False(t, xlDeployServer.AcceptsDoc(&doc))
 	})
 
-	t.Run("should not replace homes if included in yaml document", func(t *testing.T) {
-		dummyServer := DummyHTTPServer{}
-		server := XLDeployServer{Server: &dummyServer,
-			ApplicationsHome:   "Applications/MyHome",
-			EnvironmentsHome:   "Environments/MyHome",
-			ConfigurationHome:  "Configuration/MyHome",
-			InfrastructureHome: "Infrastructure/MyHome"}
+	t.Run("XL Release should accept xl-release/v1 documents", func(t *testing.T) {
+		doc := Document{unmarshalleddocument{"Applications", "xl-release/v1", nil, nil}, ""}
+		xlReleaseServer := XLReleaseServer{&DummyHTTPServer{}, ""}
 
-		yaml := `
-apiVersion: xl-deploy/v1
-kind: Applications
-metadata:
-  Applications-home: Applications/DoNotTouch
-  Environments-home: Environments/DoNotTouch
-  Configuration-home: Configuration/DoNotTouch
-  Infrastructure-home: Infrastructure/DoNotTouch
-`
-
-		doc, err := ParseYamlDocument(yaml)
-		assert.Nil(t, err)
-		assert.NotNil(t, doc)
-
-		err2 := server.SendDoc(doc)
-		assert.Nil(t, err2)
-
-		doc, err = ParseYamlDocument(string(dummyServer.capturedBytes))
-		assert.Nil(t, err)
-
-		assert.Equal(t, "Applications/DoNotTouch", doc.Metadata["Applications-home"])
-		assert.Equal(t, "Environments/DoNotTouch", doc.Metadata["Environments-home"])
-		assert.Equal(t, "Configuration/DoNotTouch", doc.Metadata["Configuration-home"])
-		assert.Equal(t, "Infrastructure/DoNotTouch", doc.Metadata["Infrastructure-home"])
+		assert.True(t, xlReleaseServer.AcceptsDoc(&doc))
 	})
 
-	t.Run("should not spec and metadata if empty and homes are empty", func(t *testing.T) {
-		dummyServer := DummyHTTPServer{}
-		server := XLDeployServer{Server: &dummyServer,
-			ApplicationsHome:   "",
-			EnvironmentsHome:   "",
-			ConfigurationHome:  "",
-			InfrastructureHome: ""}
+	t.Run("XL Release should not accept xl-deploy/v1alpha1 documents", func(t *testing.T) {
+		doc := Document{unmarshalleddocument{"Applications", "xl-deploy/v1alpha1", nil, nil}, ""}
+		xlReleaseServer := XLReleaseServer{&DummyHTTPServer{}, ""}
 
-		yaml := `
-apiVersion: xl-deploy/v1
+		assert.False(t, xlReleaseServer.AcceptsDoc(&doc))
+	})
+
+	t.Run("should send ZIP if generated", func(t *testing.T) {
+		artifactsDir, err := ioutil.TempDir("", "should_send_ZIP_if_generated")
+		if err != nil {
+			assert.FailNow(t, "cannot open temporary directory", err)
+		}
+		defer os.RemoveAll(artifactsDir)
+		artifactContents := "cats=5\ndogs=8\n"
+		ioutil.WriteFile(filepath.Join(artifactsDir, "petclinic.properties"), []byte(artifactContents), 0644)
+
+		yamlDoc := `apiVersion: xl-deploy/v1
 kind: Applications
-`
+spec:
+- name: PetClinic
+  type: udm.Application
+  children:
+  - name: '1.0'
+    type: udm.DeploymentPackage
+    children:
+    - name: conf
+      type: file.File
+      file: !file petclinic.properties`
 
-		doc, err := ParseYamlDocument(yaml)
+		doc, err := ParseYamlDocument(yamlDoc)
+
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
-		assert.Nil(t, doc.Metadata)
 
-		err2 := server.SendDoc(doc)
-		assert.Nil(t, err2)
+		dummyServer := DummyHTTPServer{}
+		xlDeployServer := XLDeployServer{Server: &dummyServer}
+		context := &Context{&xlDeployServer, &XLReleaseServer{Server: &DummyHTTPServer{}}}
 
-		doc, err = ParseYamlDocument(string(dummyServer.capturedBytes))
+		doc.Preprocess(context, artifactsDir)
+		defer doc.Cleanup()
+
+		err = xlDeployServer.SendDoc(doc)
+
 		assert.Nil(t, err)
-
-		assert.Nil(t, doc.Metadata)
-		assert.Nil(t, doc.Spec)
+		assert.Equal(t, "deployit/ascode", dummyServer.capturedPath)
+		assert.Nil(t, dummyServer.capturedBytes)
+		assert.Equal(t, doc.ApplyZip, dummyServer.capturedFilename)
 	})
 }
+

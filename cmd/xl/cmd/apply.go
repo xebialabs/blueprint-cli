@@ -6,6 +6,7 @@ import (
 	"github.com/xebialabs/xl-cli/internal/pkg/lib"
 	"os"
 	"io"
+	"path/filepath"
 )
 
 var applyFilenames []string
@@ -32,7 +33,10 @@ func DoApply(context *lib.Context, applyFilenames []string) {
 	if len(applyFilenames) == 0 {
 		lib.Fatal("Please provide a yaml file to apply\n")
 	}
+
 	for _, applyFilename := range applyFilenames {
+		applyDir := filepath.Dir(applyFilename)
+		lib.Verbose("using relative directory `%s` for file references\n", applyDir)
 		reader, err := os.Open(applyFilename)
 		if err != nil {
 			lib.Fatal("Error while opening file %s: %s\n", applyFilename, err)
@@ -49,7 +53,7 @@ func DoApply(context *lib.Context, applyFilenames []string) {
 				}
 			}
 			lib.Info("Applying %s\n", doc.Kind)
-			err = context.ProcessSingleDocument(doc)
+			err = context.ProcessSingleDocument(doc, applyDir)
 			if err != nil {
 				lib.Fatal("Error while processing yaml document %s: %s\n", applyFilename, err)
 			}

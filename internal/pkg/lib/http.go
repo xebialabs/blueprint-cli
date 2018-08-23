@@ -3,14 +3,17 @@ package lib
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
 type HTTPServer interface {
-	PostYaml(path string, body []byte) error
+	PostYamlDoc(path string, yamlDocBytes []byte) error
+	PostYamlZip(path string, yamlZipFilename string) error
 }
 
 type SimpleHTTPServer struct {
@@ -21,20 +24,33 @@ type SimpleHTTPServer struct {
 
 var client = &http.Client{}
 
-func (server *SimpleHTTPServer) PostYaml(resource string, body []byte) error {
-	buf := bytes.NewReader(body)
+func (server *SimpleHTTPServer) PostYamlDoc(resource string, yamlDocBytes []byte) error {
+	return server.post(resource, "text/vnd.yaml", bytes.NewReader(yamlDocBytes))
+}
 
+func (server *SimpleHTTPServer) PostYamlZip(resource string, yamlZipFilename string) error {
+	f, err := os.Open(yamlZipFilename)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	return server.post(resource, "application/zip", f)
+}
+
+func (server *SimpleHTTPServer) post(resource string, contentType string, body io.Reader) error {
 	maybeSlash := ""
 	if !strings.HasSuffix(server.Url.String(), "/") {
 		maybeSlash = "/"
 	}
 	theUrl := server.Url.String() + maybeSlash + resource
-	request, err := http.NewRequest("POST", theUrl, buf)
+	request, err := http.NewRequest("POST", theUrl, body)
 	if err != nil {
 		return err
 	}
 
-	request.Header.Set("Content-Type", "text/vnd.yaml")
+	request.Header.Set("Content-Type", contentType)
 	request.SetBasicAuth(server.Username, server.Password)
 	response, err := client.Do(request)
 
@@ -49,6 +65,8 @@ func (server *SimpleHTTPServer) PostYaml(resource string, body []byte) error {
 	} else if response.StatusCode >= 400 {
 		bodyText, _ := ioutil.ReadAll(response.Body)
 		return fmt.Errorf("%d unexpected response: %s", response.StatusCode, string(bodyText))
+	} else {
+		Verbose("Response status %s\n", response.Status)
 	}
 
 	return nil
