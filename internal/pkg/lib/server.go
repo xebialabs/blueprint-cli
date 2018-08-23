@@ -1,5 +1,7 @@
 package lib
 
+import "fmt"
+
 type XLServer interface {
 	AcceptsDoc(doc *Document) bool
 	PreprocessDoc(doc *Document)
@@ -49,6 +51,9 @@ func (server *XLDeployServer) SendDoc(doc *Document) error {
 }
 
 func (server *XLReleaseServer) SendDoc(doc *Document) error {
+	if doc.ApplyZip != "" {
+		return fmt.Errorf("file tags found but XL Release release does not support support file references")
+	}
 	return sendDoc(server.Server, "ascode", doc)
 }
 
