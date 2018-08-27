@@ -1,0 +1,86 @@
+#!groovy
+
+pipeline {
+    agent none
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactDaysToKeepStr: '7', artifactNumToKeepStr: '5'))
+        timeout(time: 1, unit: 'HOURS')
+        timestamps()
+        ansiColor('xterm')
+    }
+
+    parameters {
+        choice(choices: ' \nprerelease\npatch\nminor\nmajor', description: 'Which version component should be incremented?', name: 'RELEASE_SCOPE')
+        choice(choices: ' \nalpha\nbeta\nrc\nfinal', description: 'Which type of release do you want to start from? This parameter is ignored if RELEASE_SCOPE is set. If this parameter is chosen new version will start from current.version-RELEASE_STAGE.1', name: 'RELEASE_STAGE')
+        string(defaultValue: '', description: 'Note: set scope and stage to \'blank\' to use this AND REMEMBER TO REMOVE THE EMPTY SPACE (Ascii code 20) THAT IS IN THIS FIELD INITIALLY!!!. In case of a new development cycle you may need to set the version number explicitly if it is non-contiguous. E.g. put something like 1.2.3 or 1.2.3-beta.10 here.', name: 'RELEASE_EXPLICIT')
+    }
+
+    stages {
+        stage('Release XL Cli') {
+            agent {
+                node {
+                    label 'xld||xlr'
+                }
+            }
+
+            tools {
+                jdk 'JDK 8u171'
+            }
+
+            steps {
+                checkout scm
+                script {
+                    if (params.RELEASE_SCOPE == 'prerelease') {
+                        sh "./gradlew release -Prelease.versionIncrementer=incrementPrerelease -Prelease.disableChecks -Prelease.pushTagsOnly"
+                    } else if (params.RELEASE_SCOPE == 'patch') {
+                        sh "./gradlew release -Prelease.versionIncrementer=incrementPatch -Prelease.disableChecks -Prelease.pushTagsOnly"
+                    } else if (params.RELEASE_SCOPE == 'minor') {
+                        sh "./gradlew release -Prelease.versionIncrementer=incrementMinor -Prelease.disableChecks -Prelease.pushTagsOnly"
+                    } else if (params.RELEASE_SCOPE == 'major') {
+                        sh "./gradlew release -Prelease.versionIncrementer=incrementMajor -Prelease.disableChecks -Prelease.pushTagsOnly"
+                    } else if (!params.RELEASE_STAGE.trim().isEmpty()) {
+                        sh "./gradlew release -Drelease.prereleasePhase=${params.RELEASE_STAGE} -Prelease.disableChecks -Prelease.pushTagsOnly"
+                    } else if (!params.RELEASE_EXPLICIT.trim().isEmpty()) {
+                        sh "./gradlew release -Prelease.forceVersion=${params.RELEASE_EXPLICIT} -Prelease.disableChecks -Prelease.pushTagsOnly"
+                    } else {
+                        error("RELEASE_SCOPE and RELEASE_STAGE and RELEASE_EXPLICIT are empty!")
+                    }
+                }
+            }
+        }
+        stage('Publish XL Cli') {
+            agent {
+                node {
+                    label 'xld||xlr'
+                }
+            }
+
+            tools {
+                jdk 'JDK 8u171'
+            }
+
+            steps {
+                checkout scm
+                sh "./gradlew clean build"
+                sh "./gradlew publish"
+            }
+        }
+    }
+    post {
+        success {
+            script {
+                if (env.BRANCH_NAME == 'master') {
+                    hipchatSend color: 'GREEN', credentialId: 'hipchat-token', message: "XL Cli master release <b>SUCCESS</b> - <a href=\"${BUILD_URL}\">click to open</a>", notify: false, room: 'Developer ❤️'
+                }
+            }
+        }
+        failure {
+            script {
+                if (env.BRANCH_NAME == 'master') {
+                    hipchatSend color: 'RED', credentialId: 'hipchat-token', message: "XL Cli master release <b>FAILED</b> - <a href=\"${BUILD_URL}\">click to open</a>", notify: true, room: 'Developer ❤️'
+                }
+            }
+        }
+    }
+}

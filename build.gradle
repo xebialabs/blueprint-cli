@@ -1,5 +1,6 @@
 plugins {
     id 'com.github.blindpirate.gogradle' version '0.10'
+    id 'pl.allegro.tech.build.axion-release' version '1.9.2'
 }
 
 apply plugin: 'maven-publish'
@@ -39,12 +40,26 @@ clean.doFirst {
     delete 'build'
 }
 
+scmVersion {
+    tag {
+        prefix = 'xl-client'
+    }
+
+    versionIncrementer {
+        context ->
+            def cv = context.currentVersion
+            def phase = System.getProperty('release.prereleasePhase')
+            phase ? cv.setPreReleaseVersion(phase + '.1') : cv.incrementPreReleaseVersion()
+    }
+}
+
+project.version = scmVersion.version
+
 publishing {
     publications {
         maven(MavenPublication) {
             groupId 'com.xebialabs.xlclient'
             artifactId 'xl-client'
-            version '8.2.0-alpha.6'
             artifact("./build/darwin-amd64/xl") {
                 classifier = 'darwin-amd64'
                 extension = 'bin'
@@ -61,7 +76,9 @@ publishing {
     }
     repositories {
         maven {
-            url "${nexusBaseUrl}/repositories/alphas/"
+            def alphasRepoUrl = "${nexusBaseUrl}/repositories/alphas/"
+            def releasesRepoUrl = "${nexusBaseUrl}/repositories/releases/"
+            url version.contains('alpha') ? alphasRepoUrl : releasesRepoUrl
             credentials {
                 username nexusUserName
                 password nexusPassword
