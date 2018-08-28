@@ -47,14 +47,14 @@ func addHomeIfMissing(doc *Document, home string, key string) {
 }
 
 func (server *XLDeployServer) SendDoc(doc *Document) error {
-	return sendDoc(server.Server, "deployit/ascode", doc)
+	return sendDoc(server.Server, "deployit/devops-as-code/apply", doc)
 }
 
 func (server *XLReleaseServer) SendDoc(doc *Document) error {
 	if doc.ApplyZip != "" {
 		return fmt.Errorf("file tags found but XL Release does not support file references")
 	}
-	return sendDoc(server.Server, "ascode", doc)
+	return sendDoc(server.Server, "devops-as-code/apply", doc)
 }
 
 func sendDoc(server HTTPServer, path string, doc *Document) error {

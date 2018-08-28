@@ -2,10 +2,10 @@ package lib
 
 import (
 	"github.com/stretchr/testify/assert"
-	"testing"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"testing"
 )
 
 type DummyHTTPServer struct {
@@ -94,9 +94,8 @@ spec:
 		err = xlDeployServer.SendDoc(doc)
 
 		assert.Nil(t, err)
-		assert.Equal(t, "deployit/ascode", dummyServer.capturedPath)
+		assert.Equal(t, "deployit/devops-as-code/apply", dummyServer.capturedPath)
 		assert.Nil(t, dummyServer.capturedBytes)
 		assert.Equal(t, doc.ApplyZip, dummyServer.capturedFilename)
 	})
 }
-

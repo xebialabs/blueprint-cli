@@ -3,6 +3,7 @@ package lib
 import (
 	"archive/zip"
 	"encoding/base64"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -10,7 +11,6 @@ import (
 	"net/url"
 	"os"
 	"testing"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestHttp(t *testing.T) {
@@ -25,7 +25,7 @@ func TestHttp(t *testing.T) {
 			//fmt.Println("REQUEST: \n" + string(requestDump))
 
 			assert.Equal(t, "POST", request.Method)
-			assert.Equal(t, "/ascode", request.URL.Path)
+			assert.Equal(t, "/devops-as-code/apply", request.URL.Path)
 			assert.Equal(t, "text/vnd.yaml", request.Header.Get("Content-Type"))
 			assert.Equal(t, "Basic "+base64.StdEncoding.EncodeToString([]byte("admin:admin")), request.Header.Get("Authorization"))
 			body, err := ioutil.ReadAll(request.Body)
@@ -39,7 +39,7 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse(testServer.URL)
 		server := SimpleHTTPServer{Url: *res, Username: "admin", Password: "admin"}
 
-		error := server.PostYamlDoc("ascode", []byte("document body"))
+		error := server.PostYamlDoc("devops-as-code/apply", []byte("document body"))
 		assert.Nil(t, error)
 	})
 
@@ -95,7 +95,7 @@ func TestHttp(t *testing.T) {
 
 			r, err := os.Open(uploadedZip.Name())
 			if err != nil {
-				assert.Fail(t,"cannot open temporary file to read request body", "cannot open temporary file [%s] to read request body: %s", uploadedZip.Name(), err)
+				assert.Fail(t, "cannot open temporary file to read request body", "cannot open temporary file [%s] to read request body: %s", uploadedZip.Name(), err)
 				return
 			}
 			defer r.Close()
@@ -109,7 +109,7 @@ func TestHttp(t *testing.T) {
 			for _, f := range zipReader.File {
 				fr, err := f.Open()
 				if err != nil {
-					assert.FailNow(t, "cannot open entry in uploaded ZIP file","cannot open entry [%s] in uploaded ZIP file: %s", f.Name, err)
+					assert.FailNow(t, "cannot open entry in uploaded ZIP file", "cannot open entry [%s] in uploaded ZIP file: %s", f.Name, err)
 				}
 				contents, err := ioutil.ReadAll(fr)
 				if err != nil {
