@@ -48,8 +48,28 @@ scmVersion {
     versionIncrementer {
         context ->
             def cv = context.currentVersion
-            def phase = System.getProperty('release.prereleasePhase')
-            phase ? cv.setPreReleaseVersion(phase + '.1') : cv.incrementPreReleaseVersion()
+            def releaseScope = System.getProperty('release.releaseScope')
+            def releaseStage = System.getProperty('release.releaseStage')
+            def releaseExplicit = System.getProperty('release.releaseExplicit')
+
+            switch (releaseScope) {
+                case 'major':
+                    cv = cv.preReleaseVersion ? cv.incrementMajorVersion(cv.preReleaseVersion) : cv.incrementMajorVersion()
+                    break
+                case 'minor':
+                    cv = cv.preReleaseVersion ? cv.incrementMinorVersion(cv.preReleaseVersion) : cv.incrementMinorVersion()
+                    break
+                case 'patch':
+                    cv = cv.preReleaseVersion ? cv.incrementPatchVersion(cv.preReleaseVersion) : cv.incrementPatchVersion()
+            }
+
+            if (releaseStage && cv.preReleaseVersion?.contains(releaseStage)) {
+                cv.incrementPreReleaseVersion()
+            } else if (releaseStage) {
+                releaseStage == 'final' ? cv.valueOf(cv.normalVersion) : cv.setPreReleaseVersion(releaseStage + '.1')
+            } else {
+                releaseExplicit ? cv.valueOf(releaseExplicit) : cv
+            }
     }
 }
 
@@ -74,6 +94,7 @@ publishing {
             }
         }
     }
+
     repositories {
         maven {
             def alphasRepoUrl = "${nexusBaseUrl}/repositories/alphas/"
