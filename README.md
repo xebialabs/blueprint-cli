@@ -4,8 +4,12 @@ Project for XL as-code command line interface.
 
 ## Environment
 
-If you are using JetBrains IDE (IntelliJ IDEA Ultimate edition/GoLand), locate this project inside parent directory ~/go/src/github.com/xebialabs,
-otherwise, your IDE won't recognize installed dependencies.
+If you are using JetBrains IDE (IntelliJ IDEA Ultimate edition/GoLand), please do this 2 simple steps:
+
+* Install dependencies using gradle (see above)
+* In Intellij Idea go to: `Preferences -> Languages & Frameworks -> GO -> GOPATH`
+* In Project GOPATH section add click "add" and and select `PROJECT_ROOT/.gogradle/project_gopath`. 
+If you cannot see hidden files on MAC, just press `CMD + SHIFT + .`
 
 ## Usage
 
