@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"fmt"
 	"testing"
 )
 
@@ -29,29 +30,29 @@ func (d *DummyHTTPServer) PostYamlZip(path string, zipfilename string) error {
 }
 
 func TestServer(t *testing.T) {
-	t.Run("XL Deploy should accept xl-deploy/v1alpha1 documents", func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", "xl-deploy/v1alpha1", nil, nil}, ""}
+	t.Run(fmt.Sprintf("XL Deploy should accept %s documents", XldApiVersion), func(t *testing.T) {
+		doc := Document{unmarshalleddocument{"Applications", XldApiVersion, nil, nil}, ""}
 		xlDeployServer := XLDeployServer{&DummyHTTPServer{}, "", "", "", ""}
 
 		assert.True(t, xlDeployServer.AcceptsDoc(&doc))
 	})
 
-	t.Run("XL Deploy should not accept xl-release/v1 documents", func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", "xl-release/v1", nil, nil}, ""}
+	t.Run(fmt.Sprintf("XL Deploy should not accept %s documents", XlrApiVersion), func(t *testing.T) {
+		doc := Document{unmarshalleddocument{"Applications", XlrApiVersion, nil, nil}, ""}
 		xlDeployServer := XLDeployServer{&DummyHTTPServer{}, "", "", "", ""}
 
 		assert.False(t, xlDeployServer.AcceptsDoc(&doc))
 	})
 
-	t.Run("XL Release should accept xl-release/v1 documents", func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", "xl-release/v1", nil, nil}, ""}
+	t.Run(fmt.Sprintf("XL Release should accept %s documents", XlrApiVersion), func(t *testing.T) {
+		doc := Document{unmarshalleddocument{"Applications", XlrApiVersion, nil, nil}, ""}
 		xlReleaseServer := XLReleaseServer{&DummyHTTPServer{}, ""}
 
 		assert.True(t, xlReleaseServer.AcceptsDoc(&doc))
 	})
 
-	t.Run("XL Release should not accept xl-deploy/v1alpha1 documents", func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", "xl-deploy/v1alpha1", nil, nil}, ""}
+	t.Run(fmt.Sprintf("XL Release should not accept %s documents", XldApiVersion), func(t *testing.T) {
+		doc := Document{unmarshalleddocument{"Applications", XldApiVersion, nil, nil}, ""}
 		xlReleaseServer := XLReleaseServer{&DummyHTTPServer{}, ""}
 
 		assert.False(t, xlReleaseServer.AcceptsDoc(&doc))
@@ -66,7 +67,7 @@ func TestServer(t *testing.T) {
 		artifactContents := "cats=5\ndogs=8\n"
 		ioutil.WriteFile(filepath.Join(artifactsDir, "petclinic.properties"), []byte(artifactContents), 0644)
 
-		yamlDoc := `apiVersion: xl-deploy/v1
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
 spec:
 - name: PetClinic
@@ -77,7 +78,7 @@ spec:
     children:
     - name: conf
       type: file.File
-      file: !file petclinic.properties`
+      file: !file petclinic.properties`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yamlDoc)
 

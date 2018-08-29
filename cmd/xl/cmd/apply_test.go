@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"github.com/magiconair/properties/assert"
+	"fmt"
 )
 
 func TestApply(t *testing.T) {
@@ -17,37 +18,37 @@ func TestApply(t *testing.T) {
 		file1, err := ioutil.TempFile("", "file1")
 		if err != nil { panic(err) }
 		defer os.Remove(file1.Name())
-		file1.WriteString(`
-apiVersion: xl-release/v1
+		file1.WriteString(fmt.Sprintf(`
+apiVersion: %s
 kind: Template
 spec:
 - name: Template1
 
 ---
 
-apiVersion: xl-deploy/v1alpha1
+apiVersion: %s
 kind: Applications
 spec:
 - name: App1
-`)
+`, lib.XlrApiVersion, lib.XldApiVersion))
 		file1.Close()
 
 		file2, err := ioutil.TempFile("", "file2")
 		if err != nil { panic(err) }
 		defer os.Remove(file2.Name())
-		file2.WriteString(`
-apiVersion: xl-release/v1
+		file2.WriteString(fmt.Sprintf(`
+apiVersion: %s
 kind: Template
 spec:
 - name: Template2
 
 ---
 
-apiVersion: xl-deploy/v1alpha1
+apiVersion: %s
 kind: Applications
 spec:
 - name: App2
-`)
+`, lib.XlrApiVersion, lib.XldApiVersion))
 		file2.Close()
 
 		var documents []lib.Document

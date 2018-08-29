@@ -3,6 +3,7 @@ package lib
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"fmt"
 )
 
 type DummyXLServer struct {
@@ -31,18 +32,18 @@ func (dummy *DummyXLServer) SendDoc(doc *Document) error {
 
 func TestContext(t *testing.T) {
 	t.Run("send YAML document with xl-deploy apiVersion to XL Deploy server", func(t *testing.T) {
-		xld := DummyXLServer{accepts: []string{"xl-deploy/v1alpha1"}}
-		xlr := DummyXLServer{accepts: []string{"xl-release/v1"}}
+		xld := DummyXLServer{accepts: []string{XldApiVersion}}
+		xlr := DummyXLServer{accepts: []string{XlrApiVersion}}
 		context := Context{
 			XLDeploy:  &xld,
 			XLRelease: &xlr,
 		}
 
-		yamlDoc := `apiVersion: xl-deploy/v1alpha1
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
 spec:
 - name: Applications/AWS
-  type: core.Directory`
+  type: core.Directory`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yamlDoc)
 
@@ -59,8 +60,8 @@ spec:
 	})
 
 	t.Run("report error when YAML document contains unknown apiVersion", func(t *testing.T) {
-		xld := DummyXLServer{accepts: []string{"xl-deploy/v1alpha1"}}
-		xlr := DummyXLServer{accepts: []string{"xl-release/v1"}}
+		xld := DummyXLServer{accepts: []string{XldApiVersion}}
+		xlr := DummyXLServer{accepts: []string{XlrApiVersion}}
 		context := Context{
 			XLDeploy:  &xld,
 			XLRelease: &xlr,
@@ -80,8 +81,8 @@ spec:
 	})
 
 	t.Run("report error when YAML document does not contain an apiVersion", func(t *testing.T) {
-		xld := DummyXLServer{accepts: []string{"xl-deploy/v1alpha1"}}
-		xlr := DummyXLServer{accepts: []string{"xl-release/v1"}}
+		xld := DummyXLServer{accepts: []string{XldApiVersion}}
+		xlr := DummyXLServer{accepts: []string{XlrApiVersion}}
 		context := Context{
 			XLDeploy:  &xld,
 			XLRelease: &xlr,

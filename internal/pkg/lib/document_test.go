@@ -9,11 +9,12 @@ import (
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/xebialabs/yaml"
+	"fmt"
 )
 
 func TestDocument(t *testing.T) {
 	t.Run("should parse YAML document", func(t *testing.T) {
-		yamlDoc := `apiVersion: xl-deploy/v1
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
 metadata:
   Applications-home: Applications/Cloud
@@ -26,13 +27,13 @@ spec:
       children:
       - name: 1.0
         type: udm.DeploymentPackage
-`
+`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yamlDoc)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
-		assert.Equal(t, "xl-deploy/v1", doc.ApiVersion)
+		assert.Equal(t, XldApiVersion, doc.ApiVersion)
 		assert.Equal(t, "Applications", doc.Kind)
 		assert.NotNil(t, doc.Metadata)
 		assert.Equal(t, "Applications/Cloud", doc.Metadata["Applications-home"])
@@ -47,28 +48,28 @@ spec:
 	})
 
 	t.Run("should parse YAML file with multiple documents", func(t *testing.T) {
-		yamlDocs := `apiVersion: xl-deploy/v1
+		yamlDocs := fmt.Sprintf(`apiVersion: %s
 kind: Applications
 spec:
 - name: Applications/AWS1
 ---
-apiVersion: xl-release/v1
+apiVersion: %s
 kind: Template
 spec:
 - name: Template1
 ---
-apiVersion: xl-release/v1
+apiVersion: %s
 kind: Template
 spec:
 - name: Template2
-`
+`, XldApiVersion, XlrApiVersion, XlrApiVersion)
 
 		docreader := NewDocumentReader(strings.NewReader(yamlDocs))
 		doc, err := docreader.ReadNextYamlDocument()
 
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
-		assert.Equal(t, "xl-deploy/v1", doc.ApiVersion)
+		assert.Equal(t, XldApiVersion, doc.ApiVersion)
 		assert.Equal(t, "Applications", doc.Kind)
 		assert.NotNil(t, doc.Spec)
 		assert.Equal(t, "Applications/AWS1", doc.Spec[0]["name"])
@@ -77,7 +78,7 @@ spec:
 
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
-		assert.Equal(t, "xl-release/v1", doc.ApiVersion)
+		assert.Equal(t, XlrApiVersion, doc.ApiVersion)
 		assert.Equal(t, "Template", doc.Kind)
 		assert.NotNil(t, doc.Spec)
 		assert.Equal(t, "Template1", doc.Spec[0]["name"])
@@ -92,7 +93,7 @@ spec:
 
 
 	t.Run("should parse YAML documents with custom tags", func(t *testing.T) {
-		yamlDoc := `apiVersion: xl-deploy/v1
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
 spec:
 - name: PetClinic-ear
@@ -105,7 +106,7 @@ spec:
       type: jee.Ear
       file: !file PetClinic-1.0.ear
 ---
-apiVersion: xl-deploy/v1
+apiVersion: %s
 kind: Intrastructure
 spec:
 - name: server
@@ -113,7 +114,7 @@ spec:
   address: server.example.com
   username: root
   password: !secret server.root.password
-`
+`, XldApiVersion, XldApiVersion)
 
 		docreader := NewDocumentReader(strings.NewReader(yamlDoc))
 		doc1, err1 := docreader.ReadNextYamlDocument()
@@ -137,8 +138,8 @@ spec:
 	})
 
 	t.Run("should add xl-deploy homes if missing in yaml document", func(t *testing.T) {
-		yamlDoc := `apiVersion: xl-deploy/v1alpha1
-kind: Applications`
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Applications`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yamlDoc)
 
@@ -155,7 +156,7 @@ kind: Applications`
 
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
-		assert.Equal(t, "xl-deploy/v1alpha1", doc.ApiVersion)
+		assert.Equal(t, XldApiVersion, doc.ApiVersion)
 		assert.Equal(t, "Applications", doc.Kind)
 		assert.Equal(t, "Applications/MyHome", doc.Metadata["Applications-home"])
 		assert.Equal(t, "Environments/MyHome", doc.Metadata["Environments-home"])
@@ -164,8 +165,8 @@ kind: Applications`
 	})
 
 	t.Run("should add xl-release home if missing in yaml document", func(t *testing.T) {
-		yaml := `apiVersion: xl-release/v1
-kind: Templates`
+		yaml := fmt.Sprintf(`apiVersion: %s
+kind: Templates`, XlrApiVersion)
 
 		doc, err := ParseYamlDocument(yaml)
 
@@ -178,18 +179,18 @@ kind: Templates`
 
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
-		assert.Equal(t, "xl-release/v1", doc.ApiVersion)
+		assert.Equal(t, XlrApiVersion, doc.ApiVersion)
 		assert.Equal(t, "MyHome", doc.Metadata["home"])
 	})
 
 	t.Run("should not replace homes if included in yaml document", func(t *testing.T) {
-		yaml := `apiVersion: xl-deploy/v1
+		yaml := fmt.Sprintf(`apiVersion: %s
 kind: Applications
 metadata:
   Applications-home: Applications/DoNotTouch
   Environments-home: Environments/DoNotTouch
   Configuration-home: Configuration/DoNotTouch
-  Infrastructure-home: Infrastructure/DoNotTouch`
+  Infrastructure-home: Infrastructure/DoNotTouch`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yaml)
 
@@ -213,8 +214,8 @@ metadata:
 	})
 
 	t.Run("should not add homes if empty", func(t *testing.T) {
-		yaml := `apiVersion: xl-deploy/v1
-kind: Applications`
+		yaml := fmt.Sprintf(`apiVersion: %s
+kind: Applications`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yaml)
 
@@ -246,7 +247,7 @@ kind: Applications`
 		artifactContents := "cats=5\ndogs=8\n"
 		ioutil.WriteFile(filepath.Join(artifactsDir, "petclinic.properties"), []byte(artifactContents), 0644)
 
-		yamlDoc := `apiVersion: xl-deploy/v1
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
 spec:
 - name: PetClinic
@@ -257,7 +258,7 @@ spec:
     children:
     - name: conf
       type: file.File
-      file: !file petclinic.properties`
+      file: !file petclinic.properties`, XldApiVersion)
 
 		doc, err := NewDocumentReader(strings.NewReader(yamlDoc)).ReadNextYamlDocument()
 
@@ -301,7 +302,7 @@ spec:
 		}
 		defer os.RemoveAll(artifactsDir)
 
-		yamlDoc := `apiVersion: xl-deploy/v1
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
 spec:
 - name: PetClinic
@@ -312,7 +313,7 @@ spec:
     children:
     - name: conf
       type: file.File
-      file: !file /etc/passwd`
+      file: !file /etc/passwd`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yamlDoc)
 
@@ -331,7 +332,7 @@ spec:
 		}
 		defer os.RemoveAll(artifactsDir)
 
-		yamlDoc := `apiVersion: xl-deploy/v1
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
 spec:
 - name: PetClinic
@@ -342,7 +343,7 @@ spec:
     children:
     - name: conf
       type: file.File
-      file: !file ../../../../../../../../../../etc/passwd`
+      file: !file ../../../../../../../../../../etc/passwd`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yamlDoc)
 
@@ -355,7 +356,7 @@ spec:
 	})
 
 	t.Run("should render YAML document", func(t *testing.T) {
-		yamlDoc := `apiVersion: xl-deploy/v1
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
 metadata:
   Applications-home: Applications/Cloud
@@ -368,7 +369,7 @@ spec:
       children:
       - name: '1.0'
         type: udm.DeploymentPackage
-`
+`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yamlDoc)
 
@@ -386,8 +387,8 @@ spec:
 	})
 
 	t.Run("should not render metadata if empty", func(t *testing.T) {
-		yamlDoc := `apiVersion: xl-deploy/v1
-kind: Applications`
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Applications`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yamlDoc)
 
@@ -400,8 +401,8 @@ kind: Applications`
 	})
 
 	t.Run("should not render spec if empty", func(t *testing.T) {
-		yamlDoc := `apiVersion: xl-deploy/v1
-kind: Applications`
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Applications`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yamlDoc)
 
@@ -414,11 +415,11 @@ kind: Applications`
 	})
 
 	t.Run("should render YAML document with empty metadata", func(t *testing.T) {
-		yamlDoc := `apiVersion: xl-deploy/v1
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Infrastructure
 spec:
 - name: Localhost
-  type: overthere.LocalHost`
+  type: overthere.LocalHost`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yamlDoc)
 
@@ -437,13 +438,13 @@ spec:
 
 	t.Run("should render YAML document with custom file tags", func(t *testing.T) {
 		yamlDoc :=
-			`apiVersion: xl-deploy/v1alpha1
+			fmt.Sprintf(`apiVersion: %s
 kind: Applications
 spec:
 - name: PetClinic-ear
   type: jee.Ear
   file: !file PetClinic-1.0.ear
-`
+`, XldApiVersion)
 
 		doc, err := ParseYamlDocument(yamlDoc)
 

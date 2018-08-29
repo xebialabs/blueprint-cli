@@ -2,6 +2,9 @@ package lib
 
 import "fmt"
 
+const XldApiVersion = "xl-deploy/v1beta1"
+const XlrApiVersion = "xl-release/v1beta1"
+
 type XLServer interface {
 	AcceptsDoc(doc *Document) bool
 	PreprocessDoc(doc *Document)
@@ -22,11 +25,11 @@ type XLReleaseServer struct {
 }
 
 func (server *XLDeployServer) AcceptsDoc(doc *Document) bool {
-	return doc.ApiVersion == "xl-deploy/v1alpha1"
+	return doc.ApiVersion == XldApiVersion
 }
 
 func (server *XLReleaseServer) AcceptsDoc(doc *Document) bool {
-	return doc.ApiVersion == "xl-release/v1"
+	return doc.ApiVersion == XlrApiVersion
 }
 
 func (server *XLDeployServer) PreprocessDoc(doc *Document) {
