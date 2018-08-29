@@ -75,6 +75,13 @@ scmVersion {
 
 project.version = scmVersion.version
 
+task copyVendor(type: Copy) {
+    from "vendor"
+    into ".gogradle/project_gopath/src"
+}
+
+vendor.finalizedBy copyVendor
+
 publishing {
     publications {
         maven(MavenPublication) {
