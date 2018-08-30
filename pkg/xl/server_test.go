@@ -31,28 +31,28 @@ func (d *DummyHTTPServer) PostYamlZip(path string, zipfilename string) error {
 
 func TestServer(t *testing.T) {
 	t.Run(fmt.Sprintf("XL Deploy should accept %s documents", XldApiVersion), func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", XldApiVersion, nil, nil}, ""}
+		doc := Document{unmarshalleddocument{"Applications", XldApiVersion, nil, nil}, 0,0,""}
 		xlDeployServer := XLDeployServer{&DummyHTTPServer{}, "", "", "", ""}
 
 		assert.True(t, xlDeployServer.AcceptsDoc(&doc))
 	})
 
 	t.Run(fmt.Sprintf("XL Deploy should not accept %s documents", XlrApiVersion), func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", XlrApiVersion, nil, nil}, ""}
+		doc := Document{unmarshalleddocument{"Applications", XlrApiVersion, nil, nil}, 0,0,""}
 		xlDeployServer := XLDeployServer{&DummyHTTPServer{}, "", "", "", ""}
 
 		assert.False(t, xlDeployServer.AcceptsDoc(&doc))
 	})
 
 	t.Run(fmt.Sprintf("XL Release should accept %s documents", XlrApiVersion), func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", XlrApiVersion, nil, nil}, ""}
+		doc := Document{unmarshalleddocument{"Applications", XlrApiVersion, nil, nil}, 0,0,""}
 		xlReleaseServer := XLReleaseServer{&DummyHTTPServer{}, ""}
 
 		assert.True(t, xlReleaseServer.AcceptsDoc(&doc))
 	})
 
 	t.Run(fmt.Sprintf("XL Release should not accept %s documents", XldApiVersion), func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", XldApiVersion, nil, nil}, ""}
+		doc := Document{unmarshalleddocument{"Applications", XldApiVersion, nil, nil}, 0, 0, ""}
 		xlReleaseServer := XLReleaseServer{&DummyHTTPServer{}, ""}
 
 		assert.False(t, xlReleaseServer.AcceptsDoc(&doc))

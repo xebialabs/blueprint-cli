@@ -14,6 +14,8 @@ import (
 
 type Document struct {
 	unmarshalleddocument
+	Line     int
+	Column   int
 	ApplyZip string
 }
 
@@ -46,12 +48,12 @@ func NewDocumentReader(reader io.Reader) *DocumentReader {
 
 func (reader *DocumentReader) ReadNextYamlDocument() (*Document, error) {
 	pdoc := unmarshalleddocument{}
-	err := reader.decoder.Decode(&pdoc)
+	line, column, err := reader.decoder.DecodeWithPosition(&pdoc)
 	if err != nil {
 		return nil, err
 	}
 
-	doc := Document{pdoc,  ""}
+	doc := Document{pdoc,  line, column, ""}
 	if doc.Metadata == nil {
 		doc.Metadata = map[interface{}]interface{}{}
 	}
