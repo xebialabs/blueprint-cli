@@ -11,12 +11,14 @@ golang {
 
 dependencies {
     golang {
-        build name: 'github.com/mitchellh/go-homedir'
-        build name: 'github.com/spf13/cobra'
-        build name: 'github.com/spf13/viper'
-        build name: 'github.com/stretchr/testify/'
-        build name: 'github.com/stretchr/testify/assert'
+        build name: 'github.com/mitchellh/go-homedir', tag: 'v1.0.0'
+        build name: 'github.com/spf13/cobra', tag: 'v0.0.3'
+        build name: 'github.com/spf13/viper', tag: 'v1.1.0'
+        build name: 'github.com/stretchr/testify/', tag: 'v1.2.2'
+        build name: 'github.com/stretchr/testify/assert', tag: 'v1.2.2'
         build name: 'github.com/xebialabs/yaml', branch: 'v2'
+        build name: 'gopkg.in/cheggaaa/pb.v1', tag: 'v1.0.25'
+        build name: 'golang.org/x/crypto/ssh/terminal'
     }
 }
 
