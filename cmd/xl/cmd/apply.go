@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/xebialabs/xl-cli/internal/pkg/lib"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 	"os"
 	"io"
 	"path/filepath"
@@ -19,43 +19,43 @@ Flag url takes precedence over xld and xlr. Setting url disregards xld and xlr.
 Omitting xld and xlr defaults to using "default" as the server name.
 The configuration of these preconfigured default servers is possible with the login command.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		context, err := lib.BuildContext(viper.GetViper())
+		context, err := xl.BuildContext(viper.GetViper())
 		if err != nil {
-			lib.Fatal("Error while reading configuration: %s\n", err)
+			xl.Fatal("Error while reading configuration: %s\n", err)
 		}
-		lib.Verbose("Using configuration:\n %v\n", viper.AllSettings())
+		xl.Verbose("Using configuration:\n %v\n", viper.AllSettings())
 
 		DoApply(context, applyFilenames)
 	},
 }
 
-func DoApply(context *lib.Context, applyFilenames []string) {
+func DoApply(context *xl.Context, applyFilenames []string) {
 	if len(applyFilenames) == 0 {
-		lib.Fatal("Please provide a yaml file to apply\n")
+		xl.Fatal("Please provide a yaml file to apply\n")
 	}
 
 	for _, applyFilename := range applyFilenames {
 		applyDir := filepath.Dir(applyFilename)
-		lib.Verbose("using relative directory `%s` for file references\n", applyDir)
+		xl.Verbose("using relative directory `%s` for file references\n", applyDir)
 		reader, err := os.Open(applyFilename)
 		if err != nil {
-			lib.Fatal("Error while opening file %s: %s\n", applyFilename, err)
+			xl.Fatal("Error while opening file %s: %s\n", applyFilename, err)
 		}
-		docReader := lib.NewDocumentReader(reader)
+		docReader := xl.NewDocumentReader(reader)
 		for {
 			doc, err := docReader.ReadNextYamlDocument()
 			if err != nil {
 				if err == io.EOF {
-					lib.Info("Done with file %s\n", applyFilename)
+					xl.Info("Done with file %s\n", applyFilename)
 					break
 				} else {
-					lib.Fatal("Error while reading yaml document %s: %s\n", applyFilename, err)
+					xl.Fatal("Error while reading yaml document %s: %s\n", applyFilename, err)
 				}
 			}
-			lib.Info("Applying %s\n", doc.Kind)
+			xl.Info("Applying %s\n", doc.Kind)
 			err = context.ProcessSingleDocument(doc, applyDir)
 			if err != nil {
-				lib.Fatal("Error while processing yaml document %s: %s\n", applyFilename, err)
+				xl.Fatal("Error while processing yaml document %s: %s\n", applyFilename, err)
 			}
 		}
 		reader.Close()

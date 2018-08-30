@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"github.com/xebialabs/xl-cli/internal/pkg/lib"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io/ioutil"
 	"os"
 	"github.com/magiconair/properties/assert"
@@ -30,7 +30,7 @@ apiVersion: %s
 kind: Applications
 spec:
 - name: App1
-`, lib.XlrApiVersion, lib.XldApiVersion))
+`, xl.XlrApiVersion, xl.XldApiVersion))
 		file1.Close()
 
 		file2, err := ioutil.TempFile("", "file2")
@@ -48,15 +48,15 @@ apiVersion: %s
 kind: Applications
 spec:
 - name: App2
-`, lib.XlrApiVersion, lib.XldApiVersion))
+`, xl.XlrApiVersion, xl.XldApiVersion))
 		file2.Close()
 
-		var documents []lib.Document
+		var documents []xl.Document
 
 		xldHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
 			body, err := ioutil.ReadAll(request.Body)
 			if err != nil {panic(err)}
-			doc, err := lib.ParseYamlDocument(string(body))
+			doc, err := xl.ParseYamlDocument(string(body))
 			if err != nil {panic(err)}
 			documents = append(documents, *doc)
 		}
@@ -64,7 +64,7 @@ spec:
 		xlrHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
 			body, err := ioutil.ReadAll(request.Body)
 			if err != nil {panic(err)}
-			doc, err := lib.ParseYamlDocument(string(body))
+			doc, err := xl.ParseYamlDocument(string(body))
 			if err != nil {panic(err)}
 			documents = append(documents, *doc)
 		}
@@ -80,11 +80,11 @@ spec:
 		xldUrl, _ := url.Parse(xldTestServer.URL + "/")
 		xlrUrl, _ := url.Parse(xlrTestServer.URL + "/")
 
-		context := lib.Context{
-			XLDeploy:  &lib.XLDeployServer{Server: &lib.SimpleHTTPServer{Url: *xldUrl, Username:"", Password:""},
+		context := xl.Context{
+			XLDeploy:  &xl.XLDeployServer{Server: &xl.SimpleHTTPServer{Url: *xldUrl, Username:"", Password:""},
 										   ApplicationsHome: "Applications/XL", InfrastructureHome:"",
 										   ConfigurationHome:"",EnvironmentsHome:""},
-			XLRelease: &lib.XLReleaseServer{Server: &lib.SimpleHTTPServer{Url: *xlrUrl, Username:"", Password:""},
+			XLRelease: &xl.XLReleaseServer{Server: &xl.SimpleHTTPServer{Url: *xlrUrl, Username:"", Password:""},
 										   Home: "XL"},
 		}
 

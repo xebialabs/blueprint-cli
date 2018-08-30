@@ -1,4 +1,4 @@
-package lib
+package xl
 
 import (
 	"archive/zip"

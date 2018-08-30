@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"strings"
-	"github.com/xebialabs/xl-cli/internal/pkg/lib"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
 var cfgFile string
@@ -23,7 +23,7 @@ releases, pipelines, applications and target environments.`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		lib.Fatal("Error occurred when running apply: %s\n", err)
+		xl.Fatal("Error occurred when running apply: %s\n", err)
 	}
 }
 
@@ -31,7 +31,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default: $HOME/.xebialabs/config.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&lib.IsVerbose, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().BoolVarP(&xl.IsVerbose, "verbose", "v", false, "verbose output")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -56,13 +56,13 @@ func initConfig() {
 
 	err := viper.ReadInConfig()
 	if err == nil {
-		lib.Info("Using config file: %s\n", viper.ConfigFileUsed())
+		xl.Info("Using config file: %s\n", viper.ConfigFileUsed())
 	} else {
 		switch err.(type) {
 		case viper.ConfigFileNotFoundError:
-			lib.Info("No config file used\n")
+			xl.Info("No config file used\n")
 		default:
-			lib.Fatal("Cannot read config file %s: %s\n", viper.ConfigFileUsed(), err)
+			xl.Fatal("Cannot read config file %s: %s\n", viper.ConfigFileUsed(), err)
 		}
 	}
 }
