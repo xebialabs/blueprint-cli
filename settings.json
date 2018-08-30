@@ -1,0 +1,3 @@
+{
+    "go.goPath": "./vendor:./.gogradle/project_gopath"
+}
