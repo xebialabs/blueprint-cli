@@ -36,68 +36,47 @@ func Fatal(format string, a ...interface{}) {
 	os.Exit(1)
 }
 
-func StartProgress(total int) {
+func StartProgress(filename string) (error) {
 	if !IsQuiet {
 		if !IsVerbose && isatty.IsTerminal(os.Stdout.Fd()) {
-			bar = pb.StartNew(total)
+			nrOfDocs, err := estimateNrOfDocs(filename)
+			if err != nil {
+				return err
+			}
+			bar = pb.StartNew(nrOfDocs)
+			bar.Prefix(filepath.Base(filename))
 			showingBar = true
+		} else {
+			Info("Applying %s\n", filename)
 		}
 	}
+	return nil
 }
 
-func UpdateProgressStartFile(filename string) {
-	if !IsQuiet {
-		if showingBar {
-			bar.Prefix(filepath.Base(filename))
-		} else {
-			Info("Processing file %s\n", filename)
-		}
-	}
-}
 
 func UpdateProgressStartDocument(filename string, doc *Document) {
-	if !IsQuiet {
-		if showingBar {
-			bar.Increment()
-		} else {
-			Info("Processing document at line %d\n", doc.Line)
-		}
+	if showingBar {
+		bar.Increment()
+	} else {
+		Verbose("... applying document at line %d\n", doc.Line)
 	}
 }
 
-func UpdateProgressEndFile() {
-	if !IsQuiet {
-		if showingBar {
-			bar.Prefix("")
-		}
+func UpdateProgressEndDocument() {
+	if !showingBar {
+		Verbose("... done\n")
 	}
 }
 
 func EndProgress() {
-	if !IsQuiet {
-		if showingBar {
-			bar.FinishPrint("Done")
-		} else {
-			Info("Done\n")
-		}
+	if showingBar {
+		bar.Finish()
+	} else {
+		Verbose("Done\n")
 	}
 }
 
-func CountTotalNrOfDocs(filenames []string) (int, error){
-	var totalNrOfDocuments = 0
-
-	for _, filename := range filenames {
-		nrOfDocuments, err := EstimateNrOfDocs(filename)
-		if err != nil {
-			return 0, err
-		}
-		totalNrOfDocuments += nrOfDocuments
-	}
-
-	return totalNrOfDocuments, nil
-}
-
-func EstimateNrOfDocs(filename string) (int, error) {
+func estimateNrOfDocs(filename string) (int, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return 0, err

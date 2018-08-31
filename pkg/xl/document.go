@@ -209,7 +209,7 @@ func (doc *Document) processFileTag(tag yaml.CustomTag, c *processingContext) (i
 		if err != nil {
 			return nil, err
 		}
-		Verbose("... first !file tag found, creating temporary ZIP file `%s`\n", zipfile.Name())
+		Verbose("...... first !file tag found, creating temporary ZIP file `%s`\n", zipfile.Name())
 		c.zipfile = zipfile
 		c.zipwriter = zip.NewWriter(c.zipfile)
 	}
@@ -217,7 +217,7 @@ func (doc *Document) processFileTag(tag yaml.CustomTag, c *processingContext) (i
 	filename := tag.Value
 
 	if _, found := c.seenFiles[filename]; found {
-		Verbose("... file `%s` is already in the ZIP file, skipping it\n", filename)
+		Verbose("...... file `%s` is already in the ZIP file, skipping it\n", filename)
 		return tag, nil
 	}
 
@@ -229,7 +229,7 @@ func (doc *Document) processFileTag(tag yaml.CustomTag, c *processingContext) (i
 	}
 
 	fullFilename := filepath.Join(c.artifactsDir, filename)
-	Verbose("... !file tag `%s` in XL YAML document was resolved to full path `%s`\n", filename, fullFilename)
+	Verbose("...... !file tag `%s` in XL YAML document was resolved to full path `%s`\n", filename, fullFilename)
 
 	fi, err := os.Stat(fullFilename)
 	if err != nil {
@@ -250,7 +250,7 @@ func (doc *Document) processFileTag(tag yaml.CustomTag, c *processingContext) (i
 	if err != nil {
 		return nil, err
 	}
-	Verbose("... adding file `%s` to ZIP file\n", filename)
+	Verbose("...... adding file `%s` to ZIP file\n", filename)
 	io.Copy(w, r)
 
 	c.seenFiles[filename] = true
@@ -277,7 +277,7 @@ func (doc *Document) RenderYamlDocument() ([]byte, error) {
 
 func (doc *Document) Cleanup() {
 	if doc.ApplyZip != "" {
-		Verbose("... deleting temporary file `%s`\n", doc.ApplyZip)
+		Verbose("...... deleting temporary file `%s`\n", doc.ApplyZip)
 		os.Remove(doc.ApplyZip)
 		doc.ApplyZip = ""
 	}

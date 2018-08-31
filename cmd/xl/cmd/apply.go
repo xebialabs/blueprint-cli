@@ -36,15 +36,8 @@ func DoApply(context *xl.Context, applyFilenames []string) {
 		xl.Fatal("No XL YAML file to apply\n")
 	}
 
-	totalNrOfDocs, err := xl.CountTotalNrOfDocs(applyFilenames)
-	if err != nil {
-		panic(err)
-	}
-
-	xl.StartProgress(totalNrOfDocs)
-
 	for _, applyFilename := range applyFilenames {
-		xl.UpdateProgressStartFile(applyFilename)
+		xl.StartProgress(applyFilename)
 
 		applyDir := filepath.Dir(applyFilename)
 		reader, err := os.Open(applyFilename)
@@ -57,7 +50,6 @@ func DoApply(context *xl.Context, applyFilenames []string) {
 			doc, err := docReader.ReadNextYamlDocument()
 			if err != nil {
 				if err == io.EOF {
-					xl.UpdateProgressEndFile()
 					break
 				} else {
 					reportFatalDocumentError(applyFilename, doc, err)
@@ -69,11 +61,13 @@ func DoApply(context *xl.Context, applyFilenames []string) {
 			if err != nil {
 				reportFatalDocumentError(applyFilename, doc, err)
 			}
+			xl.UpdateProgressEndDocument()
 		}
+
 		reader.Close()
+		xl.EndProgress()
 	}
 
-	xl.EndProgress()
 }
 
 var isFieldAlreadySetErrorRegexp = regexp.MustCompile(`field \w+ already set in type`)
