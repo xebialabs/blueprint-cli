@@ -31,11 +31,16 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default: $HOME/.xebialabs/config.yaml)")
+	rootCmd.PersistentFlags().BoolVarP(&xl.IsQuiet, "quiet", "q", false, "surpress all output, except for errors")
 	rootCmd.PersistentFlags().BoolVarP(&xl.IsVerbose, "verbose", "v", false, "verbose output")
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	if xl.IsQuiet && xl.IsVerbose {
+		xl.Fatal("Cannot use --quiet (-q) and --verbose (-v) flags together")
+	}
+
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -56,11 +61,11 @@ func initConfig() {
 
 	err := viper.ReadInConfig()
 	if err == nil {
-		xl.Info("Using config file: %s\n", viper.ConfigFileUsed())
+		xl.Verbose("Using configuration file: %s\n", viper.ConfigFileUsed())
 	} else {
 		switch err.(type) {
 		case viper.ConfigFileNotFoundError:
-			xl.Info("No config file used\n")
+			xl.Verbose("No configuration file found. Using default configuration and command line options\n")
 		default:
 			xl.Fatal("Cannot read config file %s: %s\n", viper.ConfigFileUsed(), err)
 		}

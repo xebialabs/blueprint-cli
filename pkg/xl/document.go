@@ -49,8 +49,15 @@ func NewDocumentReader(reader io.Reader) *DocumentReader {
 func (reader *DocumentReader) ReadNextYamlDocument() (*Document, error) {
 	pdoc := unmarshalleddocument{}
 	line, column, err := reader.decoder.DecodeWithPosition(&pdoc)
+
+	if line == 0 {
+		line++
+	} else {
+		line += 2
+	}
+
 	if err != nil {
-		return nil, err
+		return &Document{unmarshalleddocument{}, line, column, ""}, err
 	}
 
 	doc := Document{pdoc,  line, column, ""}
@@ -147,8 +154,6 @@ func (doc *Document) processList(l []interface{}, c *processingContext) (error) 
 
 
 func (doc *Document) processMap(m map[interface{}]interface{}, c *processingContext) (error) {
-	name := m["name"]
-	Verbose("processing yaml node %v\n", name)
 	for k, v := range m {
 		newV, err := doc.processValue(v, c)
 		if err != nil {
@@ -204,7 +209,7 @@ func (doc *Document) processFileTag(tag yaml.CustomTag, c *processingContext) (i
 		if err != nil {
 			return nil, err
 		}
-		Verbose("creating temporary zipfile for uploading files at: `%s`\n", zipfile.Name())
+		Verbose("... first !file tag found, creating temporary ZIP file `%s`\n", zipfile.Name())
 		c.zipfile = zipfile
 		c.zipwriter = zip.NewWriter(c.zipfile)
 	}
@@ -212,19 +217,19 @@ func (doc *Document) processFileTag(tag yaml.CustomTag, c *processingContext) (i
 	filename := tag.Value
 
 	if _, found := c.seenFiles[filename]; found {
-		Verbose("skipping file `%s` since its already in the archive\n", filename)
+		Verbose("... file `%s` is already in the ZIP file, skipping it\n", filename)
 		return tag, nil
 	}
 
 	if filepath.IsAbs(filename) {
-		return nil, errors.New(fmt.Sprintf("absolute path is not allowed in !file tag: %s", filename))
+		return nil, errors.New(fmt.Sprintf("absolute path `%s` is not allowed in !file tag", filename))
 	}
 	if isRelativePath(filename) {
-		return nil, errors.New(fmt.Sprintf("relative path with .. is not allowed in !file tag: %s", filename))
+		return nil, errors.New(fmt.Sprintf("relative path with .. `%s` is not allowed in !file tag", filename))
 	}
 
 	fullFilename := filepath.Join(c.artifactsDir, filename)
-	Verbose("file tag found `%s`. resolved to full path `%s`\n", filename, fullFilename)
+	Verbose("... !file tag `%s` in XL YAML document was resolved to full path `%s`\n", filename, fullFilename)
 
 	fi, err := os.Stat(fullFilename)
 	if err != nil {
@@ -245,7 +250,7 @@ func (doc *Document) processFileTag(tag yaml.CustomTag, c *processingContext) (i
 	if err != nil {
 		return nil, err
 	}
-	Verbose("including file %s to zip\n", filename)
+	Verbose("... adding file `%s` to ZIP file\n", filename)
 	io.Copy(w, r)
 
 	c.seenFiles[filename] = true
@@ -272,7 +277,7 @@ func (doc *Document) RenderYamlDocument() ([]byte, error) {
 
 func (doc *Document) Cleanup() {
 	if doc.ApplyZip != "" {
-		Verbose("deleting temporary file `%s`\n", doc.ApplyZip)
+		Verbose("... deleting temporary file `%s`\n", doc.ApplyZip)
 		os.Remove(doc.ApplyZip)
 		doc.ApplyZip = ""
 	}

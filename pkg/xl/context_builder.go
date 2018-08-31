@@ -103,7 +103,7 @@ func writeObfuscryptPasswords(v *viper.Viper, prefixes []string) error {
 		if configDirty {
 			err := configOnDisk.WriteConfig()
 			if err == nil {
-				Info("Saved config file %s\n", v.ConfigFileUsed())
+				Info("Configuration file %s saved\n", v.ConfigFileUsed())
 			} else {
 				return err
 			}

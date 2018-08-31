@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"bufio"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -10,7 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/xl"
-	"gopkg.in/cheggaaa/pb.v1"
+	"regexp"
+	"github.com/xebialabs/xl-cli/.gogradle/project_gopath/src/github.com/pkg/errors"
 )
 
 var applyFilenames []string
@@ -35,78 +34,60 @@ The configuration of these preconfigured default servers is possible with the lo
 
 func DoApply(context *xl.Context, applyFilenames []string) {
 	if len(applyFilenames) == 0 {
-		xl.Fatal("Please provide a yaml file to apply\n")
+		xl.Fatal("No XL YAML file to apply\n")
 	}
 
-	totalNrOfDocs, err := countTotalNrOfDocs(applyFilenames)
+	totalNrOfDocs, err := xl.CountTotalNrOfDocs(applyFilenames)
 	if err != nil {
 		panic(err)
 	}
 
-	bar := pb.StartNew(totalNrOfDocs)
+	xl.StartProgress(totalNrOfDocs)
+
 	for _, applyFilename := range applyFilenames {
-		bar.Prefix(fmt.Sprintf("%s:", filepath.Base(applyFilename)))
+		xl.UpdateProgressStartFile(applyFilename)
 
 		applyDir := filepath.Dir(applyFilename)
-		xl.Verbose("using relative directory %s for file references\n", applyDir)
 		reader, err := os.Open(applyFilename)
 		if err != nil {
-			xl.Fatal("Error while opening file %s: %s\n", applyFilename, err)
+			xl.Fatal("Error while opening XL YAML file %s: %s\n", applyFilename, err)
 		}
+
 		docReader := xl.NewDocumentReader(reader)
 		for {
 			doc, err := docReader.ReadNextYamlDocument()
 			if err != nil {
 				if err == io.EOF {
-					bar.Prefix("")
+					xl.UpdateProgressEndFile()
 					break
 				} else {
-					xl.Fatal("Error while reading yaml document from %s: %s\n", applyFilename, err)
+					reportFatalDocumentError(applyFilename, doc, err)
 				}
 			}
 
-			bar.Increment()
-			time.Sleep(1000 * time.Millisecond)
-
+			xl.UpdateProgressStartDocument(applyFilename, doc)
+			time.Sleep(1 * time.Millisecond)
 			err = context.ProcessSingleDocument(doc, applyDir)
 			if err != nil {
-				xl.Fatal("Error while processing yaml document at line %d of %s: %s\n", doc.Line, applyFilename, err)
+				reportFatalDocumentError(applyFilename, doc, err)
 			}
 		}
 		reader.Close()
 	}
-	bar.FinishPrint("Done")
+
+	xl.EndProgress()
 }
 
-func countTotalNrOfDocs(applyFilenames []string) (int, error){
-	var totalNrOfDocuments = 0
+var isFieldAlreadySetErrorRegexp = regexp.MustCompile(`field \w+ already set in type`)
 
-	for _, applyFilename := range applyFilenames {
-		nrOfDocuments, err := estimateNrOfDocs(applyFilename)
-		if err != nil {
-			return 0, err
-		}
-		totalNrOfDocuments += nrOfDocuments
+func reportFatalDocumentError(applyFilename string, doc *xl.Document, err error) {
+	if isFieldAlreadySetErrorRegexp.MatchString(err.Error()) {
+		err = errors.Wrap(err, "Possible missing triple dash (---) to separate multiple YAML documents")
 	}
 
-	return totalNrOfDocuments, nil
+	xl.Fatal("Error while processing YAML document at line %d of XL YAML file %s: %s\n", doc.Line, applyFilename, err)
 }
 
-func estimateNrOfDocs(applyFilename string) (int, error) {
-	f, err := os.Open(applyFilename)
-	if err != nil {
-		return 0, err
-	}
-	defer f.Close()
-	nrOfDocs := 1
-	scanner := bufio.NewScanner(bufio.NewReader(f))
-	for scanner.Scan() {
-		if scanner.Text() == "---" {
-			nrOfDocs++
-		}
-	}
-	return nrOfDocs, nil
-}
 
 
 func init() {

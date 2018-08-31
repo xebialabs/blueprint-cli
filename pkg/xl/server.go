@@ -62,10 +62,10 @@ func (server *XLReleaseServer) SendDoc(doc *Document) error {
 
 func sendDoc(server HTTPServer, path string, doc *Document) error {
 	if doc.ApplyZip != "" {
-		Verbose("file references found, posting zip to server\n")
+		Verbose("... document contains !file tags, sending ZIP file with YAML document and artifacts to server\n")
 		return server.PostYamlZip(path, doc.ApplyZip)
 	} else {
-		Verbose("no file references found, posting yaml to server\n")
+		Verbose("... document does not contain !file tags, sending plain YAML document to server\n")
 		documentBytes, err := doc.RenderYamlDocument()
 		if err != nil {
 			return err
