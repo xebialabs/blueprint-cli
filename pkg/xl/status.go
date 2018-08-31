@@ -2,12 +2,12 @@
 package xl
 
 import (
-	"fmt"
-	"os"
-	"gopkg.in/cheggaaa/pb.v1"
-	"github.com/mattn/go-isatty"
 	"bufio"
+	"fmt"
 	"path/filepath"
+	"os"
+	"github.com/mattn/go-isatty"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 var IsQuiet = false
