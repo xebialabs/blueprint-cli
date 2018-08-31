@@ -17,7 +17,7 @@ var bar *pb.ProgressBar = nil
 
 func Verbose(format string, a ...interface{}) {
 	if IsVerbose {
-		//fmt.Printf(format, a...)
+		fmt.Printf(format, a...)
 	}
 }
 
