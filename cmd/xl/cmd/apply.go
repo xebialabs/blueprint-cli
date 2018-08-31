@@ -4,12 +4,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"time"
+	"regexp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/pkg/errors"
 	"github.com/xebialabs/xl-cli/pkg/xl"
-	"regexp"
-	"github.com/xebialabs/xl-cli/.gogradle/project_gopath/src/github.com/pkg/errors"
 )
 
 var applyFilenames []string
@@ -66,7 +65,6 @@ func DoApply(context *xl.Context, applyFilenames []string) {
 			}
 
 			xl.UpdateProgressStartDocument(applyFilename, doc)
-			time.Sleep(1 * time.Millisecond)
 			err = context.ProcessSingleDocument(doc, applyDir)
 			if err != nil {
 				reportFatalDocumentError(applyFilename, doc, err)
