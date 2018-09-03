@@ -1,0 +1,10 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"go.gopath": "${workspaceFolder}/vendor:${workspaceFolder}/.gogradle/project_gopath"
+	}
+}

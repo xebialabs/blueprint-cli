@@ -28,3 +28,6 @@ scanning/
 .gogradle/
 .gradle/
 vendor/
+
+xl-cli.ipr
+xl-cli.iws
