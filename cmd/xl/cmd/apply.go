@@ -80,8 +80,6 @@ func reportFatalDocumentError(applyFilename string, doc *xl.Document, err error)
 	xl.Fatal("Error while processing YAML document at line %d of XL YAML file %s: %s\n", doc.Line, applyFilename, err)
 }
 
-
-
 func init() {
 	rootCmd.AddCommand(applyCmd)
 
