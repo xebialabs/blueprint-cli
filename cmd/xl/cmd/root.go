@@ -31,7 +31,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default: $HOME/.xebialabs/config.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&xl.IsQuiet, "quiet", "q", false, "surpress all output, except for errors")
+	rootCmd.PersistentFlags().BoolVarP(&xl.IsQuiet, "quiet", "q", false, "suppress all output, except for errors")
 	rootCmd.PersistentFlags().BoolVarP(&xl.IsVerbose, "verbose", "v", false, "verbose output")
 }
 
