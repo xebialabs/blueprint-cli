@@ -9,6 +9,7 @@ type XLServer interface {
 	AcceptsDoc(doc *Document) bool
 	PreprocessDoc(doc *Document)
 	SendDoc(doc *Document) error
+	ExportDoc(filename string, path string, override bool) error
 }
 
 type XLDeployServer struct {
@@ -47,6 +48,14 @@ func addHomeIfMissing(doc *Document, home string, key string) {
 	if _, found := doc.Metadata[key]; home != "" && !found {
 		doc.Metadata[key] = home
 	}
+}
+
+func (server *XLDeployServer) ExportDoc(filename string, path string, override bool) error {
+	return server.Server.ExportYamlDoc(filename, "deployit/devops-as-code/export/" + path, override)
+}
+
+func (server *XLReleaseServer) ExportDoc(filename string, path string, override bool) error {
+	return server.Server.ExportYamlDoc(filename, "devops-as-code/export/" + path, override)
 }
 
 func (server *XLDeployServer) SendDoc(doc *Document) error {

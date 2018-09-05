@@ -15,6 +15,10 @@ type DummyHTTPServer struct {
 	capturedFilename string
 }
 
+func (d *DummyHTTPServer) ExportYamlDoc(path string, exportFilename string, override bool) error {
+	return nil
+}
+
 func (d *DummyHTTPServer) PostYamlDoc(path string, yamlDocBytes []byte) error {
 	d.capturedPath = path
 	d.capturedBytes = yamlDocBytes

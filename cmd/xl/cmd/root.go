@@ -23,7 +23,7 @@ releases, pipelines, applications and target environments.`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		xl.Fatal("Error occurred when running apply: %s\n", err)
+		xl.Fatal("Error occurred when running command: %s\n", err)
 	}
 }
 
