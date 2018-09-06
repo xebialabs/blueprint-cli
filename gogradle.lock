@@ -13,7 +13,7 @@ dependencies:
   - name: "github.com/beorn7/perks"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -23,34 +23,24 @@ dependencies:
   - name: "github.com/bgentry/speakeasy"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
       vcs: "git"
     vendorPath: "vendor/github.com/bgentry/speakeasy"
     transitive: false
-  - name: "github.com/coreos/bbolt"
-    host:
-      name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
-      urls:
-      - "https://github.com/coreos/etcd.git"
-      - "git@github.com:coreos/etcd.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/coreos/bbolt"
-    transitive: false
   - urls:
     - "https://github.com/coreos/etcd.git"
     - "git@github.com:coreos/etcd.git"
     vcs: "git"
     name: "github.com/coreos/etcd"
-    commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+    commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
     transitive: false
   - name: "github.com/coreos/go-semver"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -60,7 +50,7 @@ dependencies:
   - name: "github.com/coreos/go-systemd"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -70,7 +60,7 @@ dependencies:
   - name: "github.com/coreos/pkg"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -97,7 +87,7 @@ dependencies:
   - name: "github.com/dgrijalva/jwt-go"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -107,7 +97,7 @@ dependencies:
   - name: "github.com/dustin/go-humanize"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -119,12 +109,12 @@ dependencies:
     - "git@github.com:fsnotify/fsnotify.git"
     vcs: "git"
     name: "github.com/fsnotify/fsnotify"
-    commit: "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
+    commit: "ccc981bf80385c528a65fbfdd49bf2d8da22aa23"
     transitive: false
   - name: "github.com/ghodss/yaml"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -134,7 +124,7 @@ dependencies:
   - name: "github.com/gogo/protobuf"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -144,7 +134,7 @@ dependencies:
   - name: "github.com/golang/groupcache"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -154,7 +144,7 @@ dependencies:
   - name: "github.com/golang/protobuf"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -164,7 +154,7 @@ dependencies:
   - name: "github.com/google/btree"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -174,7 +164,7 @@ dependencies:
   - name: "github.com/gorilla/websocket"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -184,7 +174,7 @@ dependencies:
   - name: "github.com/grpc-ecosystem/go-grpc-middleware"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -194,7 +184,7 @@ dependencies:
   - name: "github.com/grpc-ecosystem/go-grpc-prometheus"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -204,7 +194,7 @@ dependencies:
   - name: "github.com/grpc-ecosystem/grpc-gateway"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -216,22 +206,29 @@ dependencies:
     - "git@github.com:hashicorp/hcl.git"
     vcs: "git"
     name: "github.com/hashicorp/hcl"
-    commit: "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
+    commit: "8cb6e5b959231cc1119e43259c4a608f9c51a241"
     transitive: false
   - name: "github.com/inconshreveable/mousetrap"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
       vcs: "git"
     vendorPath: "vendor/github.com/inconshreveable/mousetrap"
     transitive: false
+  - urls:
+    - "https://github.com/jhoonb/archivex.git"
+    - "git@github.com:jhoonb/archivex.git"
+    vcs: "git"
+    name: "github.com/jhoonb/archivex"
+    commit: "0488e4ce168110297b49ad60bee94d38de70dd8a"
+    transitive: false
   - name: "github.com/jonboulle/clockwork"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -248,7 +245,7 @@ dependencies:
   - name: "github.com/kr/pty"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -265,7 +262,7 @@ dependencies:
   - name: "github.com/mattn/go-runewidth"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -275,7 +272,7 @@ dependencies:
   - name: "github.com/matttproud/golang_protobuf_extensions"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -287,19 +284,19 @@ dependencies:
     - "git@github.com:mitchellh/go-homedir.git"
     vcs: "git"
     name: "github.com/mitchellh/go-homedir"
-    commit: "58046073cbffe2f25d425fe1331102f55cf719de"
+    commit: "ae18d6b8b3205b561c79e8e5f69bff09736185f4"
     transitive: false
   - urls:
     - "https://github.com/mitchellh/mapstructure.git"
     - "git@github.com:mitchellh/mapstructure.git"
     vcs: "git"
     name: "github.com/mitchellh/mapstructure"
-    commit: "f15292f7a699fcc1a38a80977f80a046874ba8ac"
+    commit: "fa473d140ef3c6adf42d6b391fe76707f1f243c8"
     transitive: false
   - name: "github.com/olekukonko/tablewriter"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -316,7 +313,7 @@ dependencies:
   - name: "github.com/petar/GoLLRB"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -335,7 +332,7 @@ dependencies:
     - "git@github.com:pkg/sftp.git"
     vcs: "git"
     name: "github.com/pkg/sftp"
-    commit: "6b9fa10dea25176501bd80eb8a45a46d2afc97ad"
+    commit: "b9345f483dc30f2e9d44786ee1a7e5700bb2341b"
     transitive: false
   - name: "github.com/pmezard/go-difflib"
     host:
@@ -350,7 +347,7 @@ dependencies:
   - name: "github.com/prometheus/client_golang"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -360,7 +357,7 @@ dependencies:
   - name: "github.com/prometheus/client_model"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -370,7 +367,7 @@ dependencies:
   - name: "github.com/prometheus/common"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -380,7 +377,7 @@ dependencies:
   - name: "github.com/prometheus/procfs"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -410,7 +407,7 @@ dependencies:
   - name: "github.com/sirupsen/logrus"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -420,7 +417,7 @@ dependencies:
   - name: "github.com/soheilhy/cmux"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -446,7 +443,7 @@ dependencies:
     - "git@github.com:spf13/cobra.git"
     vcs: "git"
     name: "github.com/spf13/cobra"
-    commit: "7c4570c3ebeb8129a1f7456d0908a8b676b6f9f1"
+    commit: "99dc123558852f67743bd0b2caf8383cb3c6d720"
     transitive: false
   - urls:
     - "https://github.com/spf13/jwalterweatherman.git"
@@ -460,14 +457,14 @@ dependencies:
     - "git@github.com:spf13/pflag.git"
     vcs: "git"
     name: "github.com/spf13/pflag"
-    commit: "947b89bd1b7dabfed991ac30e1a56f5193f0c88b"
+    commit: "298182f68c66c05229eb03ac171abe6e309ee79a"
     transitive: false
   - urls:
     - "https://github.com/spf13/viper.git"
     - "git@github.com:spf13/viper.git"
     vcs: "git"
     name: "github.com/spf13/viper"
-    commit: "907c19d40d9a6c9bb55f040ff4ae45271a4754b9"
+    commit: "0ac2068de99fd349edc4954d0e9b4a600d75da44"
     transitive: false
   - name: "github.com/stretchr/objx"
     host:
@@ -489,7 +486,7 @@ dependencies:
   - name: "github.com/tmc/grpc-websocket-proxy"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -499,7 +496,7 @@ dependencies:
   - name: "github.com/ugorji/go"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -509,7 +506,7 @@ dependencies:
   - name: "github.com/urfave/cli"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -526,7 +523,7 @@ dependencies:
   - name: "github.com/xiang90/probing"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -540,10 +537,20 @@ dependencies:
     name: "github.com/xordataexchange/crypt"
     commit: "b2862e3d0a775f18c7cfe02273500ae307b61218"
     transitive: false
+  - name: "go.etcd.io/bbolt"
+    host:
+      name: "github.com/coreos/etcd"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
+      urls:
+      - "https://github.com/coreos/etcd.git"
+      - "git@github.com:coreos/etcd.git"
+      vcs: "git"
+    vendorPath: "vendor/go.etcd.io/bbolt"
+    transitive: false
   - name: "go.uber.org/atomic"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -553,7 +560,7 @@ dependencies:
   - name: "go.uber.org/multierr"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -563,7 +570,7 @@ dependencies:
   - name: "go.uber.org/zap"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -572,17 +579,17 @@ dependencies:
     transitive: false
   - vcs: "git"
     name: "golang.org/x/crypto"
-    commit: "de0752318171da717af4ce24d0a2e8626afaeb11"
+    commit: "182538f80094b6a8efaade63a8fd8e0d9d5843dd"
     url: "https://go.googlesource.com/crypto"
     transitive: false
   - vcs: "git"
     name: "golang.org/x/net"
-    commit: "aaf60122140d3fcf75376d319f0554393160eb50"
+    commit: "8a410e7b638dca158bf9e766925842f6651ff828"
     url: "https://go.googlesource.com/net"
     transitive: false
   - vcs: "git"
     name: "golang.org/x/sys"
-    commit: "1c9583448a9c3aa0f9a6a5241bf73c0bd8aafded"
+    commit: "2b024373dcd9800f0cae693839fac6ede8d64a8c"
     url: "https://go.googlesource.com/sys"
     transitive: false
   - vcs: "git"
@@ -593,7 +600,7 @@ dependencies:
   - name: "golang.org/x/time"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -602,13 +609,13 @@ dependencies:
     transitive: false
   - vcs: "git"
     name: "golang.org/x/tools"
-    commit: "9de19001913fbbc31d62e61c3c2d0a49ee352534"
+    commit: "7ca132754999accbaa5c1735eda29e7ce0f3bf03"
     url: "https://go.googlesource.com/tools"
     transitive: false
   - name: "google.golang.org/genproto"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -618,7 +625,7 @@ dependencies:
   - name: "google.golang.org/grpc"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -628,7 +635,7 @@ dependencies:
   - name: "gopkg.in/cheggaaa/pb.v1"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -638,7 +645,7 @@ dependencies:
   - name: "gopkg.in/yaml.v2"
     host:
       name: "github.com/coreos/etcd"
-      commit: "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
+      commit: "6143c135bd92a8c9d46122efd0b65762c2f14c8b"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"

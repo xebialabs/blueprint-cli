@@ -3,13 +3,14 @@ package xl
 import (
 	"archive/zip"
 	"fmt"
-	"io"
-	"os"
-	"io/ioutil"
-	"path/filepath"
-	"strings"
+	"github.com/jhoonb/archivex"
 	"github.com/pkg/errors"
 	"github.com/xebialabs/yaml"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 type Document struct {
@@ -23,8 +24,8 @@ type DocumentReader struct {
 
 type unmarshalleddocument struct {
 	Kind       string
-	ApiVersion string `yaml:"apiVersion"`
-	Metadata   map[interface{}]interface{} `yaml:"metadata,omitempty"`
+	ApiVersion string                        `yaml:"apiVersion"`
+	Metadata   map[interface{}]interface{}   `yaml:"metadata,omitempty"`
 	Spec       []map[interface{}]interface{} `yaml:"spec,omitempty"`
 }
 
@@ -51,7 +52,7 @@ func (reader *DocumentReader) ReadNextYamlDocument() (*Document, error) {
 		return nil, err
 	}
 
-	doc := Document{pdoc,  ""}
+	doc := Document{pdoc, ""}
 	if doc.Metadata == nil {
 		doc.Metadata = map[interface{}]interface{}{}
 	}
@@ -66,7 +67,7 @@ func ParseYamlDocument(yamlDoc string) (*Document, error) {
 	return NewDocumentReader(strings.NewReader(yamlDoc)).ReadNextYamlDocument()
 }
 
-func (doc *Document) Preprocess(context *Context, artifactsDir string) (error) {
+func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 	c := processingContext{context, artifactsDir, nil, nil, make(map[string]bool)}
 
 	if c.context != nil {
@@ -122,7 +123,7 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) (error) {
 	return err
 }
 
-func (doc *Document) processListOfMaps(l []map[interface{}]interface{}, c *processingContext) (error) {
+func (doc *Document) processListOfMaps(l []map[interface{}]interface{}, c *processingContext) error {
 	for _, v := range l {
 		err := doc.processMap(v, c)
 		if err != nil {
@@ -132,7 +133,7 @@ func (doc *Document) processListOfMaps(l []map[interface{}]interface{}, c *proce
 	return nil
 }
 
-func (doc *Document) processList(l []interface{}, c *processingContext) (error) {
+func (doc *Document) processList(l []interface{}, c *processingContext) error {
 	for i, v := range l {
 		newV, err := doc.processValue(v, c)
 		if err != nil {
@@ -143,8 +144,7 @@ func (doc *Document) processList(l []interface{}, c *processingContext) (error) 
 	return nil
 }
 
-
-func (doc *Document) processMap(m map[interface{}]interface{}, c *processingContext) (error) {
+func (doc *Document) processMap(m map[interface{}]interface{}, c *processingContext) error {
 	name := m["name"]
 	Verbose("processing yaml node %v\n", name)
 	for k, v := range m {
@@ -193,10 +193,71 @@ func (doc *Document) processCustomTag(tag yaml.CustomTag, c *processingContext) 
 	}
 }
 
-func (doc *Document) processFileTag(tag yaml.CustomTag, c *processingContext) (interface{}, error) {
+func (doc *Document) validateFileTag(tag yaml.CustomTag, c *processingContext) error {
 	if c.artifactsDir == "" {
-		return nil, errors.New("cannot process !file tags if artifactsDir has not been set")
+		return errors.New("cannot process !file tags if artifactsDir has not been set")
 	}
+	filename := tag.Value
+	if filepath.IsAbs(filename) {
+		return errors.New(fmt.Sprintf("absolute path is not allowed in !file tag: %s", filename))
+	}
+	if isRelativePath(filename) {
+		return errors.New(fmt.Sprintf("relative path with .. is not allowed in !file tag: %s", filename))
+	}
+	return nil
+}
+
+func (doc *Document) writeDirectory(tag yaml.CustomTag, filename string, fullFilename string, c *processingContext) (interface{}, error) {
+	directoryPath := fullFilename + "/"
+	entityName := filepath.Clean(filename)
+	Verbose("writing directory %s into zip file with name: [%s]\n", directoryPath, entityName)
+	w, err := c.zipwriter.Create(entityName)
+	if err != nil {
+		return nil, err
+	}
+	tag.Value = entityName
+	z := &archivex.ZipFile{}
+	z.CreateWriter(entityName, w)
+	defer z.Close()
+	return tag, z.AddAll(fullFilename+"/", false)
+}
+
+func (doc *Document) writeFile(filename string, fullFilename string, c *processingContext) error {
+	r, err := os.Open(fullFilename)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	w, err := c.zipwriter.Create(filename)
+	if err != nil {
+		return err
+	}
+	Verbose("including file %s to zip\n", filename)
+	io.Copy(w, r)
+	return nil
+}
+
+func (doc *Document) writeFileOrDir(tag yaml.CustomTag, filename string, c *processingContext) (interface{}, error) {
+	fullFilename := filepath.Join(c.artifactsDir, filename)
+	Verbose("file tag found `%s`. resolved to full path `%s`\n", filename, fullFilename)
+	fi, err := os.Stat(fullFilename)
+	if err != nil {
+		return nil, err
+	}
+	switch mode := fi.Mode(); {
+	case mode.IsDir():
+		return doc.writeDirectory(tag, filename, fullFilename, c)
+	}
+	return tag, doc.writeFile(filename, fullFilename, c)
+}
+
+func (doc *Document) processFileTag(tag yaml.CustomTag, c *processingContext) (interface{}, error) {
+	err := doc.validateFileTag(tag, c)
+	if err != nil {
+		return nil, err
+	}
+
 	if c.zipwriter == nil {
 		zipfile, err := ioutil.TempFile("", "yaml")
 		if err != nil {
@@ -214,41 +275,13 @@ func (doc *Document) processFileTag(tag yaml.CustomTag, c *processingContext) (i
 		return tag, nil
 	}
 
-	if filepath.IsAbs(filename) {
-		return nil, errors.New(fmt.Sprintf("absolute path is not allowed in !file tag: %s", filename))
+	fileTag, writeError := doc.writeFileOrDir(tag, filename, c)
+	if writeError != nil {
+		return nil, writeError
+	} else {
+		c.seenFiles[filename] = true
+		return fileTag, nil
 	}
-	if isRelativePath(filename) {
-		return nil, errors.New(fmt.Sprintf("relative path with .. is not allowed in !file tag: %s", filename))
-	}
-
-	fullFilename := filepath.Join(c.artifactsDir, filename)
-	Verbose("file tag found `%s`. resolved to full path `%s`\n", filename, fullFilename)
-
-	fi, err := os.Stat(fullFilename)
-	if err != nil {
-		return nil, err
-	}
-	switch mode := fi.Mode(); {
-	case mode.IsDir():
-		return nil, errors.New(fmt.Sprintf("directories are not supported in !file tag: %s", filename))
-	}
-
-	r, err := os.Open(fullFilename)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Close()
-
-	w, err := c.zipwriter.Create(filename)
-	if err != nil {
-		return nil, err
-	}
-	Verbose("including file %s to zip\n", filename)
-	io.Copy(w, r)
-
-	c.seenFiles[filename] = true
-
-	return tag, nil
 }
 
 func isRelativePath(filename string) bool {
