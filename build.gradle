@@ -6,6 +6,7 @@ plugins {
 apply plugin: 'maven-publish'
 
 golang {
+    goVersion = '1.11'
     packagePath = 'github.com/xebialabs/xl-cli' // go import path of project to be built, NOT local file system path!
 }
 
@@ -16,6 +17,7 @@ dependencies {
         build name: 'github.com/spf13/viper'
         build name: 'github.com/stretchr/testify/'
         build name: 'github.com/stretchr/testify/assert'
+        build name: 'github.com/jhoonb/archivex/archivex'
         build name: 'github.com/xebialabs/yaml', branch: 'v2'
     }
 }
