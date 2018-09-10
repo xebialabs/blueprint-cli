@@ -31,3 +31,16 @@ func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) erro
 
 	return fmt.Errorf("unknown apiVersion: %s", doc.ApiVersion)
 }
+
+func (c *Context) ExportSingleDocument(exportServer string, exportFilename string, exportPath string, exportOverride bool) error {
+
+	if exportServer == "xl-deploy" {
+		return c.XLDeploy.ExportDoc(exportFilename, exportPath, exportOverride)
+	}
+
+	if exportServer == "xl-release" {
+		return c.XLRelease.ExportDoc(exportFilename, exportPath, exportOverride)
+	}
+
+	return fmt.Errorf("unknown server type: %s", exportServer)
+}

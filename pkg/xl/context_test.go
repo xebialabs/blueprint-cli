@@ -12,6 +12,11 @@ type DummyXLServer struct {
 	docs []Document
 }
 
+func (dummy *DummyXLServer) ExportDoc(filename string, path string, override bool) error {
+
+	return nil
+}
+
 func (dummy *DummyXLServer) AcceptsDoc(doc *Document) bool {
 	for _, accept := range dummy.accepts {
 		if accept == doc.ApiVersion {
