@@ -38,7 +38,7 @@ func init() {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	if xl.IsQuiet && xl.IsVerbose {
-		xl.Fatal("Cannot use --quiet (-q) and --verbose (-v) flags together")
+		xl.Fatal("Cannot use --quiet (-q) and --verbose (-v) flags together\n")
 	}
 
 	if cfgFile != "" {
