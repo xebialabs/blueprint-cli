@@ -51,9 +51,9 @@ func (reader *DocumentReader) ReadNextYamlDocument() (*Document, error) {
 	line, column, err := reader.decoder.DecodeWithPosition(&pdoc)
 
 	if line == 0 {
-		line++
+		line++ // the YAML parser counts from 0, but people count from 1
 	} else {
-		line += 2
+		line += 2 // the YAML parser returns the line number of the document separator before the document _and_ count from 0
 	}
 
 	if err != nil {
