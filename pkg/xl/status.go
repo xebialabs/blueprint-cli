@@ -28,11 +28,12 @@ func Info(format string, a ...interface{}) {
 }
 
 func Error(format string, a ...interface{}) {
+	finishBar()
 	fmt.Fprintf(os.Stderr, format, a...)
 }
 
 func Fatal(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, a...)
+	Error(format, a...)
 	os.Exit(1)
 }
 
@@ -70,9 +71,17 @@ func UpdateProgressEndDocument() {
 
 func EndProgress() {
 	if showingBar {
-		bar.Finish()
+		finishBar()
 	} else {
 		Verbose("Done\n")
+	}
+}
+
+func finishBar() {
+	if showingBar {
+		bar.Set64(bar.Total)
+		bar.Finish()
+		showingBar = false
 	}
 }
 
