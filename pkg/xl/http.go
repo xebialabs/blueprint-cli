@@ -95,11 +95,11 @@ func (server *SimpleHTTPServer) doRequest(method string, path string, contentTyp
 	}
 
 	if response.StatusCode == 401 {
-		return nil, fmt.Errorf("401 request unauthorized. did you configure the correct credentials?")
+		return nil, fmt.Errorf("401 Request unauthorized. Please check your credentials.")
 	} else if response.StatusCode == 403 {
-		return nil, fmt.Errorf("403 request forbidden. do you have the correct permissions?")
+		return nil, fmt.Errorf("403 Request forbidden. Please check your permissions on the server.")
 	} else if response.StatusCode == 404 {
-		return nil, fmt.Errorf("404 not found, did you specify the correct url/path?")
+		return nil, fmt.Errorf("404 Not found. Please specify the correct url.")
 	} else if response.StatusCode >= 400 {
 		bodyText, _ := ioutil.ReadAll(response.Body)
 		return nil, fmt.Errorf("%d unexpected response: %s", response.StatusCode, string(bodyText))
