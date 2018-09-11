@@ -8,6 +8,8 @@ import (
 	"os"
 	"github.com/mattn/go-isatty"
 	"gopkg.in/cheggaaa/pb.v1"
+	"strings"
+	"unicode"
 )
 
 var IsQuiet = false
@@ -94,7 +96,7 @@ func estimateNrOfDocs(filename string) (int, error) {
 	nrOfDocs := 1
 	scanner := bufio.NewScanner(bufio.NewReader(f))
 	for scanner.Scan() {
-		if scanner.Text() == "---" {
+		if strings.TrimRightFunc(scanner.Text(), unicode.IsSpace) == "---" {
 			nrOfDocs++
 		}
 	}
