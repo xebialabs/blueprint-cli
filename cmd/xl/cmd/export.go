@@ -14,7 +14,7 @@ var exportOverride bool
 var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Export configuration",
-	Long: `Export configuration`,
+	Long:  `Export configuration`,
 	Run: func(cmd *cobra.Command, args []string) {
 		context, err := xl.BuildContext(viper.GetViper())
 		if err != nil {
@@ -43,8 +43,5 @@ func init() {
 	exportFlags.StringVarP(&exportFilename, "file", "f", "export.yaml", "Path of the file where the export will be stored")
 	exportFlags.StringVarP(&exportPath, "path", "p", "", "Server path which will be exported")
 	exportFlags.StringVarP(&exportServer, "server", "s", "xl-deploy", "Which server to export from, either \"xl-deploy\" or \"xl-release\"")
-	exportFlags.BoolVarP(&exportOverride, "override", "o",false, "Set to true to override the export file")
-	AddServerFlags(exportFlags)
-
+	exportFlags.BoolVarP(&exportOverride, "override", "o", false, "Set to true to override the export file")
 }
-

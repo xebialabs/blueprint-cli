@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/xl"
-	"os"
 	"io"
+	"os"
 	"path/filepath"
 )
 
@@ -14,7 +14,7 @@ var applyFilenames []string
 var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Apply configuration changes",
-	Long: `Apply configuration changes`,
+	Long:  `Apply configuration changes`,
 	Run: func(cmd *cobra.Command, args []string) {
 		context, err := xl.BuildContext(viper.GetViper())
 		if err != nil {
@@ -64,6 +64,4 @@ func init() {
 
 	applyFlags := applyCmd.Flags()
 	applyFlags.StringArrayVarP(&applyFilenames, "file", "f", []string{}, "Path(s) to the file(s) to apply")
-	AddServerFlags(applyFlags)
-
 }
