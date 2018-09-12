@@ -16,10 +16,7 @@ var applyFilenames []string
 var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Apply configuration changes",
-	Long: `Apply configuration changes to XebiaLabs products from YAML files.
-Flag url takes precedence over xld and xlr. Setting url disregards xld and xlr.
-Omitting xld and xlr defaults to using "default" as the server name.
-The configuration of these preconfigured default servers is possible with the login command.`,
+	Long:  `Apply configuration changes`,
 	Run: func(cmd *cobra.Command, args []string) {
 		context, err := xl.BuildContext(viper.GetViper())
 		if err != nil {
@@ -85,17 +82,4 @@ func init() {
 
 	applyFlags := applyCmd.Flags()
 	applyFlags.StringArrayVarP(&applyFilenames, "file", "f", []string{}, "Path(s) to the file(s) to apply")
-	applyFlags.String("xl-deploy-url", "http://localhost:4516/", "URL to access the XL Deploy server")
-	applyFlags.String("xl-deploy-username", "admin", "Username to access the XL Deploy server")
-	applyFlags.String("xl-deploy-password", "admin", "Password to access the XL Deploy server")
-	viper.BindPFlag("xl-deploy.url", applyFlags.Lookup("xl-deploy-url"))
-	viper.BindPFlag("xl-deploy.username", applyFlags.Lookup("xl-deploy-username"))
-	viper.BindPFlag("xl-deploy.password", applyFlags.Lookup("xl-deploy-password"))
-
-	applyFlags.String("xl-release-url", "http://localhost:5516/", "URL to access the XL Release server")
-	applyFlags.String("xl-release-username", "admin", "Username to access the XL Release server")
-	applyFlags.String("xl-release-password", "admin", "Password to access the XL Release server")
-	viper.BindPFlag("xl-release.url", applyFlags.Lookup("xl-release-url"))
-	viper.BindPFlag("xl-release.username", applyFlags.Lookup("xl-release-username"))
-	viper.BindPFlag("xl-release.password", applyFlags.Lookup("xl-release-password"))
 }

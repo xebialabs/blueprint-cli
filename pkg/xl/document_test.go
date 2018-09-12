@@ -2,15 +2,58 @@ package xl
 
 import (
 	"archive/zip"
+	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/xebialabs/yaml"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"github.com/stretchr/testify/assert"
-	"github.com/xebialabs/yaml"
-	"fmt"
 )
+
+func writeFile(path string, content []byte) {
+	ioutil.WriteFile(path, content, 0644)
+}
+
+func writeTemlFile(content []byte) string {
+	location, _ := ioutil.TempFile("", "tmpFile")
+	writeFile(location.Name(), content)
+	return location.Name()
+}
+
+func prepareArtifactsDir(t *testing.T, dir string, folderName string, fileContents map[string]string) string {
+	artifactsDir, err := ioutil.TempDir(dir, folderName)
+	if err != nil {
+		assert.FailNow(t, "cannot open temporary directory", err)
+	}
+
+	for fileName, fileContent := range fileContents {
+		writeFile(filepath.Join(artifactsDir, fileName), []byte(fileContent))
+	}
+	return artifactsDir
+}
+
+func readZipContent(t *testing.T, doc *Document, path string) map[string][]byte {
+	zipR, err := zip.OpenReader(path)
+	if err != nil {
+		assert.FailNow(t, "cannot open generated ZIP file [%s]: %s", doc.ApplyZip, err)
+	}
+
+	fileContents := make(map[string][]byte)
+	for _, f := range zipR.File {
+		fr, err := f.Open()
+		if err != nil {
+			assert.FailNow(t, "cannot open entry [%s] in generated ZIP file [%s]: %s", f.Name, doc.ApplyZip, err)
+		}
+		contents, err := ioutil.ReadAll(fr)
+		if err != nil {
+			assert.FailNow(t, "cannot read entry [%s] in generated ZIP file [%s]: %s", f.Name, doc.ApplyZip, err)
+		}
+		fileContents[f.Name] = contents
+	}
+	return fileContents
+}
 
 func TestDocument(t *testing.T) {
 	t.Run("should parse YAML document", func(t *testing.T) {
@@ -63,7 +106,6 @@ kind: Template
 spec:
 - name: Template2
 `, XldApiVersion, XlrApiVersion, XlrApiVersion)
-
 		docreader := NewDocumentReader(strings.NewReader(yamlDocs))
 		doc, err := docreader.ReadNextYamlDocument()
 
@@ -91,7 +133,6 @@ spec:
 		assert.Equal(t, "Template2", doc.Spec[0]["name"])
 	})
 
-
 	t.Run("should parse YAML documents with custom tags", func(t *testing.T) {
 		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
@@ -115,7 +156,6 @@ spec:
   username: root
   password: !secret server.root.password
 `, XldApiVersion, XldApiVersion)
-
 		docreader := NewDocumentReader(strings.NewReader(yamlDoc))
 		doc1, err1 := docreader.ReadNextYamlDocument()
 
@@ -140,7 +180,6 @@ spec:
 	t.Run("should add xl-deploy homes if missing in yaml document", func(t *testing.T) {
 		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications`, XldApiVersion)
-
 		doc, err := ParseYamlDocument(yamlDoc)
 
 		assert.Nil(t, err)
@@ -167,7 +206,6 @@ kind: Applications`, XldApiVersion)
 	t.Run("should add xl-release home if missing in yaml document", func(t *testing.T) {
 		yaml := fmt.Sprintf(`apiVersion: %s
 kind: Templates`, XlrApiVersion)
-
 		doc, err := ParseYamlDocument(yaml)
 
 		assert.Nil(t, err)
@@ -191,7 +229,6 @@ metadata:
   Environments-home: Environments/DoNotTouch
   Configuration-home: Configuration/DoNotTouch
   Infrastructure-home: Infrastructure/DoNotTouch`, XldApiVersion)
-
 		doc, err := ParseYamlDocument(yaml)
 
 		assert.Nil(t, err)
@@ -239,14 +276,11 @@ kind: Applications`, XldApiVersion)
 	})
 
 	t.Run("should process !file tags", func(t *testing.T) {
-		artifactsDir, err := ioutil.TempDir("", "should_process_file_tags")
-		if err != nil {
-			assert.FailNow(t, "cannot open temporary directory", err)
-		}
-		defer os.RemoveAll(artifactsDir)
 		artifactContents := "cats=5\ndogs=8\n"
-		ioutil.WriteFile(filepath.Join(artifactsDir, "petclinic.properties"), []byte(artifactContents), 0644)
-
+		artifactsDir := prepareArtifactsDir(t, "", "should_process_file_tags", map[string]string{
+			"petclinic.properties": artifactContents,
+		})
+		defer os.RemoveAll(artifactsDir)
 		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
 spec:
@@ -259,7 +293,6 @@ spec:
     - name: conf
       type: file.File
       file: !file petclinic.properties`, XldApiVersion)
-
 		doc, err := NewDocumentReader(strings.NewReader(yamlDoc)).ReadNextYamlDocument()
 
 		assert.Nil(t, err)
@@ -270,29 +303,12 @@ spec:
 
 		assert.Nil(t, errp)
 		assert.NotNil(t, doc.ApplyZip)
-		zipR, err := zip.OpenReader(doc.ApplyZip)
-		if err != nil {
-			assert.FailNow(t, "cannot open generated ZIP file [%s]: %s", doc.ApplyZip, err)
-		}
-
-		fileContents := make(map[string]string)
-		for _, f := range zipR.File {
-			fr, err := f.Open()
-			if err != nil {
-				assert.FailNow(t, "cannot open entry [%s] in generated ZIP file [%s]: %s", f.Name, doc.ApplyZip, err)
-			}
-			contents, err := ioutil.ReadAll(fr)
-			if err != nil {
-				assert.FailNow(t, "cannot read entry [%s] in generated ZIP file [%s]: %s", f.Name, doc.ApplyZip, err)
-			}
-			fileContents[f.Name] = string(contents)
-		}
-
+		fileContents := readZipContent(t, doc, doc.ApplyZip)
 		assert.Contains(t, fileContents, "index.yaml")
-		indexDocument, err := ParseYamlDocument(fileContents["index.yaml"])
+		indexDocument, err := ParseYamlDocument(string(fileContents["index.yaml"]))
 		Applications_PetClinic_1_0_conf_file := indexDocument.Spec[0]["children"].([]interface{})[0].(map[interface{}]interface{})["children"].([]interface{})[0].(map[interface{}]interface{})["file"].(yaml.CustomTag)
 		assert.Contains(t, fileContents, Applications_PetClinic_1_0_conf_file.Value)
-		assert.Equal(t, artifactContents, fileContents[Applications_PetClinic_1_0_conf_file.Value])
+		assert.Equal(t, artifactContents, string(fileContents[Applications_PetClinic_1_0_conf_file.Value]))
 	})
 
 	t.Run("should report error when !file tag contains absolute path", func(t *testing.T) {
@@ -322,7 +338,7 @@ spec:
 
 		err = doc.Preprocess(nil, artifactsDir)
 		assert.NotNil(t, err)
-		assert.Contains(t,  err.Error(), "absolute path")
+		assert.Contains(t, err.Error(), "absolute path")
 	})
 
 	t.Run("should report error when !file tag contains relative path that starts with ..", func(t *testing.T) {
@@ -352,7 +368,7 @@ spec:
 
 		err = doc.Preprocess(nil, artifactsDir)
 		assert.NotNil(t, err)
-		assert.Contains(t,  err.Error(), "relative path")
+		assert.Contains(t, err.Error(), "relative path")
 	})
 
 	t.Run("should render YAML document", func(t *testing.T) {
@@ -370,7 +386,6 @@ spec:
       - name: '1.0'
         type: udm.DeploymentPackage
 `, XldApiVersion)
-
 		doc, err := ParseYamlDocument(yamlDoc)
 
 		assert.Nil(t, err)
@@ -403,7 +418,6 @@ kind: Applications`, XldApiVersion)
 	t.Run("should not render spec if empty", func(t *testing.T) {
 		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications`, XldApiVersion)
-
 		doc, err := ParseYamlDocument(yamlDoc)
 
 		assert.Nil(t, err)
@@ -420,7 +434,6 @@ kind: Infrastructure
 spec:
 - name: Localhost
   type: overthere.LocalHost`, XldApiVersion)
-
 		doc, err := ParseYamlDocument(yamlDoc)
 
 		assert.Nil(t, err)
@@ -445,7 +458,6 @@ spec:
   type: jee.Ear
   file: !file PetClinic-1.0.ear
 `, XldApiVersion)
-
 		doc, err := ParseYamlDocument(yamlDoc)
 
 		assert.Nil(t, err)
@@ -459,6 +471,46 @@ spec:
 		assert.Equal(t, doc.Kind, renderedDoc.Kind)
 		assert.Equal(t, doc.Metadata, renderedDoc.Metadata)
 		assert.Equal(t, doc.Spec, renderedDoc.Spec)
+	})
+
+	t.Run("should support folders in !file tags", func(t *testing.T) {
+		baseDir := prepareArtifactsDir(t, "", "should_process_folders_in_file_tags", map[string]string{})
+		artifactsDir := prepareArtifactsDir(t, baseDir, "should_process_folders_in_file_tags", map[string]string{
+			"users.conf":  "admin\njohn\n",
+			"system.conf": "autoShutdown: false",
+		})
+		defer os.RemoveAll(baseDir)
+		folderDirZip := filepath.Base(artifactsDir)
+
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Applications
+spec:
+- name: 
+  type: file.Folder
+  file: !file %s`, XldApiVersion, folderDirZip)
+		doc, err := NewDocumentReader(strings.NewReader(yamlDoc)).ReadNextYamlDocument()
+
+		assert.Nil(t, err)
+		assert.NotNil(t, doc)
+
+		errp := doc.Preprocess(nil, baseDir)
+		defer doc.Cleanup()
+
+		assert.Nil(t, errp)
+		assert.NotNil(t, doc.ApplyZip)
+
+		fileContents := readZipContent(t, doc, doc.ApplyZip)
+		assert.Contains(t, fileContents, "index.yaml")
+		assert.Contains(t, fileContents, folderDirZip)
+
+		internalFolderZip := writeTemlFile(fileContents[folderDirZip])
+		defer os.Remove(internalFolderZip)
+
+		internalFolderZipContents := readZipContent(t, doc, internalFolderZip)
+		assert.Contains(t, internalFolderZipContents, "users.conf")
+		assert.Contains(t, internalFolderZipContents, "system.conf")
+		assert.Equal(t, string(internalFolderZipContents["users.conf"]), "admin\njohn\n")
+		assert.Equal(t, string(internalFolderZipContents["system.conf"]), "autoShutdown: false")
 	})
 
 }
