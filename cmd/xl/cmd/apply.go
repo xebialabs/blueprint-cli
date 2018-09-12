@@ -22,7 +22,9 @@ var applyCmd = &cobra.Command{
 		if err != nil {
 			xl.Fatal("Error while reading configuration: %s\n", err)
 		}
-		xl.Verbose("Using configuration:\n %v\n", viper.AllSettings())
+		if xl.IsVerbose {
+			context.PrintConfiguration()
+		}
 
 		DoApply(context, applyFilenames)
 	},

@@ -263,7 +263,6 @@ func isRelativePath(filename string) bool {
 
 func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, filename string, c *processingContext) (interface{}, error) {
 	fullFilename := filepath.Join(c.artifactsDir, filename)
-	Verbose("...... !file tag `%s` in XL YAML document was resolved to full path `%s`\n", filename, fullFilename)
 
 	fi, err := os.Stat(fullFilename)
 	if err != nil {
@@ -277,7 +276,7 @@ func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, filename string, c *pro
 }
 
 func (doc *Document) writeDirectory(tag *yaml.CustomTag, filename string, fullFilename string, c *processingContext) (interface{}, error) {
-	Verbose("...... adding directory `%s` to ZIP file as `%s`\n", fullFilename, filename)
+	Verbose("...... adding directory `%s` to ZIP file\n", filename)
 
 	w, err := c.zipwriter.Create(filename)
 	if err != nil {
@@ -291,7 +290,7 @@ func (doc *Document) writeDirectory(tag *yaml.CustomTag, filename string, fullFi
 }
 
 func (doc *Document) writeFile(filename string, fullFilename string, c *processingContext) error {
-	Verbose("...... adding file `%s` to ZIP file as `%s`\n", fullFilename, filename)
+	Verbose("...... adding file `%s` to ZIP file\n", filename)
 
 	r, err := os.Open(fullFilename)
 	if err != nil {
