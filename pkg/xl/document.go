@@ -3,18 +3,20 @@ package xl
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/jhoonb/archivex"
-	"github.com/pkg/errors"
-	"github.com/xebialabs/yaml"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"github.com/jhoonb/archivex"
+	"github.com/pkg/errors"
+	"github.com/xebialabs/yaml"
 )
 
 type Document struct {
 	unmarshalleddocument
+	Line     int
+	Column   int
 	ApplyZip string
 }
 
@@ -47,12 +49,19 @@ func NewDocumentReader(reader io.Reader) *DocumentReader {
 
 func (reader *DocumentReader) ReadNextYamlDocument() (*Document, error) {
 	pdoc := unmarshalleddocument{}
-	err := reader.decoder.Decode(&pdoc)
-	if err != nil {
-		return nil, err
+	line, column, err := reader.decoder.DecodeWithPosition(&pdoc)
+
+	if line == 0 {
+		line++ // the YAML parser counts from 0, but people count from 1
+	} else {
+		line += 2 // the YAML parser returns the line number of the document separator before the document _and_ count from 0
 	}
 
-	doc := Document{pdoc, ""}
+	if err != nil {
+		return &Document{unmarshalleddocument{}, line, column, ""}, err
+	}
+
+	doc := Document{pdoc,  line, column, ""}
 	if doc.Metadata == nil {
 		doc.Metadata = map[interface{}]interface{}{}
 	}
@@ -144,9 +153,7 @@ func (doc *Document) processList(l []interface{}, c *processingContext) error {
 	return nil
 }
 
-func (doc *Document) processMap(m map[interface{}]interface{}, c *processingContext) error {
-	name := m["name"]
-	Verbose("processing yaml node %v\n", name)
+func (doc *Document) processMap(m map[interface{}]interface{}, c *processingContext) (error) {
 	for k, v := range m {
 		newV, err := doc.processValue(v, c)
 		if err != nil {
@@ -175,7 +182,7 @@ func (doc *Document) processValue(v interface{}, c *processingContext) (interfac
 			return nil, err
 		}
 	case yaml.CustomTag:
-		newV, err := doc.processCustomTag(tv, c)
+		newV, err := doc.processCustomTag(&tv, c)
 		if err != nil {
 			return nil, err
 		}
@@ -184,7 +191,7 @@ func (doc *Document) processValue(v interface{}, c *processingContext) (interfac
 	return v, nil
 }
 
-func (doc *Document) processCustomTag(tag yaml.CustomTag, c *processingContext) (interface{}, error) {
+func (doc *Document) processCustomTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
 	switch tag.Tag {
 	case "!file":
 		return doc.processFileTag(tag, c)
@@ -193,7 +200,45 @@ func (doc *Document) processCustomTag(tag yaml.CustomTag, c *processingContext) 
 	}
 }
 
-func (doc *Document) validateFileTag(tag yaml.CustomTag, c *processingContext) error {
+func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
+	doc.normalizeFileTag(tag, c)
+
+	err := doc.validateFileTag(tag, c)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.zipwriter == nil {
+		zipfile, err := ioutil.TempFile("", "yaml")
+		if err != nil {
+			return nil, err
+		}
+		Verbose("...... first !file tag found, creating temporary ZIP file `%s`\n", zipfile.Name())
+		c.zipfile = zipfile
+		c.zipwriter = zip.NewWriter(c.zipfile)
+	}
+
+	filename := tag.Value
+
+	if _, found := c.seenFiles[filename]; found {
+		Verbose("...... file `%s` has already been added to the ZIP file. Skipping it\n", filename)
+		return tag, nil
+	}
+
+	fileTag, writeError := doc.writeFileOrDir(tag, filename, c)
+	if writeError != nil {
+		return nil, writeError
+	} else {
+		c.seenFiles[filename] = true
+		return fileTag, nil
+	}
+}
+
+func (doc *Document) normalizeFileTag(tag *yaml.CustomTag, c *processingContext)  {
+	tag.Value = filepath.Clean(tag.Value)
+}
+
+func (doc *Document) validateFileTag(tag *yaml.CustomTag, c *processingContext) error {
 	if c.artifactsDir == "" {
 		return errors.New("cannot process !file tags if artifactsDir has not been set")
 	}
@@ -207,40 +252,18 @@ func (doc *Document) validateFileTag(tag yaml.CustomTag, c *processingContext) e
 	return nil
 }
 
-func (doc *Document) writeDirectory(tag yaml.CustomTag, filename string, fullFilename string, c *processingContext) (interface{}, error) {
-	directoryPath := fullFilename + "/"
-	entityName := filepath.Clean(filename)
-	Verbose("writing directory %s into zip file with name: [%s]\n", directoryPath, entityName)
-	w, err := c.zipwriter.Create(entityName)
-	if err != nil {
-		return nil, err
+func isRelativePath(filename string) bool {
+	for _, p := range strings.Split(filename, string(os.PathSeparator)) {
+		if p == ".." {
+			return true
+		}
 	}
-	tag.Value = entityName
-	z := &archivex.ZipFile{}
-	z.CreateWriter(entityName, w)
-	defer z.Close()
-	return tag, z.AddAll(fullFilename+"/", false)
+	return false
 }
 
-func (doc *Document) writeFile(filename string, fullFilename string, c *processingContext) error {
-	r, err := os.Open(fullFilename)
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-
-	w, err := c.zipwriter.Create(filename)
-	if err != nil {
-		return err
-	}
-	Verbose("including file %s to zip\n", filename)
-	io.Copy(w, r)
-	return nil
-}
-
-func (doc *Document) writeFileOrDir(tag yaml.CustomTag, filename string, c *processingContext) (interface{}, error) {
+func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, filename string, c *processingContext) (interface{}, error) {
 	fullFilename := filepath.Join(c.artifactsDir, filename)
-	Verbose("file tag found `%s`. resolved to full path `%s`\n", filename, fullFilename)
+
 	fi, err := os.Stat(fullFilename)
 	if err != nil {
 		return nil, err
@@ -252,45 +275,36 @@ func (doc *Document) writeFileOrDir(tag yaml.CustomTag, filename string, c *proc
 	return tag, doc.writeFile(filename, fullFilename, c)
 }
 
-func (doc *Document) processFileTag(tag yaml.CustomTag, c *processingContext) (interface{}, error) {
-	err := doc.validateFileTag(tag, c)
+func (doc *Document) writeDirectory(tag *yaml.CustomTag, filename string, fullFilename string, c *processingContext) (interface{}, error) {
+	Verbose("...... adding directory `%s` to ZIP file\n", filename)
+
+	w, err := c.zipwriter.Create(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	if c.zipwriter == nil {
-		zipfile, err := ioutil.TempFile("", "yaml")
-		if err != nil {
-			return nil, err
-		}
-		Verbose("creating temporary zipfile for uploading files at: `%s`\n", zipfile.Name())
-		c.zipfile = zipfile
-		c.zipwriter = zip.NewWriter(c.zipfile)
-	}
-
-	filename := tag.Value
-
-	if _, found := c.seenFiles[filename]; found {
-		Verbose("skipping file `%s` since its already in the archive\n", filename)
-		return tag, nil
-	}
-
-	fileTag, writeError := doc.writeFileOrDir(tag, filename, c)
-	if writeError != nil {
-		return nil, writeError
-	} else {
-		c.seenFiles[filename] = true
-		return fileTag, nil
-	}
+	z := &archivex.ZipFile{}
+	z.CreateWriter(filename, w)
+	defer z.Close()
+	return tag, z.AddAll(fullFilename, false)
 }
 
-func isRelativePath(filename string) bool {
-	for _, p := range strings.Split(filename, string(os.PathSeparator)) {
-		if p == ".." {
-			return true
-		}
+func (doc *Document) writeFile(filename string, fullFilename string, c *processingContext) error {
+	Verbose("...... adding file `%s` to ZIP file\n", filename)
+
+	r, err := os.Open(fullFilename)
+	if err != nil {
+		return err
 	}
-	return false
+	defer r.Close()
+
+	w, err := c.zipwriter.Create(filename)
+	if err != nil {
+		return err
+	}
+
+	io.Copy(w, r)
+	return nil
 }
 
 func (doc *Document) RenderYamlDocument() ([]byte, error) {
@@ -303,7 +317,7 @@ func (doc *Document) RenderYamlDocument() ([]byte, error) {
 
 func (doc *Document) Cleanup() {
 	if doc.ApplyZip != "" {
-		Verbose("deleting temporary file `%s`\n", doc.ApplyZip)
+		Verbose("...... deleting temporary file `%s`\n", doc.ApplyZip)
 		os.Remove(doc.ApplyZip)
 		doc.ApplyZip = ""
 	}

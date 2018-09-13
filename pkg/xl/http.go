@@ -103,8 +103,6 @@ func (server *SimpleHTTPServer) doRequest(method string, path string, contentTyp
 	} else if response.StatusCode >= 400 {
 		bodyText, _ := ioutil.ReadAll(response.Body)
 		return nil, fmt.Errorf("%d unexpected response: %s", response.StatusCode, string(bodyText))
-	} else {
-		Verbose("Response status %s\n", response.Status)
 	}
 
 	return response, nil

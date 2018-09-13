@@ -20,7 +20,9 @@ var exportCmd = &cobra.Command{
 		if err != nil {
 			xl.Fatal("Error while reading configuration: %s\n", err)
 		}
-		xl.Verbose("Using configuration:\n %v\n", viper.AllSettings())
+		if xl.IsVerbose {
+			context.PrintConfiguration()
+		}
 
 		DoExport(context)
 	},
@@ -30,6 +32,7 @@ func DoExport(context *xl.Context) {
 	if exportPath == "" {
 		xl.Fatal("Please provide a path to export\n")
 	}
+
 	err := context.ExportSingleDocument(exportServer, exportFilename, exportPath, exportOverride)
 	if err != nil {
 		xl.Fatal("Error while exporting document: %s\n", err)
