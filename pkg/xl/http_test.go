@@ -3,6 +3,7 @@ package xl
 import (
 	"archive/zip"
 	"encoding/base64"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"io/ioutil"
@@ -11,7 +12,6 @@ import (
 	"net/url"
 	"os"
 	"testing"
-	"fmt"
 )
 
 func TestHttp(t *testing.T) {
@@ -142,8 +142,10 @@ func TestHttp(t *testing.T) {
 			responseWriter.Write([]byte("yaml: content"))
 		}
 
-		file, err := ioutil.TempFile("", "export.yaml")
-		if err != nil { panic(err) }
+		file, err := ioutil.TempFile("", "export.zip")
+		if err != nil {
+			panic(err)
+		}
 		defer os.Remove(file.Name())
 
 		testServer := httptest.NewServer(http.HandlerFunc(handler))
@@ -162,10 +164,11 @@ func TestHttp(t *testing.T) {
 		assert.Equal(t, "yaml: content", string(b))
 	})
 
-
 	t.Run("should refuse export when file exists", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "export.yaml")
-		if err != nil { panic(err) }
+		file, err := ioutil.TempFile("", "export.zip")
+		if err != nil {
+			panic(err)
+		}
 		defer os.Remove(file.Name())
 
 		res, _ := url.Parse("http://test")
