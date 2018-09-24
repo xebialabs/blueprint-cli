@@ -3,11 +3,13 @@ package xl
 import (
 	"bytes"
 	"fmt"
+	"github.com/mholt/archiver"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -25,28 +27,43 @@ type SimpleHTTPServer struct {
 
 var client = &http.Client{}
 
-func (server *SimpleHTTPServer) ExportYamlDoc(exportFilename string, path string, override bool) error {
+func (server *SimpleHTTPServer) ExportYamlDoc(exportFilename string, ciPath string, override bool) error {
 	if override == false {
 		if _, err := os.Stat(exportFilename); !os.IsNotExist(err) {
-			return fmt.Errorf("file `%s` already exists", exportFilename)
+			return fmt.Errorf("file `%s` already exists. Use -o flag to overwrite it.", exportFilename)
 		}
 	}
 
-	response, err := server.doRequest("GET", path, "", nil)
+	response, err := server.doRequest("GET", ciPath, "", nil)
 	if err != nil {
 		return err
 	}
 	defer response.Body.Close()
 
-	// writing file
-	outFile, err := os.Create(exportFilename)
+	tempArchive, err := ioutil.TempFile(os.TempDir(), "tempArchive")
 	if err != nil {
 		return err
 	}
-	defer outFile.Close()
+	defer os.Remove(tempArchive.Name())
 
-	_, err = io.Copy(outFile, response.Body)
+	_, err = io.Copy(tempArchive, response.Body)
+	if err != nil {
+		return err
+	}
 
+	tempArchivePath, err := filepath.Abs(tempArchive.Name())
+	if err != nil {
+		return err
+	}
+
+	indexFilePath, err := filepath.Abs(exportFilename)
+	if err != nil {
+		return err
+	}
+
+	destinationDir := filepath.Dir(indexFilePath)
+	err = archiver.Zip.Open(tempArchivePath, destinationDir)
+	err = os.Rename(filepath.Join(destinationDir, "index.yaml"), filepath.Join(destinationDir, filepath.Base(exportFilename)))
 	if err != nil {
 		return err
 	}

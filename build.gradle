@@ -22,6 +22,7 @@ dependencies {
         build name: 'github.com/xebialabs/yaml', branch: 'v2'
         build name: 'golang.org/x/crypto/ssh/terminal'
         build name: 'gopkg.in/cheggaaa/pb.v1', tag: 'v1.0.25'
+        build name: 'github.com/mholt/archiver', tag: 'v2.1.0'
     }
 }
 

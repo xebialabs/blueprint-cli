@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"testing"
+	"path/filepath"
 )
 
 func TestHttp(t *testing.T) {
@@ -46,33 +47,8 @@ func TestHttp(t *testing.T) {
 
 	t.Run("should post ZIP", func(t *testing.T) {
 		filesToUploaded := map[string]string{"file1": "this is the first file", "file2": "and this is the second file"}
-		zipToUpload, err := ioutil.TempFile("", "zipToUpload")
-		if err != nil {
-			assert.FailNow(t, "cannot create temporary file to create zip", "cannot create temporary file to create zip: %s", err)
-		}
+		zipToUpload := createZip(t, filesToUploaded)
 		defer os.Remove(zipToUpload.Name())
-		zipWriter := zip.NewWriter(zipToUpload)
-
-		for filename, fileContents := range filesToUploaded {
-			w, err := zipWriter.Create(filename)
-			if err != nil {
-				assert.FailNow(t, "cannot add file to zip", "cannot add file [%s] to zip: %s", filename, err)
-			}
-			_, err = w.Write([]byte(fileContents))
-			if err != nil {
-				assert.FailNow(t, "cannot write file to zip", "cannot write file [%s] to zip: %s", filename, err)
-			}
-
-		}
-
-		err = zipWriter.Close()
-		if err != nil {
-			assert.FailNow(t, "cannot close zip", "cannot close zip: %s", err)
-		}
-		err = zipToUpload.Close()
-		if err != nil {
-			assert.FailNow(t, "cannot close zip file", "cannot close zip file: %s", err)
-		}
 
 		handler := func(responseWriter http.ResponseWriter, request *http.Request) {
 			assert.Equal(t, "POST", request.Method)
@@ -132,17 +108,25 @@ func TestHttp(t *testing.T) {
 		assert.Nil(t, error)
 	})
 
-	t.Run("should export yaml and write to file", func(t *testing.T) {
+	t.Run("should export yaml and depending files", func(t *testing.T) {
 
 		handler := func(responseWriter http.ResponseWriter, request *http.Request) {
 			assert.Equal(t, "GET", request.Method)
 			assert.Equal(t, "/export/Applications", request.URL.Path)
 			assert.Equal(t, "Basic "+base64.StdEncoding.EncodeToString([]byte("root:s3cr3t")), request.Header.Get("Authorization"))
 
-			responseWriter.Write([]byte("yaml: content"))
+			archiveFiles := map[string]string{"index.yaml": "yaml: content", "otherfile": "otherfile content"}
+			zipfile := createZip(t, archiveFiles)
+			defer os.Remove(zipfile.Name())
+
+			b, err := ioutil.ReadFile(zipfile.Name())
+			if err != nil {
+				panic(err)
+			}
+			responseWriter.Write(b)
 		}
 
-		file, err := ioutil.TempFile("", "export.zip")
+		file, err := ioutil.TempFile("", "export.yaml")
 		if err != nil {
 			panic(err)
 		}
@@ -162,6 +146,12 @@ func TestHttp(t *testing.T) {
 			fmt.Print(err)
 		}
 		assert.Equal(t, "yaml: content", string(b))
+
+		b2, err := ioutil.ReadFile(filepath.Join(filepath.Dir(file.Name()), "otherfile"))
+		if err != nil {
+			fmt.Print(err)
+		}
+		assert.Equal(t, "otherfile content", string(b2))
 	})
 
 	t.Run("should refuse export when file exists", func(t *testing.T) {
@@ -178,4 +168,32 @@ func TestHttp(t *testing.T) {
 		assert.Contains(t, error.Error(), "already exists")
 	})
 
+}
+
+func createZip(t *testing.T, filesToUploaded map[string]string) *os.File {
+	zipToUpload, err := ioutil.TempFile("", "zipToUpload")
+	if err != nil {
+		assert.FailNow(t, "cannot create temporary file to create zip", "cannot create temporary file to create zip: %s", err)
+	}
+	zipWriter := zip.NewWriter(zipToUpload)
+	for filename, fileContents := range filesToUploaded {
+		w, err := zipWriter.Create(filename)
+		if err != nil {
+			assert.FailNow(t, "cannot add file to zip", "cannot add file [%s] to zip: %s", filename, err)
+		}
+		_, err = w.Write([]byte(fileContents))
+		if err != nil {
+			assert.FailNow(t, "cannot write file to zip", "cannot write file [%s] to zip: %s", filename, err)
+		}
+
+	}
+	err = zipWriter.Close()
+	if err != nil {
+		assert.FailNow(t, "cannot close zip", "cannot close zip: %s", err)
+	}
+	err = zipToUpload.Close()
+	if err != nil {
+		assert.FailNow(t, "cannot close zip file", "cannot close zip file: %s", err)
+	}
+	return zipToUpload
 }
