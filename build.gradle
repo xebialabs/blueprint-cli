@@ -39,7 +39,7 @@ build {
     ]
 
     def gitCommit = runCmd('git', 'rev-parse', 'HEAD')
-    def gitVersion = runCmd('git', 'describe', '--dirty', '--broken')
+    def gitVersion = runCmd('git', 'describe', '--dirty')
     def gitVersionShort = gitVersion.startsWith("xl-client-") ? gitVersion.substring(10) : gitVersion
 
     def simpleDateFormat = new SimpleDateFormat("yyy-MM-dd'T'HH:mm:ss.SSS'Z'")
