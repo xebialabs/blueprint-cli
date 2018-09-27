@@ -64,9 +64,7 @@ func initConfig() {
 		viper.SetConfigName("config")
 	}
 
-	viper.SetEnvPrefix("CLI")
-	replacer := strings.NewReplacer("-", "_", ".", "_")
-	viper.SetEnvKeyReplacer(replacer)
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
 	viper.AutomaticEnv() // read in environment variables that match
 
 	viper.SetConfigType("yaml")
