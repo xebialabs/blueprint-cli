@@ -14,7 +14,7 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use: "xl",
 	Short: "The xl command line tool interacts with XL Release and XL Deploy",
-	Long: `The xl command line tool provides a fast and straightforward method for provisioning
+	Long: "XL Cli " + CliVersion + "\n" + `The xl command line tool provides a fast and straightforward method for provisioning
 XL Release and XL Deploy with YAML files. The files can include items like
 releases, pipelines, applications and target environments.`,
 }

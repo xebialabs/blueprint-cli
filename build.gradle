@@ -1,3 +1,5 @@
+import java.text.SimpleDateFormat
+
 plugins {
     id 'com.github.blindpirate.gogradle' version '0.10'
     id 'pl.allegro.tech.build.axion-release' version '1.9.2'
@@ -30,21 +32,6 @@ repositories {
     mavenCentral()
 }
 
-build {
-    // Cross-compile platforms, update as necessary.
-    targetPlatform = [
-            'darwin-amd64', 'linux-amd64', 'windows-amd64'
-    ]
-
-    // The ${} placeholder will be rendered in cross-compile
-    go 'build -o ./build/${GOOS}-${GOARCH}/xl${GOEXE} cmd/xl/main.go'
-}
-
-build.dependsOn test
-
-clean.doFirst {
-    delete 'build'
-}
 
 scmVersion {
     tag {
@@ -80,6 +67,38 @@ scmVersion {
 }
 
 project.version = scmVersion.version
+
+build {
+    // Cross-compile platforms, update as necessary.
+    targetPlatform = [
+            'darwin-amd64', 'linux-amd64', 'windows-amd64'
+    ]
+
+    def gitCommit = runCmd('git', 'rev-parse', 'HEAD')
+    def gitVersion = runCmd('git', 'describe', '--long', '--dirty')
+    def gitVersionShort = gitVersion.startsWith("xl-client-") ? gitVersion.substring(10) : gitVersion
+
+    def simpleDateFormat = new SimpleDateFormat("yyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
+    def date = simpleDateFormat.format(new Date())
+
+    def ldflags = "-ldflags='" +
+            ldflag("CliVersion", { -> project.version}) +
+            ldflag("BuildVersion", gitVersionShort) +
+            ldflag("BuildGitCommit", gitCommit) +
+            ldflag("BuildDate", date) +
+            "'"
+
+    // The ${} placeholder will be rendered in cross-compile
+    go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
+}
+
+build.dependsOn test
+
+clean.doFirst {
+    delete 'build'
+}
+
 
 task copyVendor(type: Copy) {
     from "vendor"
@@ -119,4 +138,17 @@ publishing {
             }
         }
     }
+}
+
+def runCmd(Object... args) {
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine args
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+
+def ldflag(c, v) {
+    "-X \"github.com/xebialabs/xl-cli/cmd/xl/cmd.${c}=${v}\" "
 }
