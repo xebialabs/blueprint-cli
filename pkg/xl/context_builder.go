@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"net/url"
+	"os"
+	"strings"
 )
 
-func BuildContext(v *viper.Viper) (*Context, error) {
+func BuildContext(v *viper.Viper, valueOverrides *map[string]string, secretOverrides *map[string]string) (*Context, error) {
 	var xlDeploy *XLDeployServer
 	var xlRelease *XLReleaseServer
 
@@ -36,9 +38,14 @@ func BuildContext(v *viper.Viper) (*Context, error) {
 		writeObfuscryptPasswords(v, []string{"xl-deploy", "xl-release"})
 	}
 
+	values := readValues(v, "values", "XL_VALUE_", valueOverrides)
+	secrets := readValues(v, "secrets", "XL_SECRET_", secretOverrides)
+
 	return &Context{
 		XLDeploy:  xlDeploy,
 		XLRelease: xlRelease,
+		values:    values,
+		secrets:   secrets,
 	}, nil
 }
 
@@ -82,6 +89,30 @@ func readServerConfig(v *viper.Viper, prefix string) (*SimpleHTTPServer, bool, e
 		Username: username,
 		Password: password,
 	}, passwordWasNotObfuscrypted, nil
+}
+
+func readValues(v *viper.Viper, configName string, envPrefix string, flagOverrides *map[string]string) map[string]string {
+	m := v.GetStringMapString(configName)
+
+	for _, envOverride := range os.Environ() {
+		eqPos := strings.Index(envOverride, "=")
+		if eqPos == -1 {
+			continue
+		}
+		k := envOverride[:eqPos]
+		v := envOverride[eqPos+1:]
+		if strings.HasPrefix(k, envPrefix) {
+			m[k[len(envPrefix):]] = v
+		}
+	}
+
+	if flagOverrides != nil {
+		for k, v := range *flagOverrides {
+			m[k] = v
+		}
+	}
+
+	return m
 }
 
 func writeObfuscryptPasswords(v *viper.Viper, prefixes []string) error {

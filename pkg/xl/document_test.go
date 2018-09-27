@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/xebialabs/yaml"
 	"io/ioutil"
 	"os"
@@ -278,7 +279,112 @@ kind: Applications`, XldApiVersion)
 		assert.Nil(t, doc.Metadata["Infrastructure-home"])
 	})
 
-	t.Run("should process !file tags", func(t *testing.T) {
+	t.Run("should process !value tag", func(t *testing.T) {
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Infrastructure
+spec:
+- name: serverHost
+  type: overthere.SshHost
+  address: !value server.host
+  username: root
+  password: r00t`, XldApiVersion)
+
+		doc, err := ParseYamlDocument(yamlDoc)
+
+		require.Nil(t, err)
+		require.NotNil(t, doc)
+
+		values := map[string]string{
+			"server.host": "server.example.com",
+		}
+		context := &Context{values: values}
+
+		err = doc.Preprocess(context, "")
+
+		assert.Nil(t, err)
+		assert.Equal(t, "server.example.com", doc.Spec[0]["address"])
+	})
+
+	t.Run("should report error when !value tag refers to unknown value", func(t *testing.T) {
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Infrastructure
+spec:
+- name: serverHost
+  type: overthere.SshHost
+  address: server.example.com
+  username: !value server.username
+  password: r00t`, XldApiVersion)
+
+		doc, err := ParseYamlDocument(yamlDoc)
+
+		require.Nil(t, err)
+		require.NotNil(t, doc)
+
+		values := map[string]string{
+			"server.host": "server.example.com",
+		}
+		context := &Context{values: values}
+
+		err = doc.Preprocess(context, "")
+
+		assert.NotNil(t, err)
+		assert.Contains(t, err.Error(), "No value")
+	})
+
+	t.Run("should process !secret tag", func(t *testing.T) {
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Infrastructure
+spec:
+- name: serverHost
+  type: overthere.SshHost
+  address: server.example.com
+  username: root
+  password: !secret server.password`, XldApiVersion)
+
+		doc, err := ParseYamlDocument(yamlDoc)
+
+		require.Nil(t, err)
+		require.NotNil(t, doc)
+
+		secrets := map[string]string{
+			"server.password": "r00t",
+		}
+		context := &Context{secrets: secrets}
+
+		err = doc.Preprocess(context, "")
+
+		assert.Nil(t, err)
+		assert.Equal(t, "r00t", doc.Spec[0]["password"])
+	})
+
+	t.Run("should report error when !secret tag refers to unknown value", func(t *testing.T) {
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Infrastructure
+spec:
+- name: serverHost
+  type: overthere.SshHost
+  address: server.example.com
+  username: root
+  password: r00t
+  sshPassphrase: !secret server.passphrase`, XldApiVersion)
+
+		doc, err := ParseYamlDocument(yamlDoc)
+
+		require.Nil(t, err)
+		require.NotNil(t, doc)
+
+		secrets := map[string]string{
+			"server.password": "r00t",
+		}
+		context := &Context{secrets: secrets}
+
+		err = doc.Preprocess(context, "")
+
+		assert.NotNil(t, err)
+		assert.Contains(t, err.Error(), "No secret")
+	})
+
+	t.Run("should process !file tag", func(t *testing.T) {
 		artifactContents := "cats=5\ndogs=8\n"
 		artifactsDir := prepareArtifactsDir(t, "", "should_process_file_tags", map[string]string{
 			"petclinic.properties": artifactContents,
