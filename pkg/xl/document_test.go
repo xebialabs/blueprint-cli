@@ -185,11 +185,12 @@ kind: Applications`, XldApiVersion)
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
 
-		context := &Context{&XLDeployServer{Server: &DummyHTTPServer{},
+		context := &Context{XLDeploy: &XLDeployServer{Server: &DummyHTTPServer{},
 			ApplicationsHome:   "Applications/MyHome",
 			EnvironmentsHome:   "Environments/MyHome",
 			ConfigurationHome:  "Configuration/MyHome",
-			InfrastructureHome: "Infrastructure/MyHome"}, &XLReleaseServer{Server: &DummyHTTPServer{}}}
+			InfrastructureHome: "Infrastructure/MyHome"},
+			XLRelease: &XLReleaseServer{Server: &DummyHTTPServer{}}}
 		err = doc.Preprocess(context, "")
 		defer doc.Cleanup()
 
@@ -211,7 +212,7 @@ kind: Templates`, XlrApiVersion)
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
 
-		context := &Context{&XLDeployServer{Server: &DummyHTTPServer{}}, &XLReleaseServer{Server: &DummyHTTPServer{}, Home: "MyHome"}}
+		context := &Context{XLDeploy: &XLDeployServer{Server: &DummyHTTPServer{}}, XLRelease: &XLReleaseServer{Server: &DummyHTTPServer{}, Home: "MyHome"}}
 		err = doc.Preprocess(context, "")
 		defer doc.Cleanup()
 
@@ -234,11 +235,12 @@ metadata:
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
 
-		context := &Context{&XLDeployServer{Server: &DummyHTTPServer{},
+		context := &Context{XLDeploy: &XLDeployServer{Server: &DummyHTTPServer{},
 			ApplicationsHome:   "Applications/MyHome",
 			EnvironmentsHome:   "Environments/MyHome",
 			ConfigurationHome:  "Configuration/MyHome",
-			InfrastructureHome: "Infrastructure/MyHome"}, &XLReleaseServer{Server: &DummyHTTPServer{}}}
+			InfrastructureHome: "Infrastructure/MyHome"},
+			XLRelease: &XLReleaseServer{Server: &DummyHTTPServer{}}}
 		err = doc.Preprocess(context, "")
 		defer doc.Cleanup()
 
@@ -259,11 +261,12 @@ kind: Applications`, XldApiVersion)
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
 
-		context := &Context{&XLDeployServer{Server: &DummyHTTPServer{},
+		context := &Context{XLDeploy: &XLDeployServer{Server: &DummyHTTPServer{},
 			ApplicationsHome:   "",
 			EnvironmentsHome:   "",
 			ConfigurationHome:  "",
-			InfrastructureHome: ""}, &XLReleaseServer{Server: &DummyHTTPServer{}}}
+			InfrastructureHome: ""},
+			XLRelease: &XLReleaseServer{Server: &DummyHTTPServer{}}}
 		err = doc.Preprocess(context, "")
 		defer doc.Cleanup()
 

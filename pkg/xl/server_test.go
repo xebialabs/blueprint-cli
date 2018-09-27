@@ -91,7 +91,7 @@ spec:
 
 		dummyServer := DummyHTTPServer{}
 		xlDeployServer := XLDeployServer{Server: &dummyServer}
-		context := &Context{&xlDeployServer, &XLReleaseServer{Server: &DummyHTTPServer{}}}
+		context := &Context{XLDeploy: &XLDeployServer{Server: &dummyServer}, XLRelease: &XLReleaseServer{Server: &DummyHTTPServer{}}}
 
 		doc.Preprocess(context, artifactsDir)
 		defer doc.Cleanup()

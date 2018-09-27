@@ -39,10 +39,7 @@ func TestContext(t *testing.T) {
 	t.Run("send YAML document with xl-deploy apiVersion to XL Deploy server", func(t *testing.T) {
 		xld := DummyXLServer{accepts: []string{XldApiVersion}}
 		xlr := DummyXLServer{accepts: []string{XlrApiVersion}}
-		context := Context{
-			XLDeploy:  &xld,
-			XLRelease: &xlr,
-		}
+		context := Context{XLDeploy:  &xld, XLRelease: &xlr}
 
 		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
@@ -67,10 +64,7 @@ spec:
 	t.Run("report error when YAML document contains unknown apiVersion", func(t *testing.T) {
 		xld := DummyXLServer{accepts: []string{XldApiVersion}}
 		xlr := DummyXLServer{accepts: []string{XlrApiVersion}}
-		context := Context{
-			XLDeploy:  &xld,
-			XLRelease: &xlr,
-		}
+		context := Context{XLDeploy:  &xld, XLRelease: &xlr}
 
 		yamlDoc := "apiVersion: xxxx"
 
@@ -88,10 +82,7 @@ spec:
 	t.Run("report error when YAML document does not contain an apiVersion", func(t *testing.T) {
 		xld := DummyXLServer{accepts: []string{XldApiVersion}}
 		xlr := DummyXLServer{accepts: []string{XlrApiVersion}}
-		context := Context{
-			XLDeploy:  &xld,
-			XLRelease: &xlr,
-		}
+		context := Context{XLDeploy:  &xld, XLRelease: &xlr}
 
 		yamlDoc := "kind: Version"
 
