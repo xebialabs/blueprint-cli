@@ -90,13 +90,13 @@ spec:
 
 		DoApply(&context, applyFilenames)
 
-		assert.Equal(t, documents[0].Spec[0]["name"], "Template1")
+		assert.Equal(t, xl.TransformToMap(documents[0].Spec)[0]["name"], "Template1")
 		assert.Equal(t, documents[0].Metadata["home"], "XL")
-		assert.Equal(t, documents[1].Spec[0]["name"], "App1")
+		assert.Equal(t, xl.TransformToMap(documents[1].Spec)[0]["name"], "App1")
 		assert.Equal(t, documents[1].Metadata["Applications-home"], "Applications/XL")
-		assert.Equal(t, documents[2].Spec[0]["name"], "Template2")
+		assert.Equal(t, xl.TransformToMap(documents[2].Spec)[0]["name"], "Template2")
 		assert.Equal(t, documents[2].Metadata["home"], "XL")
-		assert.Equal(t, documents[3].Spec[0]["name"], "App2")
+		assert.Equal(t, xl.TransformToMap(documents[3].Spec)[0]["name"], "App2")
 		assert.Equal(t, documents[3].Metadata["Applications-home"], "Applications/XL")
 	})
 }
