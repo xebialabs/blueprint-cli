@@ -1,13 +1,12 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"fmt"
+	"github.com/spf13/cobra"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 	"runtime"
 )
 
-var CliVersion = "undefined"
 var BuildVersion = "undefined"
 var BuildGitCommit = "undefined"
 var BuildDate = "undefined"

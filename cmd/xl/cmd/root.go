@@ -8,11 +8,12 @@ import (
 	"strings"
 )
 
+var CliVersion = "undefined"
 var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use: "xl",
+	Use:   "xl",
 	Short: "The xl command line tool interacts with XL Release and XL Deploy",
 	Long: "XL Cli " + CliVersion + "\n" + `The xl command line tool provides a fast and straightforward method for provisioning
 XL Release and XL Deploy with YAML files. The files can include items like

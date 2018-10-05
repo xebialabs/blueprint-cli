@@ -68,6 +68,12 @@ scmVersion {
 
 project.version = scmVersion.version
 
+task installTemplify(type: com.github.blindpirate.gogradle.Go) {
+    go "get github.com/wlbr/templify"
+}
+
+installDependencies.dependsOn installTemplify
+
 build {
     // Cross-compile platforms, update as necessary.
     targetPlatform = [
@@ -90,6 +96,7 @@ build {
             "'"
 
     // The ${} placeholder will be rendered in cross-compile
+    go "generate cmd/xl/cmd/wrapper.go"
     go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
 }
 
