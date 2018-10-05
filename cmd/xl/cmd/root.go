@@ -30,22 +30,24 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default: $HOME/.xebialabs/config.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&xl.IsQuiet, "quiet", "q", false, "suppress all output, except for errors")
-	rootCmd.PersistentFlags().BoolVarP(&xl.IsVerbose, "verbose", "v", false, "verbose output")
-	rootCmd.PersistentFlags().String("xl-deploy-url", "http://localhost:4516/", "URL to access the XL Deploy server")
-	rootCmd.PersistentFlags().String("xl-deploy-username", "admin", "Username to access the XL Deploy server")
-	rootCmd.PersistentFlags().String("xl-deploy-password", "admin", "Password to access the XL Deploy server")
-	viper.BindPFlag("xl-deploy.url", rootCmd.PersistentFlags().Lookup("xl-deploy-url"))
-	viper.BindPFlag("xl-deploy.username", rootCmd.PersistentFlags().Lookup("xl-deploy-username"))
-	viper.BindPFlag("xl-deploy.password", rootCmd.PersistentFlags().Lookup("xl-deploy-password"))
+	rootFlags := rootCmd.PersistentFlags()
 
-	rootCmd.PersistentFlags().String("xl-release-url", "http://localhost:5516/", "URL to access the XL Release server")
-	rootCmd.PersistentFlags().String("xl-release-username", "admin", "Username to access the XL Release server")
-	rootCmd.PersistentFlags().String("xl-release-password", "admin", "Password to access the XL Release server")
-	viper.BindPFlag("xl-release.url", rootCmd.PersistentFlags().Lookup("xl-release-url"))
-	viper.BindPFlag("xl-release.username", rootCmd.PersistentFlags().Lookup("xl-release-username"))
-	viper.BindPFlag("xl-release.password", rootCmd.PersistentFlags().Lookup("xl-release-password"))
+	rootFlags.StringVar(&cfgFile, "config", "", "config file (default: $HOME/.xebialabs/config.yaml)")
+	rootFlags.BoolVarP(&xl.IsQuiet, "quiet", "q", false, "suppress all output, except for errors")
+	rootFlags.BoolVarP(&xl.IsVerbose, "verbose", "v", false, "verbose output")
+	rootFlags.String("xl-deploy-url", "http://localhost:4516/", "URL to access the XL Deploy server")
+	rootFlags.String("xl-deploy-username", "admin", "Username to access the XL Deploy server")
+	rootFlags.String("xl-deploy-password", "admin", "Password to access the XL Deploy server")
+	viper.BindPFlag("xl-deploy.url", rootFlags.Lookup("xl-deploy-url"))
+	viper.BindPFlag("xl-deploy.username", rootFlags.Lookup("xl-deploy-username"))
+	viper.BindPFlag("xl-deploy.password", rootFlags.Lookup("xl-deploy-password"))
+
+	rootFlags.String("xl-release-url", "http://localhost:5516/", "URL to access the XL Release server")
+	rootFlags.String("xl-release-username", "admin", "Username to access the XL Release server")
+	rootFlags.String("xl-release-password", "admin", "Password to access the XL Release server")
+	viper.BindPFlag("xl-release.url", rootFlags.Lookup("xl-release-url"))
+	viper.BindPFlag("xl-release.username", rootFlags.Lookup("xl-release-username"))
+	viper.BindPFlag("xl-release.password", rootFlags.Lookup("xl-release-password"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -64,9 +66,7 @@ func initConfig() {
 		viper.SetConfigName("config")
 	}
 
-	viper.SetEnvPrefix("CLI")
-	replacer := strings.NewReplacer("-", "_", ".", "_")
-	viper.SetEnvKeyReplacer(replacer)
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
 	viper.AutomaticEnv() // read in environment variables that match
 
 	viper.SetConfigType("yaml")

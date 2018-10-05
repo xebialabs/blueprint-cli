@@ -193,11 +193,37 @@ func (doc *Document) processValue(v interface{}, c *processingContext) (interfac
 
 func (doc *Document) processCustomTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
 	switch tag.Tag {
+	case "!value":
+		return doc.processValueTag(tag, c)
+	case "!secret":
+		return doc.processSecretTag(tag, c)
 	case "!file":
 		return doc.processFileTag(tag, c)
 	default:
 		return nil, errors.New(fmt.Sprintf("unknown tag %s %s", tag.Tag, tag.Value))
 	}
+}
+
+func (doc *Document) processValueTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
+	value, exists := c.context.values[tag.Value]
+	if !exists {
+		return nil, errors.New(fmt.Sprintf("No value for !value %s", tag.Value))
+	}
+
+	Verbose("...... inserting value for !value %s\n", tag.Value)
+
+	return value, nil
+}
+
+func (doc *Document) processSecretTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
+	secret, exists := c.context.secrets[tag.Value]
+	if !exists {
+		return nil, errors.New(fmt.Sprintf("No secret for !secret %s", tag.Value))
+	}
+
+	Verbose("...... inserting secret value for !secret %s\n", tag.Value)
+
+	return secret, nil
 }
 
 func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
@@ -213,7 +239,7 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 		if err != nil {
 			return nil, err
 		}
-		Verbose("...... first !file tag found, creating temporary ZIP file `%s`\n", zipfile.Name())
+		Verbose("...... first !file tag found, creating temporary ZIP file %s\n", zipfile.Name())
 		c.zipfile = zipfile
 		c.zipwriter = zip.NewWriter(c.zipfile)
 	}
@@ -221,7 +247,7 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 	filename := tag.Value
 
 	if _, found := c.seenFiles[filename]; found {
-		Verbose("...... file `%s` has already been added to the ZIP file. Skipping it\n", filename)
+		Verbose("...... file %s has already been added to the ZIP file. Skipping it\n", filename)
 		return tag, nil
 	}
 
@@ -276,7 +302,7 @@ func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, filename string, c *pro
 }
 
 func (doc *Document) writeDirectory(tag *yaml.CustomTag, filename string, fullFilename string, c *processingContext) (interface{}, error) {
-	Verbose("...... adding directory `%s` to ZIP file\n", filename)
+	Verbose("...... adding directory for !file %s\n", filename)
 
 	w, err := c.zipwriter.Create(filename)
 	if err != nil {
@@ -290,7 +316,7 @@ func (doc *Document) writeDirectory(tag *yaml.CustomTag, filename string, fullFi
 }
 
 func (doc *Document) writeFile(filename string, fullFilename string, c *processingContext) error {
-	Verbose("...... adding file `%s` to ZIP file\n", filename)
+	Verbose("...... adding file for !file %s\n", filename)
 
 	r, err := os.Open(fullFilename)
 	if err != nil {
@@ -317,7 +343,7 @@ func (doc *Document) RenderYamlDocument() ([]byte, error) {
 
 func (doc *Document) Cleanup() {
 	if doc.ApplyZip != "" {
-		Verbose("...... deleting temporary file `%s`\n", doc.ApplyZip)
+		Verbose("...... deleting temporary file %s\n", doc.ApplyZip)
 		os.Remove(doc.ApplyZip)
 		doc.ApplyZip = ""
 	}

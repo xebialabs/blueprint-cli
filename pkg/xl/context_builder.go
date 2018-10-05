@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"net/url"
+	"os"
+	"strings"
 )
 
-func BuildContext(v *viper.Viper) (*Context, error) {
+func BuildContext(v *viper.Viper, valueOverrides *map[string]string, secretOverrides *map[string]string) (*Context, error) {
 	var xlDeploy *XLDeployServer
 	var xlRelease *XLReleaseServer
 
@@ -32,13 +34,25 @@ func BuildContext(v *viper.Viper) (*Context, error) {
 		xlRelease.Home = v.GetString("xl-release.home")
 	}
 
-	if xlDeployPasswordWasNotObfuscrypted || xlReleasePasswordWasNotObfuscrypted {
-		writeObfuscryptPasswords(v, []string{"xl-deploy", "xl-release"})
+	values, _, err := readValues(v, "values", "XL_VALUE_", valueOverrides, false)
+	if err != nil {
+		return nil, err
+	}
+
+	secrets, secretsWereNotObfuscrypted, err := readValues(v, "secrets", "XL_SECRET_", secretOverrides, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if xlDeployPasswordWasNotObfuscrypted || xlReleasePasswordWasNotObfuscrypted || secretsWereNotObfuscrypted {
+		obfuscryptPasswordsOnDisk(v)
 	}
 
 	return &Context{
 		XLDeploy:  xlDeploy,
 		XLRelease: xlRelease,
+		values:    values,
+		secrets:   secrets,
 	}, nil
 }
 
@@ -68,12 +82,6 @@ func readServerConfig(v *viper.Viper, prefix string) (*SimpleHTTPServer, bool, e
 	if err == nil {
 		password = deobfuscrypted
 	} else {
-		obfuscrypted, err := Obfuscrypt(password)
-		if err != nil {
-			return nil, false, err
-		}
-
-		v.Set(fmt.Sprintf("%s.password", prefix), obfuscrypted)
 		passwordWasNotObfuscrypted = true
 	}
 
@@ -84,7 +92,44 @@ func readServerConfig(v *viper.Viper, prefix string) (*SimpleHTTPServer, bool, e
 	}, passwordWasNotObfuscrypted, nil
 }
 
-func writeObfuscryptPasswords(v *viper.Viper, prefixes []string) error {
+func readValues(v *viper.Viper, configName string, envPrefix string, flagOverrides *map[string]string, deobfuscryptSecrets bool) (map[string]string, bool, error) {
+	var secretsWereNotObfuscrypted = false
+
+	m := v.GetStringMapString(configName)
+	if(deobfuscryptSecrets) {
+		for key, value := range m {
+			deobfuscrypted, err := Deobfuscrypt(value)
+			if err == nil {
+				m[key] = deobfuscrypted
+			} else {
+				secretsWereNotObfuscrypted = true
+			}
+		}
+	}
+
+	for _, envOverride := range os.Environ() {
+		eqPos := strings.Index(envOverride, "=")
+		if eqPos == -1 {
+			continue
+		}
+		key := envOverride[:eqPos]
+		value := envOverride[eqPos+1:]
+
+		if strings.HasPrefix(key, envPrefix) {
+			m[key[len(envPrefix):]] = value
+		}
+	}
+
+	if flagOverrides != nil {
+		for k, v := range *flagOverrides {
+			m[k] = v
+		}
+	}
+
+	return m, secretsWereNotObfuscrypted, nil
+}
+
+func obfuscryptPasswordsOnDisk(v *viper.Viper) error {
 
 	configFile := v.ConfigFileUsed()
 	if configFile != "" {
@@ -93,14 +138,50 @@ func writeObfuscryptPasswords(v *viper.Viper, prefixes []string) error {
 		configOnDisk.SetConfigFile(configFile)
 		configOnDisk.ReadInConfig()
 
-		// copy obfuscrypted passwords
+		// obfuscryptIfNeeded unobfuscrypted passwords
 		configDirty := false
-		for _, prefix := range prefixes {
-			configDirty = copyObfuscryptedPassword(configOnDisk, v, fmt.Sprintf("%s.password", prefix)) || configDirty
+
+		for _, prefix := range []string{"xl-deploy", "xl-release"} {
+			key := fmt.Sprintf("%s.password", prefix)
+			if configOnDisk.IsSet(key) {
+				value := configOnDisk.GetString(key)
+
+				dirty, obfuscrypted, err := obfuscryptIfNeeded(value)
+				if err != nil {
+					return err
+				}
+				if dirty {
+					configOnDisk.Set(key, obfuscrypted)
+					configDirty = true
+				}
+			}
 		}
 
+		if configOnDisk.IsSet("secrets") {
+			secrets := configOnDisk.GetStringMapString("secrets")
+			for key, value := range secrets {
+				dirty, obfuscrypted, err := obfuscryptIfNeeded(value)
+				if err != nil {
+					return err
+				}
+				if dirty {
+					secrets[key] = obfuscrypted
+					configDirty = true
+				}
+			}
+			// reset the secrets map to ensure it does not get unfolded
+			configOnDisk.Set("secrets", secrets)
+		}
+
+		//
 		// write config if dirty
 		if configDirty {
+			// ensure the values map does not get unfolded
+			if configOnDisk.IsSet("values") {
+				values := configOnDisk.GetStringMapString("values")
+				configOnDisk.Set("values", values)
+			}
+
 			err := configOnDisk.WriteConfig()
 			if err == nil {
 				Info("Configuration file %s saved\n", v.ConfigFileUsed())
@@ -113,14 +194,15 @@ func writeObfuscryptPasswords(v *viper.Viper, prefixes []string) error {
 	return nil
 }
 
-func copyObfuscryptedPassword(to *viper.Viper, from *viper.Viper, key string) bool {
-	fromPassword := from.GetString(key)
-	if fromPassword != "" {
-		toPassword := to.GetString(key)
-		if toPassword != "" && toPassword != fromPassword {
-			to.Set(key, fromPassword)
-			return true
+func obfuscryptIfNeeded(value string) (bool, string, error){
+	_, err := Deobfuscrypt(value)
+	if err == nil {
+		return false, value, nil
+	} else {
+		obfuscrypted, err := Obfuscrypt(value)
+		if err != nil {
+			return false, "", err
 		}
+		return true, obfuscrypted, nil
 	}
-	return false
 }

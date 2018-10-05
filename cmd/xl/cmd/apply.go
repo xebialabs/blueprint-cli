@@ -12,13 +12,15 @@ import (
 )
 
 var applyFilenames []string
+var applyValues map[string]string
+var applySecrets map[string]string
 
 var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Apply configuration changes",
 	Long:  `Apply configuration changes`,
 	Run: func(cmd *cobra.Command, args []string) {
-		context, err := xl.BuildContext(viper.GetViper())
+		context, err := xl.BuildContext(viper.GetViper(), &applyValues, &applySecrets)
 		if err != nil {
 			xl.Fatal("Error while reading configuration: %s\n", err)
 		}
@@ -84,4 +86,6 @@ func init() {
 
 	applyFlags := applyCmd.Flags()
 	applyFlags.StringArrayVarP(&applyFilenames, "file", "f", []string{}, "Path(s) to the file(s) to apply")
+	applyFlags.StringToStringVar(&applyValues, "values", map[string]string{}, "Values")
+	applyFlags.StringToStringVar(&applySecrets, "secrets", map[string]string{}, "Secret values")
 }

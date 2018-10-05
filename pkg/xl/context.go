@@ -7,6 +7,8 @@ import (
 type Context struct {
 	XLDeploy  XLServer
 	XLRelease XLServer
+	values    map[string]string
+	secrets   map[string]string
 }
 
 func (c *Context) PrintConfiguration() {
@@ -17,10 +19,25 @@ func (c *Context) PrintConfiguration() {
 		c.XLDeploy.(*XLDeployServer).EnvironmentsHome,
 		c.XLDeploy.(*XLDeployServer).InfrastructureHome,
 		c.XLDeploy.(*XLDeployServer).ConfigurationHome)
+
 	Info("XL Release:\n  URL: %s\n  Username: %s\n  Home: %s\n",
 		c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Url.String(),
 		c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Username,
 		c.XLRelease.(*XLReleaseServer).Home)
+
+	if len(c.values) > 0 {
+		Info("Values:\n")
+		for k, v := range c.values {
+			Info("  %s: %s\n", k, v)
+		}
+	}
+
+	if len(c.secrets) > 0 {
+		Info("Secrets:\n")
+		for k, _ := range c.secrets {
+			Info("  %s: ********\n", k)
+		}
+	}
 }
 
 func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) error {
