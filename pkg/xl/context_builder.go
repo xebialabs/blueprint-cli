@@ -96,12 +96,14 @@ func readValues(v *viper.Viper, configName string, envPrefix string, flagOverrid
 	var secretsWereNotObfuscrypted = false
 
 	m := v.GetStringMapString(configName)
-	for key, value := range m {
-		deobfuscrypted, err := Deobfuscrypt(value)
-		if err == nil {
-			m[key] = deobfuscrypted
-		} else {
-			secretsWereNotObfuscrypted = true
+	if(deobfuscryptSecrets) {
+		for key, value := range m {
+			deobfuscrypted, err := Deobfuscrypt(value)
+			if err == nil {
+				m[key] = deobfuscrypted
+			} else {
+				secretsWereNotObfuscrypted = true
+			}
 		}
 	}
 
