@@ -1,6 +1,6 @@
-# as-code-cli
+# XL CLI
 
-Project for XL as-code command line interface.
+Project for XL DevOps as Code command line interface.
 
 ## Environment
 
@@ -16,6 +16,10 @@ If you cannot see hidden files on MAC, just press `CMD + SHIFT + .`
 To install dependencies, run:
 ```
 ./gradlew vendor
+```
+If you add a new dependency to the gradle build run:
+```
+./gradlew vendor lock -Dgogradle.mode=DEV 
 ```
 
 To build the project, run:
