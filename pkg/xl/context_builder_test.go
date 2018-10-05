@@ -193,11 +193,12 @@ secrets:
 
 		defer os.RemoveAll(configdir)
 		configfile := filepath.Join(configdir, "config.yaml")
-		obfuscryptedPassword, err := Obfuscrypt("t3st")
+		obfuscryptedXLDeployPassword, err := Obfuscrypt("t3st")
 		originalConfigBytes := []byte(`xl-deploy:
   url: http://testxld:6154
   username: testuser
-` + "  password: " + obfuscryptedPassword + "\n")
+  password: ` + obfuscryptedXLDeployPassword + `
+`)
 		ioutil.WriteFile(configfile, originalConfigBytes, 0755)
 
 		v := viper.New()
@@ -252,6 +253,42 @@ secrets:
 		assert.Equal(t, originalConfigBytes, configBytes)
 	})
 
+	t.Run("do not write config file if xl-deploy.password was stored in the config file but was overridden", func(t *testing.T) {
+		configdir, err := ioutil.TempDir("", "xebialabsconfig")
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		obfuscryptedXLDeployPassword, err := Obfuscrypt("t3stus3r")
+		defer os.RemoveAll(configdir)
+		configfile := filepath.Join(configdir, "config.yaml")
+		originalConfigBytes := []byte(`xl-deploy:
+  url: http://testxld:6154
+  username: testuser
+  password: ` + obfuscryptedXLDeployPassword + `
+`)
+		ioutil.WriteFile(configfile, originalConfigBytes, 0755)
+
+		v := viper.New()
+		v.SetConfigFile(configfile)
+		v.ReadInConfig()
+		v.Set("xl-deploy.password", "t3st")
+
+		c, err := BuildContext(v, nil, nil)
+
+		assert.Nil(t, err)
+		assert.NotNil(t, c)
+		assert.Nil(t, c.XLRelease)
+		assert.NotNil(t, c.XLDeploy)
+		assert.Equal(t, "http://testxld:6154", c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Url.String())
+		assert.Equal(t, "testuser", c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Username)
+		assert.Equal(t, "t3st", c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Password)
+
+		configBytes, err := ioutil.ReadFile(configfile)
+		assert.Equal(t, originalConfigBytes, configBytes)
+	})
+
 	t.Run("do not write config file if xl-deploy.password was already obfuscrypted and xl-release.password was not obfuscrypted but not stored in the config file", func(t *testing.T) {
 		configdir, err := ioutil.TempDir("", "xebialabsconfig")
 		if err != nil {
@@ -261,14 +298,15 @@ secrets:
 
 		defer os.RemoveAll(configdir)
 		configfile := filepath.Join(configdir, "config.yaml")
-		obfuscryptedPassword, err := Obfuscrypt("t3st")
+		obfuscryptedXLDeployPassword, err := Obfuscrypt("t3st")
 		originalConfigBytes := []byte(`xl-release:
   url: http://testxlr:6155
   username: releaseuser
 xl-deploy:
   url: http://testxld:6154
   username: testuser
-` + "  password: " + obfuscryptedPassword + "\n")
+  password: ` + obfuscryptedXLDeployPassword + `
+`)
 		ioutil.WriteFile(configfile, originalConfigBytes, 0755)
 
 		v := viper.New()
@@ -293,8 +331,135 @@ xl-deploy:
 		assert.Equal(t, originalConfigBytes, configBytes)
 	})
 
+	t.Run("write config file if a secret was not obfuscrypted", func(t *testing.T) {
+		configdir, err := ioutil.TempDir("", "xebialabsconfig")
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-	t.Run("should return error when password is missing", func(t *testing.T) {
+		defer os.RemoveAll(configdir)
+		configfile := filepath.Join(configdir, "config.yaml")
+		obfuscryptedXLDeployPassword, err := Obfuscrypt("t3st")
+		require.Nil(t, err)
+		ioutil.WriteFile(configfile, []byte(`xl-deploy:
+  url: http://testxld:6154
+  username: testuser
+  password: ` + obfuscryptedXLDeployPassword + `
+secrets:
+  server.password: r00t
+`), 0755)
+
+		v := viper.New()
+		v.SetConfigFile(configfile)
+		v.ReadInConfig()
+
+		c, err := BuildContext(v, nil, nil)
+		require.Nil(t, err)
+		require.NotNil(t, c)
+		require.NotNil(t, c.secrets)
+		require.Equal(t, "r00t", c.secrets["server.password"])
+
+		configbytes, err := ioutil.ReadFile(configfile)
+		require.Nil(t, err)
+
+		parsed := make(map[interface{}]interface{})
+		err = yaml.Unmarshal(configbytes, parsed)
+		require.Nil(t, err)
+
+		secrets := parsed["secrets"].(map[interface{}]interface{})
+		require.NotNil(t, secrets)
+
+		obfuscryptedSecret := secrets["server.password"].(string)
+		require.NotNil(t, obfuscryptedSecret)
+
+		deobfuscryptedSecret, err := Deobfuscrypt(obfuscryptedSecret)
+		require.Nil(t, err)
+		require.Equal(t, "r00t", deobfuscryptedSecret)
+
+		_, containsValues := parsed["values"]
+		require.False(t, containsValues)
+	})
+
+	t.Run("write config file and do not unfold values", func(t *testing.T) {
+		configdir, err := ioutil.TempDir("", "xebialabsconfig")
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		defer os.RemoveAll(configdir)
+		configfile := filepath.Join(configdir, "config.yaml")
+		obfuscryptedXLDeployPassword, err := Obfuscrypt("t3st")
+		require.Nil(t, err)
+		ioutil.WriteFile(configfile, []byte(`xl-deploy:
+  url: http://testxld:6154
+  username: testuser
+  password: ` + obfuscryptedXLDeployPassword + `
+secrets:
+  server.password: r00t
+values:
+  server.username: root
+  server.hostname: server.example.com
+`), 0755)
+
+		v := viper.New()
+		v.SetConfigFile(configfile)
+		v.ReadInConfig()
+
+		_, err = BuildContext(v, nil, nil)
+		require.Nil(t, err)
+
+		configbytes, err := ioutil.ReadFile(configfile)
+		require.Nil(t, err)
+
+		parsed := make(map[interface{}]interface{})
+		err = yaml.Unmarshal(configbytes, parsed)
+		require.Nil(t, err)
+
+		values := parsed["values"].(map[interface{}]interface{})
+		require.NotNil(t, values)
+		serverUsername := values["server.username"].(string)
+		require.Equal(t, "root", serverUsername)
+	})
+
+	t.Run("do not write config file if a secret was not obfuscrypted", func(t *testing.T) {
+		configdir, err := ioutil.TempDir("", "xebialabsconfig")
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		defer os.RemoveAll(configdir)
+		configfile := filepath.Join(configdir, "config.yaml")
+		obfuscryptedXLDeployPassword, err := Obfuscrypt("t3st")
+		obfusctyptedSecret, err := Obfuscrypt("r00t")
+		require.Nil(t, err)
+		originalConfigBytes := []byte(`xl-deploy:
+  url: http://testxld:6154
+  username: testuser
+  password: ` + obfuscryptedXLDeployPassword + `
+secrets:
+  server.password: ` + obfusctyptedSecret + `
+`)
+		ioutil.WriteFile(configfile, originalConfigBytes, 0755)
+
+		v := viper.New()
+		v.SetConfigFile(configfile)
+		v.ReadInConfig()
+
+		c, err := BuildContext(v, nil, nil)
+
+		require.Nil(t, err)
+		require.NotNil(t, c)
+		require.NotNil(t, c.secrets)
+		require.Equal(t, "r00t", c.secrets["server.password"])
+
+		configBytes, err := ioutil.ReadFile(configfile)
+		assert.Equal(t, originalConfigBytes, configBytes)
+	})
+
+	t.Run("return error when password is missing", func(t *testing.T) {
 		configdir, err := ioutil.TempDir("", "xebialabsconfig")
 		if err != nil {
 			t.Error(err)
