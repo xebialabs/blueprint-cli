@@ -93,6 +93,7 @@ build {
             ldflag("BuildVersion", gitVersionShort) +
             ldflag("BuildGitCommit", gitCommit) +
             ldflag("BuildDate", date) +
+            (project.hasProperty("optimise") ? "-s -w" : "") +
             "'"
 
     // The ${} placeholder will be rendered in cross-compile
@@ -110,6 +111,21 @@ clean.doFirst {
 task copyVendor(type: Copy) {
     from "vendor"
     into ".gogradle/project_gopath/src"
+}
+
+task upx {
+    dependsOn build
+    doLast {
+        exec {
+            commandLine 'upx', "${project.buildDir}/darwin-amd64/xl"
+        }
+        exec {
+            commandLine 'upx', "${project.buildDir}/linux-amd64/xl"
+        }
+        exec {
+            commandLine 'upx', "${project.buildDir}/windows-amd64/xl.exe"
+        }
+    }
 }
 
 vendor.finalizedBy copyVendor
