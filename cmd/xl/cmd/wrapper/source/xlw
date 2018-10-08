@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+##############################################################################
+##
+##  XL Cli wrapper script for Linux/Darwin
+##
+##############################################################################
+
+#
+# prerequisites
+# - curl
+# - bash (not posix compliant currently)
+#
+# Supported corner cases
+# - when script is executed from different location (in other words working dir != project dir) that project dir context is set correctly
+# - when multiple builds of same project are started at the same time it will wait
+# - when script is killed at the point of side effects are happening everything is deleted
+#
+# TODO
+# - instead of lockfile use an atomic copy? (vincent)
+# - implement support for switching CLI_LOCATION (HOME OR PROJECT)
+# - can we make it work with just sh?
+# - check if posix compliant? https://www.shellcheck.net
+# - switch to wget if curl is not provided (or other tools)
+# - does PROG_DIR detection really work with all corner cases and on different OS?
+
+set -e
+
+# detecting program dir
+PROG_DIR="$(cd "$(dirname "${0:-$PWD}")" 2>/dev/null 1>&2 && pwd)"
+
+XL_WRAPPER_CONFIG_DIR="${PROG_DIR}/xl/wrapper"
+XL_WRAPPER_CONFIG_FILE="${XL_WRAPPER_CONFIG_DIR}/{{.WrapperConfigName}}"
+
+if [ ! -f ${XL_WRAPPER_CONFIG_FILE} ]
+then
+  echo "Creating wrapper config file."
+  mkdir -p "${PROG_DIR}/xl/wrapper"
+  touch $XL_WRAPPER_CONFIG_FILE
+  echo "CLI_LOCATION=HOME" >> $XL_WRAPPER_CONFIG_FILE
+  echo "CLI_BASE_URL={{.CliBaseUrl}}" >> $XL_WRAPPER_CONFIG_FILE
+  echo "CLI_VERSION={{.CliVersion}}" >> $XL_WRAPPER_CONFIG_FILE
+fi
+
+source ${XL_WRAPPER_CONFIG_FILE}
+
+XL_WRAPPER_HOME="${HOME}/.xebialabs/wrapper/${CLI_VERSION}"
+
+echo "CLI_BASE=${CLI_BASE}"
+echo "CLI_VERSION=${CLI_VERSION}"
+echo "XL_WRAPPER_HOME=${XL_WRAPPER_HOME}"
+
+BINARY_TYPE="unknown"
+case "`uname`" in
+  Darwin* )
+    BINARY_TYPE="darwin-amd64"
+    ;;
+  Linux* )
+    BINARY_TYPE="linux-amd64"
+    ;;
+esac
+
+# not sure if we want to be so strict
+if [ ${BINARY_TYPE} = "unknown" ] ; then
+    echo "Unsupported OS `uname`"
+    exit 1
+fi
+
+# find target location
+if [ ! -d "${XL_WRAPPER_HOME}" ] ; then
+  mkdir -p "${XL_WRAPPER_HOME}"
+fi
+
+# if xl does not exist download it
+XL_BIN="${XL_WRAPPER_HOME}/xl"
+if [ ! -f "${XL_BIN}" ] ; then
+  echo "Downloading xl binary to ${XL_BIN}"
+  curl -fLso "${XL_BIN}.$$" "${CLI_BASE_URL}/${CLI_VERSION}/${BINARY_TYPE}/xl"
+  chmod +x "${XL_BIN}.$$"
+  mv "${XL_BIN}.$$" "${XL_BIN}"
+fi
+
+# now run xl cli
+exec ${XL_BIN} "$@"

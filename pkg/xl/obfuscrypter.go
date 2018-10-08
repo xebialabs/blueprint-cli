@@ -61,6 +61,10 @@ func Deobfuscrypt(obfuscryptedText string) (string, error) {
 		return "", err
 	}
 
+	if (len(encryptedBytes) == 0) {
+		return "", errors.New("Blocksize must be greater than 0")
+	}
+
 	if (len(encryptedBytes) % aes.BlockSize) != 0 {
 		return "", errors.New("Blocksize must be multipe of decoded message length")
 	}
