@@ -6,24 +6,6 @@
 ##
 ##############################################################################
 
-#
-# prerequisites
-# - curl
-# - bash (not posix compliant currently)
-#
-# Supported corner cases
-# - when script is executed from different location (in other words working dir != project dir) that project dir context is set correctly
-# - when multiple builds of same project are started at the same time it will wait
-# - when script is killed at the point of side effects are happening everything is deleted
-#
-# TODO
-# - instead of lockfile use an atomic copy? (vincent)
-# - implement support for switching CLI_LOCATION (HOME OR PROJECT)
-# - can we make it work with just sh?
-# - check if posix compliant? https://www.shellcheck.net
-# - switch to wget if curl is not provided (or other tools)
-# - does PROG_DIR detection really work with all corner cases and on different OS?
-
 set -e
 
 # detecting program dir
@@ -50,6 +32,7 @@ echo "CLI_BASE=${CLI_BASE}"
 echo "CLI_VERSION=${CLI_VERSION}"
 echo "XL_WRAPPER_HOME=${XL_WRAPPER_HOME}"
 
+# checking OS
 BINARY_TYPE="unknown"
 case "`uname`" in
   Darwin* )
@@ -60,7 +43,6 @@ case "`uname`" in
     ;;
 esac
 
-# not sure if we want to be so strict
 if [ ${BINARY_TYPE} = "unknown" ] ; then
     echo "Unsupported OS `uname`"
     exit 1
