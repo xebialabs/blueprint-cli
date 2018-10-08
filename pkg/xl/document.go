@@ -28,7 +28,7 @@ type unmarshalleddocument struct {
 	Kind       string
 	ApiVersion string                        `yaml:"apiVersion"`
 	Metadata   map[interface{}]interface{}   `yaml:"metadata,omitempty"`
-	Spec       []map[interface{}]interface{} `yaml:"spec,omitempty"`
+	Spec	   interface{}					 `yaml:"spec,omitempty"`
 }
 
 type processingContext struct {
@@ -65,9 +65,6 @@ func (reader *DocumentReader) ReadNextYamlDocument() (*Document, error) {
 	if doc.Metadata == nil {
 		doc.Metadata = map[interface{}]interface{}{}
 	}
-	if doc.Spec == nil {
-		doc.Spec = []map[interface{}]interface{}{}
-	}
 
 	return &doc, nil
 }
@@ -88,8 +85,9 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 			c.context.XLRelease.PreprocessDoc(doc)
 		}
 	}
+	spec := TransformToMap(doc.Spec)
 
-	err := doc.processListOfMaps(doc.Spec, &c)
+	err := doc.processListOfMaps(spec, &c)
 
 	if c.zipfile != nil {
 		defer func() {
@@ -347,4 +345,36 @@ func (doc *Document) Cleanup() {
 		os.Remove(doc.ApplyZip)
 		doc.ApplyZip = ""
 	}
+}
+
+func TransformToMap(spec interface {}) [] map[interface{}] interface{} {
+	var convertedMap [] map[interface{}] interface{}
+
+	switch typeVal := spec.(type) {
+	case []interface {}:
+		list := make([]map[interface{}]interface{}, 0)
+		for _, v := range typeVal {
+			list = append(list, v.(map[interface{}]interface{}))
+		}
+		temporaryList := make([]map[interface{}]interface{}, len(list))
+
+		for i, v := range list {
+			temporaryList[i] = v
+		}
+
+		convertedMap = temporaryList
+	case []map[interface{}]interface{}:
+		convertedMap = typeVal
+	case map[interface{}]interface{}:
+		list := [...]map[interface{}]interface{}{typeVal}
+		temporaryList := make([]map[interface{}]interface{}, 1)
+
+		for i, v := range list {
+			temporaryList[i] = v
+		}
+
+		convertedMap = temporaryList
+	}
+
+	return convertedMap
 }

@@ -82,8 +82,9 @@ spec:
 		assert.NotNil(t, doc.Metadata)
 		assert.Equal(t, "Applications/Cloud", doc.Metadata["Applications-home"])
 		assert.NotNil(t, doc.Spec)
-		assert.Equal(t, "Applications/AWS", doc.Spec[0]["name"])
-		children := doc.Spec[0]["children"].([]interface{})
+		spec := TransformToMap(doc.Spec)
+		assert.Equal(t, "Applications/AWS", spec[0]["name"])
+		children := spec[0]["children"].([]interface {})
 		firstChild := children[0].(map[interface{}]interface{})
 		assert.Equal(t, "rest-o-rant-ecs-service", firstChild["name"])
 		children2 := firstChild["children"].([]interface{})
@@ -115,7 +116,8 @@ spec:
 		assert.Equal(t, XldApiVersion, doc.ApiVersion)
 		assert.Equal(t, "Applications", doc.Kind)
 		assert.NotNil(t, doc.Spec)
-		assert.Equal(t, "Applications/AWS1", doc.Spec[0]["name"])
+		spec := TransformToMap(doc.Spec)
+		assert.Equal(t, "Applications/AWS1", spec[0]["name"])
 
 		doc, err = docreader.ReadNextYamlDocument()
 
@@ -124,14 +126,16 @@ spec:
 		assert.Equal(t, XlrApiVersion, doc.ApiVersion)
 		assert.Equal(t, "Template", doc.Kind)
 		assert.NotNil(t, doc.Spec)
-		assert.Equal(t, "Template1", doc.Spec[0]["name"])
+		spec = TransformToMap(doc.Spec)
+		assert.Equal(t, "Template1", spec[0]["name"])
 
 		doc, err = docreader.ReadNextYamlDocument()
 
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
 		assert.NotNil(t, doc.Spec)
-		assert.Equal(t, "Template2", doc.Spec[0]["name"])
+		spec = TransformToMap(doc.Spec)
+		assert.Equal(t, "Template2", spec[0]["name"])
 	})
 
 	t.Run("should parse YAML documents with custom tags", func(t *testing.T) {
@@ -159,11 +163,13 @@ spec:
 `, XldApiVersion, XldApiVersion)
 		docreader := NewDocumentReader(strings.NewReader(yamlDoc))
 		doc1, err1 := docreader.ReadNextYamlDocument()
+		var v1 interface{}
 
 		assert.Nil(t, err1)
 		assert.NotNil(t, doc1)
-		assert.Equal(t, "PetClinic-ear", doc1.Spec[0]["name"])
-		v1 := doc1.Spec[0]["children"]                     // spec[0].children
+		spec1 := TransformToMap(doc1.Spec)
+		assert.Equal(t, "PetClinic-ear", spec1[0]["name"])
+		v1 = spec1[0]["children"]                     // spec[0].children
 		v2 := v1.([]interface{})[0]                        // spec[0].children[0]
 		v3 := v2.(map[interface{}]interface{})["children"] // spec[0].children[0].children
 		v4 := v3.([]interface{})[0]                        // spec[0].children[0].children[0]
@@ -174,8 +180,9 @@ spec:
 
 		assert.Nil(t, err2)
 		assert.NotNil(t, doc2)
-		assert.Equal(t, "server", doc2.Spec[0]["name"])
-		assert.Equal(t, yaml.CustomTag{"!secret", "server.root.password"}, doc2.Spec[0]["password"])
+		spec2 := TransformToMap(doc2.Spec)
+		assert.Equal(t, "server", spec2[0]["name"])
+		assert.Equal(t, yaml.CustomTag{"!secret", "server.root.password"}, spec2[0]["password"])
 	})
 
 	t.Run("should add xl-deploy homes if missing in yaml document", func(t *testing.T) {
@@ -302,7 +309,7 @@ spec:
 		err = doc.Preprocess(context, "")
 
 		assert.Nil(t, err)
-		assert.Equal(t, "server.example.com", doc.Spec[0]["address"])
+		assert.Equal(t, "server.example.com", TransformToMap(doc.Spec)[0]["address"])
 	})
 
 	t.Run("should report error when !value tag refers to unknown value", func(t *testing.T) {
@@ -354,7 +361,7 @@ spec:
 		err = doc.Preprocess(context, "")
 
 		assert.Nil(t, err)
-		assert.Equal(t, "r00t", doc.Spec[0]["password"])
+		assert.Equal(t, "r00t", TransformToMap(doc.Spec)[0]["password"])
 	})
 
 	t.Run("should report error when !secret tag refers to unknown value", func(t *testing.T) {
@@ -415,7 +422,8 @@ spec:
 		fileContents := readZipContent(t, doc, doc.ApplyZip)
 		assert.Contains(t, fileContents, "index.yaml")
 		indexDocument, err := ParseYamlDocument(string(fileContents["index.yaml"]))
-		Applications_PetClinic_1_0_conf_file := indexDocument.Spec[0]["children"].([]interface{})[0].(map[interface{}]interface{})["children"].([]interface{})[0].(map[interface{}]interface{})["file"].(yaml.CustomTag)
+		indexDocumentSpec := TransformToMap(indexDocument.Spec)
+		Applications_PetClinic_1_0_conf_file := indexDocumentSpec[0]["children"].([]interface{})[0].(map[interface{}]interface{})["children"].([]interface{})[0].(map[interface{}]interface{})["file"].(yaml.CustomTag)
 		assert.Contains(t, fileContents, Applications_PetClinic_1_0_conf_file.Value)
 		assert.Equal(t, artifactContents, string(fileContents[Applications_PetClinic_1_0_conf_file.Value]))
 	})
