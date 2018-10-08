@@ -309,7 +309,7 @@ spec:
 		err = doc.Preprocess(context, "")
 
 		assert.Nil(t, err)
-		assert.Equal(t, "server.example.com", doc.Spec[0]["address"])
+		assert.Equal(t, "server.example.com", TransformToMap(doc.Spec)[0]["address"])
 	})
 
 	t.Run("should report error when !value tag refers to unknown value", func(t *testing.T) {
@@ -361,7 +361,7 @@ spec:
 		err = doc.Preprocess(context, "")
 
 		assert.Nil(t, err)
-		assert.Equal(t, "r00t", doc.Spec[0]["password"])
+		assert.Equal(t, "r00t", TransformToMap(doc.Spec)[0]["password"])
 	})
 
 	t.Run("should report error when !secret tag refers to unknown value", func(t *testing.T) {
