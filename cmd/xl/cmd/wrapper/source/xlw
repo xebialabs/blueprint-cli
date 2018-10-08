@@ -11,26 +11,9 @@ set -e
 # detecting program dir
 PROG_DIR="$(cd "$(dirname "${0:-$PWD}")" 2>/dev/null 1>&2 && pwd)"
 
-XL_WRAPPER_CONFIG_DIR="${PROG_DIR}/xl/wrapper"
-XL_WRAPPER_CONFIG_FILE="${XL_WRAPPER_CONFIG_DIR}/{{.WrapperConfigName}}"
-
-if [ ! -f ${XL_WRAPPER_CONFIG_FILE} ]
-then
-  echo "Creating wrapper config file."
-  mkdir -p "${PROG_DIR}/xl/wrapper"
-  touch $XL_WRAPPER_CONFIG_FILE
-  echo "CLI_LOCATION=HOME" >> $XL_WRAPPER_CONFIG_FILE
-  echo "CLI_BASE_URL={{.CliBaseUrl}}" >> $XL_WRAPPER_CONFIG_FILE
-  echo "CLI_VERSION={{.CliVersion}}" >> $XL_WRAPPER_CONFIG_FILE
-fi
-
-source ${XL_WRAPPER_CONFIG_FILE}
+source "${PROG_DIR}/xl/wrapper/{{.WrapperConfigName}}"
 
 XL_WRAPPER_HOME="${HOME}/.xebialabs/wrapper/${CLI_VERSION}"
-
-echo "CLI_BASE=${CLI_BASE}"
-echo "CLI_VERSION=${CLI_VERSION}"
-echo "XL_WRAPPER_HOME=${XL_WRAPPER_HOME}"
 
 # checking OS
 BINARY_TYPE="unknown"
@@ -63,4 +46,4 @@ if [ ! -f "${XL_BIN}" ] ; then
 fi
 
 # now run xl cli
-exec ${XL_BIN} "$@"
+exec "${XL_BIN}" "$@"
