@@ -24,7 +24,7 @@ pipeline {
 
             steps {
                 checkout scm
-                sh "./gradlew clean build"
+                sh "./gradlew clean build --info"
             }
         }
 

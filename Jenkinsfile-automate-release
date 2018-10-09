@@ -31,7 +31,7 @@ pipeline {
             steps {
                 checkout scm
                 sh "./gradlew release -Drelease.releaseScope=${params.RELEASE_SCOPE} -Drelease.releaseStage=${params.RELEASE_STAGE} -Drelease.releaseExplicit=${params.RELEASE_EXPLICIT} -Prelease.disableChecks -Prelease.pushTagsOnly"
-                sh "./gradlew clean build upx publish -Poptimise"
+                sh "./gradlew clean build upx publish -Poptimise --info"
             }
         }
     }
