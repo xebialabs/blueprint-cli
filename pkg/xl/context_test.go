@@ -1,19 +1,18 @@
 package xl
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"fmt"
 )
 
 type DummyXLServer struct {
-	accepts []string
+	accepts           []string
 	preprocessInvoked int
-	docs []Document
+	docs              []Document
 }
 
 func (dummy *DummyXLServer) ExportDoc(filename string, path string, override bool) error {
-
 	return nil
 }
 
@@ -30,9 +29,9 @@ func (dummy *DummyXLServer) PreprocessDoc(doc *Document) {
 	dummy.preprocessInvoked++
 }
 
-func (dummy *DummyXLServer) SendDoc(doc *Document) error {
+func (dummy *DummyXLServer) SendDoc(doc *Document) (*ChangedCis, error) {
 	dummy.docs = append(dummy.docs, *doc)
-	return nil
+	return nil, nil
 }
 
 func TestContext(t *testing.T) {
@@ -52,7 +51,7 @@ spec:
 		assert.NotNil(t, doc)
 		assert.Nil(t, err)
 
-		err2 := context.ProcessSingleDocument(doc, "")
+		_, err2 := context.ProcessSingleDocument(doc, "")
 
 		assert.Nil(t, err2)
 		assert.Equal(t, 1, xld.preprocessInvoked)
@@ -73,7 +72,7 @@ spec:
 		assert.NotNil(t, doc)
 		assert.Nil(t, err)
 
-		err2 := context.ProcessSingleDocument(doc, "")
+		_, err2 := context.ProcessSingleDocument(doc, "")
 
 		assert.NotNil(t, err2)
 		assert.Equal(t, "unknown apiVersion: xxxx", err2.Error())
@@ -91,7 +90,7 @@ spec:
 		assert.NotNil(t, doc)
 		assert.Nil(t, err)
 
-		err2 := context.ProcessSingleDocument(doc, "")
+		_, err2 := context.ProcessSingleDocument(doc, "")
 
 		assert.NotNil(t, err2)
 		assert.Equal(t, "apiVersion missing", err2.Error())

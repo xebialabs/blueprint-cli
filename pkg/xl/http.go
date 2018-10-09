@@ -2,8 +2,10 @@ package xl
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/mholt/archiver"
+	"github.com/olekukonko/tablewriter"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -14,8 +16,8 @@ import (
 )
 
 type HTTPServer interface {
-	PostYamlDoc(path string, yamlDocBytes []byte) error
-	PostYamlZip(path string, yamlZipFilename string) error
+	PostYamlDoc(path string, yamlDocBytes []byte) (*ChangedCis, error)
+	PostYamlZip(path string, yamlZipFilename string) (*ChangedCis, error)
 	ExportYamlDoc(exportFilename string, path string, override bool) error
 }
 
@@ -71,25 +73,75 @@ func (server *SimpleHTTPServer) ExportYamlDoc(exportFilename string, ciPath stri
 	return nil
 }
 
-func (server *SimpleHTTPServer) PostYamlDoc(resource string, yamlDocBytes []byte) error {
-	_, err := server.doRequest("POST", resource, "text/vnd.yaml", bytes.NewReader(yamlDocBytes))
-	return err
+func processAsCodeResponse(response http.Response) *AsCodeResponse {
+	var resp AsCodeResponse
+	bodyText, _ := ioutil.ReadAll(response.Body)
+	json.Unmarshal(bodyText, &resp)
+	return &resp
 }
 
-func (server *SimpleHTTPServer) PostYamlZip(resource string, yamlZipFilename string) error {
+func (server *SimpleHTTPServer) PostYamlDoc(resource string, yamlDocBytes []byte) (*ChangedCis, error) {
+	response, err := server.doRequest("POST", resource, "text/vnd.yaml", bytes.NewReader(yamlDocBytes))
+	if err != nil {
+		return nil, err
+	}
+	var asCodeResponse = processAsCodeResponse(*response)
+	return asCodeResponse.Cis, nil
+}
+
+func (server *SimpleHTTPServer) PostYamlZip(resource string, yamlZipFilename string) (*ChangedCis, error) {
 	f, err := os.Open(yamlZipFilename)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer f.Close()
 
-	_, err2 := server.doRequest("POST", resource, "application/zip", f)
-	return err2
+	response, err2 := server.doRequest("POST", resource, "application/zip", f)
+	if err2 != nil {
+		return nil, err2
+	}
+	var asCodeResponse = processAsCodeResponse(*response)
+	return asCodeResponse.Cis, nil
+}
+
+func printTable(initialString string, header []string, data [][]string) error {
+	var buf = bytes.NewBufferString(fmt.Sprintf("\n%s\n\n", initialString))
+	var table = tablewriter.NewWriter(buf)
+	table.SetBorder(false)
+	table.SetHeader(header)
+	table.AppendBulk(data)
+	table.Render()
+	return fmt.Errorf(buf.String())
+}
+
+func formatAsCodeError(response http.Response) error {
+	var asCodeResponse = processAsCodeResponse(response)
+
+	if asCodeResponse.Errors.Document != nil {
+		return fmt.Errorf("\nMalformed YAML document.\nProblematic field: [%s], problem: %s", asCodeResponse.Errors.Document.Field, asCodeResponse.Errors.Document.Problem)
+	}
+
+	if asCodeResponse.Errors.Validation != nil && len(*asCodeResponse.Errors.Validation) > 0 {
+		var data = make([][]string, len(*asCodeResponse.Errors.Validation))
+		for i, validation := range *asCodeResponse.Errors.Validation {
+			data[i] = []string{validation.CiId, validation.PropertyName, validation.Message}
+		}
+		return printTable("Validation failed for the following CIs:", []string{"ID", "Property", "Problem"}, data)
+	}
+
+	if asCodeResponse.Errors.Permission != nil && len(*asCodeResponse.Errors.Permission) > 0 {
+		var data = make([][]string, len(*asCodeResponse.Errors.Permission))
+		for i, permission := range *asCodeResponse.Errors.Permission {
+			data[i] = []string{permission.CiId, permission.Permission}
+		}
+		return printTable("Following permissions are not granted to you:", []string{"ID", "Permission"}, data)
+	}
+
+	return fmt.Errorf("\nUnexpected response: %s", *asCodeResponse.Errors.Generic)
 }
 
 func (server *SimpleHTTPServer) doRequest(method string, path string, contentType string, body io.Reader) (*http.Response, error) {
-
 	maybeSlash := ""
 	if !strings.HasSuffix(server.Url.String(), "/") {
 		maybeSlash = "/"
@@ -118,8 +170,7 @@ func (server *SimpleHTTPServer) doRequest(method string, path string, contentTyp
 	} else if response.StatusCode == 404 {
 		return nil, fmt.Errorf("404 Not found. Please specify the correct url.")
 	} else if response.StatusCode >= 400 {
-		bodyText, _ := ioutil.ReadAll(response.Body)
-		return nil, fmt.Errorf("%d unexpected response: %s", response.StatusCode, string(bodyText))
+		return nil, formatAsCodeError(*response)
 	}
 
 	return response, nil

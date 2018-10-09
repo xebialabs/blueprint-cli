@@ -25,6 +25,7 @@ dependencies {
         build name: 'golang.org/x/crypto/ssh/terminal'
         build name: 'gopkg.in/cheggaaa/pb.v1', tag: 'v1.0.25'
         build name: 'github.com/mholt/archiver', tag: 'v2.1.0'
+        build name: 'github.com/olekukonko/tablewriter'
     }
 }
 

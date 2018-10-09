@@ -1,14 +1,15 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/pkg/errors"
-	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
 var applyFilenames []string
@@ -30,6 +31,25 @@ var applyCmd = &cobra.Command{
 
 		DoApply(context, applyFilenames)
 	},
+}
+
+func printCiIds(kind string, ids *[]string) {
+	if ids != nil && len(*ids) > 0 {
+		xl.Verbose("...... ---------------\n")
+		xl.Verbose(fmt.Sprintf("...... %s CIs:\n", kind))
+		xl.Verbose("...... ---------------\n")
+		for idx, id := range *ids {
+			xl.Verbose(fmt.Sprintf("...... %d. %s\n", idx+1, id))
+		}
+		xl.Verbose("...... ---------------\n")
+	}
+}
+
+func printChangedCis(changedCis *xl.ChangedCis) {
+	if changedCis != nil {
+		printCiIds("Created", changedCis.Created)
+		printCiIds("Updated", changedCis.Updated)
+	}
 }
 
 func DoApply(context *xl.Context, applyFilenames []string) {
@@ -58,7 +78,8 @@ func DoApply(context *xl.Context, applyFilenames []string) {
 			}
 
 			xl.UpdateProgressStartDocument(applyFilename, doc)
-			err = context.ProcessSingleDocument(doc, applyDir)
+			changedCis, err := context.ProcessSingleDocument(doc, applyDir)
+			printChangedCis(changedCis)
 			if err != nil {
 				reportFatalDocumentError(applyFilename, doc, err)
 			}

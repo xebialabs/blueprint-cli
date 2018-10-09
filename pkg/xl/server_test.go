@@ -1,11 +1,11 @@
 package xl
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"fmt"
 	"testing"
 )
 
@@ -19,18 +19,18 @@ func (d *DummyHTTPServer) ExportYamlDoc(path string, exportFilename string, over
 	return nil
 }
 
-func (d *DummyHTTPServer) PostYamlDoc(path string, yamlDocBytes []byte) error {
+func (d *DummyHTTPServer) PostYamlDoc(path string, yamlDocBytes []byte) (*ChangedCis, error) {
 	d.capturedPath = path
 	d.capturedBytes = yamlDocBytes
 	d.capturedFilename = ""
-	return nil
+	return nil, nil
 }
 
-func (d *DummyHTTPServer) PostYamlZip(path string, zipfilename string) error {
+func (d *DummyHTTPServer) PostYamlZip(path string, zipfilename string) (*ChangedCis, error) {
 	d.capturedPath = path
 	d.capturedBytes = nil
 	d.capturedFilename = zipfilename
-	return nil
+	return nil, nil
 }
 
 func TestServer(t *testing.T) {
@@ -96,7 +96,7 @@ spec:
 		doc.Preprocess(context, artifactsDir)
 		defer doc.Cleanup()
 
-		err = xlDeployServer.SendDoc(doc)
+		_, err = xlDeployServer.SendDoc(doc)
 
 		assert.Nil(t, err)
 		assert.Equal(t, "deployit/devops-as-code/apply", dummyServer.capturedPath)

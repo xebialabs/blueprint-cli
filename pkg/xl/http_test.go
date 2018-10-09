@@ -11,8 +11,8 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"testing"
 	"path/filepath"
+	"testing"
 )
 
 func TestHttp(t *testing.T) {
@@ -41,7 +41,7 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse(testServer.URL)
 		server := SimpleHTTPServer{Url: *res, Username: "admin", Password: "admin"}
 
-		error := server.PostYamlDoc("devops-as-code/apply", []byte("document body"))
+		_, error := server.PostYamlDoc("devops-as-code/apply", []byte("document body"))
 		assert.Nil(t, error)
 	})
 
@@ -104,7 +104,7 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse(testServer.URL)
 		server := SimpleHTTPServer{Url: *res, Username: "root", Password: "s3cr3t"}
 
-		error := server.PostYamlZip("apply", zipToUpload.Name())
+		_, error := server.PostYamlZip("apply", zipToUpload.Name())
 		assert.Nil(t, error)
 	})
 

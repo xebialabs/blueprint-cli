@@ -4,6 +4,39 @@ import (
 	"fmt"
 )
 
+type ChangedCis struct {
+	Created *[]string
+	Updated *[]string
+}
+
+type CiValidationError struct {
+	CiId         string
+	PropertyName string
+	Message      string
+}
+
+type PermissionError struct {
+	CiId       string
+	Permission string
+}
+
+type DocumentFieldError struct {
+	Field   string
+	Problem string
+}
+
+type Errors struct {
+	Validation *[]CiValidationError
+	Permission *[]PermissionError
+	Document   *DocumentFieldError
+	Generic    *string
+}
+
+type AsCodeResponse struct {
+	Cis    *ChangedCis
+	Errors *Errors
+}
+
 type Context struct {
 	XLDeploy  XLServer
 	XLRelease XLServer
@@ -40,16 +73,16 @@ func (c *Context) PrintConfiguration() {
 	}
 }
 
-func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) error {
+func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*ChangedCis, error) {
 	err := doc.Preprocess(c, artifactsDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer doc.Cleanup()
 
 	if doc.ApiVersion == "" {
-		return fmt.Errorf("apiVersion missing")
+		return nil, fmt.Errorf("apiVersion missing")
 	}
 
 	if c.XLDeploy != nil && c.XLDeploy.AcceptsDoc(doc) {
@@ -60,7 +93,7 @@ func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) erro
 		return c.XLRelease.SendDoc(doc)
 	}
 
-	return fmt.Errorf("unknown apiVersion: %s", doc.ApiVersion)
+	return nil, fmt.Errorf("unknown apiVersion: %s", doc.ApiVersion)
 }
 
 func (c *Context) ExportSingleDocument(exportServer string, exportFilename string, exportPath string, exportOverride bool) error {
