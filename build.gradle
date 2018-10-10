@@ -81,6 +81,8 @@ build {
             'darwin-amd64', 'linux-amd64', 'windows-amd64'
     ]
 
+    environment "CGO_ENABLED", "0" // To make sure a fully statically linked binary is produced even when building on linux
+
     def gitCommit = runCmd('git', 'rev-parse', 'HEAD')
     def gitVersion = runCmd('git', 'describe', '--long', '--dirty')
     def gitVersionShort = gitVersion.startsWith("xl-client-") ? gitVersion.substring(10) : gitVersion
