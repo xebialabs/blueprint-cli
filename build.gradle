@@ -166,6 +166,12 @@ publishing {
     }
 }
 
+task dumpVersion {
+    file(buildDir).mkdirs()
+    def out = file("$buildDir/version.dump")
+    out.write("version=$project.version")
+}
+
 def runCmd(Object... args) {
     def stdout = new ByteArrayOutputStream()
     exec {
