@@ -1,11 +1,14 @@
 import java.text.SimpleDateFormat
+import jp.classmethod.aws.gradle.s3.AmazonS3FileUploadTask
 
 plugins {
     id 'com.github.blindpirate.gogradle' version '0.10'
     id 'pl.allegro.tech.build.axion-release' version '1.9.2'
+    id "jp.classmethod.aws" version "0.38"
 }
 
 apply plugin: 'maven-publish'
+apply plugin: 'jp.classmethod.aws.s3'
 
 golang {
     goVersion = '1.11'
@@ -104,6 +107,10 @@ build {
     go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
 }
 
+aws {
+    profileName = "default"
+}
+
 build.dependsOn test
 
 clean.doFirst {
@@ -164,6 +171,29 @@ publishing {
             }
         }
     }
+}
+
+task uploadToS3 {
+    mustRunAfter 'publish'
+    dependsOn 'uploadDarwinToS3', 'uploadWindowsToS3', 'uploadLinuxToS3'
+}
+
+task uploadDarwinToS3(type: AmazonS3FileUploadTask) {
+    file file("${project.buildDir}/darwin-amd64/xl")
+    bucketName 'xl-cli'
+    key "bin/${project.version}/darwin-amd64/xl"
+}
+
+task uploadWindowsToS3(type: AmazonS3FileUploadTask) {
+    file file("${project.buildDir}/windows-amd64/xl.exe")
+    bucketName 'xl-cli'
+    key "bin/${project.version}/windows-amd64/xl.exe"
+}
+
+task uploadLinuxToS3(type: AmazonS3FileUploadTask) {
+    file file("${project.buildDir}/linux-amd64/xl")
+    bucketName 'xl-cli'
+    key "bin/${project.version}/linux-amd64/xl"
 }
 
 def runCmd(Object... args) {
