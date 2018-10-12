@@ -75,6 +75,12 @@ task installTemplify(type: com.github.blindpirate.gogradle.Go) {
 
 installDependencies.dependsOn installTemplify
 
+task dumpVersion {
+    file(buildDir).mkdirs()
+    def out = file("$buildDir/version.dump")
+    out.write("version=$project.version")
+}
+
 build {
     // Cross-compile platforms, update as necessary.
     targetPlatform = [
@@ -102,6 +108,7 @@ build {
     // The ${} placeholder will be rendered in cross-compile
     go "generate cmd/xl/cmd/wrapper.go"
     go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
+    dumpVersion
 }
 
 build.dependsOn test
@@ -164,12 +171,6 @@ publishing {
             }
         }
     }
-}
-
-task dumpVersion {
-    file(buildDir).mkdirs()
-    def out = file("$buildDir/version.dump")
-    out.write("version=$project.version")
 }
 
 def runCmd(Object... args) {

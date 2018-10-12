@@ -32,6 +32,12 @@ pipeline {
                 checkout scm
                 sh "./gradlew release -Drelease.releaseScope=${params.RELEASE_SCOPE} -Drelease.releaseStage=${params.RELEASE_STAGE} -Drelease.releaseExplicit=${params.RELEASE_EXPLICIT} -Prelease.disableChecks -Prelease.pushTagsOnly"
                 sh "./gradlew clean build upx publish -Poptimise --info"
+
+                if (fileExists('build/version.dump') == true) {
+                    currentVersion = readFile 'build/version.dump'
+
+                    env.version = currentVersion
+                }
             }
         }
     }

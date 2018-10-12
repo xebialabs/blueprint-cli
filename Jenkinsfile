@@ -25,6 +25,12 @@ pipeline {
             steps {
                 checkout scm
                 sh "./gradlew clean build --info"
+
+                if (fileExists('build/version.dump') == true) {
+                    currentVersion = readFile 'build/version.dump'
+
+                    env.version = currentVersion
+                }
             }
         }
 
