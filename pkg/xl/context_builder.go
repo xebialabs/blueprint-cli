@@ -56,6 +56,39 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string, secretOverr
 	}, nil
 }
 
+func setEnvVariableIfNotPresent(key string, value string) {
+	_, present := os.LookupEnv(key)
+	if !present {
+		os.Setenv(key, value)
+	}
+}
+
+func processServerCredentials(serverKind string) error {
+	credentialsEnvKey := fmt.Sprintf("XL_%s_CREDENTIALS", serverKind)
+	usernameEnvKey := fmt.Sprintf("XL_%s_USERNAME", serverKind)
+	passwordEnvKey := fmt.Sprintf("XL_%s_PASSWORD", serverKind)
+
+	credentials, credentialsPresent := os.LookupEnv(credentialsEnvKey)
+	if credentialsPresent {
+		credentialsArray := strings.Split(credentials, ":")
+		if len(credentialsArray) != 2 {
+			return errors.New(fmt.Sprintf("Invalid format of %s environment variable. It must have format: 'username:password'", credentialsEnvKey))
+		}
+
+		setEnvVariableIfNotPresent(usernameEnvKey, credentialsArray[0])
+		setEnvVariableIfNotPresent(passwordEnvKey, credentialsArray[1])
+	}
+	return nil
+}
+
+func ProcessCredentials() error {
+	err := processServerCredentials("DEPLOY")
+	if err != nil {
+		return err
+	}
+	return processServerCredentials("RELEASE")
+}
+
 func readServerConfig(v *viper.Viper, prefix string) (*SimpleHTTPServer, bool, error) {
 	urlstring := v.GetString(fmt.Sprintf("%s.url", prefix))
 	if urlstring == "" {
@@ -96,7 +129,7 @@ func readValues(v *viper.Viper, configName string, envPrefix string, flagOverrid
 	var secretsWereNotObfuscrypted = false
 
 	m := v.GetStringMapString(configName)
-	if(deobfuscryptSecrets) {
+	if deobfuscryptSecrets {
 		for key, value := range m {
 			deobfuscrypted, err := Deobfuscrypt(value)
 			if err == nil {
@@ -194,7 +227,7 @@ func obfuscryptPasswordsOnDisk(v *viper.Viper) error {
 	return nil
 }
 
-func obfuscryptIfNeeded(value string) (bool, string, error){
+func obfuscryptIfNeeded(value string) (bool, string, error) {
 	_, err := Deobfuscrypt(value)
 	if err == nil {
 		return false, value, nil

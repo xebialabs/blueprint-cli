@@ -2,6 +2,7 @@ package xl
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -345,7 +346,7 @@ xl-deploy:
 		ioutil.WriteFile(configfile, []byte(`xl-deploy:
   url: http://testxld:6154
   username: testuser
-  password: ` + obfuscryptedXLDeployPassword + `
+  password: `+obfuscryptedXLDeployPassword+`
 secrets:
   server.password: r00t
 `), 0755)
@@ -395,7 +396,7 @@ secrets:
 		ioutil.WriteFile(configfile, []byte(`xl-deploy:
   url: http://testxld:6154
   username: testuser
-  password: ` + obfuscryptedXLDeployPassword + `
+  password: `+obfuscryptedXLDeployPassword+`
 secrets:
   server.password: r00t
 values:
@@ -484,5 +485,72 @@ secrets:
 		assert.Equal(t, "configuration property xl-deploy.username is required if xl-deploy.url is set", err.Error())
 	})
 
+	assertEnvKeyNotPresent := func(key string) {
+		_, exists := os.LookupEnv(key)
+		assert.False(t, exists)
+	}
 
+	assertEnvKeyEqual := func(key string, value string) {
+		envValue, exists := os.LookupEnv(key)
+		assert.True(t, exists)
+		assert.Equal(t, value, envValue)
+	}
+
+	assertNoServerCredentials := func(serverKind string) {
+		assertEnvKeyNotPresent(fmt.Sprintf("XL_%s_CREDENTIALS", serverKind))
+		assertEnvKeyNotPresent(fmt.Sprintf("XL_%s_USERNAME", serverKind))
+		assertEnvKeyNotPresent(fmt.Sprintf("XL_%s_PASSWORD", serverKind))
+	}
+
+	assertServerCredentials := func(serverKind string, credentials string, user string, password string) {
+		assertEnvKeyEqual(fmt.Sprintf("XL_%s_CREDENTIALS", serverKind), credentials)
+		assertEnvKeyEqual(fmt.Sprintf("XL_%s_USERNAME", serverKind), user)
+		assertEnvKeyEqual(fmt.Sprintf("XL_%s_PASSWORD", serverKind), password)
+	}
+
+	cleanupServerCredentials := func(serverKind string) {
+		os.Unsetenv(fmt.Sprintf("XL_%s_CREDENTIALS", serverKind))
+		os.Unsetenv(fmt.Sprintf("XL_%s_USERNAME", serverKind))
+		os.Unsetenv(fmt.Sprintf("XL_%s_PASSWORD", serverKind))
+	}
+
+	cleanupAllCredentials := func() {
+		cleanupServerCredentials("DEPLOY")
+		cleanupServerCredentials("RELEASE")
+	}
+
+	t.Run("parse credentials from XL_{SERVER_KIND}_CREDENTIALS env variable and fill in username and password", func(t *testing.T) {
+		assertNoServerCredentials("DEPLOY")
+		assertNoServerCredentials("RELEASE")
+
+		os.Setenv("XL_DEPLOY_CREDENTIALS", "admin:qwerty")
+		os.Setenv("XL_RELEASE_CREDENTIALS", "john:mat")
+		assert.Nil(t, ProcessCredentials())
+
+		assertServerCredentials("DEPLOY", "admin:qwerty", "admin", "qwerty")
+		assertServerCredentials("RELEASE", "john:mat", "john", "mat")
+		cleanupAllCredentials()
+	})
+
+	t.Run("parse credentials from XL_{SERVER_KIND}_CREDENTIALS env variable and set only fields that was not specified before", func(t *testing.T) {
+		assertNoServerCredentials("DEPLOY")
+		assertNoServerCredentials("RELEASE")
+
+		os.Setenv("XL_DEPLOY_USERNAME", "user1")
+		os.Setenv("XL_DEPLOY_CREDENTIALS", "admin:qwerty")
+		os.Setenv("XL_RELEASE_PASSWORD", "password1")
+		os.Setenv("XL_RELEASE_CREDENTIALS", "john:mat")
+		assert.Nil(t, ProcessCredentials())
+
+		assertServerCredentials("DEPLOY", "admin:qwerty", "user1", "qwerty")
+		assertServerCredentials("RELEASE", "john:mat", "john", "password1")
+		cleanupAllCredentials()
+	})
+
+	t.Run("validate a format of XL_{SERVER_KIND}_CREDENTIALS", func(t *testing.T) {
+		assertNoServerCredentials("DEPLOY")
+		os.Setenv("XL_DEPLOY_CREDENTIALS", "admin")
+		assert.Equal(t, "Invalid format of XL_DEPLOY_CREDENTIALS environment variable. It must have format: 'username:password'", ProcessCredentials().Error())
+		cleanupAllCredentials()
+	})
 }
