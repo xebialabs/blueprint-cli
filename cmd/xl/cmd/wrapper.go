@@ -1,6 +1,7 @@
 package cmd
 
 //go:generate $GOPATH/bin/templify -p wrapper -e -o wrapper/xlw.go wrapper/source/xlw
+//go:generate $GOPATH/bin/templify -p wrapper -e -o wrapper/xlwBat.go wrapper/source/xlw.bat
 //go:generate $GOPATH/bin/templify -p wrapper -e -o wrapper/wrapper.conf.go wrapper/source/wrapper.conf
 
 import (
@@ -42,6 +43,10 @@ func writeTemplateFile(name string, templateString string, config WrapperConfig)
 }
 
 func writeWrapperScripts(config WrapperConfig) error {
+	err := writeTemplateFile("xlw.bat", wrapper.XlwBatTemplate(), config)
+	if err != nil {
+		return err
+	}
 	return writeTemplateFile("xlw", wrapper.XlwTemplate(), config)
 }
 
