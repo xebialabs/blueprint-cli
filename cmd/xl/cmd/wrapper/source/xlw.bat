@@ -20,7 +20,8 @@ set WRAPPER_BINARY=%XL_WRAPPER_HOME%\\%BINARY_NAME%
 set TEMP_BINARY_FILE=%WRAPPER_BINARY%.%RANDOM%
 
 if not exist %WRAPPER_BINARY% (
-    call bitsadmin /transfer xlBinaryDownloadJob /download /priority normal %CLI_BASE_URL%/%CLI_VERSION%/windows-amd64/%BINARY_NAME% %TEMP_BINARY_FILE% || goto :error
+    echo Downloading XL binary v%CLI_VERSION%
+    powershell -Command "(New-Object Net.WebClient).DownloadFile('%CLI_BASE_URL%/%CLI_VERSION%/windows-amd64/%BINARY_NAME%', '%TEMP_BINARY_FILE%')" || goto :error
     call ren "%TEMP_BINARY_FILE%" %BINARY_NAME% || goto :error
 )
 

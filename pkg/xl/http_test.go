@@ -155,7 +155,7 @@ func TestHttp(t *testing.T) {
 	})
 
 	t.Run("should refuse export when file exists", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "export.zip")
+		file, err := ioutil.TempFile("", "export.yaml")
 		if err != nil {
 			panic(err)
 		}
