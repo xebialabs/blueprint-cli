@@ -8,7 +8,7 @@ const XlrApiVersion = "xl-release/v1beta1"
 type XLServer interface {
 	AcceptsDoc(doc *Document) bool
 	PreprocessDoc(doc *Document)
-	SendDoc(doc *Document) (*ChangedCis, error)
+	SendDoc(doc *Document) (*Changes, error)
 	ExportDoc(filename string, path string, override bool) error
 }
 
@@ -58,18 +58,18 @@ func (server *XLReleaseServer) ExportDoc(filename string, path string, override 
 	return server.Server.ExportYamlDoc(filename, "devops-as-code/export/"+path, override)
 }
 
-func (server *XLDeployServer) SendDoc(doc *Document) (*ChangedCis, error) {
+func (server *XLDeployServer) SendDoc(doc *Document) (*Changes, error) {
 	return sendDoc(server.Server, "deployit/devops-as-code/apply", doc)
 }
 
-func (server *XLReleaseServer) SendDoc(doc *Document) (*ChangedCis, error) {
+func (server *XLReleaseServer) SendDoc(doc *Document) (*Changes, error) {
 	if doc.ApplyZip != "" {
 		return nil, fmt.Errorf("file tags found but XL Release does not support file references")
 	}
 	return sendDoc(server.Server, "devops-as-code/apply", doc)
 }
 
-func sendDoc(server HTTPServer, path string, doc *Document) (*ChangedCis, error) {
+func sendDoc(server HTTPServer, path string, doc *Document) (*Changes, error) {
 	if doc.ApplyZip != "" {
 		Verbose("...... document contains !file tags, sending ZIP file with YAML document and artifacts to server\n")
 		return server.PostYamlZip(path, doc.ApplyZip)

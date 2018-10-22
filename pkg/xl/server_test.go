@@ -19,14 +19,14 @@ func (d *DummyHTTPServer) ExportYamlDoc(path string, exportFilename string, over
 	return nil
 }
 
-func (d *DummyHTTPServer) PostYamlDoc(path string, yamlDocBytes []byte) (*ChangedCis, error) {
+func (d *DummyHTTPServer) PostYamlDoc(path string, yamlDocBytes []byte) (*Changes, error) {
 	d.capturedPath = path
 	d.capturedBytes = yamlDocBytes
 	d.capturedFilename = ""
 	return nil, nil
 }
 
-func (d *DummyHTTPServer) PostYamlZip(path string, zipfilename string) (*ChangedCis, error) {
+func (d *DummyHTTPServer) PostYamlZip(path string, zipfilename string) (*Changes, error) {
 	d.capturedPath = path
 	d.capturedBytes = nil
 	d.capturedFilename = zipfilename
