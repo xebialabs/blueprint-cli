@@ -53,6 +53,11 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	err := xl.ProcessCredentials()
+	if err != nil {
+		xl.Fatal("Error processing server credentials:\n%s", err)
+	}
+
 	if xl.IsQuiet && xl.IsVerbose {
 		xl.Fatal("Cannot use --quiet (-q) and --verbose (-v) flags together\n")
 	}
@@ -73,7 +78,7 @@ func initConfig() {
 	viper.SetConfigType("yaml")
 	// If a config file is found, read it in.
 
-	err := viper.ReadInConfig()
+	err = viper.ReadInConfig()
 	if err == nil {
 		xl.Verbose("Using configuration file: %s\n", viper.ConfigFileUsed())
 	} else {
