@@ -41,14 +41,14 @@ pipeline {
         success {
             script {
                 if(env.BRANCH_NAME == 'master'){
-                    hipchatSend color: 'GREEN', credentialId: 'hipchat-token', message: "XL Cli master build <b>SUCCESS</b> - <a href=\"${BUILD_URL}\">click to open</a>", notify: false, room: 'Developer ❤️'
+                    slackSend color: "good", tokenCredentialId: "slack-token", message: "XL Cli master build *SUCCESS* - <${env.BUILD_URL}|click to open>", channel: 'team-developer-love'
                 }
             }
         }
         failure {
             script {
                 if(env.BRANCH_NAME == 'master'){
-                    hipchatSend color: 'RED', credentialId: 'hipchat-token', message: "XL Cli master build <b>FAILED</b> - <a href=\"${BUILD_URL}\">click to open</a>", notify: true, room: 'Developer ❤️'
+                    slackSend color: "danger", tokenCredentialId: "slack-token", message: "XL Cli master build *SUCCESS* - <${env.BUILD_URL}|click to open>", channel: 'team-developer-love'
                 }
             }
         }
