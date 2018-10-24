@@ -16,8 +16,8 @@ import (
 )
 
 type HTTPServer interface {
-	PostYamlDoc(path string, yamlDocBytes []byte) (*ChangedCis, error)
-	PostYamlZip(path string, yamlZipFilename string) (*ChangedCis, error)
+	PostYamlDoc(path string, yamlDocBytes []byte) (*Changes, error)
+	PostYamlZip(path string, yamlZipFilename string) (*Changes, error)
 	ExportYamlDoc(exportFilename string, path string, override bool) error
 }
 
@@ -80,16 +80,16 @@ func processAsCodeResponse(response http.Response) *AsCodeResponse {
 	return &resp
 }
 
-func (server *SimpleHTTPServer) PostYamlDoc(resource string, yamlDocBytes []byte) (*ChangedCis, error) {
+func (server *SimpleHTTPServer) PostYamlDoc(resource string, yamlDocBytes []byte) (*Changes, error) {
 	response, err := server.doRequest("POST", resource, "text/vnd.yaml", bytes.NewReader(yamlDocBytes))
 	if err != nil {
 		return nil, err
 	}
 	var asCodeResponse = processAsCodeResponse(*response)
-	return asCodeResponse.Cis, nil
+	return asCodeResponse.Changes, nil
 }
 
-func (server *SimpleHTTPServer) PostYamlZip(resource string, yamlZipFilename string) (*ChangedCis, error) {
+func (server *SimpleHTTPServer) PostYamlZip(resource string, yamlZipFilename string) (*Changes, error) {
 	f, err := os.Open(yamlZipFilename)
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (server *SimpleHTTPServer) PostYamlZip(resource string, yamlZipFilename str
 		return nil, err2
 	}
 	var asCodeResponse = processAsCodeResponse(*response)
-	return asCodeResponse.Cis, nil
+	return asCodeResponse.Changes, nil
 }
 
 func printTable(initialString string, header []string, data [][]string) error {
