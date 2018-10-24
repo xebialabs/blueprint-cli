@@ -29,9 +29,6 @@ var exportCmd = &cobra.Command{
 }
 
 func DoExport(context *xl.Context) {
-	if exportPath == "" {
-		xl.Fatal("Please provide a path to export\n")
-	}
 
 	err := context.ExportSingleDocument(exportServer, exportFilename, exportPath, exportOverride)
 	if err != nil {
@@ -43,8 +40,10 @@ func init() {
 	rootCmd.AddCommand(exportCmd)
 
 	exportFlags := exportCmd.Flags()
-	exportFlags.StringVarP(&exportFilename, "file", "f", "export.yaml", "Path of the file where the export yaml file will be stored")
-	exportFlags.StringVarP(&exportPath, "path", "p", "", "Server path which will be exported")
+	exportFlags.StringVarP(&exportFilename, "file", "f", "", "Path of the file where the export yaml file will be stored (required)")
+	exportCmd.MarkFlagRequired("file")
+	exportFlags.StringVarP(&exportPath, "path", "p", "", "Server path which will be exported (required)")
+	exportCmd.MarkFlagRequired("path")
 	exportFlags.StringVarP(&exportServer, "server", "s", "xl-deploy", "Which server to export from, either \"xl-deploy\" or \"xl-release\"")
 	exportFlags.BoolVarP(&exportOverride, "override", "o", false, "Set to true to override the export file")
 }

@@ -69,9 +69,6 @@ func printChanges(changes *xl.Changes) {
 }
 
 func DoApply(context *xl.Context, applyFilenames []string) {
-	if len(applyFilenames) == 0 {
-		xl.Fatal("No XL YAML file to apply\n")
-	}
 
 	for _, applyFilename := range applyFilenames {
 		xl.StartProgress(applyFilename)
@@ -122,7 +119,8 @@ func init() {
 	rootCmd.AddCommand(applyCmd)
 
 	applyFlags := applyCmd.Flags()
-	applyFlags.StringArrayVarP(&applyFilenames, "file", "f", []string{}, "Path(s) to the file(s) to apply")
+	applyFlags.StringArrayVarP(&applyFilenames, "file", "f", []string{}, "Path(s) to the file(s) to apply (required)")
+	applyCmd.MarkFlagRequired("file")
 	applyFlags.StringToStringVar(&applyValues, "values", map[string]string{}, "Values")
 	applyFlags.StringToStringVar(&applySecrets, "secrets", map[string]string{}, "Secret values")
 }
