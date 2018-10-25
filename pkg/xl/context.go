@@ -41,7 +41,6 @@ type Context struct {
 	XLDeploy  XLServer
 	XLRelease XLServer
 	values    map[string]string
-	secrets   map[string]string
 }
 
 func (c *Context) PrintConfiguration() {
@@ -65,12 +64,6 @@ func (c *Context) PrintConfiguration() {
 		}
 	}
 
-	if len(c.secrets) > 0 {
-		Info("Secrets:\n")
-		for k, _ := range c.secrets {
-			Info("  %s: ********\n", k)
-		}
-	}
 }
 
 func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*ChangedCis, error) {

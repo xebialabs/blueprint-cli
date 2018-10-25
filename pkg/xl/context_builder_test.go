@@ -20,7 +20,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set("xl-deploy.username", "deployer")
 		v.Set("xl-deploy.password", "d3ploy1t")
 
-		c, err := BuildContext(v, nil, nil)
+		c, err := BuildContext(v, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -37,7 +37,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set("xl-release.username", "releaser")
 		v.Set("xl-release.password", "r3l34s3")
 
-		c, err := BuildContext(v, nil, nil)
+		c, err := BuildContext(v, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -62,7 +62,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set("xl-release.password", "r3l34s3")
 		v.Set("xl-release.home", "XLR/home/folder")
 
-		c, err := BuildContext(v, nil, nil)
+		c, err := BuildContext(v, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -81,39 +81,26 @@ func TestContextBuilder(t *testing.T) {
 		assert.Equal(t, "XLR/home/folder", c.XLRelease.(*XLReleaseServer).Home)
 	})
 
-	t.Run("build context without values or secrets", func(t *testing.T) {
+	t.Run("build context without values", func(t *testing.T) {
 		v := viper.New()
 
-		c, err := BuildContext(v, nil, nil)
+		c, err := BuildContext(v, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
 		assert.NotNil(t, c.values)
-		assert.NotNil(t, c.secrets)
 	})
 
 	t.Run("build context with values", func(t *testing.T) {
 		v := viper.New()
 		v.Set("values", map[string]string{"server.address": "server.example.com"})
 
-		c, err := BuildContext(v, nil, nil)
+		c, err := BuildContext(v, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
 		assert.NotNil(t, c.values)
 		assert.Equal(t, "server.example.com", c.values["server.address"])
-	})
-
-	t.Run("build context with secrets", func(t *testing.T) {
-		v := viper.New()
-		v.Set("secrets", map[string]string{"server.password": "r00t"})
-
-		c, err := BuildContext(v, nil, nil)
-
-		assert.Nil(t, err)
-		assert.NotNil(t, c)
-		assert.NotNil(t, c.values)
-		assert.Equal(t, "r00t", c.secrets["server.password"])
 	})
 
 	t.Run("build context from YAML", func(t *testing.T) {
@@ -123,15 +110,14 @@ func TestContextBuilder(t *testing.T) {
   password: 3dm1n
 values:
   server.address: server.example.com
-secrets:
-  server.password: r00t`
+`
 
 		v := viper.New()
 		v.SetConfigType("yaml")
 		err := v.ReadConfig(bytes.NewBuffer([]byte(yamlConfig)))
 		require.Nil(t, err)
 
-		c, err := BuildContext(v, nil, nil)
+		c, err := BuildContext(v, nil)
 
 		require.Nil(t, err)
 		require.NotNil(t, c)
@@ -139,7 +125,6 @@ secrets:
 		require.Equal(t, "http://xld.example.com:4516", c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Url.String())
 		require.NotNil(t, c.values)
 		require.Equal(t, "server.example.com", c.values["server.address"])
-		require.Equal(t, "r00t", c.secrets["server.password"])
 	})
 
 	t.Run("do not write config file if xl-deploy.password was stored in the config file but was overridden", func(t *testing.T) {
@@ -163,7 +148,7 @@ secrets:
 		v.ReadInConfig()
 		v.Set("xl-deploy.password", "t3st")
 
-		c, err := BuildContext(v, nil, nil)
+		c, err := BuildContext(v, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -191,8 +176,6 @@ secrets:
   url: http://testxld:6154
   username: testuser
   password: t3st
-secrets:
-  server.password: r00t
 values:
   server.username: root
   server.hostname: server.example.com
@@ -202,7 +185,7 @@ values:
 		v.SetConfigFile(configfile)
 		v.ReadInConfig()
 
-		_, err = BuildContext(v, nil, nil)
+		_, err = BuildContext(v,  nil)
 		require.Nil(t, err)
 
 		configbytes, err := ioutil.ReadFile(configfile)
@@ -236,7 +219,7 @@ values:
 		v.SetConfigFile(configfile)
 		v.ReadInConfig()
 
-		c, err := BuildContext(v, nil, nil)
+		c, err := BuildContext(v, nil)
 
 		assert.NotNil(t, err)
 		assert.Nil(t, c)

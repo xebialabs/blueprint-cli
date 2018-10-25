@@ -193,8 +193,6 @@ func (doc *Document) processCustomTag(tag *yaml.CustomTag, c *processingContext)
 	switch tag.Tag {
 	case "!value":
 		return doc.processValueTag(tag, c)
-	case "!secret":
-		return doc.processSecretTag(tag, c)
 	case "!file":
 		return doc.processFileTag(tag, c)
 	default:
@@ -211,17 +209,6 @@ func (doc *Document) processValueTag(tag *yaml.CustomTag, c *processingContext) 
 	Verbose("...... inserting value for !value %s\n", tag.Value)
 
 	return value, nil
-}
-
-func (doc *Document) processSecretTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
-	secret, exists := c.context.secrets[tag.Value]
-	if !exists {
-		return nil, errors.New(fmt.Sprintf("No secret for !secret %s", tag.Value))
-	}
-
-	Verbose("...... inserting secret value for !secret %s\n", tag.Value)
-
-	return secret, nil
 }
 
 func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {

@@ -159,7 +159,7 @@ spec:
   type: overthere.SshHost
   address: server.example.com
   username: root
-  password: !secret server.root.password
+  password: !value server.root.password
 `, XldApiVersion, XldApiVersion)
 		docreader := NewDocumentReader(strings.NewReader(yamlDoc))
 		doc1, err1 := docreader.ReadNextYamlDocument()
@@ -182,7 +182,7 @@ spec:
 		assert.NotNil(t, doc2)
 		spec2 := TransformToMap(doc2.Spec)
 		assert.Equal(t, "server", spec2[0]["name"])
-		assert.Equal(t, yaml.CustomTag{"!secret", "server.root.password"}, spec2[0]["password"])
+		assert.Equal(t, yaml.CustomTag{"!value", "server.root.password"}, spec2[0]["password"])
 	})
 
 	t.Run("should add xl-deploy homes if missing in yaml document", func(t *testing.T) {
@@ -336,59 +336,6 @@ spec:
 
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "No value")
-	})
-
-	t.Run("should process !secret tag", func(t *testing.T) {
-		yamlDoc := fmt.Sprintf(`apiVersion: %s
-kind: Infrastructure
-spec:
-- name: serverHost
-  type: overthere.SshHost
-  address: server.example.com
-  username: root
-  password: !secret server.password`, XldApiVersion)
-
-		doc, err := ParseYamlDocument(yamlDoc)
-
-		require.Nil(t, err)
-		require.NotNil(t, doc)
-
-		secrets := map[string]string{
-			"server.password": "r00t",
-		}
-		context := &Context{secrets: secrets}
-
-		err = doc.Preprocess(context, "")
-
-		assert.Nil(t, err)
-		assert.Equal(t, "r00t", TransformToMap(doc.Spec)[0]["password"])
-	})
-
-	t.Run("should report error when !secret tag refers to unknown value", func(t *testing.T) {
-		yamlDoc := fmt.Sprintf(`apiVersion: %s
-kind: Infrastructure
-spec:
-- name: serverHost
-  type: overthere.SshHost
-  address: server.example.com
-  username: root
-  password: r00t
-  sshPassphrase: !secret server.passphrase`, XldApiVersion)
-
-		doc, err := ParseYamlDocument(yamlDoc)
-
-		require.Nil(t, err)
-		require.NotNil(t, doc)
-
-		secrets := map[string]string{
-			"server.password": "r00t",
-		}
-		context := &Context{secrets: secrets}
-
-		err = doc.Preprocess(context, "")
-
-		assert.NotNil(t, err)
-		assert.Contains(t, err.Error(), "No secret")
 	})
 
 	t.Run("should process !file tag", func(t *testing.T) {

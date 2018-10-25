@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func BuildContext(v *viper.Viper, valueOverrides *map[string]string, secretOverrides *map[string]string) (*Context, error) {
+func BuildContext(v *viper.Viper, valueOverrides *map[string]string) (*Context, error) {
 	var xlDeploy *XLDeployServer
 	var xlRelease *XLReleaseServer
 
@@ -39,17 +39,10 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string, secretOverr
 		return nil, err
 	}
 
-	secrets, err := readValues(v, "secrets", "XL_SECRET_", secretOverrides)
-	if err != nil {
-		return nil, err
-	}
-
-
 	return &Context{
 		XLDeploy:  xlDeploy,
 		XLRelease: xlRelease,
 		values:    values,
-		secrets:   secrets,
 	}, nil
 }
 

@@ -16,7 +16,7 @@ var exportCmd = &cobra.Command{
 	Short: "Export configuration",
 	Long:  `Export configuration`,
 	Run: func(cmd *cobra.Command, args []string) {
-		context, err := xl.BuildContext(viper.GetViper(), nil, nil)
+		context, err := xl.BuildContext(viper.GetViper(), nil)
 		if err != nil {
 			xl.Fatal("Error while reading configuration: %s\n", err)
 		}
