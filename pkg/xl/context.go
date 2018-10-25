@@ -32,9 +32,19 @@ type Errors struct {
 	Generic    *string
 }
 
+type TaskInfo struct {
+	Id          string
+	Description string
+}
+
+type Changes struct {
+	Cis  *ChangedCis
+	Task *TaskInfo
+}
+
 type AsCodeResponse struct {
-	Cis    *ChangedCis
-	Errors *Errors
+	Changes *Changes
+	Errors  *Errors
 }
 
 type Context struct {
@@ -66,7 +76,7 @@ func (c *Context) PrintConfiguration() {
 
 }
 
-func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*ChangedCis, error) {
+func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Changes, error) {
 	err := doc.Preprocess(c, artifactsDir)
 	if err != nil {
 		return nil, err

@@ -51,10 +51,23 @@ func printChangedCis(changedCis *xl.ChangedCis) {
 	}
 }
 
-func DoApply(context *xl.Context, applyFilenames []string) {
-	if len(applyFilenames) == 0 {
-		xl.Fatal("No XL YAML file to apply\n")
+func printTaskInfo(task *xl.TaskInfo) {
+	if task != nil {
+		xl.Verbose("...... ---------------\n")
+		xl.Verbose(fmt.Sprintf("...... Task [%s] is started:\n", task.Id))
+		xl.Verbose(fmt.Sprintf("...... %s.\n", task.Description))
+		xl.Verbose("...... ---------------\n")
 	}
+}
+
+func printChanges(changes *xl.Changes) {
+	if changes != nil {
+		printChangedCis(changes.Cis)
+		printTaskInfo(changes.Task)
+	}
+}
+
+func DoApply(context *xl.Context, applyFilenames []string) {
 
 	for _, applyFilename := range applyFilenames {
 		xl.StartProgress(applyFilename)
@@ -77,8 +90,8 @@ func DoApply(context *xl.Context, applyFilenames []string) {
 			}
 
 			xl.UpdateProgressStartDocument(applyFilename, doc)
-			changedCis, err := context.ProcessSingleDocument(doc, applyDir)
-			printChangedCis(changedCis)
+			changes, err := context.ProcessSingleDocument(doc, applyDir)
+			printChanges(changes)
 			if err != nil {
 				reportFatalDocumentError(applyFilename, doc, err)
 			}
@@ -105,6 +118,7 @@ func init() {
 	rootCmd.AddCommand(applyCmd)
 
 	applyFlags := applyCmd.Flags()
-	applyFlags.StringArrayVarP(&applyFilenames, "file", "f", []string{}, "Path(s) to the file(s) to apply")
+	applyFlags.StringArrayVarP(&applyFilenames, "file", "f", []string{}, "Path(s) to the file(s) to apply (required)")
+	applyCmd.MarkFlagRequired("file")
 	applyFlags.StringToStringVar(&applyValues, "values", map[string]string{}, "Values")
 }
