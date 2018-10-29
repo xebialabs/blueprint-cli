@@ -51,7 +51,7 @@ func writeWrapperScripts(config WrapperConfig) error {
 }
 
 func writeConfigFile(config WrapperConfig) error {
-	var confDir = filepath.FromSlash("xl/wrapper")
+	var confDir = filepath.FromSlash(".xebialabs")
 	var confFile = filepath.FromSlash(fmt.Sprintf("%s/%s", confDir, config.WrapperConfigName))
 	os.MkdirAll(confDir, os.ModePerm)
 	return writeTemplateFile(confFile, wrapper.WrapperTemplate(), config)
