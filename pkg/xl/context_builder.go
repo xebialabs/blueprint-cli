@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"regexp"
 )
 
 func BuildContext(v *viper.Viper, valueOverrides *map[string]string) (*Context, error) {
@@ -62,7 +63,7 @@ func processServerCredentials(serverKind string) error {
 	if credentialsPresent {
 		credentialsArray := strings.Split(credentials, ":")
 		if len(credentialsArray) != 2 {
-			return errors.New(fmt.Sprintf("Invalid format of %s environment variable. It must have format: 'username:password'", credentialsEnvKey))
+			return errors.New(fmt.Sprintf("environment variable %s has an invalid format. It must container a username and a password separated by a colon", credentialsEnvKey))
 		}
 
 		setEnvVariableIfNotPresent(usernameEnvKey, credentialsArray[0])
@@ -108,7 +109,6 @@ func readServerConfig(v *viper.Viper, prefix string) (*SimpleHTTPServer, error) 
 }
 
 func readValues(v *viper.Viper, configName string, envPrefix string, flagOverrides *map[string]string) (map[string]string, error) {
-
 	m := v.GetStringMapString(configName)
 
 	for _, envOverride := range os.Environ() {
@@ -121,6 +121,13 @@ func readValues(v *viper.Viper, configName string, envPrefix string, flagOverrid
 
 		if strings.HasPrefix(key, envPrefix) {
 			m[key[len(envPrefix):]] = value
+		}
+	}
+
+	var validKeyRegex = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+	for k, _ := range m {
+		if !validKeyRegex.MatchString(k) {
+			return nil, errors.New(fmt.Sprintf("the name of the value %s is invalid. It must start with an alphabetical character or an underscore and be followed by zero or more alphanumerical characters or underscores", k))
 		}
 	}
 

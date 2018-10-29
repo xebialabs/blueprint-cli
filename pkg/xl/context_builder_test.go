@@ -93,14 +93,14 @@ func TestContextBuilder(t *testing.T) {
 
 	t.Run("build context with values", func(t *testing.T) {
 		v := viper.New()
-		v.Set("values", map[string]string{"server.address": "server.example.com"})
+		v.Set("values", map[string]string{"server_address": "server.example.com"})
 
 		c, err := BuildContext(v, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
 		assert.NotNil(t, c.values)
-		assert.Equal(t, "server.example.com", c.values["server.address"])
+		assert.Equal(t, "server.example.com", c.values["server_address"])
 	})
 
 	t.Run("build context from YAML", func(t *testing.T) {
@@ -109,7 +109,7 @@ func TestContextBuilder(t *testing.T) {
   username: admin
   password: 3dm1n
 values:
-  server.address: server.example.com
+  server_address: server.example.com
 `
 
 		v := viper.New()
@@ -124,7 +124,7 @@ values:
 		require.NotNil(t, c.XLDeploy)
 		require.Equal(t, "http://xld.example.com:4516", c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Url.String())
 		require.NotNil(t, c.values)
-		require.Equal(t, "server.example.com", c.values["server.address"])
+		require.Equal(t, "server.example.com", c.values["server_address"])
 	})
 
 	t.Run("do not write config file if xl-deploy.password was stored in the config file but was overridden", func(t *testing.T) {
@@ -177,8 +177,8 @@ values:
   username: testuser
   password: t3st
 values:
-  server.username: root
-  server.hostname: server.example.com
+  server_username: root
+  server_hostname: server.example.com
 `), 0755)
 
 		v := viper.New()
@@ -197,7 +197,7 @@ values:
 
 		values := parsed["values"].(map[interface{}]interface{})
 		require.NotNil(t, values)
-		serverUsername := values["server.username"].(string)
+		serverUsername := values["server_username"].(string)
 		require.Equal(t, "root", serverUsername)
 	})
 
@@ -288,10 +288,21 @@ values:
 		cleanupAllCredentials()
 	})
 
-	t.Run("validate a format of XL_{SERVER_KIND}_CREDENTIALS", func(t *testing.T) {
+	t.Run("validate format of XL_{SERVER_KIND}_CREDENTIALS", func(t *testing.T) {
 		assertNoServerCredentials("DEPLOY")
 		os.Setenv("XL_DEPLOY_CREDENTIALS", "admin")
-		assert.Equal(t, "Invalid format of XL_DEPLOY_CREDENTIALS environment variable. It must have format: 'username:password'", ProcessCredentials().Error())
+		assert.Equal(t, "environment variable XL_DEPLOY_CREDENTIALS has an invalid format. It must container a username and a password separated by a colon", ProcessCredentials().Error())
 		cleanupAllCredentials()
 	})
+
+	t.Run("validate that names of values are correct", func(t *testing.T) {
+		v := viper.New()
+		v.Set("values", map[string]string{"!incorrectKey": "test value"})
+
+		_, err := BuildContext(v, nil)
+
+		assert.NotNil(t, err)
+		assert.Equal(t, "the name of the value !incorrectKey is invalid. It must start with an alphabetical character or an underscore and be followed by zero or more alphanumerical characters or underscores", err.Error())
+	})
+
 }
