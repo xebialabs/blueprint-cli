@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
+	"path"
+	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/viper"
 )
 
 var applyFilenames []string
@@ -20,15 +22,7 @@ var applyCmd = &cobra.Command{
 	Short: "Apply configuration changes",
 	Long:  `Apply configuration changes`,
 	Run: func(cmd *cobra.Command, args []string) {
-		context, err := xl.BuildContext(viper.GetViper(), &applyValues)
-		if err != nil {
-			xl.Fatal("Error while reading configuration: %s\n", err)
-		}
-		if xl.IsVerbose {
-			context.PrintConfiguration()
-		}
-
-		DoApply(context, applyFilenames)
+		DoApply(applyFilenames)
 	},
 }
 
@@ -67,9 +61,32 @@ func printChanges(changes *xl.Changes) {
 	}
 }
 
-func DoApply(context *xl.Context, applyFilenames []string) {
+func DoApply(applyFilenames []string) {
+
+	homeValsFiles, e := listHomeXlValsFiles()
+
+	if e != nil {
+		xl.Fatal("Error while reading value files from home: %s\n", e)
+	}
 
 	for _, applyFilename := range applyFilenames {
+
+		projectValsFiles, err := listRelativeXlValsFiles(filepath.Dir(applyFilename))
+		if err != nil {
+			xl.Fatal("Error while reading value files for %s from project: %s\n", applyFilename, err)
+		}
+
+		allValsFiles := append(homeValsFiles, projectValsFiles...)
+
+		context, err := xl.BuildContext(viper.GetViper(), &applyValues, allValsFiles)
+		if err != nil {
+			xl.Fatal("Error while reading configuration: %s\n", err)
+		}
+		if xl.IsVerbose {
+			xl.Info("Context for document %s\n", applyFilename)
+			context.PrintConfiguration()
+		}
+
 		xl.StartProgress(applyFilename)
 
 		applyDir := filepath.Dir(applyFilename)
@@ -121,4 +138,28 @@ func init() {
 	applyFlags.StringArrayVarP(&applyFilenames, "file", "f", []string{}, "Path(s) to the file(s) to apply (required)")
 	applyCmd.MarkFlagRequired("file")
 	applyFlags.StringToStringVar(&applyValues, "values", map[string]string{}, "Values")
+}
+
+func listHomeXlValsFiles() ([]string, error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return nil, err
+	}
+	xebialabsFolder := path.Join(home, ".xebialabs")
+	if _, err := os.Stat(xebialabsFolder); os.IsNotExist(err) {
+		return []string{}, nil
+	}
+	valfiles, err := xl.FindByExtInDirSorted(xebialabsFolder, ".xlvals")
+	if err != nil {
+		return nil, err
+	}
+	return valfiles, nil
+}
+
+func listRelativeXlValsFiles(dir string) ([]string, error) {
+	valfiles, err := xl.FindByExtInDirSorted(dir, ".xlvals")
+	if err != nil {
+		return nil, err
+	}
+	return valfiles, nil
 }

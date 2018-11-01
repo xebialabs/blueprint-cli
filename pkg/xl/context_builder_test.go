@@ -14,13 +14,16 @@ import (
 )
 
 func TestContextBuilder(t *testing.T) {
+
+	IsVerbose = true
+
 	t.Run("build simple context for XL Deploy", func(t *testing.T) {
 		v := viper.New()
 		v.Set("xl-deploy.url", "http://testxld:6154")
 		v.Set("xl-deploy.username", "deployer")
 		v.Set("xl-deploy.password", "d3ploy1t")
 
-		c, err := BuildContext(v, nil)
+		c, err := BuildContext(v, nil, []string{})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -37,7 +40,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set("xl-release.username", "releaser")
 		v.Set("xl-release.password", "r3l34s3")
 
-		c, err := BuildContext(v, nil)
+		c, err := BuildContext(v, nil, []string{})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -62,7 +65,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set("xl-release.password", "r3l34s3")
 		v.Set("xl-release.home", "XLR/home/folder")
 
-		c, err := BuildContext(v, nil)
+		c, err := BuildContext(v, nil, []string{})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -84,23 +87,11 @@ func TestContextBuilder(t *testing.T) {
 	t.Run("build context without values", func(t *testing.T) {
 		v := viper.New()
 
-		c, err := BuildContext(v, nil)
+		c, err := BuildContext(v, nil, []string{})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
 		assert.NotNil(t, c.values)
-	})
-
-	t.Run("build context with values", func(t *testing.T) {
-		v := viper.New()
-		v.Set("values", map[string]string{"server_address": "server.example.com"})
-
-		c, err := BuildContext(v, nil)
-
-		assert.Nil(t, err)
-		assert.NotNil(t, c)
-		assert.NotNil(t, c.values)
-		assert.Equal(t, "server.example.com", c.values["server_address"])
 	})
 
 	t.Run("build context from YAML", func(t *testing.T) {
@@ -108,8 +99,6 @@ func TestContextBuilder(t *testing.T) {
   url: http://xld.example.com:4516
   username: admin
   password: 3dm1n
-values:
-  server_address: server.example.com
 `
 
 		v := viper.New()
@@ -117,14 +106,12 @@ values:
 		err := v.ReadConfig(bytes.NewBuffer([]byte(yamlConfig)))
 		require.Nil(t, err)
 
-		c, err := BuildContext(v, nil)
+		c, err := BuildContext(v, nil, []string{})
 
 		require.Nil(t, err)
 		require.NotNil(t, c)
 		require.NotNil(t, c.XLDeploy)
 		require.Equal(t, "http://xld.example.com:4516", c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Url.String())
-		require.NotNil(t, c.values)
-		require.Equal(t, "server.example.com", c.values["server_address"])
 	})
 
 	t.Run("do not write config file if xl-deploy.password was stored in the config file but was overridden", func(t *testing.T) {
@@ -148,7 +135,7 @@ values:
 		v.ReadInConfig()
 		v.Set("xl-deploy.password", "t3st")
 
-		c, err := BuildContext(v, nil)
+		c, err := BuildContext(v, nil, []string{})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -176,16 +163,13 @@ values:
   url: http://testxld:6154
   username: testuser
   password: t3st
-values:
-  server_username: root
-  server_hostname: server.example.com
 `), 0755)
 
 		v := viper.New()
 		v.SetConfigFile(configfile)
 		v.ReadInConfig()
 
-		_, err = BuildContext(v,  nil)
+		_, err = BuildContext(v,  nil, []string{})
 		require.Nil(t, err)
 
 		configbytes, err := ioutil.ReadFile(configfile)
@@ -195,10 +179,6 @@ values:
 		err = yaml.Unmarshal(configbytes, parsed)
 		require.Nil(t, err)
 
-		values := parsed["values"].(map[interface{}]interface{})
-		require.NotNil(t, values)
-		serverUsername := values["server_username"].(string)
-		require.Equal(t, "root", serverUsername)
 	})
 
 	t.Run("return error when password is missing", func(t *testing.T) {
@@ -219,7 +199,7 @@ values:
 		v.SetConfigFile(configfile)
 		v.ReadInConfig()
 
-		c, err := BuildContext(v, nil)
+		c, err := BuildContext(v, nil, []string{})
 
 		assert.NotNil(t, err)
 		assert.Nil(t, c)
@@ -297,12 +277,118 @@ values:
 
 	t.Run("validate that names of values are correct", func(t *testing.T) {
 		v := viper.New()
-		v.Set("values", map[string]string{"!incorrectKey": "test value"})
 
-		_, err := BuildContext(v, nil)
+		values := make(map[string]string)
+		values["!incorrectKey"] = "test value"
+
+		_, err := BuildContext(v, &values, []string{})
 
 		assert.NotNil(t, err)
 		assert.Equal(t, "the name of the value !incorrectKey is invalid. It must start with an alphabetical character or an underscore and be followed by zero or more alphanumerical characters or underscores", err.Error())
 	})
 
+
+	t.Run("Should override values in alphabetical order", func(t *testing.T) {
+		v := viper.New()
+
+		propfile1 := writePropFile("file1", `
+test=test
+test2=test2
+`)
+		defer os.Remove(propfile1.Name())
+
+		valsFiles := []string{propfile1.Name()}
+
+		context, err2 := BuildContext(v, nil, valsFiles)
+		assert.Nil(t, err2)
+
+		assert.Equal(t, "test", context.values["test"])
+		assert.Equal(t, "test2", context.values["test2"])
+	})
+
+	t.Run("Should override values from value files in right order (only value files)", func(t *testing.T) {
+		v := viper.New()
+
+		propfile1 := writePropFile("file1", `
+test=test
+test2=test2
+verifythisfilegetsread=ok
+`)
+		defer os.Remove(propfile1.Name())
+
+		propfile2 := writePropFile("file2", `
+test=override
+test2=override2
+`)
+		defer os.Remove(propfile2.Name())
+
+		valsFiles := []string{propfile1.Name(),propfile2.Name()}
+
+		context, err2 := BuildContext(v, nil, valsFiles)
+		assert.Nil(t, err2)
+
+		assert.Equal(t, 3, len(context.values))
+		assert.Equal(t, "override", context.values["test"])
+		assert.Equal(t, "override2", context.values["test2"])
+		assert.Equal(t, "ok", context.values["verifythisfilegetsread"])
+	})
+
+	t.Run("Should command line parameter value should override value files", func(t *testing.T) {
+		v := viper.New()
+
+		propfile1 := writePropFile("file1", `
+test=test
+test2=test2
+verifythisfilegetsread=ok
+`)
+		defer os.Remove(propfile1.Name())
+
+		valsFiles := []string{propfile1.Name()}
+
+		values := make(map[string]string)
+		values["test"] = "override"
+		values["test2"] = "override2"
+
+		context, err2 := BuildContext(v, &values, valsFiles)
+		assert.Nil(t, err2)
+
+		assert.Equal(t, 3, len(context.values))
+		assert.Equal(t, "override", context.values["test"])
+		assert.Equal(t, "override2", context.values["test2"])
+		assert.Equal(t, "ok", context.values["verifythisfilegetsread"])
+	})
+
+	t.Run("Environment variables should override value files", func(t *testing.T) {
+		v := viper.New()
+
+		propfile1 := writePropFile("file1", `
+test=test
+test2=test2
+verifythisfilegetsread=ok
+`)
+		defer os.Remove(propfile1.Name())
+
+		valsFiles := []string{propfile1.Name()}
+
+		os.Setenv("XL_VALUE_test", "override")
+		os.Setenv("XL_VALUE_test2", "override2")
+
+		context, err2 := BuildContext(v, nil, valsFiles)
+		assert.Nil(t, err2)
+
+		assert.Equal(t, 3, len(context.values))
+		assert.Equal(t, "override", context.values["test"])
+		assert.Equal(t, "override2", context.values["test2"])
+		assert.Equal(t, "ok", context.values["verifythisfilegetsread"])
+	})
+
+}
+
+func writePropFile(prefix string, content3 string) (f *os.File) {
+	tmpfile, err := ioutil.TempFile("", prefix)
+	if err != nil {
+		panic(err)
+	}
+	ioutil.WriteFile(tmpfile.Name(), []byte(content3), 0755)
+	return tmpfile
 }

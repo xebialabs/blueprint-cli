@@ -10,7 +10,7 @@ import (
 	"regexp"
 )
 
-func BuildContext(v *viper.Viper, valueOverrides *map[string]string) (*Context, error) {
+func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles []string) (*Context, error) {
 	var xlDeploy *XLDeployServer
 	var xlRelease *XLReleaseServer
 
@@ -35,7 +35,7 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string) (*Context, 
 		xlRelease.Home = v.GetString("xl-release.home")
 	}
 
-	values, err := readValues(v, "values", "XL_VALUE_", valueOverrides)
+	values, err := mergeValues("XL_VALUE_", valueOverrides, valueFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -108,8 +108,12 @@ func readServerConfig(v *viper.Viper, prefix string) (*SimpleHTTPServer, error) 
 	}, nil
 }
 
-func readValues(v *viper.Viper, configName string, envPrefix string, flagOverrides *map[string]string) (map[string]string, error) {
-	m := v.GetStringMapString(configName)
+func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles []string) (map[string]string, error) {
+
+	m, err := readValuesFromXlValsFiles(valueFiles)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, envOverride := range os.Environ() {
 		eqPos := strings.Index(envOverride, "=")
@@ -124,6 +128,12 @@ func readValues(v *viper.Viper, configName string, envPrefix string, flagOverrid
 		}
 	}
 
+	if flagOverrides != nil {
+		for k, v := range *flagOverrides {
+			m[k] = v
+		}
+	}
+
 	var validKeyRegex = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 	for k, _ := range m {
 		if !validKeyRegex.MatchString(k) {
@@ -131,12 +141,26 @@ func readValues(v *viper.Viper, configName string, envPrefix string, flagOverrid
 		}
 	}
 
-	if flagOverrides != nil {
-		for k, v := range *flagOverrides {
-			m[k] = v
-		}
+	return m, nil
+}
+func readValuesFromXlValsFiles(valueFiles []string) (map[string]string, error) {
+
+	propViper := viper.New()
+	m := make(map[string]string)
+
+	for _, valueFile := range valueFiles {
+		Verbose("Using value file: %s\n", valueFile)
+		propViper.SetConfigFile(valueFile)
+		propViper.SetConfigType("properties")
+		propViper.MergeInConfig()
+
+	}
+
+	// covert to map
+	keys := propViper.AllKeys()
+	for _, key := range keys {
+		m[key] = propViper.GetString(key)
 	}
 
 	return m, nil
 }
-
