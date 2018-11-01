@@ -195,9 +195,16 @@ func (doc *Document) processCustomTag(tag *yaml.CustomTag, c *processingContext)
 		return doc.processValueTag(tag, c)
 	case "!file":
 		return doc.processFileTag(tag, c)
+	case "!format":
+		return doc.processFormatTag(tag, c)
 	default:
 		return nil, errors.New(fmt.Sprintf("unknown tag %s %s", tag.Tag, tag.Value))
 	}
+}
+
+func (doc *Document) processFormatTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
+	Verbose("...... Processing format tag on field %s\n", tag.Tag)
+	return Substitute(tag.Value, c.context.values)
 }
 
 func (doc *Document) processValueTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {

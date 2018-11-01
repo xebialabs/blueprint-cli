@@ -160,7 +160,16 @@ spec:
   address: server.example.com
   username: root
   password: !value server.root.password
-`, XldApiVersion, XldApiVersion)
+---
+apiVersion: %s
+kind: Intrastructure
+spec:
+- name: server
+  type: overthere.SshHost
+  address: !format '%%server_url%%%%%%35%%%%'
+  username: root
+  password: pass
+`, XldApiVersion, XldApiVersion, XldApiVersion)
 		docreader := NewDocumentReader(strings.NewReader(yamlDoc))
 		doc1, err1 := docreader.ReadNextYamlDocument()
 		var v1 interface{}
@@ -183,6 +192,14 @@ spec:
 		spec2 := TransformToMap(doc2.Spec)
 		assert.Equal(t, "server", spec2[0]["name"])
 		assert.Equal(t, yaml.CustomTag{"!value", "server.root.password"}, spec2[0]["password"])
+
+		doc3, err3 := docreader.ReadNextYamlDocument()
+
+		assert.Nil(t, err3)
+		assert.NotNil(t, doc3)
+		spec3 := TransformToMap(doc3.Spec)
+		fmt.Println(fmt.Sprintf("%s", doc3.Spec))
+		assert.Equal(t, yaml.CustomTag{"!format", "%server_url%%%35%%"}, spec3[0]["address"])
 	})
 
 	t.Run("should add xl-deploy homes if missing in yaml document", func(t *testing.T) {
@@ -336,6 +353,74 @@ spec:
 
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "No value")
+	})
+
+	t.Run("should process !format tag", func(t *testing.T) {
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Infrastructure
+spec:`, XldApiVersion) + `
+- name: serverHost
+  type: overthere.SshHost
+  address: server.example.com
+  username: !format '%server_url%%%35%%'
+  password: r00t`
+
+		doc, err := ParseYamlDocument(yamlDoc)
+
+		require.Nil(t, err)
+		require.NotNil(t, doc)
+
+		values := map[string]string{
+			"server_url": "theuselessweb.com/",
+		}
+		context := &Context{values: values}
+
+		err = doc.Preprocess(context, "")
+
+		assert.Nil(t, err)
+		assert.Equal(t, "theuselessweb.com/%35%", TransformToMap(doc.Spec)[0]["username"])
+	})
+
+	t.Run("should process !format tag", func(t *testing.T) {
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Infrastructure
+spec:`, XldApiVersion) + `
+- name: serverHost
+  url: !format '%server_url%%%35%%'
+`
+		doc, err := ParseYamlDocument(yamlDoc)
+
+		require.Nil(t, err)
+		require.NotNil(t, doc)
+
+		values := map[string]string{"server_url":"testhost"}
+		context := &Context{values: values}
+
+		err = doc.Preprocess(context, "")
+
+		assert.Nil(t, err)
+		assert.Equal(t, "testhost%35%", TransformToMap(doc.Spec)[0]["url"])
+	})
+
+	t.Run("should report error when !format tag have a reference to unknown value", func(t *testing.T) {
+		yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Infrastructure
+spec:`, XldApiVersion) + `
+- name: serverHost
+  url: !format '%server_url%%%35%%'
+`
+		doc, err := ParseYamlDocument(yamlDoc)
+
+		require.Nil(t, err)
+		require.NotNil(t, doc)
+
+		values := map[string]string{}
+		context := &Context{values: values}
+
+		err = doc.Preprocess(context, "")
+
+		assert.NotNil(t, err)
+		assert.Contains(t, err.Error(), "unknown value: `server_url`")
 	})
 
 	t.Run("should process !file tag", func(t *testing.T) {
