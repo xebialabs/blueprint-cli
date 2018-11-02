@@ -2,7 +2,7 @@ import java.text.SimpleDateFormat
 import jp.classmethod.aws.gradle.s3.AmazonS3FileUploadTask
 
 plugins {
-    id 'com.github.blindpirate.gogradle' version '0.10'
+    id 'com.github.blindpirate.gogradle' version '0.10.2'
     id 'pl.allegro.tech.build.axion-release' version '1.9.2'
     id "jp.classmethod.aws" version "0.38"
 }
