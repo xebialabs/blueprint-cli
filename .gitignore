@@ -4,6 +4,9 @@
 *.so
 *.dylib
 
+# generated packr files
+*-packr.go
+
 # Test binary, build with `go test -c`
 *.test
 

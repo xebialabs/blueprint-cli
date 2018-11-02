@@ -1,3 +1,5 @@
+import com.github.blindpirate.gogradle.Go
+
 import java.text.SimpleDateFormat
 import jp.classmethod.aws.gradle.s3.AmazonS3FileUploadTask
 
@@ -17,6 +19,11 @@ golang {
 
 dependencies {
     golang {
+
+        // *** WARNING *** since we now have license information embedded in the application
+        // You need to do some additional steps when adding a library. See README for more details
+        // *** NOTICE **** always verify the information from the tool since its based on heuristics
+        build name: 'github.com/gobuffalo/packr'
         build name: 'github.com/spf13/cobra',               tag: 'v0.0.3'
         build name: 'github.com/spf13/viper',               tag: 'v1.1.0'
         build name: 'github.com/mitchellh/go-homedir',      tag: 'v1.0.0'
@@ -71,11 +78,15 @@ scmVersion {
 
 project.version = scmVersion.version
 
-task installTemplify(type: com.github.blindpirate.gogradle.Go) {
+task installTemplify(type: Go) {
     go "get github.com/wlbr/templify"
 }
 
-installDependencies.dependsOn installTemplify
+task installPackr(type: Go) {
+    go "get github.com/gobuffalo/packr/packr"
+}
+
+installDependencies.dependsOn installTemplify, installPackr
 
 task dumpVersion {
     file(buildDir).mkdirs()
@@ -107,8 +118,9 @@ build {
             (project.hasProperty("optimise") ? "-s -w" : "") +
             "'"
 
-    // The ${} placeholder will be rendered in cross-compile
+    run "packr"
     go "generate cmd/xl/cmd/wrapper.go"
+    // The ${} placeholder will be rendered in cross-compile
     go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
     dumpVersion
 }
