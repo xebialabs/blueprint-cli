@@ -118,7 +118,7 @@ build {
             (project.hasProperty("optimise") ? "-s -w" : "") +
             "'"
 
-    go "run packr"
+    run "packr"
     go "generate cmd/xl/cmd/wrapper.go"
     // The ${} placeholder will be rendered in cross-compile
     go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
