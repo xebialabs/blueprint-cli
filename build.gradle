@@ -83,7 +83,7 @@ task installTemplify(type: Go) {
 }
 
 task installPackr(type: Go) {
-    go "install github.com/gobuffalo/packr/packr"
+    go "get github.com/gobuffalo/packr/packr"
 }
 
 installDependencies.dependsOn installTemplify, installPackr
@@ -118,7 +118,7 @@ build {
             (project.hasProperty("optimise") ? "-s -w" : "") +
             "'"
 
-    run "packr"
+    go "run packr"
     go "generate cmd/xl/cmd/wrapper.go"
     // The ${} placeholder will be rendered in cross-compile
     go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
