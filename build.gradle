@@ -26,7 +26,8 @@ dependencies {
         build name: 'github.com/olekukonko/tablewriter',    tag: 'v0.0.1'
         build name: 'gopkg.in/cheggaaa/pb.v1',              tag: 'v1.0.25'
         build name: 'github.com/mattn/go-isatty',           tag: 'v0.0.3'
-
+        build name: 'github.com/magiconair/properties',     tag: 'v1.8.0'
+        build name: 'github.com/thoas/go-funk',             tag: '0.4'
         test name: 'github.com/stretchr/testify/',          tag: 'v1.2.2'
     }
 }
