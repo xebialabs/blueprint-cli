@@ -215,6 +215,36 @@ metadata:
 		assert.Equal(t, infra.doc(1).Kind, "Deployment")
 		assert.Nil(t, infra.metadata(1)["imports"])
 	})
+
+	t.Run("should list xlvals files from relative directory in alphabetical order", func(t *testing.T) {
+		dir, err := ioutil.TempDir("", "")
+		defer os.Remove(dir)
+		check(err)
+
+		_, err1 := os.Create(filepath.Join(dir, "b.xlvals"))
+		check(err1)
+
+		_, err2 := os.Create(filepath.Join(dir, "c.xlvals"))
+		check(err2)
+
+		_, err3 := os.Create(filepath.Join(dir, "a.xlvals"))
+		check(err3)
+
+		subdir, err := ioutil.TempDir(dir, "")
+		check(err)
+
+		_, err4 := os.Create(filepath.Join(subdir, "d.xlvals"))
+		check(err4)
+
+		files, err := listRelativeXlValsFiles(dir)
+		check(err)
+
+		assert.Len(t, files, 3)
+		assert.Equal(t, filepath.Base(files[0]), "a.xlvals")
+		assert.Equal(t, filepath.Base(files[1]), "b.xlvals")
+		assert.Equal(t, filepath.Base(files[2]), "c.xlvals")
+		assert.NotContains(t, files, "d.xlvals")
+	})
 }
 
 func createTempDir(name string) string {

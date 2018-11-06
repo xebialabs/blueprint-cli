@@ -3,36 +3,24 @@ package xl
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"os"
-	"path"
 	"path/filepath"
-	"sort"
+	"os"
 	"strings"
+	"io/ioutil"
 )
 
 func FindByExtInDirSorted(parentPath string, ext string) ([]string, error) {
-	var files []string
-	err := filepath.Walk(parentPath, func(currentPath string, f os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !f.IsDir() && filepath.Ext(currentPath) == ext {
-			files = append(files, currentPath)
-		}
-		return nil
-	})
+	var res []string
+	files, err := ioutil.ReadDir(parentPath) // sorted by filename
 	if err != nil {
 		return nil, err
 	}
-
-	// sort by filename
-	sort.Slice(files, func(i, j int) bool {
-		_, f1 := path.Split(files[i])
-		_, f2 := path.Split(files[j])
-		return strings.Compare(f1, f2) == 0
-	})
-
-	return files, nil
+	for _, f := range files {
+		if !f.IsDir() && filepath.Ext(f.Name()) == ext {
+			res = append(res, filepath.Join(parentPath, f.Name()))
+		}
+	}
+	return res, nil
 }
 
 func isRelativePath(filename string) bool {
