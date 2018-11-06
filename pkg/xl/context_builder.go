@@ -3,12 +3,13 @@ package xl
 import (
 	"errors"
 	"fmt"
+	"github.com/magiconair/properties"
 	"github.com/spf13/viper"
+	"github.com/thoas/go-funk"
 	"net/url"
 	"os"
-	"strings"
 	"regexp"
-	"github.com/magiconair/properties"
+	"strings"
 )
 
 func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles []string) (*Context, error) {
@@ -110,7 +111,9 @@ func readServerConfig(v *viper.Viper, prefix string) (*SimpleHTTPServer, error) 
 }
 
 func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles []string) (map[string]string, error) {
-
+	funk.ForEach(valueFiles, func(valueFile string) {
+		Verbose("Using value file: %s\n", valueFile)
+	})
 	m := properties.MustLoadFiles(valueFiles, properties.UTF8, false).Map()
 
 	for _, envOverride := range os.Environ() {
