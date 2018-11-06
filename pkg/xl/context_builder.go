@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"regexp"
+	"github.com/magiconair/properties"
 )
 
 func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles []string) (*Context, error) {
@@ -110,10 +111,7 @@ func readServerConfig(v *viper.Viper, prefix string) (*SimpleHTTPServer, error) 
 
 func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles []string) (map[string]string, error) {
 
-	m, err := readValuesFromXlValsFiles(valueFiles)
-	if err != nil {
-		return nil, err
-	}
+	m := properties.MustLoadFiles(valueFiles, properties.UTF8, false).Map()
 
 	for _, envOverride := range os.Environ() {
 		eqPos := strings.Index(envOverride, "=")
@@ -139,27 +137,6 @@ func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles 
 		if !validKeyRegex.MatchString(k) {
 			return nil, errors.New(fmt.Sprintf("the name of the value %s is invalid. It must start with an alphabetical character or an underscore and be followed by zero or more alphanumerical characters or underscores", k))
 		}
-	}
-
-	return m, nil
-}
-func readValuesFromXlValsFiles(valueFiles []string) (map[string]string, error) {
-
-	propViper := viper.New()
-	m := make(map[string]string)
-
-	for _, valueFile := range valueFiles {
-		Verbose("Using value file: %s\n", valueFile)
-		propViper.SetConfigFile(valueFile)
-		propViper.SetConfigType("properties")
-		propViper.MergeInConfig()
-
-	}
-
-	// covert to map
-	keys := propViper.AllKeys()
-	for _, key := range keys {
-		m[key] = propViper.GetString(key)
 	}
 
 	return m, nil
