@@ -1,37 +1,83 @@
 package cmd
 
 import (
-	"testing"
+	"fmt"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io/ioutil"
 	"os"
 	"fmt"
 	"net/http"
-	"github.com/spf13/viper"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"testing"
 	"github.com/stretchr/testify/assert"
 )
 
+type TestInfra struct {
+	documents []xl.Document
+	xldServer *httptest.Server
+	xlrServer *httptest.Server
+}
+
+func (infra *TestInfra) appendDoc(document xl.Document) {
+	infra.documents = append(infra.documents, document)
+}
+
+func (infra *TestInfra) shutdown() {
+	infra.xldServer.Close()
+	infra.xlrServer.Close()
+}
+
+func (infra *TestInfra) doc(index int) xl.Document {
+	return infra.documents[index]
+}
+
+func (infra *TestInfra) spec(index int) []map[interface{}]interface{} {
+	return xl.TransformToMap(infra.doc(index).Spec)
+}
+
+func (infra *TestInfra) metadata(index int) map[interface{}]interface{} {
+	return infra.doc(index).Metadata
+}
+
+func CreateTestInfra(viper *viper.Viper) *TestInfra {
+	infra := &TestInfra{documents: make([]xl.Document, 0)}
+
+	xldHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
+		body, err := ioutil.ReadAll(request.Body)
+		check(err)
+		doc, err := xl.ParseYamlDocument(string(body))
+		check(err)
+		infra.appendDoc(*doc)
+	}
+
+	xlrHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
+		body, err := ioutil.ReadAll(request.Body)
+		check(err)
+		doc, err := xl.ParseYamlDocument(string(body))
+		check(err)
+		infra.appendDoc(*doc)
+	}
+
+	infra.xldServer = httptest.NewServer(http.HandlerFunc(xldHandler))
+	infra.xlrServer = httptest.NewServer(http.HandlerFunc(xlrHandler))
+
+	viper.Set("xl-deploy.url", infra.xldServer.URL)
+	viper.Set("xl-release.url", infra.xlrServer.URL)
+	return infra
+}
 
 func TestApply(t *testing.T) {
 
 	xl.IsVerbose = true
 
 	t.Run("should apply multiple yaml files in right order with value replacement to both xlr and xld", func(t *testing.T) {
-
-		tempDir1, err := ioutil.TempDir("", "firstDir")
-		check(err)
-		prop1, err := os.Create(filepath.Join(tempDir1, "prop1.xlvals"))
-		check(err)
-		defer prop1.Close()
-		_, err2 := prop1.WriteString("replaceme=success1")
-		prop1.Sync()
-		check(err2)
-		yaml, err := ioutil.TempFile(tempDir1, "yaml1")
-		check(err)
-		defer os.RemoveAll(tempDir1)
-		yaml.WriteString(fmt.Sprintf(`
+		tempDir1 := createTempDir("firstDir")
+		writeToFile(filepath.Join(tempDir1, "prop1.xlvals"), "replaceme=success1")
+		yaml := writeToTempFile(tempDir1, "yaml1", fmt.Sprintf(`
 apiVersion: %s
 kind: Template
 spec:
@@ -45,28 +91,12 @@ kind: Applications
 spec:
 - name: App1
 `, xl.XlrApiVersion, xl.XldApiVersion))
-		yaml.Close()
+		defer os.RemoveAll(tempDir1)
 
-		tempDir2, err := ioutil.TempDir("", "secondDir")
-		check(err)
-		prop2, err := os.Create(filepath.Join(tempDir2, "prop2.xlvals"))
-		check(err)
-		defer prop2.Close()
-		_, err3 := prop2.WriteString("replaceme=success2\noverrideme=notoverriden")
-		prop2.Sync()
-		check(err3)
-
-		prop3, err := os.Create(filepath.Join(tempDir2, "prop3.xlvals"))
-		check(err)
-		defer prop3.Close()
-		_, err4 := prop3.WriteString("overrideme=OVERRIDDEN")
-		prop3.Sync()
-		check(err4)
-
-		yaml2, err := ioutil.TempFile(tempDir2, "yaml2")
-		check(err)
-		defer os.RemoveAll(tempDir2)
-		yaml2.WriteString(fmt.Sprintf(`
+		tempDir2 := createTempDir("secondDir")
+		writeToFile(filepath.Join(tempDir2, "prop2.xlvals"), "replaceme=success2\noverrideme=notoverriden")
+		writeToFile(filepath.Join(tempDir2, "prop3.xlvals"), "overrideme=OVERRIDDEN")
+		yaml2 := writeToTempFile(tempDir2, "yaml2", fmt.Sprintf(`
 apiVersion: %s
 kind: Template
 spec:
@@ -80,55 +110,114 @@ kind: Applications
 spec:
 - name: App2
 `, xl.XlrApiVersion, xl.XldApiVersion))
-		yaml2.Close()
-
-		var documents []xl.Document
-
-		xldHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
-			body, err := ioutil.ReadAll(request.Body)
-			check(err)
-			doc, err := xl.ParseYamlDocument(string(body))
-			check(err)
-			documents = append(documents, *doc)
-		}
-
-		xlrHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
-			body, err := ioutil.ReadAll(request.Body)
-			check(err)
-			doc, err := xl.ParseYamlDocument(string(body))
-			check(err)
-			documents = append(documents, *doc)
-		}
-
-		applyFilenames := []string{yaml.Name(), yaml2.Name()}
-
-		xldTestServer := httptest.NewServer(http.HandlerFunc(xldHandler))
-		defer xldTestServer.Close()
-
-		xlrTestServer := httptest.NewServer(http.HandlerFunc(xlrHandler))
-		defer xlrTestServer.Close()
+		defer os.RemoveAll(tempDir2)
 
 		v := viper.GetViper()
-		v.Set("xl-deploy.url", xldTestServer.URL)
-		v.Set("xl-release.url", xlrTestServer.URL)
 		v.Set("xl-deploy.applications-home", "Applications/XL")
 		v.Set("xl-release.home", "XL")
 
-		DoApply(applyFilenames)
+		infra := CreateTestInfra(v)
+		defer infra.shutdown()
 
-		assert.Equal(t, xl.TransformToMap(documents[0].Spec)[0]["name"], "Template1")
-		assert.Equal(t, xl.TransformToMap(documents[0].Spec)[1]["replaceTest"], "success1")
-		assert.Equal(t, documents[0].Metadata["home"], "XL")
-		assert.Equal(t, xl.TransformToMap(documents[1].Spec)[0]["name"], "App1")
-		assert.Equal(t, documents[1].Metadata["Applications-home"], "Applications/XL")
-		assert.Equal(t, xl.TransformToMap(documents[2].Spec)[0]["name"], "Template2")
-		assert.Equal(t, xl.TransformToMap(documents[2].Spec)[1]["replaceTest"], "success2")
-		assert.Equal(t, xl.TransformToMap(documents[2].Spec)[2]["overrideTest"], "OVERRIDDEN")
-		assert.Equal(t, documents[2].Metadata["home"], "XL")
-		assert.Equal(t, xl.TransformToMap(documents[3].Spec)[0]["name"], "App2")
-		assert.Equal(t, documents[3].Metadata["Applications-home"], "Applications/XL")
+		DoApply([]string{yaml.Name(), yaml2.Name()})
+
+		assert.Equal(t, infra.spec(0)[0]["name"], "Template1")
+		assert.Equal(t, infra.spec(0)[1]["replaceTest"], "success1")
+		assert.Equal(t, infra.metadata(0)["home"], "XL")
+
+		assert.Equal(t, infra.spec(1)[0]["name"], "App1")
+		assert.Equal(t, infra.metadata(1)["Applications-home"], "Applications/XL")
+
+		assert.Equal(t, infra.spec(2)[0]["name"], "Template2")
+		assert.Equal(t, infra.spec(2)[1]["replaceTest"], "success2")
+		assert.Equal(t, infra.spec(2)[2]["overrideTest"], "OVERRIDDEN")
+		assert.Equal(t, infra.metadata(2)["home"], "XL")
+
+		assert.Equal(t, infra.spec(3)[0]["name"], "App2")
+		assert.Equal(t, infra.metadata(3)["Applications-home"], "Applications/XL")
 	})
 
+	t.Run("should take imports into account", func(t *testing.T) {
+		tempDir := createTempDir("imports")
+		provisionFile := writeToTempFile(tempDir, "provision.yaml", fmt.Sprintf(`
+apiVersion: %s
+kind: Applications
+spec:
+- name: App1
+`, xl.XldApiVersion))
+
+		deployFile := writeToTempFile(tempDir, "deploy.yaml", fmt.Sprintf(`
+apiVersion: %s
+kind: Deployment
+metadata:
+  imports:
+    - %s
+spec:
+  package: Applications/PetPortal/1.0
+  environment: Environments/AWS Environment
+  undeployDependencies: true
+  orchestrators:
+  - parallel-by-deployment-group
+  - sequential-by-container
+`, xl.XldApiVersion, filepath.Base(provisionFile.Name())))
+		defer os.RemoveAll(tempDir)
+
+		v := viper.GetViper()
+		infra := CreateTestInfra(v)
+		defer infra.shutdown()
+
+		DoApply([]string{deployFile.Name()})
+
+		assert.Equal(t, len(infra.documents), 2)
+		assert.Equal(t, infra.doc(0).Kind, "Applications")
+		assert.Equal(t, infra.doc(1).Kind, "Deployment")
+		assert.Nil(t, infra.metadata(1)["imports"])
+	})
+
+	t.Run("should support 'imports' file together with imports inside of imported files", func(t *testing.T) {
+		tempDir := createTempDir("imports2")
+		provisionFile := writeToTempFile(tempDir, "provision.yaml", fmt.Sprintf(`
+apiVersion: %s
+kind: Applications
+spec:
+- name: App1
+`, xl.XldApiVersion))
+
+		deployFile := writeToTempFile(tempDir, "deploy.yaml", fmt.Sprintf(`
+apiVersion: %s
+kind: Deployment
+metadata:
+  imports:
+    - %s
+spec:
+  package: Applications/PetPortal/1.0
+  environment: Environments/AWS Environment
+  undeployDependencies: true
+  orchestrators:
+  - parallel-by-deployment-group
+  - sequential-by-container
+`, xl.XldApiVersion, filepath.Base(provisionFile.Name())))
+
+		importsFile := writeToTempFile(tempDir, "imports.yaml", fmt.Sprintf(`
+apiVersion: %s
+kind: Import
+metadata:
+  imports:
+    - %s
+`, yamlFormatVersion, filepath.Base(deployFile.Name())))
+		defer os.RemoveAll(tempDir)
+
+		v := viper.GetViper()
+		infra := CreateTestInfra(v)
+		defer infra.shutdown()
+
+		DoApply([]string{importsFile.Name()})
+
+		assert.Equal(t, len(infra.documents), 2)
+		assert.Equal(t, infra.doc(0).Kind, "Applications")
+		assert.Equal(t, infra.doc(1).Kind, "Deployment")
+		assert.Nil(t, infra.metadata(1)["imports"])
+	})
 
 	t.Run("should list xlvals files from relative directory in alphabetical order", func(t *testing.T) {
 		dir, err := ioutil.TempDir("", "")
@@ -159,9 +248,33 @@ spec:
 		assert.Equal(t, filepath.Base(files[2]), "c.xlvals")
 		assert.NotContains(t, files, "d.xlvals")
 	})
-
 }
 
+func createTempDir(name string) string {
+	dir, err := ioutil.TempDir("", name)
+	check(err)
+	return dir
+}
+
+func writeToTempFile(tempDir string, fileName string, value string) *os.File {
+	file, err := ioutil.TempFile(tempDir, fileName)
+	check(err)
+	return writeTo(file, value)
+}
+
+func writeToFile(filePath string, value string) *os.File {
+	file, err := os.Create(filePath)
+	check(err)
+	return writeTo(file, value)
+}
+
+func writeTo(file *os.File, value string) *os.File {
+	defer file.Close()
+	_, err2 := file.WriteString(value)
+	file.Sync()
+	check(err2)
+	return file
+}
 
 func check(e error) {
 	if e != nil {

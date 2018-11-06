@@ -3,14 +3,14 @@ package xl
 import (
 	"archive/zip"
 	"fmt"
+	"github.com/jhoonb/archivex"
+	"github.com/pkg/errors"
+	"github.com/xebialabs/yaml"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-	"github.com/jhoonb/archivex"
-	"github.com/pkg/errors"
-	"github.com/xebialabs/yaml"
 )
 
 type Document struct {
@@ -26,9 +26,9 @@ type DocumentReader struct {
 
 type unmarshalleddocument struct {
 	Kind       string
-	ApiVersion string                        `yaml:"apiVersion"`
-	Metadata   map[interface{}]interface{}   `yaml:"metadata,omitempty"`
-	Spec	   interface{}					 `yaml:"spec,omitempty"`
+	ApiVersion string                      `yaml:"apiVersion"`
+	Metadata   map[interface{}]interface{} `yaml:"metadata,omitempty"`
+	Spec       interface{}                 `yaml:"spec,omitempty"`
 }
 
 type processingContext struct {
@@ -61,7 +61,7 @@ func (reader *DocumentReader) ReadNextYamlDocument() (*Document, error) {
 		return &Document{unmarshalleddocument{}, line, column, ""}, err
 	}
 
-	doc := Document{pdoc,  line, column, ""}
+	doc := Document{pdoc, line, column, ""}
 	if doc.Metadata == nil {
 		doc.Metadata = map[interface{}]interface{}{}
 	}
@@ -151,7 +151,7 @@ func (doc *Document) processList(l []interface{}, c *processingContext) error {
 	return nil
 }
 
-func (doc *Document) processMap(m map[interface{}]interface{}, c *processingContext) (error) {
+func (doc *Document) processMap(m map[interface{}]interface{}, c *processingContext) error {
 	for k, v := range m {
 		newV, err := doc.processValue(v, c)
 		if err != nil {
@@ -252,7 +252,7 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 	}
 }
 
-func (doc *Document) normalizeFileTag(tag *yaml.CustomTag, c *processingContext)  {
+func (doc *Document) normalizeFileTag(tag *yaml.CustomTag, c *processingContext) {
 	tag.Value = filepath.Clean(tag.Value)
 }
 
@@ -261,22 +261,7 @@ func (doc *Document) validateFileTag(tag *yaml.CustomTag, c *processingContext) 
 		return errors.New("cannot process !file tags if artifactsDir has not been set")
 	}
 	filename := tag.Value
-	if filepath.IsAbs(filename) {
-		return errors.New(fmt.Sprintf("absolute path is not allowed in !file tag: %s", filename))
-	}
-	if isRelativePath(filename) {
-		return errors.New(fmt.Sprintf("relative path with .. is not allowed in !file tag: %s", filename))
-	}
-	return nil
-}
-
-func isRelativePath(filename string) bool {
-	for _, p := range strings.Split(filename, string(os.PathSeparator)) {
-		if p == ".." {
-			return true
-		}
-	}
-	return false
+	return ValidateFilePath(filename, "!file tag")
 }
 
 func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, filename string, c *processingContext) (interface{}, error) {
@@ -341,11 +326,11 @@ func (doc *Document) Cleanup() {
 	}
 }
 
-func TransformToMap(spec interface {}) [] map[interface{}] interface{} {
-	var convertedMap [] map[interface{}] interface{}
+func TransformToMap(spec interface{}) []map[interface{}]interface{} {
+	var convertedMap []map[interface{}]interface{}
 
 	switch typeVal := spec.(type) {
-	case []interface {}:
+	case []interface{}:
 		list := make([]map[interface{}]interface{}, 0)
 		for _, v := range typeVal {
 			list = append(list, v.(map[interface{}]interface{}))
