@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+const yamlFormatVersion = "xl/v1"
+const importSpecKind = "Import"
+
 var CliVersion = "undefined"
 var cfgFile string
 
