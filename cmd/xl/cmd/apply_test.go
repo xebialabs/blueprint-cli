@@ -6,14 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io/ioutil"
-	"os"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
-	"github.com/stretchr/testify/assert"
 )
 
 type TestInfra struct {
