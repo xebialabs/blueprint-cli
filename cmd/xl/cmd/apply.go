@@ -89,7 +89,7 @@ func extractImports(baseDir string, doc *xl.Document) []string {
 				if err != nil {
 					xl.Fatal(err.Error())
 				}
-				return path.Join(baseDir, importedFile)
+				return filepath.Join(baseDir, filepath.FromSlash(importedFile))
 			}).([]string)
 			return importedFiles
 		}
@@ -105,7 +105,8 @@ func readDocumentsFromFile(fileName string) FileWithDocuments {
 	imports := make([]string, 0)
 	documents := make([]*xl.Document, 0)
 	docReader := xl.NewDocumentReader(reader)
-	baseDir := path.Dir(fileName)
+	baseDir := xl.AbsoluteFileDir(fileName)
+	xl.Verbose("Reading file: %s, base dir: %s\n", fileName, baseDir)
 	for {
 		doc, err := docReader.ReadNextYamlDocument()
 		if err != nil {
@@ -153,7 +154,7 @@ func DoApply(applyFilenames []string) {
 		xl.Fatal("Error while reading value files from home: %s\n", e)
 	}
 
-	docs := parseDocuments(applyFilenames, mapset.NewSet())
+	docs := parseDocuments(xl.ToAbsolutePaths(applyFilenames), mapset.NewSet())
 
 	for _, fileWithDocs := range docs {
 		projectValsFiles, err := listRelativeXlValsFiles(filepath.Dir(fileWithDocs.fileName))

@@ -3,10 +3,12 @@ package xl
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"path/filepath"
-	"os"
-	"strings"
+	"github.com/thoas/go-funk"
 	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
 )
 
 func FindByExtInDirSorted(parentPath string, ext string) ([]string, error) {
@@ -40,4 +42,15 @@ func ValidateFilePath(path string, in string) error {
 		return errors.New(fmt.Sprintf("relative path with .. is not allowed in %s: %s\n", in, path))
 	}
 	return nil
+}
+
+func ToAbsolutePaths(paths []string) []string {
+	return funk.Map(paths, func(f string) string {
+		abs, _ := filepath.Abs(filepath.FromSlash(f))
+		return abs
+	}).([]string)
+}
+
+func AbsoluteFileDir(fileName string) string {
+	return filepath.FromSlash(path.Dir(filepath.ToSlash(fileName)))
 }
