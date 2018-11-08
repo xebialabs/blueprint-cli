@@ -1,0 +1,22 @@
+apiVersion: xl-deploy/v1beta1
+kind: Infrastructure
+spec:
+- name: aws
+  type: aws.Cloud
+  accesskey: {{.AWSAccessKey}}
+  accessSecret: {{.AWSAccessSecret}}
+
+---
+apiVersion: xl-deploy/v1beta1
+kind: Environments
+spec:
+- name: AWS Dictionary
+  type: udm.Dictionary
+  entries:
+    region: {{.AWSRegion}}
+- name: AWS
+  type: udm.Environment
+  members:
+  - "~Infrastructure/aws"
+  dictionaries:
+  - "~Environments/AWS Dictionary"

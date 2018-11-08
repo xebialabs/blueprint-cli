@@ -175,3 +175,17 @@ func (server *SimpleHTTPServer) doRequest(method string, path string, contentTyp
 
 	return response, nil
 }
+
+func translateHTTPStatusCodeErrors(statusCode int, urlVal string) error {
+	switch {
+	case statusCode == 401:
+		return fmt.Errorf("401 Request unauthorized. Please check your credentials for %s", urlVal)
+	case statusCode == 403:
+		return fmt.Errorf("403 Request forbidden. Please check your permissions for %s", urlVal)
+	case statusCode == 404:
+		return fmt.Errorf("404 Not found. Please specify the correct url. Provided was %s", urlVal)
+	case statusCode >= 400:
+		return fmt.Errorf("error: StatusCode %d for URL %s", statusCode, urlVal)
+	}
+	return nil
+}

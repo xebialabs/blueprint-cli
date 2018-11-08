@@ -3,15 +3,78 @@ package xl
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"net/url"
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"testing"
 )
+
+func parseURIWithoutError(uri string) url.URL {
+	url, err := url.ParseRequestURI(uri)
+	if err != nil {
+		panic(err)
+	}
+	return *url
+}
+
+func TestGetTemplateRegistries(t *testing.T) {
+	t.Run("get Template Registries from valid config", func(t *testing.T) {
+		yamlConfig := `
+template-registries:
+- name: default
+  url: https://s3.amazonaws.com/xl-cli/blueprints
+- name: custom
+  url: https://s3.amazonaws.com/xl-cli/blueprints/
+  username: admin
+  password: admin
+- url: http://test.com
+`
+		v := viper.New()
+		v.SetConfigType("yaml")
+		err := v.ReadConfig(bytes.NewBuffer([]byte(yamlConfig)))
+		require.Nil(t, err)
+		out, err := getTemplateRegistries(v)
+		require.Nil(t, err)
+		exp := []TemplateRegistry{
+			TemplateRegistry{Name: "default", URL: parseURIWithoutError("https://s3.amazonaws.com/xl-cli/blueprints"), Username: "", Password: ""},
+			TemplateRegistry{Name: "custom", URL: parseURIWithoutError("https://s3.amazonaws.com/xl-cli/blueprints/"), Username: "admin", Password: "admin"},
+			TemplateRegistry{Name: "", URL: parseURIWithoutError("http://test.com"), Username: "", Password: ""},
+		}
+		assert.Equal(t, exp, out)
+	})
+	t.Run("should error on incomplete config", func(t *testing.T) {
+		yamlConfig := `
+template-registries:
+- url: http://test.com
+- name: default
+`
+		v := viper.New()
+		v.SetConfigType("yaml")
+		err := v.ReadConfig(bytes.NewBuffer([]byte(yamlConfig)))
+		require.Nil(t, err)
+		_, err = getTemplateRegistries(v)
+		require.NotNil(t, err)
+	})
+	t.Run("throw error for invalid config", func(t *testing.T) {
+		yamlConfig := `
+template-registries:
+- name: default
+  url: invalidurl;
+`
+		v := viper.New()
+		v.SetConfigType("yaml")
+		err := v.ReadConfig(bytes.NewBuffer([]byte(yamlConfig)))
+		require.Nil(t, err)
+		_, err = getTemplateRegistries(v)
+		require.NotNil(t, err)
+	})
+}
 
 func TestContextBuilder(t *testing.T) {
 

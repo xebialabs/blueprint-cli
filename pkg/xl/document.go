@@ -3,14 +3,14 @@ package xl
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/jhoonb/archivex"
-	"github.com/pkg/errors"
-	"github.com/xebialabs/yaml"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/jhoonb/archivex"
+	"github.com/xebialabs/yaml"
 )
 
 type Document struct {
@@ -198,7 +198,7 @@ func (doc *Document) processCustomTag(tag *yaml.CustomTag, c *processingContext)
 	case "!format":
 		return doc.processFormatTag(tag, c)
 	default:
-		return nil, errors.New(fmt.Sprintf("unknown tag %s %s", tag.Tag, tag.Value))
+		return nil, fmt.Errorf("unknown tag %s %s", tag.Tag, tag.Value)
 	}
 }
 
@@ -210,7 +210,7 @@ func (doc *Document) processFormatTag(tag *yaml.CustomTag, c *processingContext)
 func (doc *Document) processValueTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
 	value, exists := c.context.values[tag.Value]
 	if !exists {
-		return nil, errors.New(fmt.Sprintf("No value for !value %s", tag.Value))
+		return nil, fmt.Errorf("No value for !value %s", tag.Value)
 	}
 
 	Verbose("...... inserting value for !value %s\n", tag.Value)
@@ -246,10 +246,9 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 	fileTag, writeError := doc.writeFileOrDir(tag, filename, c)
 	if writeError != nil {
 		return nil, writeError
-	} else {
-		c.seenFiles[filename] = true
-		return fileTag, nil
 	}
+	c.seenFiles[filename] = true
+	return fileTag, nil
 }
 
 func (doc *Document) normalizeFileTag(tag *yaml.CustomTag, c *processingContext) {
@@ -258,7 +257,7 @@ func (doc *Document) normalizeFileTag(tag *yaml.CustomTag, c *processingContext)
 
 func (doc *Document) validateFileTag(tag *yaml.CustomTag, c *processingContext) error {
 	if c.artifactsDir == "" {
-		return errors.New("cannot process !file tags if artifactsDir has not been set")
+		return fmt.Errorf("cannot process !file tags if artifactsDir has not been set")
 	}
 	filename := tag.Value
 	return ValidateFilePath(filename, "!file tag")
