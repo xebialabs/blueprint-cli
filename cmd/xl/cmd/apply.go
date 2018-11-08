@@ -2,17 +2,26 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/deckarep/golang-set"
+	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
-	"path"
-	"github.com/mitchellh/go-homedir"
-	"github.com/spf13/viper"
+	"strings"
 )
+
+type FileWithDocuments struct {
+	imports   []string
+	documents []*xl.Document
+	fileName  string
+}
 
 var applyFilenames []string
 var applyValues map[string]string
@@ -61,19 +70,96 @@ func printChanges(changes *xl.Changes) {
 	}
 }
 
-func DoApply(applyFilenames []string) {
+func checkForEmptyImport(importedFile string) {
+	if len(strings.TrimSpace(importedFile)) == 0 {
+		xl.Fatal("The 'imports' field contains empty elements.\n")
+	}
+}
 
+func extractImports(baseDir string, doc *xl.Document) []string {
+	if doc.Metadata != nil && doc.Metadata["imports"] != nil {
+		if imports, ok := doc.Metadata["imports"].([]interface{}); !ok {
+			xl.Fatal("The 'imports' field has wrong format. Must be a list of strings.\n")
+		} else {
+			delete(doc.Metadata, "imports")
+			importedFiles, _ := funk.Map(imports, func(i interface{}) string {
+				importedFile, _ := i.(string)
+				checkForEmptyImport(importedFile)
+				err := xl.ValidateFilePath(importedFile, "imports")
+				if err != nil {
+					xl.Fatal(err.Error())
+				}
+				return filepath.Join(baseDir, filepath.FromSlash(importedFile))
+			}).([]string)
+			return importedFiles
+		}
+	}
+	return make([]string, 0)
+}
+
+func readDocumentsFromFile(fileName string) FileWithDocuments {
+	reader, err := os.Open(fileName)
+	if err != nil {
+		xl.Fatal("Error while opening XL YAML file %s: %s\n", fileName, err)
+	}
+	imports := make([]string, 0)
+	documents := make([]*xl.Document, 0)
+	docReader := xl.NewDocumentReader(reader)
+	baseDir := xl.AbsoluteFileDir(fileName)
+	xl.Verbose("Reading file: %s, base dir: %s\n", fileName, baseDir)
+	for {
+		doc, err := docReader.ReadNextYamlDocument()
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				reportFatalDocumentError(fileName, doc, err)
+			}
+		}
+		imports = append(imports, extractImports(baseDir, doc)...)
+		documents = append(documents, doc)
+	}
+	reader.Close()
+	return FileWithDocuments{imports, documents, fileName}
+}
+
+func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
+	funk.ForEach(filesWithDocs, func(file FileWithDocuments) {
+		funk.ForEach(file.documents, func(doc *xl.Document) {
+			if doc.Kind == importSpecKind && doc.ApiVersion != yamlFormatVersion {
+				xl.Fatal("unknown apiVersion for %s spec kind: %s\n", importSpecKind, doc.ApiVersion)
+			}
+		})
+	})
+}
+
+func parseDocuments(fileNames []string, seenFiles mapset.Set) []FileWithDocuments {
+	result := make([]FileWithDocuments, 0)
+	for _, fileName := range fileNames {
+		if !seenFiles.Contains(fileName) {
+			fileWithDocuments := readDocumentsFromFile(fileName)
+			result = append(result, fileWithDocuments)
+			seenFiles.Add(fileName)
+			result = append(parseDocuments(fileWithDocuments.imports, seenFiles), result...)
+		}
+	}
+	validateFileWithDocs(result)
+	return result
+}
+
+func DoApply(applyFilenames []string) {
 	homeValsFiles, e := listHomeXlValsFiles()
 
 	if e != nil {
 		xl.Fatal("Error while reading value files from home: %s\n", e)
 	}
 
-	for _, applyFilename := range applyFilenames {
+	docs := parseDocuments(xl.ToAbsolutePaths(applyFilenames), mapset.NewSet())
 
-		projectValsFiles, err := listRelativeXlValsFiles(filepath.Dir(applyFilename))
+	for _, fileWithDocs := range docs {
+		projectValsFiles, err := listRelativeXlValsFiles(filepath.Dir(fileWithDocs.fileName))
 		if err != nil {
-			xl.Fatal("Error while reading value files for %s from project: %s\n", applyFilename, err)
+			xl.Fatal("Error while reading value files for %s from project: %s\n", fileWithDocs.fileName, err)
 		}
 
 		allValsFiles := append(homeValsFiles, projectValsFiles...)
@@ -83,42 +169,27 @@ func DoApply(applyFilenames []string) {
 			xl.Fatal("Error while reading configuration: %s\n", err)
 		}
 		if xl.IsVerbose {
-			xl.Info("Context for document %s\n", applyFilename)
+			xl.Info("Context for document %s\n", fileWithDocs.fileName)
 			context.PrintConfiguration()
 		}
 
-		xl.StartProgress(applyFilename)
+		xl.StartProgress(fileWithDocs.fileName)
+		applyDir := filepath.Dir(fileWithDocs.fileName)
 
-		applyDir := filepath.Dir(applyFilename)
-		reader, err := os.Open(applyFilename)
-		if err != nil {
-			xl.Fatal("Error while opening XL YAML file %s: %s\n", applyFilename, err)
-		}
-
-		docReader := xl.NewDocumentReader(reader)
-		for {
-			doc, err := docReader.ReadNextYamlDocument()
-			if err != nil {
-				if err == io.EOF {
-					break
-				} else {
-					reportFatalDocumentError(applyFilename, doc, err)
+		for _, doc := range fileWithDocs.documents {
+			xl.UpdateProgressStartDocument(fileWithDocs.fileName, doc)
+			if doc.Kind != importSpecKind {
+				changes, err := context.ProcessSingleDocument(doc, applyDir)
+				printChanges(changes)
+				if err != nil {
+					reportFatalDocumentError(fileWithDocs.fileName, doc, err)
 				}
-			}
-
-			xl.UpdateProgressStartDocument(applyFilename, doc)
-			changes, err := context.ProcessSingleDocument(doc, applyDir)
-			printChanges(changes)
-			if err != nil {
-				reportFatalDocumentError(applyFilename, doc, err)
 			}
 			xl.UpdateProgressEndDocument()
 		}
 
-		reader.Close()
 		xl.EndProgress()
 	}
-
 }
 
 var isFieldAlreadySetErrorRegexp = regexp.MustCompile(`field \w+ already set in type`)

@@ -288,7 +288,7 @@ func TestContextBuilder(t *testing.T) {
 	})
 
 
-	t.Run("Should override values in alphabetical order", func(t *testing.T) {
+	t.Run("Should read values into context", func(t *testing.T) {
 		v := viper.New()
 
 		propfile1 := writePropFile("file1", `
@@ -304,6 +304,26 @@ test2=test2
 
 		assert.Equal(t, "test", context.values["test"])
 		assert.Equal(t, "test2", context.values["test2"])
+	})
+
+	t.Run("Should read case sensitive values", func(t *testing.T) {
+		v := viper.New()
+
+		propfile1 := writePropFile("file1", `
+test=test1
+TEST=test2
+Test=test3
+`)
+		defer os.Remove(propfile1.Name())
+
+		valsFiles := []string{propfile1.Name()}
+
+		context, err2 := BuildContext(v, nil, valsFiles)
+		assert.Nil(t, err2)
+
+		assert.Equal(t, "test1", context.values["test"])
+		assert.Equal(t, "test2", context.values["TEST"])
+		assert.Equal(t, "test3", context.values["Test"])
 	})
 
 	t.Run("Should override values from value files in right order (only value files)", func(t *testing.T) {
