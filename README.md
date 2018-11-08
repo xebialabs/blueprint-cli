@@ -124,7 +124,11 @@ In order to comply with some open source licenses, we need to redistribute licen
 The license data is stored in the `$PROJECT/licenses` folder. The licenses data is populated using a tool called [glice](https://github.com/ribice/glice). The resulting files are checked into version control to cache them. They only need to be updated when our dependencies change, this includes transitive dependencies. We keep them in version control to avoid fetching this information from the internet every build.
 
 When changing/updating dependencies:
-* Make sure glice is installed. `go install github.com/ribice/glice`
+* Make sure glice is installed. 
+```
+go get github.com/ribice/glice
+go install github.com/ribice/glice
+```
 * Run `glice -r -f` in the root of the project to update license files. Commit changes to version control.
 
 **NOTE** The license data generated from glice needs to be manually verified by you. The tool works on heuristics and not on facts. So everytime you make a change please verify:
