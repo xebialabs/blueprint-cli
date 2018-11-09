@@ -1,5 +1,6 @@
 import com.github.blindpirate.gogradle.Go
 
+import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import jp.classmethod.aws.gradle.s3.AmazonS3FileUploadTask
 
@@ -23,7 +24,7 @@ dependencies {
         // *** WARNING *** since we now have license information embedded in the application
         // You need to do some additional steps when adding a library. See README for more details
         // *** NOTICE **** always verify the information from the tool since its based on heuristics
-        build name: 'github.com/gobuffalo/packr'
+        build name: 'github.com/gobuffalo/packr',           tag: 'v2.0.0-beta.18'
         build name: 'github.com/spf13/cobra',               tag: 'v0.0.3'
         build name: 'github.com/spf13/viper',               tag: 'v1.1.0'
         build name: 'github.com/mitchellh/go-homedir',      tag: 'v1.0.0'
@@ -126,7 +127,7 @@ build {
             (project.hasProperty("optimise") ? "-s -w" : "") +
             "'"
 
-    run "packr"
+    run Paths.get("\${GOPATH}/bin/packr").toString()
     go "generate cmd/xl/cmd/wrapper.go"
     // The ${} placeholder will be rendered in cross-compile
     go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
