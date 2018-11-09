@@ -104,6 +104,7 @@ task dumpVersion {
 }
 
 build {
+    dependsOn installPackr
     // Cross-compile platforms, update as necessary.
     targetPlatform = [
             'darwin-amd64', 'linux-amd64', 'windows-amd64'
