@@ -116,3 +116,34 @@ Authorization flags:
 Jenkins integration flags: ./gradlew release -Prelease.disableChecks -Prelease.pushTagsOnly
 
 Other documentation on: http://axion-release-plugin.readthedocs.io/en/latest/
+
+### Bundling license information
+
+In order to comply with some open source licenses, we need to redistribute licenses of open source software that we bundle with our software. This is true for the licenses of most open source license types (like MIT). This holds for our dependencies but ALSO all transitive dependencies. Licenses are made available to our users by running the `xl license` command.
+
+The license data is stored in the `$PROJECT/licenses` folder. The licenses data is populated using a tool called [glice](https://github.com/ribice/glice). The resulting files are checked into version control to cache them. They only need to be updated when our dependencies change, this includes transitive dependencies. We keep them in version control to avoid fetching this information from the internet every build.
+
+When changing/updating dependencies:
+* Make sure glice is installed. 
+```
+go get github.com/ribice/glice
+go install github.com/ribice/glice
+```
+* Run `glice -r -f -gh <Your GitHub access token>` in the root of the project to update license files. Commit changes to version control.
+
+**NOTE 1**
+Please make sure that you use the correct GitHub access token. Without it or with wrong one the `glice` command may *SILENTLY* produce incomplete or empty results.
+
+**NOTE 2** The license data generated from glice needs to be manually verified by you. The tool works on heuristics and not on facts. So everytime you make a change please verify:
+* The license of your dependency or transitive dependency is really added
+* The license of that specific dependency is detected and of the correct type
+  * Go to the library on github and check their license
+* The license is not of a type that will prevent us from able to use the library because of for example copyleft rules (like GPL)
+* Verify all output of `xl license` is correct after building.
+
+We use [packr](https://github.com/gobuffalo/packr) to embed the license text files into our application. The build will automatically do this for you. Note that a file called `a_cmd-packr.go` is generated. This file should NOT be in version control since its a derived file and could get out of sync. Its excluded from the `gitignore` file. 
+
+Be aware of the limitations of the approach taken:
+* Based on heuristics so we need to verify all output
+* No unique detection, the license data contains similar or equal license texts
+* Missing dependencies. The information is incomplete. Some licenses could not be detected automatically, but also the list of reported libraries by go tools is incomplete (long story) but the best source of info i could find so far
