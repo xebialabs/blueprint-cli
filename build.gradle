@@ -104,7 +104,6 @@ task dumpVersion {
 }
 
 build {
-    dependsOn installPackr
     // Cross-compile platforms, update as necessary.
     targetPlatform = [
             'darwin-amd64', 'linux-amd64', 'windows-amd64'
@@ -128,7 +127,7 @@ build {
             (project.hasProperty("optimise") ? "-s -w" : "") +
             "'"
 
-    run "packr"
+    runCmd("packr")
     go "generate cmd/xl/cmd/wrapper.go"
     // The ${} placeholder will be rendered in cross-compile
     go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
