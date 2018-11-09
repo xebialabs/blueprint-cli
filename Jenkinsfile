@@ -48,7 +48,7 @@ pipeline {
         failure {
             script {
                 if(env.BRANCH_NAME == 'master'){
-                    slackSend color: "danger", tokenCredentialId: "slack-token", message: "XL Cli master build *SUCCESS* - <${env.BUILD_URL}|click to open>", channel: 'team-developer-love'
+                    slackSend color: "danger", tokenCredentialId: "slack-token", message: "XL Cli master build *FAILED* - <${env.BUILD_URL}|click to open>", channel: 'team-developer-love'
                 }
             }
         }
