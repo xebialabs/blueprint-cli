@@ -129,9 +129,12 @@ When changing/updating dependencies:
 go get github.com/ribice/glice
 go install github.com/ribice/glice
 ```
-* Run `glice -r -f` in the root of the project to update license files. Commit changes to version control.
+* Run `glice -r -f -gh <Your GitHub access token>` in the root of the project to update license files. Commit changes to version control.
 
-**NOTE** The license data generated from glice needs to be manually verified by you. The tool works on heuristics and not on facts. So everytime you make a change please verify:
+**NOTE 1**
+Please make sure that you use the correct GitHub access token. Without it or with wrong one the `glice` command may *SILENTLY* produce incomplete or empty results.
+
+**NOTE 2** The license data generated from glice needs to be manually verified by you. The tool works on heuristics and not on facts. So everytime you make a change please verify:
 * The license of your dependency or transitive dependency is really added
 * The license of that specific dependency is detected and of the correct type
   * Go to the library on github and check their license
