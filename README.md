@@ -134,7 +134,7 @@ go install github.com/ribice/glice
 **NOTE** The license data generated from glice needs to be manually verified by you. The tool works on heuristics and not on facts. So everytime you make a change please verify:
 * The license of your dependency or transitive dependency is really added
 * The license of that specific dependency is detected and of the correct type
-  * Go to the library on github en check their license
+  * Go to the library on github and check their license
 * The license is not of a type that will prevent us from able to use the library because of for example copyleft rules (like GPL)
 * Verify all output of `xl license` is correct after building.
 
