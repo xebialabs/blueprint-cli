@@ -2,6 +2,7 @@ package xl
 
 import (
 	"fmt"
+	"net/url"
 )
 
 type ChangedCis struct {
@@ -47,10 +48,18 @@ type AsCodeResponse struct {
 	Errors  *Errors
 }
 
+type TemplateRegistry struct {
+	Name     string
+	URL      url.URL
+	Username string
+	Password string
+}
+
 type Context struct {
-	XLDeploy  XLServer
-	XLRelease XLServer
-	values    map[string]string
+	XLDeploy           XLServer
+	XLRelease          XLServer
+	values             map[string]string
+	TemplateRegistries []TemplateRegistry
 }
 
 func (c *Context) PrintConfiguration() {
@@ -74,6 +83,12 @@ func (c *Context) PrintConfiguration() {
 		}
 	}
 
+	if len(c.TemplateRegistries) > 0 {
+		Info("Template Registries:\n")
+		for _, v := range c.TemplateRegistries {
+			Info("%s: %s \n", v.Name, v.URL.String())
+		}
+	}
 }
 
 func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Changes, error) {

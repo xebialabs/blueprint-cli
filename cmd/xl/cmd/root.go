@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"os"
+	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/xl"
-	"os"
-	"strings"
 )
 
 const yamlFormatVersion = "xl/v1"

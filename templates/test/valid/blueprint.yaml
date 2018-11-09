@@ -1,0 +1,27 @@
+apiVersion: xl-cli/v1beta1
+kind: Blueprint
+metadata:
+  projectName: Test Project
+  description: Is just a test blueprint project
+  author: XebiaLabs
+  version: 1.0
+spec:
+- name: Test
+  type: Input
+  value: testing
+- name: AppName
+  type: Input
+  description: Application name, will be used in various AWS resource names
+- name: AWSAccessKey
+  type: Input
+  secret: true
+  value: accesskey
+- name: AWSAccessSecret
+  type: Input
+  secret: true
+  value: accesssecret
+- name: AWSRegion
+  type: Select
+  options:
+    - !fn aws.regions(ecs)
+  default: !fn aws.regions(ecs)[0]

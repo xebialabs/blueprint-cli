@@ -1,15 +1,15 @@
 package xl
 
 import (
-	"errors"
 	"fmt"
-	"github.com/magiconair/properties"
-	"github.com/spf13/viper"
-	"github.com/thoas/go-funk"
 	"net/url"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/magiconair/properties"
+	"github.com/spf13/viper"
+	"github.com/thoas/go-funk"
 )
 
 func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles []string) (*Context, error) {
@@ -42,11 +42,58 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles 
 		return nil, err
 	}
 
+	templateRegistries, err := getTemplateRegistries(v)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Context{
-		XLDeploy:  xlDeploy,
-		XLRelease: xlRelease,
-		values:    values,
+		XLDeploy:           xlDeploy,
+		XLRelease:          xlRelease,
+		values:             values,
+		TemplateRegistries: templateRegistries,
 	}, nil
+}
+
+func getTemplateRegistries(v *viper.Viper) ([]TemplateRegistry, error) {
+	registries := []TemplateRegistry{}
+	// the type of this is []interface{}{map[interface{}]interface{}, map[interface{}]interface{}}
+	yamlVal := v.Get("template-registries")
+
+	switch typeVal := yamlVal.(type) {
+	case []interface{}:
+		for _, v := range typeVal {
+			registry := TemplateRegistry{}
+			registryMap, ok := v.(map[interface{}]interface{})
+			if ok {
+				name, ok := registryMap["name"].(string)
+				if ok {
+					registry.Name = name
+				}
+				urlval, ok := registryMap["url"].(string)
+				if ok {
+					parsedurl, err := url.ParseRequestURI(urlval)
+					if err != nil {
+						return nil, err
+					}
+					registry.URL = *parsedurl
+				} else {
+					return nil, fmt.Errorf("invalid template registry configuration. URL is required")
+				}
+				username, ok := registryMap["username"].(string)
+				if ok {
+					registry.Username = username
+				}
+				password, ok := registryMap["password"].(string)
+				if ok {
+					registry.Password = password
+				}
+			}
+			registries = append(registries, registry)
+
+		}
+	}
+	return registries, nil
 }
 
 func setEnvVariableIfNotPresent(key string, value string) {
@@ -65,7 +112,7 @@ func processServerCredentials(serverKind string) error {
 	if credentialsPresent {
 		credentialsArray := strings.Split(credentials, ":")
 		if len(credentialsArray) != 2 {
-			return errors.New(fmt.Sprintf("environment variable %s has an invalid format. It must container a username and a password separated by a colon", credentialsEnvKey))
+			return fmt.Errorf("environment variable %s has an invalid format. It must container a username and a password separated by a colon", credentialsEnvKey)
 		}
 
 		setEnvVariableIfNotPresent(usernameEnvKey, credentialsArray[0])
@@ -95,12 +142,12 @@ func readServerConfig(v *viper.Viper, prefix string) (*SimpleHTTPServer, error) 
 
 	username := v.GetString(fmt.Sprintf("%s.username", prefix))
 	if username == "" {
-		return nil, errors.New(fmt.Sprintf("configuration property %s.username is required if %s.url is set", prefix, prefix))
+		return nil, fmt.Errorf("configuration property %s.username is required if %s.url is set", prefix, prefix)
 	}
 
 	password := v.GetString(fmt.Sprintf("%s.password", prefix))
 	if password == "" {
-		return nil, errors.New(fmt.Sprintf("configuration property %s.password is required if %s.url is set", prefix, prefix))
+		return nil, fmt.Errorf("configuration property %s.password is required if %s.url is set", prefix, prefix)
 	}
 
 	return &SimpleHTTPServer{
@@ -136,9 +183,9 @@ func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles 
 	}
 
 	var validKeyRegex = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
-	for k, _ := range m {
+	for k := range m {
 		if !validKeyRegex.MatchString(k) {
-			return nil, errors.New(fmt.Sprintf("the name of the value %s is invalid. It must start with an alphabetical character or an underscore and be followed by zero or more alphanumerical characters or underscores", k))
+			return nil, fmt.Errorf("the name of the value %s is invalid. It must start with an alphabetical character or an underscore and be followed by zero or more alphanumerical characters or underscores", k)
 		}
 	}
 
