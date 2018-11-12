@@ -4,6 +4,7 @@
  - [ ] Branch is up-to-date with master
  - [ ] Code can be build by Jenkins
  - [ ] Code is reviewed and tested by someone else in the team
+ - [ ] If a new library is added, make sure the license is checked and embedded in the `xl license` command. (See readme)
 
 **Testing**
 - [ ] Works on Linux, Windows and Mac
