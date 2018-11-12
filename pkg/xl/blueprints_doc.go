@@ -151,7 +151,7 @@ func validatePrompt(pattern string) func(val interface{}) error {
 				return err
 			}
 			if !match {
-				return fmt.Errorf("value should match pattern %s", pattern)
+				return fmt.Errorf("Value should match pattern %s", pattern)
 			}
 		}
 		return nil
