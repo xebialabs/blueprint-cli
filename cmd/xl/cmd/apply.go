@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/xl"
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"io"
 	"os"
 	"path"
@@ -126,8 +127,8 @@ func readDocumentsFromFile(fileName string) FileWithDocuments {
 func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
 	funk.ForEach(filesWithDocs, func(file FileWithDocuments) {
 		funk.ForEach(file.documents, func(doc *xl.Document) {
-			if doc.Kind == importSpecKind && doc.ApiVersion != yamlFormatVersion {
-				xl.Fatal("unknown apiVersion for %s spec kind: %s\n", importSpecKind, doc.ApiVersion)
+			if doc.Kind == models.ImportSpecKind && doc.ApiVersion != models.YamlFormatVersion {
+				xl.Fatal("unknown apiVersion for %s spec kind: %s\n", models.ImportSpecKind, doc.ApiVersion)
 			}
 		})
 	})
@@ -178,7 +179,7 @@ func DoApply(applyFilenames []string) {
 
 		for _, doc := range fileWithDocs.documents {
 			xl.UpdateProgressStartDocument(fileWithDocs.fileName, doc)
-			if doc.Kind != importSpecKind {
+			if doc.Kind != models.ImportSpecKind {
 				changes, err := context.ProcessSingleDocument(doc, applyDir)
 				printChanges(changes)
 				if err != nil {

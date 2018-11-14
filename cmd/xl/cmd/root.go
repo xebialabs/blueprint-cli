@@ -9,9 +9,6 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
-const yamlFormatVersion = "xl/v1"
-const importSpecKind = "Import"
-
 var CliVersion = "undefined"
 var cfgFile string
 

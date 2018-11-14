@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/yaml"
 	"gopkg.in/AlecAivazis/survey.v1"
 )
@@ -18,8 +19,6 @@ const (
 
 	tagFn       = "!fn"
 	fmtTagValue = "!value %s"
-
-	apiVersion = "xl-cli/v1beta1"
 )
 
 // InputType constants
@@ -134,28 +133,6 @@ func (variable *Variable) GetOptions() []string {
 		}
 	}
 	return options
-}
-
-func validatePrompt(pattern string) func(val interface{}) error {
-	return func(val interface{}) error {
-		err := survey.Required(val)
-		if err != nil {
-			return err
-		}
-		if pattern != "" {
-			// the reflect value of the result
-			value := reflect.ValueOf(val)
-
-			match, err := regexp.MatchString("^"+pattern+"$", value.String())
-			if err != nil {
-				return err
-			}
-			if !match {
-				return fmt.Errorf("Value should match pattern %s", pattern)
-			}
-		}
-		return nil
-	}
 }
 
 func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.AskOpt) (string, error) {
@@ -290,11 +267,11 @@ func (blueprintDoc *BlueprintYaml) parseSpecMap(m *map[interface{}]interface{}) 
 
 // validate blueprint yaml document based on required fields
 func (blueprintDoc *BlueprintYaml) validate() error {
-	if blueprintDoc.ApiVersion != apiVersion {
-		return fmt.Errorf("api version needs to be %s", apiVersion)
+	if blueprintDoc.ApiVersion != models.YamlFormatVersion {
+		return fmt.Errorf("api version needs to be %s", models.YamlFormatVersion)
 	}
-	if blueprintDoc.Kind != "Blueprint" {
-		return fmt.Errorf("yaml document kind needs to be Blueprint")
+	if blueprintDoc.Kind != models.BlueprintSpecKind {
+		return fmt.Errorf("yaml document kind needs to be %s", models.BlueprintSpecKind)
 	}
 	return validateVariables(&blueprintDoc.Variables)
 }
@@ -373,6 +350,28 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 }
 
 // --utility functions
+func validatePrompt(pattern string) func(val interface{}) error {
+	return func(val interface{}) error {
+		err := survey.Required(val)
+		if err != nil {
+			return err
+		}
+		if pattern != "" {
+			// the reflect value of the result
+			value := reflect.ValueOf(val)
+
+			match, err := regexp.MatchString("^"+pattern+"$", value.String())
+			if err != nil {
+				return err
+			}
+			if !match {
+				return fmt.Errorf("Value should match pattern %s", pattern)
+			}
+		}
+		return nil
+	}
+}
+
 func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsOnVar *Variable, dataMap *PreparedData, defaultVal string, condition bool) bool {
 	if dependsOnVar.Value.Bool == condition {
 		saveItemToTemplateDataMap(currentVar, dataMap, defaultVal)
