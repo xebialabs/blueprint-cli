@@ -105,6 +105,31 @@ func (variable *Variable) GetDefaultVal() string {
 	return defaultVal
 }
 
+func (variable *Variable) ParseDependsOnValue(tagVal string, fieldVal string, variables *[]Variable) (bool, error) {
+	if tagVal == tagFn {
+		values, err := processCustomFunction(fieldVal)
+		if err != nil {
+			return false, err
+		}
+		if len(values) == 0 {
+			return false, fmt.Errorf("function [%s] results is empty", fieldVal)
+		}
+		Verbose("[fn] Processed value of function [%s] is: %s\n", fieldVal, values[0])
+
+		dependsOnVal, err := strconv.ParseBool(values[0])
+		if err != nil {
+			return false, err
+		}
+		return dependsOnVal, nil
+	} else {
+		dependsOnVar, err := findVariableByName(variables, fieldVal)
+		if err != nil {
+			return false, err
+		}
+		return dependsOnVar.Value.Bool, nil
+	}
+}
+
 func (variable *Variable) GetValueFieldVal() string {
 	if variable.Value.Tag == tagFn {
 		values, err := processCustomFunction(variable.Value.Val)
@@ -314,11 +339,6 @@ func validateVariables(variables *[]Variable) error {
 		if userVar.Type.Val == TypeSelect && len(userVar.Options) == 0 {
 			return fmt.Errorf("at least one option field is need to be set for parameter [%s]", userVar.Name.Val)
 		}
-
-		// validate no default value set for secret field
-		if userVar.Type.Val == TypeInput && userVar.Secret.Bool == true && userVar.Default.Val != "" {
-			return fmt.Errorf("secret field [%s] is not allowed to have default value", userVar.Name.Val)
-		}
 	}
 	return nil
 }
@@ -330,22 +350,22 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 		// process default field value
 		defaultVal := variable.GetDefaultVal()
 
-		// skip question based on DependsOnTrue & DependsOnFalse
+		// skip question based on DependsOn fields
 		if !isStringEmpty(variable.DependsOnTrue.Val) {
-			dependsOnTrueVar, err := findVariableByName(&blueprintDoc.Variables, variable.DependsOnTrue.Val)
+			dependsOnTrueVal, err := variable.ParseDependsOnValue(variable.DependsOnTrue.Tag, variable.DependsOnTrue.Val, &blueprintDoc.Variables)
 			if err != nil {
 				return nil, err
 			}
-			if skipQuestionOnCondition(&variable, variable.DependsOnTrue.Val, dependsOnTrueVar, data, defaultVal, false) {
+			if skipQuestionOnCondition(&variable, variable.DependsOnTrue.Val, dependsOnTrueVal, data, defaultVal, false) {
 				continue
 			}
 		}
 		if !isStringEmpty(variable.DependsOnFalse.Val) {
-			dependsOnFalseVar, err := findVariableByName(&blueprintDoc.Variables, variable.DependsOnFalse.Val)
+			dependsOnFalseVal, err := variable.ParseDependsOnValue(variable.DependsOnFalse.Tag, variable.DependsOnFalse.Val, &blueprintDoc.Variables)
 			if err != nil {
 				return nil, err
 			}
-			if skipQuestionOnCondition(&variable, variable.DependsOnFalse.Val, dependsOnFalseVar, data, defaultVal, true) {
+			if skipQuestionOnCondition(&variable, variable.DependsOnFalse.Val, dependsOnFalseVal, data, defaultVal, true) {
 				continue
 			}
 		}
@@ -353,9 +373,15 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 		// skip user input if value field is present
 		if variable.Value.Val != "" {
 			parsedVal := variable.GetValueFieldVal()
-			saveItemToTemplateDataMap(&variable, data, parsedVal)
-			Verbose("[dataPrep] Skipping question for parameter [%s] because value [%s] is present\n", variable.Name.Val, variable.Value.Val)
-			continue
+
+			// check if resulting value is non-empty
+			if parsedVal != "" {
+				saveItemToTemplateDataMap(&variable, data, parsedVal)
+				Verbose("[dataPrep] Skipping question for parameter [%s] because value [%s] is present\n", variable.Name.Val, variable.Value.Val)
+				continue
+			} else {
+				Verbose("[dataPrep] Parsed value for parameter [%s] is empty, therefore not being skipped\n", variable.Name.Val)
+			}
 		}
 
 		// ask question based on type to get value - if value field is not present
@@ -373,8 +399,8 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 }
 
 // --utility functions
-func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsOnVar *Variable, dataMap *PreparedData, defaultVal string, condition bool) bool {
-	if dependsOnVar.Value.Bool == condition {
+func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsOn bool, dataMap *PreparedData, defaultVal string, condition bool) bool {
+	if dependsOn == condition {
 		saveItemToTemplateDataMap(currentVar, dataMap, defaultVal)
 		Verbose("[dataPrep] Skipping question for parameter [%s] because DependsOn [%s] value is %t\n", currentVar.Name.Val, dependsOnVal, condition)
 		return true
