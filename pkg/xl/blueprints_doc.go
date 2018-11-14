@@ -56,6 +56,7 @@ type Variable struct {
 	DependsOnTrue  VarField
 	DependsOnFalse VarField
 	Options        []VarField
+	Pattern        VarField
 }
 type PreparedData struct {
 	TemplateData map[string]interface{}
@@ -135,6 +136,28 @@ func (variable *Variable) GetOptions() []string {
 	return options
 }
 
+func validatePrompt(pattern string) func(val interface{}) error {
+	return func(val interface{}) error {
+		err := survey.Required(val)
+		if err != nil {
+			return err
+		}
+		if pattern != "" {
+			// the reflect value of the result
+			value := reflect.ValueOf(val)
+
+			match, err := regexp.MatchString("^"+pattern+"$", value.String())
+			if err != nil {
+				return err
+			}
+			if !match {
+				return fmt.Errorf("Value should match pattern %s", pattern)
+			}
+		}
+		return nil
+	}
+}
+
 func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.AskOpt) (string, error) {
 	var answer string
 	var err error
@@ -144,14 +167,14 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 			err = survey.AskOne(
 				&survey.Password{Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))},
 				&answer,
-				survey.Required,
+				validatePrompt(variable.Pattern.Val),
 				surveyOpts...,
 			)
 		} else {
 			err = survey.AskOne(
 				&survey.Input{Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)), Default: defaultVal},
 				&answer,
-				survey.Required,
+				validatePrompt(variable.Pattern.Val),
 				surveyOpts...,
 			)
 		}
@@ -167,7 +190,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 				Default: defaultVal,
 			},
 			&answer,
-			survey.Required,
+			validatePrompt(variable.Pattern.Val),
 			surveyOpts...,
 		)
 	case TypeConfirm:
@@ -175,7 +198,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 		err = survey.AskOne(
 			&survey.Confirm{Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("%s?", variable.Name.Val))},
 			&confirm,
-			survey.Required,
+			validatePrompt(variable.Pattern.Val),
 			surveyOpts...,
 		)
 		if err != nil {
