@@ -63,6 +63,43 @@ func TestGetVariableDefaultVal(t *testing.T) {
 	})
 }
 
+func TestParseDependsOnValue(t *testing.T) {
+	t.Run("should error when unknown function in dependsOn", func(t *testing.T) {
+		v := Variable{
+			Name:          VarField{Val: "test"},
+			Type:          VarField{Val: TypeInput},
+			DependsOnTrue: VarField{Val: "aws.creds", Tag: "!fn"},
+		}
+		_, err := v.ParseDependsOnValue(v.DependsOnTrue.Tag, v.DependsOnTrue.Val, &[]Variable{})
+		require.NotNil(t, err)
+	})
+	t.Run("should return parsed bool value for dependsOnFn field", func(t *testing.T) {
+		v := Variable{
+			Name:           VarField{Val: "test"},
+			Type:           VarField{Val: TypeInput},
+			DependsOnTrue:  VarField{Val: "aws.credentials().IsAvailable", Tag: "!fn"},
+		}
+		_, err := v.ParseDependsOnValue(v.DependsOnTrue.Tag, v.DependsOnTrue.Val, &[]Variable{})
+		require.Nil(t, err)
+	})
+	t.Run("should return bool value from referenced var for dependsOn field", func(t *testing.T) {
+		vars := make([]Variable, 2)
+		vars[0] = Variable{
+			Name:  VarField{Val: "confirm"},
+			Type:  VarField{Val: TypeConfirm},
+			Value: VarField{Bool: true},
+		}
+		vars[1] = Variable{
+			Name:           VarField{Val: "test"},
+			Type:           VarField{Val: TypeInput},
+			DependsOnTrue:  VarField{Val: "confirm"},
+		}
+		val, err := vars[1].ParseDependsOnValue(vars[1].DependsOnTrue.Tag, vars[1].DependsOnTrue.Val, &vars)
+		require.Nil(t, err)
+		assert.Equal(t, vars[0].Value.Bool, val)
+	})
+}
+
 func TestGetValueFieldVal(t *testing.T) {
 	t.Run("should return value field string value when defined", func(t *testing.T) {
 		v := Variable{
@@ -143,7 +180,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 			Type:           VarField{Val: TypeInput},
 			DependsOnFalse: VarField{Val: "confirm"},
 		}
-		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnFalse.Val, &variables[0], NewPreparedData(), "", true))
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnFalse.Val, variables[0].Value.Bool, NewPreparedData(), "", true))
 	})
 	t.Run("should skip question (dependsOnTrue)", func(t *testing.T) {
 		variables := make([]Variable, 2)
@@ -157,7 +194,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 			Type:          VarField{Val: TypeInput},
 			DependsOnTrue: VarField{Val: "confirm"},
 		}
-		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnTrue.Val, &variables[0], NewPreparedData(), "", false))
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnTrue.Val, variables[0].Value.Bool, NewPreparedData(), "", false))
 	})
 
 	t.Run("should not skip question (dependsOnFalse)", func(t *testing.T) {
@@ -172,7 +209,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 			Type:           VarField{Val: TypeInput},
 			DependsOnFalse: VarField{Val: "confirm"},
 		}
-		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnFalse.Val, &variables[0], NewPreparedData(), "", true))
+		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnFalse.Val, variables[0].Value.Bool, NewPreparedData(), "", true))
 	})
 	t.Run("should not skip question (dependsOnTrue)", func(t *testing.T) {
 		variables := make([]Variable, 2)
@@ -186,7 +223,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 			Type:          VarField{Val: TypeInput},
 			DependsOnTrue: VarField{Val: "confirm"},
 		}
-		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnTrue.Val, &variables[0], NewPreparedData(), "", false))
+		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnTrue.Val, variables[0].Value.Bool, NewPreparedData(), "", false))
 	})
 }
 
@@ -230,21 +267,6 @@ spec:
 		_, err := parseTemplateMetadata(&metadata)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
-	})
-
-	t.Run("should error if default value is set for a field marked as secret", func(t *testing.T) {
-		metadata := []byte(
-			fmt.Sprintf(`apiVersion: %s
-kind: Blueprint
-metadata:
-spec:
-- name: Test
-  type: Input
-  secret: true
-  default: very_secret_pass`, models.YamlFormatVersion))
-		_, err := parseTemplateMetadata(&metadata)
-		require.NotNil(t, err)
-		assert.Equal(t, "secret field [Test] is not allowed to have default value", err.Error())
 	})
 
 	t.Run("should error on missing options for variable", func(t *testing.T) {

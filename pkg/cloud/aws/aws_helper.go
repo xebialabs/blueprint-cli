@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strconv"
 
 	"reflect"
 	"sort"
@@ -29,6 +30,13 @@ func (result *AWSFnResult) GetResult(module string, attr string, index int) ([]s
 		if attr == "" {
 			return nil, fmt.Errorf("requested credentials attribute is not set")
 		}
+
+		// if requested, do exists check
+		if attr == "IsAvailable" {
+			return []string{strconv.FormatBool(result.creds.AccessKeyID != "")}, nil
+		}
+
+		// return attribute
 		return []string{getAWSCredentialsField(&result.creds, attr)}, nil
 	case Regions:
 		if index != -1 {
@@ -75,7 +83,8 @@ func CallAWSFuncByName(module string, params ...string) (models.FnResult, error)
 	case Credentials:
 		creds, err := GetAWSCredentialsFromSystem()
 		if err != nil {
-			return nil, err
+			// handle AWS configuration errors gracefully
+			return &AWSFnResult{}, nil
 		}
 		return &AWSFnResult{creds: creds}, nil
 	case Regions:
