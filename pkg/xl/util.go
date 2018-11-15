@@ -6,8 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
-
 	"github.com/thoas/go-funk"
 )
 
@@ -25,21 +23,9 @@ func FindByExtInDirSorted(parentPath string, ext string) ([]string, error) {
 	return res, nil
 }
 
-func isRelativePath(filename string) bool {
-	for _, p := range strings.Split(filename, string(os.PathSeparator)) {
-		if p == ".." {
-			return true
-		}
-	}
-	return false
-}
-
 func ValidateFilePath(path string, in string) error {
 	if filepath.IsAbs(path) {
 		return fmt.Errorf("absolute path is not allowed in %s: %s\n", in, path)
-	}
-	if isRelativePath(path) {
-		return fmt.Errorf("relative path with .. is not allowed in %s: %s\n", in, path)
 	}
 	return nil
 }

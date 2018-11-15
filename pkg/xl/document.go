@@ -11,6 +11,7 @@ import (
 
 	"github.com/jhoonb/archivex"
 	"github.com/xebialabs/yaml"
+	"strconv"
 )
 
 type Document struct {
@@ -37,6 +38,12 @@ type processingContext struct {
 	zipfile      *os.File
 	zipwriter    *zip.Writer
 	seenFiles    map[string]bool
+	counter      uint64
+}
+
+func (context *processingContext) IncrementCounter() string {
+	context.counter++
+	return strconv.FormatUint(context.counter, 10)
 }
 
 func NewDocumentReader(reader io.Reader) *DocumentReader {
@@ -74,7 +81,7 @@ func ParseYamlDocument(yamlDoc string) (*Document, error) {
 }
 
 func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
-	c := processingContext{context, artifactsDir, nil, nil, make(map[string]bool)}
+	c := processingContext{context, artifactsDir, nil, nil, make(map[string]bool), 0}
 
 	if c.context != nil {
 		if c.context.XLDeploy != nil && c.context.XLDeploy.AcceptsDoc(doc) {
@@ -236,18 +243,18 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 		c.zipwriter = zip.NewWriter(c.zipfile)
 	}
 
-	filename := tag.Value
+	relativeFilename := tag.Value
 
-	if _, found := c.seenFiles[filename]; found {
-		Verbose("...... file %s has already been added to the ZIP file. Skipping it\n", filename)
+	if _, found := c.seenFiles[relativeFilename]; found {
+		Verbose("...... file %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
 		return tag, nil
 	}
 
-	fileTag, writeError := doc.writeFileOrDir(tag, filename, c)
+	fileTag, writeError := doc.writeFileOrDir(tag, relativeFilename, c)
 	if writeError != nil {
 		return nil, writeError
 	}
-	c.seenFiles[filename] = true
+	c.seenFiles[relativeFilename] = true
 	return fileTag, nil
 }
 
@@ -263,44 +270,48 @@ func (doc *Document) validateFileTag(tag *yaml.CustomTag, c *processingContext) 
 	return ValidateFilePath(filename, "!file tag")
 }
 
-func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, filename string, c *processingContext) (interface{}, error) {
-	fullFilename := filepath.Join(c.artifactsDir, filename)
+func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, relativeFilename string, c *processingContext) (interface{}, error) {
+	absoluteFilename := filepath.Join(c.artifactsDir, relativeFilename)
 
-	fi, err := os.Stat(fullFilename)
+	fi, err := os.Stat(absoluteFilename)
 	if err != nil {
 		return nil, err
 	}
-	switch mode := fi.Mode(); {
-	case mode.IsDir():
-		return doc.writeDirectory(tag, filename, fullFilename, c)
+
+	counter := c.IncrementCounter()
+	zipEntryFilename := filepath.Join(counter, filepath.Base(relativeFilename))
+	tag.Value = zipEntryFilename
+
+	mode := fi.Mode()
+	if mode.IsDir() {
+		Verbose("...... adding directory for !file %s\n", relativeFilename)
+		return tag, doc.writeDirectory(zipEntryFilename, absoluteFilename, c)
+	} else {
+		Verbose("...... adding file for !file %s\n", relativeFilename)
+		return tag, doc.writeFile(zipEntryFilename, absoluteFilename, c)
 	}
-	return tag, doc.writeFile(filename, fullFilename, c)
 }
 
-func (doc *Document) writeDirectory(tag *yaml.CustomTag, filename string, fullFilename string, c *processingContext) (interface{}, error) {
-	Verbose("...... adding directory for !file %s\n", filename)
-
-	w, err := c.zipwriter.Create(filename)
+func (doc *Document) writeDirectory(zipEntryFilename string, fullFilename string, c *processingContext) error {
+	w, err := c.zipwriter.Create(zipEntryFilename)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	z := &archivex.ZipFile{}
-	z.CreateWriter(filename, w)
+	z.CreateWriter(zipEntryFilename, w)
 	defer z.Close()
-	return tag, z.AddAll(fullFilename, false)
+	return z.AddAll(fullFilename, false)
 }
 
-func (doc *Document) writeFile(filename string, fullFilename string, c *processingContext) error {
-	Verbose("...... adding file for !file %s\n", filename)
-
+func (doc *Document) writeFile(zipEntryFilename string, fullFilename string, c *processingContext) error {
 	r, err := os.Open(fullFilename)
 	if err != nil {
 		return err
 	}
 	defer r.Close()
 
-	w, err := c.zipwriter.Create(filename)
+	w, err := c.zipwriter.Create(zipEntryFilename)
 	if err != nil {
 		return err
 	}

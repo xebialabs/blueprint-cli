@@ -17,7 +17,7 @@ func writeFile(path string, content []byte) {
 	ioutil.WriteFile(path, content, 0644)
 }
 
-func writeTemlFile(content []byte) string {
+func writeTempFile(content []byte) string {
 	location, _ := ioutil.TempFile("", "tmpFile")
 	writeFile(location.Name(), content)
 	return location.Name()
@@ -490,12 +490,20 @@ spec:
 		assert.Contains(t, err.Error(), "absolute path")
 	})
 
-	t.Run("should report error when !file tag contains relative path that starts with ..", func(t *testing.T) {
+	t.Run("should process !file tag with relative path", func(t *testing.T) {
+		artifactContents := "cats=5\ndogs=8\n"
 		artifactsDir, err := ioutil.TempDir("", "should_process_file_tags")
 		if err != nil {
 			assert.FailNow(t, "cannot open temporary directory", err)
 		}
 		defer os.RemoveAll(artifactsDir)
+
+		artifactsSubDir, err := ioutil.TempDir(artifactsDir, "subDir")
+		if err != nil {
+			assert.FailNow(t, "cannot open temporary directory", err)
+		}
+
+		writeFile(filepath.Join(artifactsDir, "test.txt"), []byte(artifactContents))
 
 		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
@@ -508,17 +516,26 @@ spec:
     children:
     - name: conf
       type: file.File
-      file: !file ../../../../../../../../../../etc/passwd`, XldApiVersion)
-
-		doc, err := ParseYamlDocument(yamlDoc)
+      file: !file ../test.txt`, XldApiVersion)
+		doc, err := NewDocumentReader(strings.NewReader(yamlDoc)).ReadNextYamlDocument()
 
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
 
-		err = doc.Preprocess(nil, artifactsDir)
-		assert.NotNil(t, err)
-		assert.Contains(t, err.Error(), "relative path")
+		errp := doc.Preprocess(nil, artifactsSubDir)
+		defer doc.Cleanup()
+
+		assert.Nil(t, errp)
+		assert.NotNil(t, doc.ApplyZip)
+		fileContents := readZipContent(t, doc, doc.ApplyZip)
+		assert.Contains(t, fileContents, "index.yaml")
+		indexDocument, err := ParseYamlDocument(string(fileContents["index.yaml"]))
+		indexDocumentSpec := TransformToMap(indexDocument.Spec)
+		Applications_PetClinic_1_0_conf_file := indexDocumentSpec[0]["children"].([]interface{})[0].(map[interface{}]interface{})["children"].([]interface{})[0].(map[interface{}]interface{})["file"].(yaml.CustomTag)
+		assert.Contains(t, fileContents, Applications_PetClinic_1_0_conf_file.Value)
+		assert.Equal(t, artifactContents, string(fileContents[Applications_PetClinic_1_0_conf_file.Value]))
 	})
+
 
 	t.Run("should render YAML document", func(t *testing.T) {
 		yamlDoc := fmt.Sprintf(`apiVersion: %s
@@ -650,9 +667,10 @@ spec:
 
 		fileContents := readZipContent(t, doc, doc.ApplyZip)
 		assert.Contains(t, fileContents, "index.yaml")
-		assert.Contains(t, fileContents, folderDirZip)
+		fileName := "1/" + folderDirZip
+		assert.Contains(t, fileContents, fileName)
 
-		internalFolderZip := writeTemlFile(fileContents[folderDirZip])
+		internalFolderZip := writeTempFile(fileContents[fileName])
 		defer os.Remove(internalFolderZip)
 
 		internalFolderZipContents := readZipContent(t, doc, internalFolderZip)
