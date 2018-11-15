@@ -1,4 +1,4 @@
-apiVersion: xl-cli/v1beta1
+apiVersion: xl/v1
 kind: Blueprint
 metadata:
   projectName: Test Project

@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
+	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
 type UserInput struct {
@@ -86,7 +87,7 @@ func GetTestTemplateDir(blueprint string) string {
 
 func getValidTestBlueprintMetadata() (*BlueprintYaml, error) {
 	metadata := []byte(
-		`apiVersion: xl-cli/v1beta1
+		fmt.Sprintf(`apiVersion: %s
 kind: Blueprint
 metadata:
 spec:
@@ -114,7 +115,7 @@ spec:
 - name: dep
   type: Input
   dependsOnTrue: isit
-  dependsOnFalse: isitnot`)
+  dependsOnFalse: isitnot`, models.YamlFormatVersion))
 	return parseTemplateMetadata(&metadata)
 }
 

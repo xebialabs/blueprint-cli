@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/xebialabs/xl-cli/pkg/xl"
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -201,7 +202,7 @@ kind: Import
 metadata:
   imports:
     - %s
-`, yamlFormatVersion, filepath.Base(deployFile.Name())))
+`, models.YamlFormatVersion, filepath.Base(deployFile.Name())))
 		defer os.RemoveAll(tempDir)
 
 		v := viper.GetViper()

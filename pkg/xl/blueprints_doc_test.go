@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 )
 
@@ -231,11 +232,11 @@ func TestParseAndValidateTemplateMetadata(t *testing.T) {
 		metadata := []byte("")
 		_, err := parseTemplateMetadata(&metadata)
 		require.NotNil(t, err)
-		assert.Equal(t, fmt.Sprintf("api version needs to be %s", apiVersion), err.Error())
+		assert.Equal(t, fmt.Sprintf("api version needs to be %s", models.YamlFormatVersion), err.Error())
 	})
 
 	t.Run("should error on missing doc kind", func(t *testing.T) {
-		metadata := []byte("apiVersion: xl-cli/v1beta1")
+		metadata := []byte("apiVersion: " + models.YamlFormatVersion)
 		_, err := parseTemplateMetadata(&metadata)
 		require.NotNil(t, err)
 		assert.Equal(t, "yaml document kind needs to be Blueprint", err.Error())
@@ -243,13 +244,13 @@ func TestParseAndValidateTemplateMetadata(t *testing.T) {
 
 	t.Run("should error on unknown field type", func(t *testing.T) {
 		metadata := []byte(
-			`apiVersion: xl-cli/v1beta1
+			fmt.Sprintf(`apiVersion: %s
 kind: Blueprint
 metadata:
 spec:
 - name: Test
   type: Invalid
-  value: testing`)
+  value: testing`, models.YamlFormatVersion))
 		_, err := parseTemplateMetadata(&metadata)
 		require.NotNil(t, err)
 		assert.Equal(t, "type [Invalid] is not valid for parameter [Test]", err.Error())
@@ -257,12 +258,12 @@ spec:
 
 	t.Run("should error on missing variable field", func(t *testing.T) {
 		metadata := []byte(
-			`apiVersion: xl-cli/v1beta1
+			fmt.Sprintf(`apiVersion: %s
 kind: Blueprint
 metadata:
 spec:
 - name: Test
-  value: testing`)
+  value: testing`, models.YamlFormatVersion))
 		_, err := parseTemplateMetadata(&metadata)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
@@ -270,13 +271,13 @@ spec:
 
 	t.Run("should error on missing options for variable", func(t *testing.T) {
 		metadata := []byte(
-			`apiVersion: xl-cli/v1beta1
+			fmt.Sprintf(`apiVersion: %s
 kind: Blueprint
 metadata:
 spec:
 - name: Test
   type: Select
-  options:`)
+  options:`, models.YamlFormatVersion))
 		_, err := parseTemplateMetadata(&metadata)
 		require.NotNil(t, err)
 		assert.Equal(t, "at least one option field is need to be set for parameter [Test]", err.Error())
