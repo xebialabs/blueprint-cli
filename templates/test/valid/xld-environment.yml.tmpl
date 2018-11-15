@@ -1,4 +1,4 @@
-apiVersion: xl-deploy/v1beta1
+apiVersion: xl-deploy/v1
 kind: Infrastructure
 spec:
 - name: aws
@@ -7,7 +7,7 @@ spec:
   accessSecret: {{.AWSAccessSecret}}
 
 ---
-apiVersion: xl-deploy/v1beta1
+apiVersion: xl-deploy/v1
 kind: Environments
 spec:
 - name: AWS Dictionary

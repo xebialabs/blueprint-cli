@@ -293,7 +293,7 @@ func TestCreateTemplateConfigForSingleFile(t *testing.T) {
 }
 
 func TestFetchTemplateFromPath(t *testing.T) {
-	stream := `
+	stream := fmt.Sprintf(`
 		###
 		variables:
 		- name: AccessKey
@@ -301,7 +301,7 @@ func TestFetchTemplateFromPath(t *testing.T) {
 		value: !Fn aws.readCreds.AccessKey
 		###
 		---
-		apiVersion: xl-deploy/v1beta1
+		apiVersion: %s
 		kind: Infrastructure
 		spec:
 		- name: aws
@@ -310,7 +310,7 @@ func TestFetchTemplateFromPath(t *testing.T) {
 		accessSecret: {{.AccessSecret}}
 		
 		---	
-		  `
+		  `, XldApiVersion)
 	t.Run("should fetch a template from http url", func(t *testing.T) {
 		out, err := fetchTemplateFromPath(TemplateConfig{
 			File: "test.yaml", FullPath: "http://aws/monolith/test.yaml.tmpl", Registry: TemplateRegistry{},

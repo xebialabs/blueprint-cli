@@ -2,8 +2,8 @@ package xl
 
 import "fmt"
 
-const XldApiVersion = "xl-deploy/v1beta1"
-const XlrApiVersion = "xl-release/v1beta1"
+const XldApiVersion = "xl-deploy/v1"
+const XlrApiVersion = "xl-release/v1"
 
 type XLServer interface {
 	AcceptsDoc(doc *Document) bool
