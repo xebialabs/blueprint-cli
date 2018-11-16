@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -78,7 +79,7 @@ func adjustPathSeperatorIfNeeded(blueprintTemplate string) string {
 }
 
 // CreateBlueprint is entry point for the cli command
-func CreateBlueprint(blueprintTemplate string, templateRegistries []TemplateRegistry, surveyOpts ...survey.AskOpt) error {
+func CreateBlueprint(blueprintTemplate string, templateRegistries []TemplateRegistry, outputDir string, surveyOpts ...survey.AskOpt) error {
 	blueprintTemplate = adjustPathSeperatorIfNeeded(blueprintTemplate)
 	// get available blueprint templates from merged registry
 	templateConfigs, templatePath, err := getAvailableBlueprintTemplates(blueprintTemplate, templateRegistries, surveyOpts...)
@@ -118,18 +119,18 @@ func CreateBlueprint(blueprintTemplate string, templateRegistries []TemplateRegi
 	Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
 	// save prepared data to values & secrets files
-	err = writeConfigToFile(preparedData.Values, valuesFile)
+	err = writeConfigToFile(preparedData.Values, path.Join(outputDir, valuesFile))
 	if err != nil {
 		return err
 	}
-	err = writeConfigToFile(preparedData.Secrets, secretsFile)
+	err = writeConfigToFile(preparedData.Secrets, path.Join(outputDir, secretsFile))
 	if err != nil {
 		return err
 	}
 
 	// generate .gitignore file
 	gitignoreData := secretsFile
-	writeDataToFile(gitignoreFile, &gitignoreData)
+	writeDataToFile(path.Join(outputDir, gitignoreFile), &gitignoreData)
 
 	// execute each template file found
 	for _, config := range templateConfigs {
@@ -174,16 +175,20 @@ func CreateBlueprint(blueprintTemplate string, templateRegistries []TemplateRegi
 	return nil
 }
 
-// --utility functions
-func writeDataToFile(outputFileName string, data *string) error {
-	// Create sub-directory if not exists
-	dir, _ := filepath.Split(outputFileName)
+func createDirectoryIfNeeded(fileName string) error {
+	dir, _ := filepath.Split(fileName)
 	if dir != "" && !PathExists(dir, true) {
 		Verbose("[file] Creating sub-directory %s\n", dir)
-		err := os.MkdirAll(dir, os.ModePerm)
-		if err != nil {
-			return err
-		}
+		return os.MkdirAll(dir, os.ModePerm)
+	}
+	return nil
+}
+
+// --utility functions
+func writeDataToFile(outputFileName string, data *string) error {
+	err := createDirectoryIfNeeded(outputFileName)
+	if err != nil {
+		return err
 	}
 
 	Verbose("[file] Creating blueprint output file %s\n", outputFileName)
@@ -198,11 +203,15 @@ func writeDataToFile(outputFileName string, data *string) error {
 	Verbose("\tWrote %d bytes \n", out)
 	file.Sync()
 	file.Close()
-	Info("[file] Blueprint output file '%s' generated succesfully\n", outputFileName)
+	Info("[file] Blueprint output file '%s' generated successfully\n", outputFileName)
 	return nil
 }
 
 func writeConfigToFile(config map[string]interface{}, filename string) error {
+	err := createDirectoryIfNeeded(filename)
+	if err != nil {
+		return err
+	}
 	props := properties.NewProperties()
 
 	// sort based on keys
@@ -229,5 +238,6 @@ func writeConfigToFile(config map[string]interface{}, filename string) error {
 		return err
 	}
 	Verbose("\tWrote %d bytes \n", bytesWritten)
+	Info("[file] Blueprint output file '%s' generated successfully\n", filename)
 	return nil
 }

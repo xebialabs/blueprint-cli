@@ -28,6 +28,8 @@ var blueprintCmd = &cobra.Command{
 var blueprintTemplate string
 var templateRegistry string
 
+const outputDir = "xebialabs"
+
 // DoBlueprint creates blueprint templates
 func DoBlueprint(context *xl.Context) {
 	templateRegistries := context.TemplateRegistries
@@ -42,7 +44,7 @@ func DoBlueprint(context *xl.Context) {
 		})
 	}
 
-	err = xl.CreateBlueprint(blueprintTemplate, templateRegistries)
+	err = xl.CreateBlueprint(blueprintTemplate, templateRegistries, outputDir)
 	if err != nil {
 		xl.Fatal("Error while creating Blueprint: %s\n", err)
 	}

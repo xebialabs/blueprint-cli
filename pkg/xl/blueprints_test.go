@@ -121,11 +121,19 @@ spec:
 
 func TestWriteDataToFile(t *testing.T) {
 	t.Run("should write template data to output file", func(t *testing.T) {
-		os.MkdirAll("test", os.ModePerm)
-		defer os.RemoveAll("test")
+		data := "test\ndata\n"
+		filePath := "test.yml"
+		err := writeDataToFile(filePath, &data)
+		defer os.Remove("test.yml")
+		require.Nil(t, err)
+		assert.FileExists(t, filePath)
+		assert.Equal(t, GetFileContent(filePath), data)
+	})
+	t.Run("should write template data to output file in a folder", func(t *testing.T) {
 		data := "test\ndata\n"
 		filePath := path.Join("test", "test.yml")
 		err := writeDataToFile(filePath, &data)
+		defer os.RemoveAll("test")
 		require.Nil(t, err)
 		assert.FileExists(t, filePath)
 		assert.Equal(t, GetFileContent(filePath), data)
@@ -134,7 +142,18 @@ func TestWriteDataToFile(t *testing.T) {
 
 func TestWriteConfigToFile(t *testing.T) {
 	t.Run("should write config data to output file sorted", func(t *testing.T) {
-		os.MkdirAll("test", os.ModePerm)
+		config := make(map[string]interface{}, 3)
+		config["d"] = 1
+		config["a"] = true
+		config["z"] = "test"
+		filePath := "test.xlvals"
+		err := writeConfigToFile(config, filePath)
+		defer os.RemoveAll("test.xlvals")
+		require.Nil(t, err)
+		assert.FileExists(t, filePath)
+		assert.Equal(t, strings.TrimSpace(GetFileContent(filePath)), "a = true\nd = 1\nz = test")
+	})
+	t.Run("should write config data to output file in folder", func(t *testing.T) {
 		defer os.RemoveAll("test")
 		config := make(map[string]interface{}, 3)
 		config["d"] = 1
@@ -165,7 +184,7 @@ func TestAdjustPathSeperatorIfNeeded(t *testing.T) {
 func TestCreateBlueprint(t *testing.T) {
 	t.Run("should error on unknown template", func(t *testing.T) {
 		RunInVirtualConsole(t, func(c *expect.Console) {}, func(stdio terminal.Stdio) error {
-			err := CreateBlueprint("abc", []TemplateRegistry{}, survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
+			err := CreateBlueprint("abc", []TemplateRegistry{}, "xebialabs", survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
 
 			require.NotNil(t, err)
 			assert.Equal(t, "template configuration not found for path abc", err.Error())
@@ -175,7 +194,7 @@ func TestCreateBlueprint(t *testing.T) {
 	})
 	t.Run("should error on invalid test template", func(t *testing.T) {
 		RunInVirtualConsole(t, func(c *expect.Console) {}, func(stdio terminal.Stdio) error {
-			err := CreateBlueprint(GetTestTemplateDir("invalid"), []TemplateRegistry{}, survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
+			err := CreateBlueprint(GetTestTemplateDir("invalid"), []TemplateRegistry{}, "xebialabs", survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
 
 			require.NotNil(t, err)
 			assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
@@ -191,7 +210,7 @@ func TestCreateBlueprint(t *testing.T) {
 
 		RunInVirtualConsole(t, SendPromptValues(userAnswers), func(stdio terminal.Stdio) error {
 			// create blueprint
-			err := CreateBlueprint(GetTestTemplateDir("valid"), []TemplateRegistry{}, survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
+			err := CreateBlueprint(GetTestTemplateDir("valid"), []TemplateRegistry{}, "xebialabs", survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
 			require.Nil(t, err)
 
 			// assertions
@@ -229,4 +248,29 @@ func TestCreateBlueprint(t *testing.T) {
 			return err
 		})
 	})*/
+}
+
+func TestCreateDirectoryIfNeeded(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "pathTest")
+	require.Nil(t, err)
+	defer os.RemoveAll(tmpDir)
+	type args struct {
+		fileName string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"create directory if it doesn't exist", args{path.Join("test", "test.xlval")}, false},
+		{"Do not create directory if it exists", args{path.Join(tmpDir, "test.xlval")}, false},
+		{"Do not do anything if there is no directory", args{"test.xlval"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := createDirectoryIfNeeded(tt.args.fileName); (err != nil) != tt.wantErr {
+				t.Errorf("createDirectoryIfNeeded() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }
