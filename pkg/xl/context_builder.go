@@ -225,7 +225,7 @@ func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles 
 
 	// Add all values files variables
 	funk.ForEach(valueFiles, func(valueFile string) {
-		Verbose("Using value file: %s\n", valueFile)
+		Verbose("Using value file %s\n", valueFile)
 	})
 	valuesMap := properties.MustLoadFiles(valueFiles, properties.UTF8, false).Map()
 	for k, v := range valuesMap {

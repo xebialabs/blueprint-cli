@@ -18,6 +18,7 @@ func Substitute(in string, values map[string]string) (res string, err error) {
 				result.WriteString("%")
 			} else {
 				if val, ok := values[capture.String()]; ok {
+					Verbose("\tSubstituting value for [%s]\n", capture.String())
 					result.WriteString(val)
 				} else {
 					return "", fmt.Errorf("unknown value: `%s`", capture.String())

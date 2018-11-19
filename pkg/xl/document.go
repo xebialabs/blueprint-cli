@@ -210,17 +210,16 @@ func (doc *Document) processCustomTag(tag *yaml.CustomTag, c *processingContext)
 }
 
 func (doc *Document) processFormatTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
-	Verbose("...... Processing format tag on field %s\n", tag.Tag)
 	return Substitute(tag.Value, c.context.values)
 }
 
 func (doc *Document) processValueTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
 	value, exists := c.context.values[tag.Value]
 	if !exists {
-		return nil, fmt.Errorf("No value for !value %s", tag.Value)
+		return nil, fmt.Errorf("No value found for !value %s", tag.Value)
 	}
 
-	Verbose("...... inserting value for !value %s\n", tag.Value)
+	Verbose("\tSubstituting value for [%s]\n", tag.Value)
 
 	return value, nil
 }
@@ -238,7 +237,7 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 		if err != nil {
 			return nil, err
 		}
-		Verbose("...... first !file tag found, creating temporary ZIP file %s\n", zipfile.Name())
+		Verbose("\tfirst !file tag found, creating temporary ZIP file %s\n", zipfile.Name())
 		c.zipfile = zipfile
 		c.zipwriter = zip.NewWriter(c.zipfile)
 	}
@@ -246,7 +245,7 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 	relativeFilename := tag.Value
 
 	if _, found := c.seenFiles[relativeFilename]; found {
-		Verbose("...... file %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
+		Verbose("\tfile %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
 		return tag, nil
 	}
 
@@ -284,10 +283,10 @@ func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, relativeFilename string
 
 	mode := fi.Mode()
 	if mode.IsDir() {
-		Verbose("...... adding directory for !file %s\n", relativeFilename)
+		Verbose("\tadding directory for !file %s\n", relativeFilename)
 		return tag, doc.writeDirectory(zipEntryFilename, absoluteFilename, c)
 	} else {
-		Verbose("...... adding file for !file %s\n", relativeFilename)
+		Verbose("\tadding file for !file %s\n", relativeFilename)
 		return tag, doc.writeFile(zipEntryFilename, absoluteFilename, c)
 	}
 }
@@ -330,7 +329,7 @@ func (doc *Document) RenderYamlDocument() ([]byte, error) {
 
 func (doc *Document) Cleanup() {
 	if doc.ApplyZip != "" {
-		Verbose("...... deleting temporary file %s\n", doc.ApplyZip)
+		Verbose("\tdeleting temporary file %s\n", doc.ApplyZip)
 		os.Remove(doc.ApplyZip)
 		doc.ApplyZip = ""
 	}

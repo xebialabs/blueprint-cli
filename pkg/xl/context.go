@@ -3,6 +3,7 @@ package xl
 import (
 	"fmt"
 	"net/url"
+	"sort"
 )
 
 type ChangedCis struct {
@@ -62,6 +63,21 @@ type Context struct {
 	TemplateRegistries []TemplateRegistry
 }
 
+func (c *Context) PrintValues() {
+	if len(c.values) > 0 {
+		// Sort values
+		var keys []string
+		for k := range c.values {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, v := range keys {
+			Info("%s: %s\n", v, c.values[v])
+		}
+	}
+}
+
 func (c *Context) PrintConfiguration() {
 	Info("XL Deploy:\n  URL: %s\n  Username: %s\n  Applications home: %s\n  Environments home: %s\n  Infrastructure home: %s\n  Configuration home: %s\n",
 		c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Url.String(),
@@ -76,12 +92,7 @@ func (c *Context) PrintConfiguration() {
 		c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Username,
 		c.XLRelease.(*XLReleaseServer).Home)
 
-	if len(c.values) > 0 {
-		Info("Values:\n")
-		for k, v := range c.values {
-			Info("  %s: %s\n", k, v)
-		}
-	}
+	c.PrintValues()
 
 	if len(c.TemplateRegistries) > 0 {
 		Info("Template Registries:\n")
