@@ -32,7 +32,7 @@ var applyCmd = &cobra.Command{
 	Short: "Apply configuration changes",
 	Long:  `Apply configuration changes`,
 	Run: func(cmd *cobra.Command, args []string) {
-		DoApply(applyFilenames)
+		DoApply(cmd, applyFilenames)
 	},
 }
 
@@ -148,7 +148,7 @@ func parseDocuments(fileNames []string, seenFiles mapset.Set) []FileWithDocument
 	return result
 }
 
-func DoApply(applyFilenames []string) {
+func DoApply(cmd *cobra.Command, applyFilenames []string) {
 	homeValsFiles, e := listHomeXlValsFiles()
 
 	if e != nil {
@@ -165,7 +165,7 @@ func DoApply(applyFilenames []string) {
 
 		allValsFiles := append(homeValsFiles, projectValsFiles...)
 
-		context, err := xl.BuildContext(viper.GetViper(), &applyValues, allValsFiles)
+		context, err := xl.BuildContext(cmd, viper.GetViper(), &applyValues, allValsFiles)
 		if err != nil {
 			xl.Fatal("Error while reading configuration: %s\n", err)
 		}

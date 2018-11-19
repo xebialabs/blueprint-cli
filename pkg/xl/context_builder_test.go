@@ -3,17 +3,24 @@ package xl
 import (
 	"bytes"
 	"fmt"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 )
+
+var TestCmd = &cobra.Command{
+	Use:   "xl",
+	Short: "Test command",
+}
 
 func parseURIWithoutError(uri string) url.URL {
 	url, err := url.ParseRequestURI(uri)
@@ -77,7 +84,8 @@ template-registries:
 }
 
 func TestContextBuilder(t *testing.T) {
-
+	cfgFile := ""
+	PrepareRootCmdFlags(TestCmd, &cfgFile)
 	IsVerbose = true
 
 	t.Run("build simple context for XL Deploy", func(t *testing.T) {
@@ -86,7 +94,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set("xl-deploy.username", "deployer")
 		v.Set("xl-deploy.password", "d3ploy1t")
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(TestCmd, v, nil, []string{})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -103,7 +111,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set("xl-release.username", "releaser")
 		v.Set("xl-release.password", "r3l34s3")
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(TestCmd, v, nil, []string{})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -128,7 +136,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set("xl-release.password", "r3l34s3")
 		v.Set("xl-release.home", "XLR/home/folder")
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(TestCmd, v, nil, []string{})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -150,7 +158,7 @@ func TestContextBuilder(t *testing.T) {
 	t.Run("build context without values", func(t *testing.T) {
 		v := viper.New()
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(TestCmd, v, nil, []string{})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -169,7 +177,7 @@ func TestContextBuilder(t *testing.T) {
 		err := v.ReadConfig(bytes.NewBuffer([]byte(yamlConfig)))
 		require.Nil(t, err)
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(TestCmd, v, nil, []string{})
 
 		require.Nil(t, err)
 		require.NotNil(t, c)
@@ -198,7 +206,7 @@ func TestContextBuilder(t *testing.T) {
 		v.ReadInConfig()
 		v.Set("xl-deploy.password", "t3st")
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(TestCmd, v, nil, []string{})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -232,7 +240,7 @@ func TestContextBuilder(t *testing.T) {
 		v.SetConfigFile(configfile)
 		v.ReadInConfig()
 
-		_, err = BuildContext(v,  nil, []string{})
+		_, err = BuildContext(TestCmd, v,  nil, []string{})
 		require.Nil(t, err)
 
 		configbytes, err := ioutil.ReadFile(configfile)
@@ -262,7 +270,7 @@ func TestContextBuilder(t *testing.T) {
 		v.SetConfigFile(configfile)
 		v.ReadInConfig()
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(TestCmd, v, nil, []string{})
 
 		assert.NotNil(t, err)
 		assert.Nil(t, c)
@@ -344,7 +352,7 @@ func TestContextBuilder(t *testing.T) {
 		values := make(map[string]string)
 		values["!incorrectKey"] = "test value"
 
-		_, err := BuildContext(v, &values, []string{})
+		_, err := BuildContext(TestCmd, v, &values, []string{})
 
 		assert.NotNil(t, err)
 		assert.Equal(t, "the name of the value !incorrectKey is invalid. It must start with an alphabetical character or an underscore and be followed by zero or more alphanumerical characters or underscores", err.Error())
@@ -362,7 +370,7 @@ test2=test2
 
 		valsFiles := []string{propfile1.Name()}
 
-		context, err2 := BuildContext(v, nil, valsFiles)
+		context, err2 := BuildContext(TestCmd, v, nil, valsFiles)
 		assert.Nil(t, err2)
 
 		assert.Equal(t, "test", context.values["test"])
@@ -381,7 +389,7 @@ Test=test3
 
 		valsFiles := []string{propfile1.Name()}
 
-		context, err2 := BuildContext(v, nil, valsFiles)
+		context, err2 := BuildContext(TestCmd, v, nil, valsFiles)
 		assert.Nil(t, err2)
 
 		assert.Equal(t, "test1", context.values["test"])
@@ -407,10 +415,10 @@ test2=override2
 
 		valsFiles := []string{propfile1.Name(),propfile2.Name()}
 
-		context, err2 := BuildContext(v, nil, valsFiles)
+		context, err2 := BuildContext(TestCmd, v, nil, valsFiles)
 		assert.Nil(t, err2)
 
-		assert.Equal(t, 3, len(context.values))
+		assert.Equal(t, 9, len(context.values))
 		assert.Equal(t, "override", context.values["test"])
 		assert.Equal(t, "override2", context.values["test2"])
 		assert.Equal(t, "ok", context.values["verifythisfilegetsread"])
@@ -432,10 +440,10 @@ verifythisfilegetsread=ok
 		values["test"] = "override"
 		values["test2"] = "override2"
 
-		context, err2 := BuildContext(v, &values, valsFiles)
+		context, err2 := BuildContext(TestCmd, v, &values, valsFiles)
 		assert.Nil(t, err2)
 
-		assert.Equal(t, 3, len(context.values))
+		assert.Equal(t, 9, len(context.values))
 		assert.Equal(t, "override", context.values["test"])
 		assert.Equal(t, "override2", context.values["test2"])
 		assert.Equal(t, "ok", context.values["verifythisfilegetsread"])
@@ -456,13 +464,41 @@ verifythisfilegetsread=ok
 		os.Setenv("XL_VALUE_test", "override")
 		os.Setenv("XL_VALUE_test2", "override2")
 
-		context, err2 := BuildContext(v, nil, valsFiles)
+		context, err2 := BuildContext(TestCmd, v, nil, valsFiles)
 		assert.Nil(t, err2)
 
-		assert.Equal(t, 3, len(context.values))
+		assert.Equal(t, 9, len(context.values))
 		assert.Equal(t, "override", context.values["test"])
 		assert.Equal(t, "override2", context.values["test2"])
 		assert.Equal(t, "ok", context.values["verifythisfilegetsread"])
+	})
+
+	t.Run("Should get default flag value when there's no override", func(t *testing.T) {
+		v := viper.New()
+
+		context, err2 := BuildContext(TestCmd, v, nil, []string{})
+		assert.Nil(t, err2)
+
+		assert.Equal(t, "http://localhost:4516/", context.values["XL_DEPLOY_URL"])
+	})
+
+	t.Run("Command flag changes should override value files", func(t *testing.T) {
+		v := viper.New()
+
+		propfile1 := writePropFile("file1", `
+XL_DEPLOY_URL=http://localhost
+`)
+		defer os.Remove(propfile1.Name())
+
+		valsFiles := []string{propfile1.Name()}
+
+		TestCmd.Flag(models.FlagXldUrl).Value.Set("http://test.com/")
+		TestCmd.Flag(models.FlagXldUrl).Changed = true
+
+		context, err2 := BuildContext(TestCmd, v, nil, valsFiles)
+		assert.Nil(t, err2)
+
+		assert.Equal(t, "http://test.com/", context.values["XL_DEPLOY_URL"])
 	})
 
 }

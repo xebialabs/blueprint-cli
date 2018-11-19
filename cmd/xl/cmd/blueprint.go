@@ -13,7 +13,7 @@ var blueprintCmd = &cobra.Command{
 	Short: "Create a Blueprint",
 	Long:  `Create a Blueprint for XL Platform Releases and Deployments`,
 	Run: func(cmd *cobra.Command, args []string) {
-		context, err := xl.BuildContext(viper.GetViper(), nil, nil)
+		context, err := xl.BuildContext(cmd, viper.GetViper(), nil, nil)
 		if err != nil {
 			xl.Fatal("Error while reading configuration: %s\n", err)
 		}

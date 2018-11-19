@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/xebialabs/xl-cli/pkg/xl"
@@ -13,6 +14,11 @@ import (
 	"path/filepath"
 	"testing"
 )
+
+var TestCmd = &cobra.Command{
+	Use:   "xl",
+	Short: "Test command",
+}
 
 type TestInfra struct {
 	documents []xl.Document
@@ -117,7 +123,7 @@ spec:
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 
-		DoApply([]string{yaml.Name(), yaml2.Name()})
+		DoApply(TestCmd, []string{yaml.Name(), yaml2.Name()})
 
 		assert.Equal(t, infra.spec(0)[0]["name"], "Template1")
 		assert.Equal(t, infra.spec(0)[1]["replaceTest"], "success1")
@@ -164,7 +170,7 @@ spec:
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 
-		DoApply([]string{deployFile.Name()})
+		DoApply(TestCmd, []string{deployFile.Name()})
 
 		assert.Equal(t, len(infra.documents), 2)
 		assert.Equal(t, infra.doc(0).Kind, "Applications")
@@ -209,7 +215,7 @@ metadata:
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 
-		DoApply([]string{importsFile.Name()})
+		DoApply(TestCmd, []string{importsFile.Name()})
 
 		assert.Equal(t, len(infra.documents), 2)
 		assert.Equal(t, infra.doc(0).Kind, "Applications")
