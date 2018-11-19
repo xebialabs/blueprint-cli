@@ -29,14 +29,14 @@ type SimpleHTTPServer struct {
 
 var client = &http.Client{}
 
-func (server *SimpleHTTPServer) ExportYamlDoc(exportFilename string, ciPath string, override bool) error {
+func (server *SimpleHTTPServer) ExportYamlDoc(exportFilename string, requestUrl string, override bool) error {
 	if override == false {
 		if _, err := os.Stat(exportFilename); !os.IsNotExist(err) {
 			return fmt.Errorf("file `%s` already exists. Use -o flag to overwrite it.", exportFilename)
 		}
 	}
 
-	response, err := server.doRequest("GET", ciPath, "", nil)
+	response, err := server.doRequest("GET", requestUrl, "", nil)
 	if err != nil {
 		return err
 	}

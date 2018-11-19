@@ -51,11 +51,11 @@ func addHomeIfMissing(doc *Document, home string, key string) {
 }
 
 func (server *XLDeployServer) ExportDoc(filename string, path string, override bool) error {
-	return server.Server.ExportYamlDoc(filename, "deployit/devops-as-code/export/"+path, override)
+	return server.Server.ExportYamlDoc(filename, "deployit/devops-as-code/export?path="+path, override)
 }
 
 func (server *XLReleaseServer) ExportDoc(filename string, path string, override bool) error {
-	return server.Server.ExportYamlDoc(filename, "devops-as-code/export/"+path, override)
+	return server.Server.ExportYamlDoc(filename, "devops-as-code/export?path="+path, override)
 }
 
 func (server *XLDeployServer) SendDoc(doc *Document) (*Changes, error) {
