@@ -144,7 +144,6 @@ clean.doFirst {
     delete 'build'
 }
 
-
 task copyVendor(type: Copy) {
     from "vendor"
     into ".gogradle/project_gopath/src"
@@ -164,8 +163,6 @@ task upx {
         }
     }
 }
-
-vendor.finalizedBy copyVendor
 
 publishing {
     publications {
