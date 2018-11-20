@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
-	"github.com/xebialabs/xl-cli/pkg/xl"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io"
 	"os"
 	"path"
@@ -19,10 +19,10 @@ import (
 )
 
 type FileWithDocuments struct {
-	imports      []string
-	parent       string
-	documents    []*xl.Document
-	fileName     string
+	imports   []string
+	parent    *string
+	documents []*xl.Document
+	fileName  string
 }
 
 var applyFilenames []string
@@ -92,7 +92,7 @@ func extractImports(baseDir string, doc *xl.Document) []string {
 	return make([]string, 0)
 }
 
-func readDocumentsFromFile(fileName string, parent string) FileWithDocuments {
+func readDocumentsFromFile(fileName string, parent *string) FileWithDocuments {
 	reader, err := os.Open(fileName)
 	if err != nil {
 		xl.Fatal("Error while opening XL YAML file %s: %s\n", fileName, err)
@@ -115,7 +115,7 @@ func readDocumentsFromFile(fileName string, parent string) FileWithDocuments {
 		documents = append(documents, doc)
 	}
 	reader.Close()
-	return FileWithDocuments{imports, parent,documents, fileName}
+	return FileWithDocuments{imports, parent, documents, fileName}
 }
 
 func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
@@ -128,14 +128,14 @@ func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
 	})
 }
 
-func parseDocuments(fileNames []string, seenFiles mapset.Set, parent string) []FileWithDocuments {
+func parseDocuments(fileNames []string, seenFiles mapset.Set, parent *string) []FileWithDocuments {
 	result := make([]FileWithDocuments, 0)
 	for _, fileName := range fileNames {
 		if !seenFiles.Contains(fileName) {
 			fileWithDocuments := readDocumentsFromFile(fileName, parent)
 			result = append(result, fileWithDocuments)
 			seenFiles.Add(fileName)
-			result = append(parseDocuments(fileWithDocuments.imports, seenFiles, fileName), result...)
+			result = append(parseDocuments(fileWithDocuments.imports, seenFiles, &fileName), result...)
 		}
 	}
 	validateFileWithDocs(result)
@@ -149,7 +149,7 @@ func DoApply(cmd *cobra.Command, applyFilenames []string) {
 		xl.Fatal("Error while reading value files from home: %s\n", e)
 	}
 
-	docs := parseDocuments(xl.ToAbsolutePaths(applyFilenames), mapset.NewSet(), "")
+	docs := parseDocuments(xl.ToAbsolutePaths(applyFilenames), mapset.NewSet(), nil)
 
 	xl.Verbose("%s\n", strings.Repeat("=", 80))
 	for _, fileWithDocs := range docs {
@@ -160,12 +160,12 @@ func DoApply(cmd *cobra.Command, applyFilenames []string) {
 		} else {
 			applyFile = filepath.Base(fileWithDocs.fileName)
 		}
-		if fileWithDocs.parent != "" {
+		if fileWithDocs.parent != nil {
 			var parentFile string
 			if xl.IsVerbose {
-				parentFile = fileWithDocs.parent
+				parentFile = *fileWithDocs.parent
 			} else {
-				parentFile = filepath.Base(fileWithDocs.parent)
+				parentFile = filepath.Base(*fileWithDocs.parent)
 			}
 			xl.Info("Applying %s (imported by %s)\n", applyFile, parentFile)
 		} else {
