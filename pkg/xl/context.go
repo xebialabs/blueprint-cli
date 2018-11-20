@@ -2,7 +2,9 @@ package xl
 
 import (
 	"fmt"
+	"github.com/thoas/go-funk"
 	"net/url"
+	"sort"
 )
 
 type ChangedCis struct {
@@ -62,6 +64,14 @@ type Context struct {
 	TemplateRegistries []TemplateRegistry
 }
 
+func (c *Context) PrintValues() {
+	var keys = funk.Keys(c.values).([]string)
+	sort.Strings(keys)
+	funk.ForEach(keys, func(key string) {
+		Info("%s: %s\n", key, c.values[key])
+	})
+}
+
 func (c *Context) PrintConfiguration() {
 	Info("XL Deploy:\n  URL: %s\n  Username: %s\n  Applications home: %s\n  Environments home: %s\n  Infrastructure home: %s\n  Configuration home: %s\n",
 		c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Url.String(),
@@ -76,12 +86,7 @@ func (c *Context) PrintConfiguration() {
 		c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Username,
 		c.XLRelease.(*XLReleaseServer).Home)
 
-	if len(c.values) > 0 {
-		Info("Values:\n")
-		for k, v := range c.values {
-			Info("  %s: %s\n", k, v)
-		}
-	}
+	c.PrintValues()
 
 	if len(c.TemplateRegistries) > 0 {
 		Info("Template Registries:\n")
