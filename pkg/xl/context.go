@@ -115,15 +115,16 @@ func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Ch
 }
 
 func (c *Context) ExportSingleDocument(exportServer string, exportFilename string, exportPath string, exportOverride bool) error {
+	finalPath := url.QueryEscape(exportPath)
 
 	if exportServer == "xl-deploy" {
-		Info("Exporting %s from XL Deploy to %s\n", exportPath, exportFilename)
-		return c.XLDeploy.ExportDoc(exportFilename, exportPath, exportOverride)
+		Info("Exporting %s from XL Deploy to %s\n", finalPath, exportFilename)
+		return c.XLDeploy.ExportDoc(exportFilename, finalPath, exportOverride)
 	}
 
 	if exportServer == "xl-release" {
-		Info("Exporting %s from XL Release to %s\n", exportPath, exportFilename)
-		return c.XLRelease.ExportDoc(exportFilename, exportPath, exportOverride)
+		Info("Exporting %s from XL Release to %s\n", finalPath, exportFilename)
+		return c.XLRelease.ExportDoc(exportFilename, finalPath, exportOverride)
 	}
 
 	return fmt.Errorf("unknown server type: %s", exportServer)
