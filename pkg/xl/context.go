@@ -2,6 +2,7 @@ package xl
 
 import (
 	"fmt"
+	"github.com/thoas/go-funk"
 	"net/url"
 	"sort"
 )
@@ -64,18 +65,11 @@ type Context struct {
 }
 
 func (c *Context) PrintValues() {
-	if len(c.values) > 0 {
-		// Sort values
-		var keys []string
-		for k := range c.values {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-
-		for _, v := range keys {
-			Info("%s: %s\n", v, c.values[v])
-		}
-	}
+	var keys = funk.Keys(c.values).([]string)
+	sort.Strings(keys)
+	funk.ForEach(keys, func(key string) {
+		Info("%s: %s\n", key, c.values[key])
+	})
 }
 
 func (c *Context) PrintConfiguration() {
