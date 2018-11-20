@@ -1,9 +1,9 @@
-
 package xl
 
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 var IsQuiet = false
@@ -28,4 +28,8 @@ func Error(format string, a ...interface{}) {
 func Fatal(format string, a ...interface{}) {
 	Error(format, a...)
 	os.Exit(1)
+}
+
+func VerboseSeparator() {
+	Verbose("%s\n", strings.Repeat("=", 80))
 }

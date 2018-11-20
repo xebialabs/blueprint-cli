@@ -151,22 +151,12 @@ func DoApply(cmd *cobra.Command, applyFilenames []string) {
 
 	docs := parseDocuments(xl.ToAbsolutePaths(applyFilenames), mapset.NewSet(), nil)
 
-	xl.Verbose("%s\n", strings.Repeat("=", 80))
+	xl.VerboseSeparator()
 	for _, fileWithDocs := range docs {
 
-		var applyFile string
-		if xl.IsVerbose {
-			applyFile = fileWithDocs.fileName
-		} else {
-			applyFile = filepath.Base(fileWithDocs.fileName)
-		}
+		var applyFile = xl.PrintableFileName(fileWithDocs.fileName)
 		if fileWithDocs.parent != nil {
-			var parentFile string
-			if xl.IsVerbose {
-				parentFile = *fileWithDocs.parent
-			} else {
-				parentFile = filepath.Base(*fileWithDocs.parent)
-			}
+			var parentFile = xl.PrintableFileName(*fileWithDocs.parent)
 			xl.Info("Applying %s (imported by %s)\n", applyFile, parentFile)
 		} else {
 			xl.Info("Applying %s\n", applyFile)
@@ -204,7 +194,7 @@ func DoApply(cmd *cobra.Command, applyFilenames []string) {
 				xl.Info("Done\n")
 			}
 		}
-		xl.Verbose("%s\n", strings.Repeat("=", 80))
+		xl.VerboseSeparator()
 	}
 }
 
