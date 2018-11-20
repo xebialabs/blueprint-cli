@@ -54,7 +54,7 @@ func printChangedCis(changedCis *xl.ChangedCis) {
 
 func printTaskInfo(task *xl.TaskInfo) {
 	if task != nil {
-		xl.Verbose(fmt.Sprintf("Task [%s] started (%s)\n", task.Description, task.Id))
+		xl.Info(fmt.Sprintf("Task [%s] started (%s)\n", task.Description, task.Id))
 	}
 }
 
