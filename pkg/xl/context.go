@@ -48,6 +48,7 @@ type Changes struct {
 type AsCodeResponse struct {
 	Changes *Changes
 	Errors  *Errors
+	RawBody string
 }
 
 type TemplateRegistry struct {
