@@ -2,11 +2,11 @@ package xl
 
 import (
 	"fmt"
+	"github.com/thoas/go-funk"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
-	"github.com/thoas/go-funk"
 )
 
 func FindByExtInDirSorted(parentPath string, ext string) ([]string, error) {
@@ -52,4 +52,12 @@ func PathExists(filename string, mustBeDir bool) bool {
 		return err == nil && info.IsDir()
 	}
 	return err == nil
+}
+
+func PrintableFileName(path string) string {
+	if IsVerbose {
+		return path
+	} else {
+		return filepath.Base(path)
+	}
 }

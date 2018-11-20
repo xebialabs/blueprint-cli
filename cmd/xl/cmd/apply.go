@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
-	"github.com/xebialabs/xl-cli/pkg/xl"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io"
 	"os"
 	"path"
@@ -20,6 +20,7 @@ import (
 
 type FileWithDocuments struct {
 	imports   []string
+	parent    *string
 	documents []*xl.Document
 	fileName  string
 }
@@ -36,15 +37,11 @@ var applyCmd = &cobra.Command{
 	},
 }
 
-func printCiIds(kind string, ids *[]string) {
+func printCiIds(op string, ids *[]string) {
 	if ids != nil && len(*ids) > 0 {
-		xl.Verbose("...... ---------------\n")
-		xl.Verbose(fmt.Sprintf("...... %s CIs:\n", kind))
-		xl.Verbose("...... ---------------\n")
-		for idx, id := range *ids {
-			xl.Verbose(fmt.Sprintf("...... %d. %s\n", idx+1, id))
+		for _, id := range *ids {
+			xl.Info(fmt.Sprintf("%s %s\n", op, id))
 		}
-		xl.Verbose("...... ---------------\n")
 	}
 }
 
@@ -57,10 +54,7 @@ func printChangedCis(changedCis *xl.ChangedCis) {
 
 func printTaskInfo(task *xl.TaskInfo) {
 	if task != nil {
-		xl.Verbose("...... ---------------\n")
-		xl.Verbose(fmt.Sprintf("...... Task [%s] is started:\n", task.Id))
-		xl.Verbose(fmt.Sprintf("...... %s.\n", task.Description))
-		xl.Verbose("...... ---------------\n")
+		xl.Info(fmt.Sprintf("Task [%s] started (%s)\n", task.Description, task.Id))
 	}
 }
 
@@ -98,7 +92,7 @@ func extractImports(baseDir string, doc *xl.Document) []string {
 	return make([]string, 0)
 }
 
-func readDocumentsFromFile(fileName string) FileWithDocuments {
+func readDocumentsFromFile(fileName string, parent *string) FileWithDocuments {
 	reader, err := os.Open(fileName)
 	if err != nil {
 		xl.Fatal("Error while opening XL YAML file %s: %s\n", fileName, err)
@@ -121,7 +115,7 @@ func readDocumentsFromFile(fileName string) FileWithDocuments {
 		documents = append(documents, doc)
 	}
 	reader.Close()
-	return FileWithDocuments{imports, documents, fileName}
+	return FileWithDocuments{imports, parent, documents, fileName}
 }
 
 func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
@@ -134,14 +128,14 @@ func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
 	})
 }
 
-func parseDocuments(fileNames []string, seenFiles mapset.Set) []FileWithDocuments {
+func parseDocuments(fileNames []string, seenFiles mapset.Set, parent *string) []FileWithDocuments {
 	result := make([]FileWithDocuments, 0)
 	for _, fileName := range fileNames {
 		if !seenFiles.Contains(fileName) {
-			fileWithDocuments := readDocumentsFromFile(fileName)
+			fileWithDocuments := readDocumentsFromFile(fileName, parent)
 			result = append(result, fileWithDocuments)
 			seenFiles.Add(fileName)
-			result = append(parseDocuments(fileWithDocuments.imports, seenFiles), result...)
+			result = append(parseDocuments(fileWithDocuments.imports, seenFiles, &fileName), result...)
 		}
 	}
 	validateFileWithDocs(result)
@@ -155,9 +149,19 @@ func DoApply(cmd *cobra.Command, applyFilenames []string) {
 		xl.Fatal("Error while reading value files from home: %s\n", e)
 	}
 
-	docs := parseDocuments(xl.ToAbsolutePaths(applyFilenames), mapset.NewSet())
+	docs := parseDocuments(xl.ToAbsolutePaths(applyFilenames), mapset.NewSet(), nil)
 
+	xl.VerboseSeparator()
 	for _, fileWithDocs := range docs {
+
+		var applyFile = xl.PrintableFileName(fileWithDocs.fileName)
+		if fileWithDocs.parent != nil {
+			var parentFile = xl.PrintableFileName(*fileWithDocs.parent)
+			xl.Info("Applying %s (imported by %s)\n", applyFile, parentFile)
+		} else {
+			xl.Info("Applying %s\n", applyFile)
+		}
+
 		projectValsFiles, err := listRelativeXlValsFiles(filepath.Dir(fileWithDocs.fileName))
 		if err != nil {
 			xl.Fatal("Error while reading value files for %s from project: %s\n", fileWithDocs.fileName, err)
@@ -169,27 +173,28 @@ func DoApply(cmd *cobra.Command, applyFilenames []string) {
 		if err != nil {
 			xl.Fatal("Error while reading configuration: %s\n", err)
 		}
+
 		if xl.IsVerbose {
-			xl.Info("Context for document %s\n", fileWithDocs.fileName)
-			context.PrintConfiguration()
+			xl.Info("Values for file %s\n", fileWithDocs.fileName)
+			context.PrintValues()
 		}
 
-		xl.StartProgress(fileWithDocs.fileName)
 		applyDir := filepath.Dir(fileWithDocs.fileName)
 
 		for _, doc := range fileWithDocs.documents {
-			xl.UpdateProgressStartDocument(fileWithDocs.fileName, doc)
+			xl.Verbose("---\n")
+			xl.Verbose("Applying document at line %d\n", doc.Line)
 			if doc.Kind != models.ImportSpecKind {
 				changes, err := context.ProcessSingleDocument(doc, applyDir)
 				printChanges(changes)
 				if err != nil {
 					reportFatalDocumentError(fileWithDocs.fileName, doc, err)
 				}
+			} else {
+				xl.Info("Done\n")
 			}
-			xl.UpdateProgressEndDocument()
 		}
-
-		xl.EndProgress()
+		xl.VerboseSeparator()
 	}
 }
 
