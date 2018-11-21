@@ -6,12 +6,15 @@
 ##
 ##############################################################################
 
-set -e
+die ( ) {
+    echo "$*"
+    exit 1
+}
 
 # detecting program dir
 PROG_DIR="$(cd "$(dirname "${0:-$PWD}")" 2>/dev/null 1>&2 && pwd)"
 
-source "${PROG_DIR}/.xebialabs/{{.WrapperConfigName}}"
+source "${PROG_DIR}/.xebialabs/{{.WrapperConfigName}}" || die "Could not read .xebialabs/wrapper.conf"
 
 XL_WRAPPER_HOME="${HOME}/.xebialabs/wrapper/${CLI_VERSION}"
 
@@ -27,22 +30,22 @@ case "`uname`" in
 esac
 
 if [ ${BINARY_TYPE} = "unknown" ] ; then
-    echo "Unsupported OS `uname`"
-    exit 1
+    die "Unsupported OS `uname`"
 fi
 
 # find target location
 if [ ! -d "${XL_WRAPPER_HOME}" ] ; then
-  mkdir -p "${XL_WRAPPER_HOME}"
+  mkdir -p "${XL_WRAPPER_HOME}" || die "Could not create wrapper home at: $XL_WRAPPER_HOME"
 fi
 
 # if xl does not exist download it
 XL_BIN="${XL_WRAPPER_HOME}/xl"
 if [ ! -f "${XL_BIN}" ] ; then
   echo "Downloading xl binary to ${XL_BIN}"
-  curl -fLso "${XL_BIN}.$$" "${CLI_BASE_URL}/${CLI_VERSION}/${BINARY_TYPE}/xl"
-  chmod +x "${XL_BIN}.$$"
-  mv "${XL_BIN}.$$" "${XL_BIN}"
+  DOWNLOAD_URL="${CLI_BASE_URL}/${CLI_VERSION}/${BINARY_TYPE}/xl"
+  curl -fLsSo "${XL_BIN}.$$" "${DOWNLOAD_URL}" || die "Could not download xl binary from: $DOWNLOAD_URL"
+  chmod +x "${XL_BIN}.$$" || die "Could not make xl binary executable"
+  mv "${XL_BIN}.$$" "${XL_BIN}" || die "Could not move xl binary to home folder"
 fi
 
 # now run xl cli
