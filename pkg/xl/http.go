@@ -73,11 +73,18 @@ func (server *SimpleHTTPServer) ExportYamlDoc(exportFilename string, requestUrl 
 	return nil
 }
 
-func processAsCodeResponse(response http.Response) *AsCodeResponse {
+func processAsCodeResponse(response http.Response) (*AsCodeResponse, error) {
 	var resp AsCodeResponse
-	bodyText, _ := ioutil.ReadAll(response.Body)
-	json.Unmarshal(bodyText, &resp)
-	return &resp
+	bodyText, err := ioutil.ReadAll(response.Body)
+	resp.RawBody = string(bodyText)
+	if err != nil {
+		return nil, err
+	}
+	uerr := json.Unmarshal(bodyText, &resp)
+	if err != nil {
+		return nil, uerr
+	}
+	return &resp, nil
 }
 
 func (server *SimpleHTTPServer) PostYamlDoc(resource string, yamlDocBytes []byte) (*Changes, error) {
@@ -85,7 +92,10 @@ func (server *SimpleHTTPServer) PostYamlDoc(resource string, yamlDocBytes []byte
 	if err != nil {
 		return nil, err
 	}
-	var asCodeResponse = processAsCodeResponse(*response)
+	asCodeResponse, e := processAsCodeResponse(*response)
+	if e != nil {
+		return nil, e
+	}
 	return asCodeResponse.Changes, nil
 }
 
@@ -101,7 +111,10 @@ func (server *SimpleHTTPServer) PostYamlZip(resource string, yamlZipFilename str
 	if err2 != nil {
 		return nil, err2
 	}
-	var asCodeResponse = processAsCodeResponse(*response)
+	asCodeResponse, e := processAsCodeResponse(*response)
+	if e != nil {
+		return nil, e
+	}
 	return asCodeResponse.Changes, nil
 }
 
@@ -116,7 +129,15 @@ func printTable(initialString string, header []string, data [][]string) error {
 }
 
 func formatAsCodeError(response http.Response) error {
-	var asCodeResponse = processAsCodeResponse(response)
+	asCodeResponse, e := processAsCodeResponse(response)
+	if e != nil {
+		return e
+	}
+
+	if asCodeResponse.Errors == nil {
+		Verbose("Unexpected response: %s \n", asCodeResponse.RawBody)
+		return fmt.Errorf("Unexpected server problem. Please contact your system administrator. Run with verbose flag for more details",)
+	}
 
 	if asCodeResponse.Errors.Document != nil {
 		return fmt.Errorf("\nMalformed YAML document.\nProblematic field: [%s], problem: %s", asCodeResponse.Errors.Document.Field, asCodeResponse.Errors.Document.Problem)
@@ -165,6 +186,8 @@ func (server *SimpleHTTPServer) doRequest(method string, path string, contentTyp
 
 	if response.StatusCode == 401 {
 		return nil, fmt.Errorf("401 Request unauthorized. Please check your credentials.")
+	} else if response.StatusCode == 402 {
+		return nil, fmt.Errorf("402 License problem. Please verify your server license.")
 	} else if response.StatusCode == 403 {
 		return nil, fmt.Errorf("403 Request forbidden. Please check your permissions on the server.")
 	} else if response.StatusCode == 404 {
