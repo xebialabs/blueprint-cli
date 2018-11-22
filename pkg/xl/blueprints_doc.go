@@ -372,6 +372,14 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 		}
 		saveItemToTemplateDataMap(&variable, data, answer)
 	}
+
+	// Final prompt from user to start generation process
+	var toContinue bool
+	survey.AskOne(&survey.Confirm{Message: "Ready to start blueprint generation?", Default: true}, &toContinue, nil)
+	if !toContinue {
+		return nil, fmt.Errorf("cancelled")
+	}
+
 	return data, nil
 }
 

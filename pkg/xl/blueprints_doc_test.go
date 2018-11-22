@@ -379,6 +379,8 @@ func TestPrepareTemplateData(t *testing.T) {
 			return err
 		})
 	})*/
+
+	// TODO: Test last confirm for start generation process
 }
 
 func TestProcessCustomFunction(t *testing.T) {
