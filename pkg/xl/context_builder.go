@@ -14,21 +14,21 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func PrepareRootCmdFlags(cmd *cobra.Command, cfgFile *string) {
-	rootFlags := cmd.PersistentFlags()
+func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
+	rootFlags := command.PersistentFlags()
 	rootFlags.StringVar(cfgFile, "config", "", "config file (default: $HOME/.xebialabs/config.yaml)")
 	rootFlags.BoolVarP(&IsQuiet, "quiet", "q", false, "suppress all output, except for errors")
 	rootFlags.BoolVarP(&IsVerbose, "verbose", "v", false, "verbose output")
-	rootFlags.String(models.FlagXldUrl, "http://localhost:4516/", "URL to access the XL Deploy server")
-	rootFlags.String(models.FlagXldUser, "admin", "Username to access the XL Deploy server")
-	rootFlags.String(models.FlagXldPass, "admin", "Password to access the XL Deploy server")
+	rootFlags.String(models.FlagXldUrl, DefaultXlDeployUrl, "URL to access the XL Deploy server")
+	rootFlags.String(models.FlagXldUser, DefaultXlDeployUsername, "Username to access the XL Deploy server")
+	rootFlags.String(models.FlagXldPass, DefaultXlDeployPassword, "Password to access the XL Deploy server")
 	viper.BindPFlag("xl-deploy.url", rootFlags.Lookup(models.FlagXldUrl))
 	viper.BindPFlag("xl-deploy.username", rootFlags.Lookup(models.FlagXldUser))
 	viper.BindPFlag("xl-deploy.password", rootFlags.Lookup(models.FlagXldPass))
 
-	rootFlags.String(models.FlagXlrUrl, "http://localhost:5516/", "URL to access the XL Release server")
-	rootFlags.String(models.FlagXlrUser, "admin", "Username to access the XL Release server")
-	rootFlags.String(models.FlagXlrPass, "admin", "Password to access the XL Release server")
+	rootFlags.String(models.FlagXlrUrl, DefaultXlReleaseUrl, "URL to access the XL Release server")
+	rootFlags.String(models.FlagXlrUser, DefaultXlReleaseUsername, "Username to access the XL Release server")
+	rootFlags.String(models.FlagXlrPass, DefaultXlReleasePassword, "Password to access the XL Release server")
 	viper.BindPFlag("xl-release.url", rootFlags.Lookup(models.FlagXlrUrl))
 	viper.BindPFlag("xl-release.username", rootFlags.Lookup(models.FlagXlrUser))
 	viper.BindPFlag("xl-release.password", rootFlags.Lookup(models.FlagXlrPass))
@@ -210,8 +210,8 @@ func getWhitelistedCmdFlagsMap(cmd *cobra.Command, getOnlyChanged bool) *map[str
 func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles []string, cmdFlagDefaults *map[string]string, cmdFlagUpdates *map[string]string) (map[string]string, error) {
 	/*
 	Value merging priority list, first being least priority
-	- COBRA CMD FLAGS - Defaults
-	- ALL VALUES FILES
+	- GLOBAL CONFIG YAML
+	- LOCAL VALUE FILES
 	- ENV VARS
 	- FLAG VALUES - VIPER OVERRIDES
 	- COBRA CMD FLAGS - If changed

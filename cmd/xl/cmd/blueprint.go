@@ -64,5 +64,5 @@ func init() {
 
 	blueprintFlags := blueprintCmd.Flags()
 	blueprintFlags.StringVarP(&blueprintTemplate, "template", "t", "", "The template path/url to use")
-	blueprintFlags.StringVarP(&templateRegistry, "template-registry", "r", "https://s3.amazonaws.com/xl-cli/blueprints", "Registry URL for Blueprint templates")
+	blueprintFlags.StringVarP(&templateRegistry, "template-registry", "r", xl.DefaultTemplateRegistry, "Registry URL for Blueprint templates")
 }
