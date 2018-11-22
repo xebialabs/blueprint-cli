@@ -45,7 +45,6 @@ type VarField struct {
 	Tag  string
 }
 type Variable struct {
-	Children       []Variable
 	Name           VarField
 	Type           VarField
 	Secret         VarField
@@ -56,6 +55,7 @@ type Variable struct {
 	DependsOnFalse VarField
 	Options        []VarField
 	Pattern        VarField
+	SaveInXlVals   VarField
 }
 type PreparedData struct {
 	TemplateData map[string]interface{}
@@ -428,7 +428,10 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 		preparedData.Secrets[variable.Name.Val] = data
 		preparedData.TemplateData[variable.Name.Val] = fmt.Sprintf(fmtTagValue, variable.Name.Val)
 	} else {
-		preparedData.Values[variable.Name.Val] = data
+		// Save to values file if switch is ON
+		if variable.SaveInXlVals.Bool == true {
+			preparedData.Values[variable.Name.Val] = data
+		}
 		preparedData.TemplateData[variable.Name.Val] = data
 	}
 }

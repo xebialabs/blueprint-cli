@@ -21,9 +21,11 @@ import (
 )
 
 const (
-	valuesFile    = "values.xlvals"
-	secretsFile   = "secrets.xlvals"
-	gitignoreFile = ".gitignore"
+	valuesFile         = "values.xlvals"
+	valuesFileHeader   = "# This file includes all non-secret values, you can add variables here and then refer them with '!value' tag in YAML files"
+	secretsFile        = "secrets.xlvals"
+	secretsFileHeader  = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
+	gitignoreFile      = ".gitignore"
 )
 
 // parse blueprint definition doc
@@ -119,11 +121,11 @@ func CreateBlueprint(blueprintTemplate string, templateRegistries []TemplateRegi
 	Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
 	// save prepared data to values & secrets files
-	err = writeConfigToFile(preparedData.Values, path.Join(outputDir, valuesFile))
+	err = writeConfigToFile(valuesFileHeader, preparedData.Values, path.Join(outputDir, valuesFile))
 	if err != nil {
 		return err
 	}
-	err = writeConfigToFile(preparedData.Secrets, path.Join(outputDir, secretsFile))
+	err = writeConfigToFile(secretsFileHeader, preparedData.Secrets, path.Join(outputDir, secretsFile))
 	if err != nil {
 		return err
 	}
@@ -207,7 +209,7 @@ func writeDataToFile(outputFileName string, data *string) error {
 	return nil
 }
 
-func writeConfigToFile(config map[string]interface{}, filename string) error {
+func writeConfigToFile(header string, config map[string]interface{}, filename string) error {
 	err := createDirectoryIfNeeded(filename)
 	if err != nil {
 		return err
@@ -233,11 +235,15 @@ func writeConfigToFile(config map[string]interface{}, filename string) error {
 		return err
 	}
 	defer f.Close()
-	bytesWritten, err := props.Write(f, properties.UTF8)
+	bytesWrittenHeader, err := f.Write([]byte(header+"\n"))
 	if err != nil {
 		return err
 	}
-	Verbose("\tWrote %d bytes \n", bytesWritten)
+	bytesWrittenConfig, err := props.Write(f, properties.UTF8)
+	if err != nil {
+		return err
+	}
+	Verbose("\tWrote %d bytes \n", bytesWrittenHeader+bytesWrittenConfig)
 	Info("[file] Blueprint output file '%s' generated successfully\n", filename)
 	return nil
 }

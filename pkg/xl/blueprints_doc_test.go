@@ -293,10 +293,11 @@ spec:
 			Secret: VarField{Bool: true},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
-			Name:        VarField{Val: "test"},
-			Type:        VarField{Val: TypeInput},
-			Default:     VarField{Val: "lala"},
-			Description: VarField{Val: "help text"},
+			Name:          VarField{Val: "test"},
+			Type:          VarField{Val: TypeInput},
+			Default:       VarField{Val: "lala"},
+			Description:   VarField{Val: "help text"},
+			SaveInXlVals:  VarField{Bool: true},
 		}, doc.Variables[1])
 		assert.Equal(t, Variable{
 			Name:  VarField{Val: "fn"},

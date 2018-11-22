@@ -97,6 +97,7 @@ spec:
 - name: test
   type: Input
   default: lala
+  saveInXlVals: true 
   description: help text
 - name: fn
   type: Input
@@ -147,11 +148,11 @@ func TestWriteConfigToFile(t *testing.T) {
 		config["a"] = true
 		config["z"] = "test"
 		filePath := "test.xlvals"
-		err := writeConfigToFile(config, filePath)
+		err := writeConfigToFile("#comment", config, filePath)
 		defer os.RemoveAll("test.xlvals")
 		require.Nil(t, err)
 		assert.FileExists(t, filePath)
-		assert.Equal(t, strings.TrimSpace(GetFileContent(filePath)), "a = true\nd = 1\nz = test")
+		assert.Equal(t, "#comment\na = true\nd = 1\nz = test", strings.TrimSpace(GetFileContent(filePath)))
 	})
 	t.Run("should write config data to output file in folder", func(t *testing.T) {
 		defer os.RemoveAll("test")
@@ -160,10 +161,10 @@ func TestWriteConfigToFile(t *testing.T) {
 		config["a"] = true
 		config["z"] = "test"
 		filePath := path.Join("test", "test.xlvals")
-		err := writeConfigToFile(config, filePath)
+		err := writeConfigToFile("#comment", config, filePath)
 		require.Nil(t, err)
 		assert.FileExists(t, filePath)
-		assert.Equal(t, strings.TrimSpace(GetFileContent(filePath)), "a = true\nd = 1\nz = test")
+		assert.Equal(t, "#comment\na = true\nd = 1\nz = test", strings.TrimSpace(GetFileContent(filePath)))
 	})
 }
 
@@ -238,6 +239,8 @@ func TestCreateBlueprint(t *testing.T) {
 			for _, infraCheck := range infraChecks {
 				assert.Contains(t, infraFile, infraCheck)
 			}
+
+	 		// TODO: Check if only saveInXlVals marked fields are in values.xlvals
 
 			// cleanup any files created
 			RemoveFiles("xld-*.yml")
