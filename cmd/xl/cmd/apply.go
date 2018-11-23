@@ -169,7 +169,7 @@ func DoApply(cmd *cobra.Command, applyFilenames []string) {
 
 		allValsFiles := append(homeValsFiles, projectValsFiles...)
 
-		context, err := xl.BuildContext(cmd, viper.GetViper(), &applyValues, allValsFiles)
+		context, err := xl.BuildContext(viper.GetViper(), &applyValues, allValsFiles)
 		if err != nil {
 			xl.Fatal("Error while reading configuration: %s\n", err)
 		}

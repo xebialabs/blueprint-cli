@@ -22,19 +22,19 @@ func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 	rootFlags.String(models.FlagXldUrl, DefaultXlDeployUrl, "URL to access the XL Deploy server")
 	rootFlags.String(models.FlagXldUser, DefaultXlDeployUsername, "Username to access the XL Deploy server")
 	rootFlags.String(models.FlagXldPass, DefaultXlDeployPassword, "Password to access the XL Deploy server")
-	viper.BindPFlag("xl-deploy.url", rootFlags.Lookup(models.FlagXldUrl))
-	viper.BindPFlag("xl-deploy.username", rootFlags.Lookup(models.FlagXldUser))
-	viper.BindPFlag("xl-deploy.password", rootFlags.Lookup(models.FlagXldPass))
+	viper.BindPFlag(models.ViperKeyXLdUrl, rootFlags.Lookup(models.FlagXldUrl))
+	viper.BindPFlag(models.ViperKeyXLdUsername, rootFlags.Lookup(models.FlagXldUser))
+	viper.BindPFlag(models.ViperKeyXLdPassword, rootFlags.Lookup(models.FlagXldPass))
 
 	rootFlags.String(models.FlagXlrUrl, DefaultXlReleaseUrl, "URL to access the XL Release server")
 	rootFlags.String(models.FlagXlrUser, DefaultXlReleaseUsername, "Username to access the XL Release server")
 	rootFlags.String(models.FlagXlrPass, DefaultXlReleasePassword, "Password to access the XL Release server")
-	viper.BindPFlag("xl-release.url", rootFlags.Lookup(models.FlagXlrUrl))
-	viper.BindPFlag("xl-release.username", rootFlags.Lookup(models.FlagXlrUser))
-	viper.BindPFlag("xl-release.password", rootFlags.Lookup(models.FlagXlrPass))
+	viper.BindPFlag(models.ViperKeyXLrUrl, rootFlags.Lookup(models.FlagXlrUrl))
+	viper.BindPFlag(models.ViperKeyXLrUsername, rootFlags.Lookup(models.FlagXlrUser))
+	viper.BindPFlag(models.ViperKeyXLrPassword, rootFlags.Lookup(models.FlagXlrPass))
 }
 
-func BuildContext(cmd *cobra.Command, v *viper.Viper, valueOverrides *map[string]string, valueFiles []string) (*Context, error) {
+func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles []string) (*Context, error) {
 	var xlDeploy *XLDeployServer
 	var xlRelease *XLReleaseServer
 
@@ -60,10 +60,9 @@ func BuildContext(cmd *cobra.Command, v *viper.Viper, valueOverrides *map[string
 	}
 
 	// Get cobra flag values
-	cmdFlagDefaults := getWhitelistedCmdFlagsMap(cmd, false)
-	cmdFlagUpdates := getWhitelistedCmdFlagsMap(cmd, true)
+	configDefaults := getServerConfigDefaults(v)
 
-	values, err := mergeValues("XL_VALUE_", valueOverrides, valueFiles, cmdFlagDefaults, cmdFlagUpdates)
+	values, err := mergeValues("XL_VALUE_", valueOverrides, valueFiles, configDefaults)
 	if err != nil {
 		return nil, err
 	}
@@ -196,18 +195,19 @@ func addCmdFlagValueToMap(cmd *cobra.Command, getOnlyChanged bool, flagName stri
 	m[key] = flag.Value.String()
 }
 
-func getWhitelistedCmdFlagsMap(cmd *cobra.Command, getOnlyChanged bool) *map[string]string {
+
+func getServerConfigDefaults(v *viper.Viper) *map[string]string {
 	m := make(map[string]string)
-	addCmdFlagValueToMap(cmd, getOnlyChanged, models.FlagXldUrl, "XL_DEPLOY_URL", m)
-	addCmdFlagValueToMap(cmd, getOnlyChanged, models.FlagXldUser, "XL_DEPLOY_USERNAME", m)
-	addCmdFlagValueToMap(cmd, getOnlyChanged, models.FlagXldPass, "XL_DEPLOY_PASSWORD", m)
-	addCmdFlagValueToMap(cmd, getOnlyChanged, models.FlagXlrUrl, "XL_RELEASE_URL", m)
-	addCmdFlagValueToMap(cmd, getOnlyChanged, models.FlagXlrUser, "XL_RELEASE_USERNAME", m)
-	addCmdFlagValueToMap(cmd, getOnlyChanged, models.FlagXlrPass, "XL_RELEASE_PASSWORD", m)
+	m["XL_DEPLOY_URL"] = v.GetString(models.ViperKeyXLdUrl)
+	m["XL_DEPLOY_USERNAME"] = v.GetString(models.ViperKeyXLdUsername)
+	m["XL_DEPLOY_PASSWORD"] = v.GetString(models.ViperKeyXLdPassword)
+	m["XL_RELEASE_URL"] = v.GetString(models.ViperKeyXLrUrl)
+	m["XL_RELEASE_USERNAME"] = v.GetString(models.ViperKeyXLrUsername)
+	m["XL_RELEASE_PASSWORD"] = v.GetString(models.ViperKeyXLrPassword)
 	return &m
 }
 
-func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles []string, cmdFlagDefaults *map[string]string, cmdFlagUpdates *map[string]string) (map[string]string, error) {
+func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles []string, configDefaults *map[string]string) (map[string]string, error) {
 	/*
 	Value merging priority list, first being least priority
 	- GLOBAL CONFIG YAML
@@ -218,8 +218,8 @@ func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles 
 	*/
 	m := make(map[string]string)
 
-	// Add Cobra command flag defaults
-	for k, v := range *cmdFlagDefaults {
+	// Add defaults for server configuration
+	for k, v := range *configDefaults {
 		m[k] = v
 	}
 
@@ -251,11 +251,6 @@ func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles 
 		for k, v := range *flagOverrides {
 			m[k] = v
 		}
-	}
-
-	// Add Cobra command flag changes
-	for k, v := range *cmdFlagUpdates {
-		m[k] = v
 	}
 
 	// Validate keys
