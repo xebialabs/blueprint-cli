@@ -12,7 +12,7 @@ type DummyXLServer struct {
 	docs              []Document
 }
 
-func (dummy *DummyXLServer) ExportDoc(filename string, path string, override bool) error {
+func (dummy *DummyXLServer) GenerateDoc(filename string, path string, override bool) error {
 	return nil
 }
 

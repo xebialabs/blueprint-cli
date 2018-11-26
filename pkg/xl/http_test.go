@@ -108,11 +108,11 @@ func TestHttp(t *testing.T) {
 		assert.Nil(t, error)
 	})
 
-	t.Run("should export yaml and depending files", func(t *testing.T) {
+	t.Run("should generate yaml and depending files", func(t *testing.T) {
 
 		handler := func(responseWriter http.ResponseWriter, request *http.Request) {
 			assert.Equal(t, "GET", request.Method)
-			assert.Equal(t, "/export/Applications", request.URL.Path)
+			assert.Equal(t, "/generate/Applications", request.URL.Path)
 			assert.Equal(t, "Basic "+base64.StdEncoding.EncodeToString([]byte("root:s3cr3t")), request.Header.Get("Authorization"))
 
 			archiveFiles := map[string]string{"index.yaml": "yaml: content", "otherfile": "otherfile content"}
@@ -126,7 +126,7 @@ func TestHttp(t *testing.T) {
 			responseWriter.Write(b)
 		}
 
-		file, err := ioutil.TempFile("", "export.yaml")
+		file, err := ioutil.TempFile("", "generated.yaml")
 		if err != nil {
 			panic(err)
 		}
@@ -138,7 +138,7 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse(testServer.URL)
 		server := SimpleHTTPServer{Url: *res, Username: "root", Password: "s3cr3t"}
 
-		error := server.ExportYamlDoc(file.Name(), "export/Applications", true)
+		error := server.GenerateYamlDoc(file.Name(), "generate/Applications", true)
 		assert.Nil(t, error)
 
 		b, err := ioutil.ReadFile(file.Name())
@@ -154,8 +154,8 @@ func TestHttp(t *testing.T) {
 		assert.Equal(t, "otherfile content", string(b2))
 	})
 
-	t.Run("should refuse export when file exists", func(t *testing.T) {
-		file, err := ioutil.TempFile("", "export.yaml")
+	t.Run("should refuse to generate when file exists", func(t *testing.T) {
+		file, err := ioutil.TempFile("", "generated.yaml")
 		if err != nil {
 			panic(err)
 		}
@@ -164,7 +164,7 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse("http://test")
 		server := SimpleHTTPServer{Url: *res, Username: "", Password: ""}
 
-		error := server.ExportYamlDoc(file.Name(), "export/Applications", false)
+		error := server.GenerateYamlDoc(file.Name(), "generate/Applications", false)
 		assert.Contains(t, error.Error(), "already exists")
 	})
 

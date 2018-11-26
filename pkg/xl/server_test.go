@@ -15,7 +15,7 @@ type DummyHTTPServer struct {
 	capturedFilename string
 }
 
-func (d *DummyHTTPServer) ExportYamlDoc(path string, exportFilename string, override bool) error {
+func (d *DummyHTTPServer) GenerateYamlDoc(path string, generateFilename string, override bool) error {
 	return nil
 }
 

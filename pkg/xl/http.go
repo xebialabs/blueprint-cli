@@ -18,7 +18,7 @@ import (
 type HTTPServer interface {
 	PostYamlDoc(path string, yamlDocBytes []byte) (*Changes, error)
 	PostYamlZip(path string, yamlZipFilename string) (*Changes, error)
-	ExportYamlDoc(exportFilename string, path string, override bool) error
+	GenerateYamlDoc(generateFilename string, path string, override bool) error
 }
 
 type SimpleHTTPServer struct {
@@ -29,10 +29,10 @@ type SimpleHTTPServer struct {
 
 var client = &http.Client{}
 
-func (server *SimpleHTTPServer) ExportYamlDoc(exportFilename string, requestUrl string, override bool) error {
+func (server *SimpleHTTPServer) GenerateYamlDoc(generateFilename string, requestUrl string, override bool) error {
 	if override == false {
-		if _, err := os.Stat(exportFilename); !os.IsNotExist(err) {
-			return fmt.Errorf("file `%s` already exists. Use -o flag to overwrite it.", exportFilename)
+		if _, err := os.Stat(generateFilename); !os.IsNotExist(err) {
+			return fmt.Errorf("file `%s` already exists. Use -o flag to overwrite it.", generateFilename)
 		}
 	}
 
@@ -58,14 +58,14 @@ func (server *SimpleHTTPServer) ExportYamlDoc(exportFilename string, requestUrl 
 		return err
 	}
 
-	indexFilePath, err := filepath.Abs(exportFilename)
+	indexFilePath, err := filepath.Abs(generateFilename)
 	if err != nil {
 		return err
 	}
 
 	destinationDir := filepath.Dir(indexFilePath)
 	err = archiver.Zip.Open(tempArchivePath, destinationDir)
-	err = os.Rename(filepath.Join(destinationDir, "index.yaml"), filepath.Join(destinationDir, filepath.Base(exportFilename)))
+	err = os.Rename(filepath.Join(destinationDir, "index.yaml"), filepath.Join(destinationDir, filepath.Base(generateFilename)))
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func formatAsCodeError(response http.Response) error {
 
 	if asCodeResponse.Errors == nil {
 		Verbose("Unexpected response: %s \n", asCodeResponse.RawBody)
-		return fmt.Errorf("Unexpected server problem. Please contact your system administrator. Run with verbose flag for more details",)
+		return fmt.Errorf("Unexpected server problem. Please contact your system administrator. Run with verbose flag for more details")
 	}
 
 	if asCodeResponse.Errors.Document != nil {

@@ -120,18 +120,18 @@ func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Ch
 	return nil, fmt.Errorf("unknown apiVersion: %s", doc.ApiVersion)
 }
 
-func (c *Context) ExportSingleDocument(exportServer string, exportFilename string, exportPath string, exportOverride bool) error {
-	finalPath := url.QueryEscape(exportPath)
+func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool) error {
+	finalPath := url.QueryEscape(generatePath)
 
-	if exportServer == "xl-deploy" {
-		Info("Exporting %s from XL Deploy to %s\n", finalPath, exportFilename)
-		return c.XLDeploy.ExportDoc(exportFilename, finalPath, exportOverride)
+	if generateServer == "xl-deploy" {
+		Info("Generating definitions for path %s from XL Deploy to %s\n", finalPath, generateFilename)
+		return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride)
 	}
 
-	if exportServer == "xl-release" {
-		Info("Exporting %s from XL Release to %s\n", finalPath, exportFilename)
-		return c.XLRelease.ExportDoc(exportFilename, finalPath, exportOverride)
+	if generateServer == "xl-release" {
+		Info("Generating definitions for path %s from XL Release to %s\n", finalPath, generateFilename)
+		return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride)
 	}
 
-	return fmt.Errorf("unknown server type: %s", exportServer)
+	return fmt.Errorf("unknown server type: %s", generateServer)
 }
