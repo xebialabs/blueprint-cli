@@ -21,7 +21,7 @@ type WrapperConfig struct {
 	WrapperConfigName string
 }
 
-var CliBaseUrl = "https://s3.amazonaws.com/xl-cli/bin"
+var CliBaseUrl = "https://dist.xebialabs.com/public/xl-cli"
 
 func writeTemplateFile(name string, templateString string, config WrapperConfig) error {
 	tpl, err := template.New(name).Parse(templateString)
