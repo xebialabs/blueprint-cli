@@ -174,11 +174,6 @@ func DoApply(cmd *cobra.Command, applyFilenames []string) {
 			xl.Fatal("Error while reading configuration: %s\n", err)
 		}
 
-		if xl.IsVerbose {
-			xl.Info("Values for file %s\n", fileWithDocs.fileName)
-			context.PrintValues()
-		}
-
 		applyDir := filepath.Dir(fileWithDocs.fileName)
 
 		for _, doc := range fileWithDocs.documents {

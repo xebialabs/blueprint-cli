@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/spf13/cobra"
 	"github.com/thoas/go-funk"
+	"sort"
 )
 
 func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
@@ -218,11 +219,6 @@ func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles 
 	*/
 	m := make(map[string]string)
 
-	// Add defaults for server configuration
-	for k, v := range *configDefaults {
-		m[k] = v
-	}
-
 	// Add all values files variables
 	funk.ForEach(valueFiles, func(valueFile string) {
 		Verbose("Using value file %s\n", valueFile)
@@ -261,5 +257,31 @@ func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles 
 		}
 	}
 
-	return m, nil
+	// print values without defaults
+	if IsVerbose {
+		printValues(m)
+	}
+
+	finalMap := make(map[string]string)
+
+	// Add defaults for server configuration
+	for k, v := range *configDefaults {
+		finalMap[k] = v
+	}
+
+	// Reapply all values on top of final map
+	for k, v := range m {
+		finalMap[k] = v
+	}
+
+	return finalMap, nil
+}
+
+func printValues(values map[string]string) {
+	var keys = funk.Keys(values).([]string)
+	sort.Strings(keys)
+	Verbose("Values:\n")
+	funk.ForEach(keys, func(key string) {
+		Verbose("%s: %s\n", key, values[key])
+	})
 }
