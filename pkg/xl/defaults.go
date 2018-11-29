@@ -1,7 +1,7 @@
 package xl
 
 const (
-	DefaultTemplateRegistry  = "https://s3.amazonaws.com/xl-cli/blueprints"
+	DefaultTemplateRegistry  = "https://dist.xebialabs.com/public/blueprints"
 	DefaultXlDeployUsername  = "admin"
 	DefaultXlDeployPassword  = "admin"
 	DefaultXlDeployUrl       = "http://localhost:4516/"

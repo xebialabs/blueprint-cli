@@ -9,12 +9,19 @@ const (
 	FlagXlrUser = "xl-release-username"
 	FlagXlrPass = "xl-release-password"
 
-	ViperKeyXLdUrl = "xl-deploy.url"
-	ViperKeyXLdUsername = "xl-deploy.username"
-	ViperKeyXLdPassword = "xl-deploy.password"
+	ViperKeyXLDUrl      = "xl-deploy.url"
+	ViperKeyXLDUsername = "xl-deploy.username"
+	ViperKeyXLDPassword = "xl-deploy.password"
 
-	ViperKeyXLrUrl = "xl-release.url"
-	ViperKeyXLrUsername = "xl-release.username"
-	ViperKeyXLrPassword = "xl-release.password"
+	ViperKeyXLRUrl      = "xl-release.url"
+	ViperKeyXLRUsername = "xl-release.username"
+	ViperKeyXLRPassword = "xl-release.password"
 
+	FlagBlueprintRepositoryUrl      = "blueprint-repository-url"
+	FlagBlueprintRepositoryUsername = "blueprint-repository-username"
+	FlagBlueprintRepositoryPassword = "blueprint-repository-password"
+
+	ViperKeyBlueprintRepositoryUrl      = "blueprint-repository.url"
+	ViperKeyBlueprintRepositoryUsername = "blueprint-repository.username"
+	ViperKeyBlueprintRepositoryPassword = "blueprint-repository.password"
 )

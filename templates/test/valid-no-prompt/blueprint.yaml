@@ -10,10 +10,14 @@ parameters:
 - name: Test
   type: Input
   value: testing
+- name: TestDepends
+  type: Confirm
+  value: "yes"
 - name: AppName
   type: Input
   pattern: "[a-z-]*"
   description: Application name, will be used in various AWS resource names
+  value: testApp
 - name: AWSAccessKey
   type: Input
   secret: true
@@ -27,8 +31,12 @@ parameters:
   options:
     - !fn aws.regions(ecs)
   default: !fn aws.regions(ecs)[0]
+  value: us-west
 
 files:
 - path: xld-environment.yml.tmpl
 - path: xld-infrastructure.yml.tmpl
+- path: xlr-pipeline-2.yml
+  dependsOnTrue: TestDepends
 - path: xlr-pipeline.yml
+  dependsOnFalse: TestDepends

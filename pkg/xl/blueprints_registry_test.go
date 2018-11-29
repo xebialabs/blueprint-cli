@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func mockMakeHTTPCallForTemplateIndex(indexURL string, registry TemplateRegistry) ([]byte, int, error) {
+func mockMakeHTTPCallForTemplateIndex(indexURL string, blueprintRepository BlueprintRepository) ([]byte, int, error) {
 	if indexURL == "http://test.registry/blueprint/index.json" {
 		json := `
 		  [
@@ -40,22 +40,8 @@ func mockMakeHTTPCallForTemplateIndex(indexURL string, registry TemplateRegistry
 	return nil, 400, nil
 }
 
-func mockMakeHTTPCallForTemplatePathIndex(indexURL string, registry TemplateRegistry) ([]byte, int, error) {
-	if indexURL == "http://test.registry/blueprint/aws/test/index.json" {
-		json := `
-		  [
-			"test.yaml",
-			"test.yml.tmpl"
-		  ]
-		  `
-		bytes := []byte(json)
-		return bytes, 200, nil
-	}
-	return nil, 400, nil
-}
-
-func mockMakeHTTPCallForTemplateFile(t *testing.T, expectedurl, output string) MakeHTTPCallForTemplateFn {
-	return func(urlPath string, registry TemplateRegistry) ([]byte, int, error) {
+func mockMakeHTTPCallForTemplateFile(t *testing.T, expectedurl, output string) MakeHTTPCallForBlueprintRepositoryFn {
+	return func(urlPath string, blueprintRepository BlueprintRepository) ([]byte, int, error) {
 		if expectedurl == "" {
 			return nil, 0, fmt.Errorf("error")
 		}
@@ -66,116 +52,14 @@ func mockMakeHTTPCallForTemplateFile(t *testing.T, expectedurl, output string) M
 	}
 }
 
-func TestGetTemplateTypes(t *testing.T) {
-	t.Run("should get sorted keys from a map", func(t *testing.T) {
-		registry := TemplateRegistry{Name: "default", URL: parseURIWithoutError("http://test.registry/blueprint/")}
-
-		out := getTemplateTypes(map[string]TemplateRegistry{
-			"aws/test2":  registry,
-			"aws/test":   registry,
-			"azure/test": registry,
-		})
-		require.NotNil(t, out)
-		assert.Equal(t, []string{
-			"aws/test", "aws/test2", "azure/test",
-		}, out)
-	})
-}
-
 func TestMakeFullURLPath(t *testing.T) {
-	t.Run("should modify the templates with full path", func(t *testing.T) {
-		registry := TemplateRegistry{Name: "default", URL: parseURIWithoutError("http://test.registry/blueprint/")}
-		out := makeFullURLPath([]string{
-			"test1.yml", "test2.yaml",
-		}, "aws/test", registry)
-		require.NotNil(t, out)
-		assert.Equal(t, []TemplateConfig{
-			TemplateConfig{File: "test1.yml", FullPath: "http://test.registry/blueprint/aws/test/test1.yml", Registry: registry},
-			TemplateConfig{File: "test2.yaml", FullPath: "http://test.registry/blueprint/aws/test/test2.yaml", Registry: registry},
-		}, out)
-	})
-}
-func TestGetTemplateConfigs(t *testing.T) {
-	t.Run("should modify the templates with full path", func(t *testing.T) {
-		registry := TemplateRegistry{Name: "default", URL: parseURIWithoutError("http://test.registry/blueprint/")}
-		out, err := getTemplateConfigs("aws/test", registry, mockMakeHTTPCallForTemplatePathIndex)
-		require.Nil(t, err)
-		require.NotNil(t, out)
-		assert.Equal(t, []TemplateConfig{
-			TemplateConfig{File: "test.yaml", FullPath: "http://test.registry/blueprint/aws/test/test.yaml", Registry: registry},
-			TemplateConfig{File: "test.yml.tmpl", FullPath: "http://test.registry/blueprint/aws/test/test.yml.tmpl", Registry: registry},
-		}, out)
-	})
-}
-
-func TestMergeRegistryIndex(t *testing.T) {
-	t.Run("should merge multiple registry index", func(t *testing.T) {
-		registry1 := TemplateRegistry{URL: parseURIWithoutError("http://test.registry/blueprint")}
-		registry2 := TemplateRegistry{URL: parseURIWithoutError("http://test.registry/blueprint2/")}
-		registry3 := TemplateRegistry{URL: parseURIWithoutError("http://test.registry/blueprint3")}
-		out, err := mergeRegistryIndex([]TemplateRegistry{
-			registry1, registry2, registry3,
-		}, mockMakeHTTPCallForTemplateIndex)
-		require.Nil(t, err)
-		require.NotNil(t, out)
-		assert.Equal(t, map[string]TemplateRegistry{
-			"aws/test2":  registry1,
-			"aws/test":   registry2,
-			"azure/test": registry2,
-			"gcp/test":   registry3,
-		}, out)
-	})
-	t.Run("should produce error if http call fails", func(t *testing.T) {
-		registry1 := TemplateRegistry{URL: parseURIWithoutError("http://test.registry/blueprint")}
-		out, err := mergeRegistryIndex([]TemplateRegistry{
-			registry1,
-		}, func(indexURL string, registry TemplateRegistry) ([]byte, int, error) {
-			json := `
-			{
-				"gcp/test": [
-					"test1",
-					"test2"
-				],,,
-			}
-		  `
-			bytes := []byte(json)
-			return bytes, 200, nil
-		})
-		require.Nil(t, out)
-		require.NotNil(t, err)
-		assert.Equal(t, "invalid character ',' looking for beginning of object key string", err.Error())
-	})
-	t.Run("should produce error on invalid json", func(t *testing.T) {
-		registry1 := TemplateRegistry{URL: parseURIWithoutError("http://test.registry/blueprint")}
-		out, err := mergeRegistryIndex([]TemplateRegistry{
-			registry1,
-		}, func(indexURL string, registry TemplateRegistry) ([]byte, int, error) {
-			return nil, 400, fmt.Errorf("http call error")
-		})
-		require.Nil(t, out)
-		require.NotNil(t, err)
-		assert.Equal(t, "http call error", err.Error())
-	})
-	t.Run("should produce error on invalid statuscode", func(t *testing.T) {
-		registry1 := TemplateRegistry{URL: parseURIWithoutError("http://test.registry/blueprint")}
-		out, err := mergeRegistryIndex([]TemplateRegistry{
-			registry1,
-		}, func(indexURL string, registry TemplateRegistry) ([]byte, int, error) {
-			return nil, 401, nil
-		})
-		require.Nil(t, out)
-		require.NotNil(t, err)
-		assert.Equal(t, "401 Request unauthorized. Please check your credentials for http://test.registry/blueprint", err.Error())
-
-		out, err = mergeRegistryIndex([]TemplateRegistry{
-			registry1,
-		}, func(indexURL string, registry TemplateRegistry) ([]byte, int, error) {
-			return nil, 405, nil
-		})
-		require.Nil(t, out)
-		require.NotNil(t, err)
-		assert.Equal(t, "error: StatusCode 405 for URL http://test.registry/blueprint", err.Error())
-
+	t.Run("should modify the template with full path and registry", func(t *testing.T) {
+		blueprintRepository := BlueprintRepository{SimpleHTTPServer{Url: parseURIWithoutError("http://test.registry/blueprint/")}}
+		templateConfig := TemplateConfig{
+			File: "test1.yml",
+		}
+		templateConfig.generateFullURLPath("aws/test", blueprintRepository)
+		assert.Equal(t, TemplateConfig{File: "test1.yml", FullPath: "http://test.registry/blueprint/aws/test/test1.yml", Repository: blueprintRepository}, templateConfig)
 	})
 }
 
@@ -208,8 +92,8 @@ func TestGetFromRelativeFolder(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, out)
 		assert.Equal(t, []TemplateConfig{
-			TemplateConfig{File: "test.yaml.tmpl", FullPath: path.Join(tmpDir, "test.yaml.tmpl")},
-			TemplateConfig{File: "test2.yaml.tmpl", FullPath: path.Join(tmpDir, "test2.yaml.tmpl")},
+			{File: "test.yaml.tmpl", FullPath: path.Join(tmpDir, "test.yaml.tmpl")},
+			{File: "test2.yaml.tmpl", FullPath: path.Join(tmpDir, "test2.yaml.tmpl")},
 		}, out)
 	})
 	t.Run("should get template config from relative nested paths", func(t *testing.T) {
@@ -244,18 +128,20 @@ func TestGetFromRelativeFolder(t *testing.T) {
 			{File: "test.yaml.tmpl", FullPath: path.Join(tmpDir, "test.yaml.tmpl")},
 		}, out)
 	})
-	t.Run("should return nil if directory is empty", func(t *testing.T) {
+	t.Run("should return error if directory is empty", func(t *testing.T) {
 		tmpDir := path.Join("test", "blueprints")
 		os.MkdirAll(tmpDir, os.ModePerm)
 		defer os.RemoveAll("test")
 		out, err := getFromRelativeFolder(tmpDir)
-		require.Nil(t, err)
 		require.Nil(t, out)
+		require.NotNil(t, err)
+		require.Equal(t, "path [test/blueprints] doesn't include any valid files", err.Error())
 	})
-	t.Run("should return nil if directory doesnt exist", func(t *testing.T) {
+	t.Run("should return error if directory doesn't exist", func(t *testing.T) {
 		out, err := getFromRelativeFolder(path.Join("test", "blueprints"))
-		require.Nil(t, err)
 		require.Nil(t, out)
+		require.NotNil(t, err)
+		require.Equal(t, "path [test/blueprints] doesn't exist", err.Error())
 	})
 }
 
@@ -265,7 +151,7 @@ func TestCreateTemplateConfigForSingleFile(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, out)
 		assert.Equal(t, []TemplateConfig{
-			TemplateConfig{File: "test.yaml.tmpl", FullPath: "http://xebialabs.com/test/blueprints/test.yaml.tmpl"},
+			{File: "test.yaml.tmpl", FullPath: "http://xebialabs.com/test/blueprints/test.yaml.tmpl"},
 		}, out)
 	})
 	t.Run("should create template config for a relative file", func(t *testing.T) {
@@ -274,7 +160,7 @@ func TestCreateTemplateConfigForSingleFile(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, out)
 		assert.Equal(t, []TemplateConfig{
-			TemplateConfig{File: "test.yaml.tmpl", FullPath: tmpPath},
+			{File: "test.yaml.tmpl", FullPath: tmpPath},
 		}, out)
 	})
 	t.Run("should create template config for a file", func(t *testing.T) {
@@ -282,7 +168,7 @@ func TestCreateTemplateConfigForSingleFile(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, out)
 		assert.Equal(t, []TemplateConfig{
-			TemplateConfig{File: "test.yaml.tmpl", FullPath: "test.yaml.tmpl"},
+			{File: "test.yaml.tmpl", FullPath: "test.yaml.tmpl"},
 		}, out)
 	})
 	t.Run("should return err if template is empty", func(t *testing.T) {
@@ -294,13 +180,6 @@ func TestCreateTemplateConfigForSingleFile(t *testing.T) {
 
 func TestFetchTemplateFromPath(t *testing.T) {
 	stream := fmt.Sprintf(`
-		###
-		variables:
-		- name: AccessKey
-		type: Function
-		value: !Fn aws.readCreds.AccessKey
-		###
-		---
 		apiVersion: %s
 		kind: Infrastructure
 		spec:
@@ -311,52 +190,267 @@ func TestFetchTemplateFromPath(t *testing.T) {
 		
 		---	
 		  `, XldApiVersion)
+
 	t.Run("should fetch a template from http url", func(t *testing.T) {
-		out, err := fetchTemplateFromPath(TemplateConfig{
-			File: "test.yaml", FullPath: "http://aws/monolith/test.yaml.tmpl", Registry: TemplateRegistry{},
-		}, true, mockMakeHTTPCallForTemplateFile(t, "http://aws/monolith/test.yaml.tmpl", stream))
-		require.Nil(t, err)
-		assert.Equal(t, stream, string(out))
-		// test without suffix for file
-		out, err = fetchTemplateFromPath(TemplateConfig{
-			File: "test.yaml", FullPath: "http://aws/monolith/test.yaml", Registry: TemplateRegistry{},
-		}, true, mockMakeHTTPCallForTemplateFile(t, "http://aws/monolith/test.yaml.tmpl", stream))
+		templateConfig := TemplateConfig{
+			File: "test.yaml.tmpl", FullPath: "http://aws/monolith/test.yaml.tmpl", Repository: BlueprintRepository{},
+		}
+		out, err := templateConfig.fetchBlueprintFromPath(true, mockMakeHTTPCallForTemplateFile(t, "http://aws/monolith/test.yaml.tmpl", stream))
 		require.Nil(t, err)
 		assert.Equal(t, stream, string(out))
 	})
+
 	t.Run("should fetch a template from local path", func(t *testing.T) {
 		tmpDir := path.Join("test", "blueprints")
+		templateConfig := TemplateConfig{
+			File: "test.yaml", FullPath: path.Join(tmpDir, "test.yaml.tmpl"),
+		}
 		os.MkdirAll(tmpDir, os.ModePerm)
 		defer os.RemoveAll("test")
 		d1 := []byte(stream)
 		ioutil.WriteFile(path.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
-		out, err := fetchTemplateFromPath(TemplateConfig{
-			File: "test.yaml", FullPath: path.Join(tmpDir, "test.yaml.tmpl"),
-		}, true, nil)
-		require.Nil(t, err)
-		assert.Equal(t, stream, string(out))
-		// test without suffix for file
-		out, err = fetchTemplateFromPath(TemplateConfig{
-			File: "test.yaml", FullPath: path.Join(tmpDir, "test.yaml"),
-		}, true, nil)
+		out, err := templateConfig.fetchBlueprintFromPath(true, nil)
 		require.Nil(t, err)
 		assert.Equal(t, stream, string(out))
 	})
+
 	t.Run("should error on url not found", func(t *testing.T) {
-		out, err := fetchTemplateFromPath(TemplateConfig{
-			File: "test.yaml", FullPath: "http://aws/monolith/test.yaml.tmpl", Registry: TemplateRegistry{},
-		}, true, mockMakeHTTPCallForTemplateFile(t, "", stream))
+		templateConfig := TemplateConfig{
+			File: "test.yaml", FullPath: "http://aws/monolith/test.yaml.tmpl", Repository: BlueprintRepository{},
+		}
+		out, err := templateConfig.fetchBlueprintFromPath(true, mockMakeHTTPCallForTemplateFile(t, "", stream))
 		require.NotNil(t, err)
 		require.Nil(t, out)
 		assert.Equal(t, "error", err.Error())
 	})
+
 	t.Run("should error on no file found", func(t *testing.T) {
 		tmpPath := path.Join("aws", "monolith", "test.yaml.tmpl")
-		out, err := fetchTemplateFromPath(TemplateConfig{
-			File: "test.yaml", FullPath: tmpPath, Registry: TemplateRegistry{},
-		}, true, nil)
+		templateConfig := TemplateConfig{
+			File: "test.yaml", FullPath: tmpPath, Repository: BlueprintRepository{},
+		}
+		out, err := templateConfig.fetchBlueprintFromPath(true, nil)
 		require.Nil(t, out)
 		require.NotNil(t, err)
 		assert.Equal(t, "template not found in path "+tmpPath, err.Error())
 	})
+}
+
+func TestGetBlueprintVariableConfig(t *testing.T) {
+	yaml := `
+      apiVersion: xl/v1
+      kind: Blueprint
+      metadata:
+        projectName: Test Project
+      
+      parameters:
+      - name: Test
+        type: Input
+        value: testing
+      
+      files:
+      - path: xld-environment.yml.tmpl
+      - path: xld-infrastructure.yml.tmpl
+      - path: xlr-pipeline.yml`
+	repository := BlueprintRepository{SimpleHTTPServer{Url: parseURIWithoutError("http://xebialabs.com")}}
+
+	tmpDir := path.Join("test", "blueprints")
+	os.MkdirAll(tmpDir, os.ModePerm)
+	defer os.RemoveAll("test")
+	d1 := []byte(yaml)
+	ioutil.WriteFile(path.Join(tmpDir, "blueprint.yaml"), d1, os.ModePerm)
+
+	type args struct {
+		templatePath      string
+		repository        BlueprintRepository
+		blueprintFileName string
+		makeHTTPCallFn    MakeHTTPCallForBlueprintRepositoryFn
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr error
+	}{
+		{
+			"read a given blueprint.yaml file from registry",
+			args{"test/blueprints", repository, "blueprint.yaml", mockMakeHTTPCallForTemplateFile(t, "http://xebialabs.com/test/blueprints/blueprint.yaml", yaml)},
+			yaml,
+			nil,
+		},
+		{
+			"read a given blueprint.yaml file local file",
+			args{"test/blueprints", BlueprintRepository{}, "blueprint.yaml", nil},
+			yaml,
+			nil,
+		},
+		{
+			"error on http error",
+			args{"test/blueprints", repository, "blueprint.yaml", mockMakeHTTPCallForTemplateFile(t, "", yaml)},
+			"",
+			fmt.Errorf("error"),
+		},
+		{
+			"error on when remote or local file doesn't exist",
+			args{"test/blueprints", BlueprintRepository{}, "blueprints.yml", nil},
+			"",
+			fmt.Errorf("template not found in path test/blueprints/blueprints.yml"),
+		},
+		{
+			"error on local path doesn't exist",
+			args{"test/blueprints2", BlueprintRepository{}, "blueprint.yaml", nil},
+			"",
+			fmt.Errorf("template not found in path test/blueprints2/blueprint.yaml"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getBlueprintVariableConfig(tt.args.templatePath, tt.args.repository, tt.args.blueprintFileName, tt.args.makeHTTPCallFn)
+			if tt.wantErr == nil || err == nil {
+				assert.Equal(t, tt.wantErr, err)
+			} else {
+				assert.Equal(t, tt.wantErr.Error(), err.Error())
+			}
+			if tt.want == "" {
+				assert.Nil(t, got)
+			} else {
+				assert.Equal(t, tt.want, string(*got))
+			}
+		})
+	}
+}
+
+func TestGetBlueprintConfig(t *testing.T) {
+	yaml1 := `
+      apiVersion: xl/v1
+      kind: Blueprint
+      metadata:
+        projectName: Test Project
+      parameters:
+      - name: Test
+        type: Input
+        value: testing`
+	yaml2 := `
+      apiVersion: xl/v1
+      kind: Blueprint
+      metadata:
+        projectName: Test Project
+      parameters:
+      - name: Test
+        type: Input
+        value: testing
+      files:
+      - path: xld-environment.yml.tmpl
+      - path: xlr-pipeline.yml`
+	templatePath := "test/blueprints"
+	repository := BlueprintRepository{SimpleHTTPServer{Url: parseURIWithoutError("http://xebialabs.com")}}
+	tmpDir, err := ioutil.TempDir("", "blueprints")
+	require.Nil(t, err)
+	defer os.RemoveAll(tmpDir)
+	d1 := []byte(yaml1)
+	ioutil.WriteFile(path.Join(tmpDir, "blueprint.yaml"), d1, os.ModePerm)
+	os.MkdirAll(path.Join(tmpDir, "nested"), os.ModePerm)
+	d1 = []byte("hello\ngo\n")
+	ioutil.WriteFile(path.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
+	ioutil.WriteFile(path.Join(tmpDir, "nested", "test2.yaml.tmpl"), d1, os.ModePerm)
+
+	tmpDir2, err := ioutil.TempDir("", "blueprints2")
+	require.Nil(t, err)
+	defer os.RemoveAll(tmpDir2)
+	d2 := []byte(yaml2)
+	ioutil.WriteFile(path.Join(tmpDir2, "blueprint.yaml"), d2, os.ModePerm)
+	ioutil.WriteFile(path.Join(tmpDir2, "test.yaml.tmpl"), d1, os.ModePerm)
+
+	type args struct {
+		templatePath string
+		repository   BlueprintRepository
+		makeHTTPCall []MakeHTTPCallForBlueprintRepositoryFn
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *BlueprintYaml
+		wantErr error
+	}{
+		{
+			"throw error when no configuration is found",
+			args{templatePath, repository, []MakeHTTPCallForBlueprintRepositoryFn{mockMakeHTTPCallForTemplateFile(t, "http://xebialabs.com/test/blueprints/blueprint.yaml", yaml1)}},
+			nil,
+			fmt.Errorf("path [%s] doesn't exist", templatePath),
+		},
+		{
+			"get config from files declaration",
+			args{templatePath, repository, []MakeHTTPCallForBlueprintRepositoryFn{mockMakeHTTPCallForTemplateFile(t, "http://xebialabs.com/test/blueprints/blueprint.yaml", yaml2)}},
+			&BlueprintYaml{
+				ApiVersion: "xl/v1",
+				Kind:       "Blueprint",
+				Metadata:   map[interface{}]interface{}{"projectName": "Test Project"},
+				Parameters: []interface{}{map[interface{}]interface{}{"name": "Test", "type": "Input", "value": "testing"}},
+				Files: []interface{}{
+					map[interface{}]interface{}{"path": "xld-environment.yml.tmpl"},
+					map[interface{}]interface{}{"path": "xlr-pipeline.yml"},
+				},
+				TemplateConfigs: []TemplateConfig{
+					{File: "xld-environment.yml.tmpl", FullPath: "http://xebialabs.com/test/blueprints/xld-environment.yml.tmpl", Repository: repository},
+					{File: "xlr-pipeline.yml", FullPath: "http://xebialabs.com/test/blueprints/xlr-pipeline.yml", Repository: repository},
+				},
+				Variables: []Variable{
+					{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+				},
+			},
+			nil,
+		},
+		{
+			"fallback to walking local file tree when declaration not found",
+			args{tmpDir, BlueprintRepository{}, []MakeHTTPCallForBlueprintRepositoryFn{mockMakeHTTPCallForTemplateFile(t, "", "")}},
+			&BlueprintYaml{
+				ApiVersion: "xl/v1",
+				Kind:       "Blueprint",
+				Metadata:   map[interface{}]interface{}{"projectName": "Test Project"},
+				Parameters: []interface{}{map[interface{}]interface{}{"name": "Test", "type": "Input", "value": "testing"}},
+				TemplateConfigs: []TemplateConfig{
+					{File: path.Join("nested", "test2.yaml.tmpl"), FullPath: tmpDir + "/nested/test2.yaml.tmpl"},
+					{File: "test.yaml.tmpl", FullPath: tmpDir + "/test.yaml.tmpl"},
+				},
+				Variables: []Variable{
+					{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+				},
+			},
+			nil,
+		},
+		{
+			"use files decalration when found in local path as well",
+			args{tmpDir2, BlueprintRepository{}, []MakeHTTPCallForBlueprintRepositoryFn{mockMakeHTTPCallForTemplateFile(t, "", "")}},
+			&BlueprintYaml{
+				ApiVersion: "xl/v1",
+				Kind:       "Blueprint",
+				Metadata:   map[interface{}]interface{}{"projectName": "Test Project"},
+				Parameters: []interface{}{map[interface{}]interface{}{"name": "Test", "type": "Input", "value": "testing"}},
+				Files: []interface{}{
+					map[interface{}]interface{}{"path": "xld-environment.yml.tmpl"},
+					map[interface{}]interface{}{"path": "xlr-pipeline.yml"},
+				},
+				TemplateConfigs: []TemplateConfig{
+					{File: "xld-environment.yml.tmpl", FullPath: tmpDir2 + "/xld-environment.yml.tmpl"},
+					{File: "xlr-pipeline.yml", FullPath: tmpDir2 + "/xlr-pipeline.yml"},
+				},
+				Variables: []Variable{
+					{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+				},
+			},
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetBlueprintConfig(tt.args.templatePath, tt.args.repository, tt.args.makeHTTPCall...)
+			if tt.wantErr == nil || err == nil {
+				assert.Equal(t, tt.wantErr, err)
+			} else {
+				assert.Equal(t, tt.wantErr.Error(), err.Error())
+			}
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }

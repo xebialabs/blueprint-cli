@@ -1,8 +1,6 @@
 package xl
 
 import (
-	"bytes"
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,61 +11,19 @@ import (
 
 	"github.com/magiconair/properties"
 
-	"io/ioutil"
-
 	"github.com/Masterminds/sprig"
-	"github.com/xebialabs/yaml"
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
+var SkipFinalPrompt = false
+
 const (
-	valuesFile         = "values.xlvals"
-	valuesFileHeader   = "# This file includes all non-secret values, you can add variables here and then refer them with '!value' tag in YAML files"
-	secretsFile        = "secrets.xlvals"
-	secretsFileHeader  = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
-	gitignoreFile      = ".gitignore"
+	valuesFile        = "values.xlvals"
+	valuesFileHeader  = "# This file includes all non-secret values, you can add variables here and then refer them with '!value' tag in YAML files"
+	secretsFile       = "secrets.xlvals"
+	secretsFileHeader = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
+	gitignoreFile     = ".gitignore"
 )
-
-// parse blueprint definition doc
-func parseTemplateMetadata(blueprintVars *[]byte) (*BlueprintYaml, error) {
-	decoder := yaml.NewDecoder(bytes.NewReader(*blueprintVars))
-	decoder.SetStrict(true)
-	doc := BlueprintYaml{}
-	decoder.Decode(&doc)
-
-	// parse & validate
-	err := doc.parseSpec()
-	if err != nil {
-		return nil, err
-	}
-	err = doc.validate()
-	return &doc, err
-}
-
-// read file contents
-func readFileContents(fileStream []byte) (string, error) {
-	content, ioErr := ioutil.ReadAll(bytes.NewReader(fileStream))
-	if ioErr != nil {
-		return "", ioErr
-	}
-	return string(content), nil
-}
-
-func getBlueprintVariableConfig(templatePath string, registry TemplateRegistry, blueprintFileName string) (*[]byte, error) {
-	// read blueprint variables file
-	filePath := fmt.Sprintf("%s/%s", templatePath, blueprintFileName)
-	if registry.URL.String() != "" {
-		filePath = fmt.Sprintf("%s%s", addSuffixIfNeeded(registry.URL.String(), "/"), filePath)
-	}
-	variableConfigs, err := createTemplateConfigForSingleFile(filePath)
-	variableConfig := variableConfigs[0]
-	variableConfig.Registry = registry
-	blueprintVars, err := fetchTemplateFromPath(variableConfig, false, makeHTTPCallForTemplate)
-	if err != nil {
-		return nil, err
-	}
-	return &blueprintVars, nil
-}
 
 func getFuncMaps() template.FuncMap {
 	funcMaps := sprig.TxtFuncMap()
@@ -80,34 +36,35 @@ func adjustPathSeperatorIfNeeded(blueprintTemplate string) string {
 	return re.ReplaceAllString(blueprintTemplate, string(os.PathSeparator))
 }
 
+func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable) (bool, error) {
+	if !isStringEmpty(templateConfig.DependsOnTrue.Val) {
+		dependsOnTrueVal, err := ParseDependsOnValue(templateConfig.DependsOnTrue, variables)
+		if err != nil {
+			return false, err
+		}
+		return !dependsOnTrueVal, nil
+	}
+	if !isStringEmpty(templateConfig.DependsOnFalse.Val) {
+		dependsOnFalseVal, err := ParseDependsOnValue(templateConfig.DependsOnFalse, variables)
+		if err != nil {
+			return false, err
+		}
+		return dependsOnFalseVal, nil
+	}
+	return false, nil
+}
+
 // CreateBlueprint is entry point for the cli command
-func CreateBlueprint(blueprintTemplate string, templateRegistries []TemplateRegistry, outputDir string, surveyOpts ...survey.AskOpt) error {
+func InstantiateBlueprint(blueprintTemplate string, blueprintRepository BlueprintRepository, outputDir string, surveyOpts ...survey.AskOpt) error {
 	blueprintTemplate = adjustPathSeperatorIfNeeded(blueprintTemplate)
 	// get available blueprint templates from merged registry
-	templateConfigs, templatePath, err := getAvailableBlueprintTemplates(blueprintTemplate, templateRegistries, surveyOpts...)
+	templatePath, err := GetBlueprintTemplateFromUser(blueprintTemplate, blueprintRepository, surveyOpts...)
 	if err != nil {
 		return err
 	}
 
-	if templateConfigs == nil {
-		return fmt.Errorf("template configuration not found for path %s", templatePath)
-	}
 	Verbose("[cmd] Reading Blueprint from %s\n", templatePath)
-
-	// read blueprint metadata file - try both .yml and .yaml extensions
-	var ymlContent *[]byte
-	var blueprintDoc *BlueprintYaml
-	var blueprintReadErr error
-	for _, extn := range blueprintMetadataFileExtensions {
-		ymlContent, blueprintReadErr = getBlueprintVariableConfig(templatePath, templateConfigs[0].Registry, blueprintMetadataFileName+extn)
-		if blueprintReadErr == nil {
-			break
-		}
-	}
-	if blueprintReadErr != nil {
-		return blueprintReadErr
-	}
-	blueprintDoc, err = parseTemplateMetadata(ymlContent)
+	blueprintDoc, err := GetBlueprintConfig(templatePath, blueprintRepository)
 	if err != nil {
 		return err
 	}
@@ -132,29 +89,32 @@ func CreateBlueprint(blueprintTemplate string, templateRegistries []TemplateRegi
 
 	// generate .gitignore file
 	gitignoreData := secretsFile
-	writeDataToFile(path.Join(outputDir, gitignoreFile), &gitignoreData)
+	err = writeDataToFile(path.Join(outputDir, gitignoreFile), &gitignoreData)
+	if err != nil {
+		return err
+	}
 
 	// execute each template file found
-	for _, config := range templateConfigs {
-		// filter blueprint metadata file
-		if strings.Contains(config.File, blueprintMetadataFileName) || config.File == "index.json" {
+	for _, config := range blueprintDoc.TemplateConfigs {
+		skipFile, err := shouldSkipFile(config, &blueprintDoc.Variables)
+		if err != nil {
+			return err
+		}
+		if skipFile {
+			Verbose("[file] skipping file [%s] since it has dependsOn value set\n", config.File)
 			continue
 		}
 
-		Verbose("[file] Fetching template file %s\n", config.FullPath)
-		templateFile, err := fetchTemplateFromPath(config, strings.HasSuffix(config.File, templateExtn), makeHTTPCallForTemplate)
-		if err != nil {
-			return err
-		}
-
 		// read template contents
-		templateString, err := readFileContents(templateFile)
+		Verbose("[file] Fetching template file %s\n", config.FullPath)
+		templateContent, err := config.fetchBlueprintFromPath(strings.HasSuffix(config.File, templateExtension), makeHTTPCallForBlueprintRepository)
 		if err != nil {
 			return err
 		}
+		templateString := string(templateContent)
 
 		// process the template file (filter based on extension)
-		if strings.HasSuffix(config.File, templateExtn) {
+		if strings.HasSuffix(config.File, templateExtension) {
 			Verbose("[file] Processing template file %s\n", config.FullPath)
 
 			// read & process the template
@@ -167,11 +127,17 @@ func CreateBlueprint(blueprintTemplate string, templateRegistries []TemplateRegi
 
 			// write the processed template to a file
 			finalTmpl := strings.TrimSpace(processedTmpl.String())
-			writeDataToFile(strings.Replace(config.File, templateExtn, "", 1), &finalTmpl)
+			err = writeDataToFile(strings.Replace(config.File, templateExtension, "", 1), &finalTmpl)
+			if err != nil {
+				return err
+			}
 		} else {
 			// handle non-template files - copy as-it-is
 			Verbose("[file] Copying file %s\n", config.FullPath)
-			writeDataToFile(config.File, &templateString)
+			err = writeDataToFile(config.File, &templateString)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -203,8 +169,14 @@ func writeDataToFile(outputFileName string, data *string) error {
 		return err
 	}
 	Verbose("\tWrote %d bytes \n", out)
-	file.Sync()
-	file.Close()
+	err = file.Sync()
+	if err != nil {
+		return err
+	}
+	err = file.Close()
+	if err != nil {
+		return err
+	}
 	Info("[file] Blueprint output file '%s' generated successfully\n", outputFileName)
 	return nil
 }
@@ -235,7 +207,7 @@ func writeConfigToFile(header string, config map[string]interface{}, filename st
 		return err
 	}
 	defer f.Close()
-	bytesWrittenHeader, err := f.Write([]byte(header+"\n"))
+	bytesWrittenHeader, err := f.Write([]byte(header + "\n"))
 	if err != nil {
 		return err
 	}

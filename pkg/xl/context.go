@@ -49,18 +49,15 @@ type AsCodeResponse struct {
 	RawBody string
 }
 
-type TemplateRegistry struct {
-	Name     string
-	URL      url.URL
-	Username string
-	Password string
+type BlueprintRepository struct {
+	Server SimpleHTTPServer
 }
 
 type Context struct {
-	XLDeploy           XLServer
-	XLRelease          XLServer
-	values             map[string]string
-	TemplateRegistries []TemplateRegistry
+	XLDeploy            XLServer
+	XLRelease           XLServer
+	BlueprintRepository BlueprintRepository
+	values              map[string]string
 }
 
 func (c *Context) PrintConfiguration() {
@@ -77,12 +74,9 @@ func (c *Context) PrintConfiguration() {
 		c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Username,
 		c.XLRelease.(*XLReleaseServer).Home)
 
-	if len(c.TemplateRegistries) > 0 {
-		Info("Template Registries:\n")
-		for _, v := range c.TemplateRegistries {
-			Info("%s: %s \n", v.Name, v.URL.String())
-		}
-	}
+	Info("Blueprint Repository:\n  URL: %s\n  Username: %s\n",
+		c.BlueprintRepository.Server.Url.String(),
+		c.BlueprintRepository.Server.Username)
 }
 
 func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Changes, error) {

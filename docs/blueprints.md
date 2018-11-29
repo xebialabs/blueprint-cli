@@ -18,7 +18,7 @@
 | **author** | - | XebiaLabs | n |
 | **version** | - | 1.0 | n |
 
-### Spec Fields
+### Parameters Fields
 
 | Field Name | Expected value(s) | Examples | Default Value | Required | Explanation |
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -34,6 +34,14 @@
 | **dependsOnFalse** | - | CreateNewCluster<br>!fn aws.credentials().IsAvailable | - | n | Reverse logic for dependsOn, see above
 | **saveInXlVals** | `true`/`false` | - | `true` for secret fields<br>`false` for other fields | n | If true, output variable will be included in the `values.xlvals` output file. By default every secret field will be written to `secrets.xlvals` file and this setting doesn't effect that functionality |
 
+### Files Fields
+
+| Field Name | Expected value(s) | Examples | Default Value | Required | Explanation |
+|:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **path** | - | xebialabs/xlr-pipeline.yaml | - | y | File/template path to be copied/processed  |
+| **dependsOnTrue** | - | CreateNewCluster<br>!fn aws.credentials().IsAvailable | - | n | This file will be generated only when value of a variable or function return true.<br>A valid variable name should be given and the variable name used should have been defined. Function tags also can be used, but expected result should always be boolean. |
+| **dependsOnFalse** | - | CreateNewCluster<br>!fn aws.credentials().IsAvailable | - | n | This file will be generated only when value of a variable or function return false.<br>A valid variable name should be given and the variable name used should have been defined. Function tags also can be used, but expected result should always be boolean.|
+
 ## Supported YAML Tags
 
 ### Custom function tag [!fn]
@@ -42,7 +50,7 @@ Blueprints support custom functions to be used within variable definitions (`spe
 
 Custom function syntax: `DOMAIN . MODULE (PARAMETERS...) . ATTRIBUTE|[INDEX]`
 
-Avialable custom functions:
+Available custom functions:
 
 | Domain | Module | Examples | Parameters | Attributes/Index | Description |
 |:------: |:-----------: |:----------------------------------------: |:----------------: |------------------------------------------------------- |:------------------------------------------------------------: |
@@ -50,9 +58,12 @@ Avialable custom functions:
 | **aws** | **regions** | aws.regions(ecs)<br>aws.regions(ecs)[0] | AWS service ID | Any index of the resulting array | Get list of available regions for the specified AWS service |
 
 
-## Go Templating
+## Go Templates
 
-In blueprint template files using `.tmpl` extension, GoLang templating can be used. Please refer to the following [cheatsheet](https://curtisvermeeren.github.io/2017/09/14/Golang-Templates-Cheatsheet) for more details how to use GoLang templates. Also support for additional [Sprig](http://masterminds.github.io/sprig/) functions are included in the templating engine, as well as list of custom XL functions. Please refer to below table for additional functions available.
+In blueprint template files using `.tmpl` extension, GoLang templating can be used. 
+Please refer to the following [cheatsheet](https://curtisvermeeren.github.io/2017/09/14/Golang-Templates-Cheatsheet) for more details how to use GoLang templates. 
+Also support for additional [Sprig](http://masterminds.github.io/sprig/) functions are included in the templating engine, as well as list of custom XL functions. 
+Please refer to below table for additional functions available.
 
 | Function | Example | Description |
 |:---------: |:----------------------: |:-------------------------------------------------: |

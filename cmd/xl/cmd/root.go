@@ -4,13 +4,15 @@ import (
 	"os"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io/ioutil"
-	"github.com/mitchellh/go-homedir"
 	"path"
 	"path/filepath"
+
+	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 	"github.com/xebialabs/yaml"
 )
 
@@ -101,14 +103,23 @@ func writeDefaultConfigurationFile() error {
 	xl.Verbose("Writing default configuration to %s\n", configFileUsed)
 
 	// using MapSlice to maintain order of keys
-	slices := yaml.MapSlice{{"xl-deploy", yaml.MapSlice{{"username", xl.DefaultXlDeployUsername},
-																    {"password", xl.DefaultXlDeployPassword},
-																    {"url",  xl.DefaultXlDeployUrl}}},
-							{"xl-release", yaml.MapSlice{{"username", xl.DefaultXlReleaseUsername},
-																	{"password", xl.DefaultXlReleasePassword},
-																	{"url",  xl.DefaultXlReleaseUrl}}},
-							{"template-registries", []yaml.MapSlice{{{"name", "default"},
-														                	     {"url", xl.DefaultTemplateRegistry}}}}}
+	slices := yaml.MapSlice{
+		{"xl-deploy", yaml.MapSlice{
+			{"username", models.DefaultXlDeployUsername},
+			{"password", models.DefaultXlDeployPassword},
+			{"url", models.DefaultXlDeployUrl},
+		}},
+		{"xl-release", yaml.MapSlice{
+			{"username", models.DefaultXlReleaseUsername},
+			{"password", models.DefaultXlReleasePassword},
+			{"url", models.DefaultXlReleaseUrl},
+		}},
+		{"blueprint-repository", yaml.MapSlice{
+			{"username", models.DefaultBlueprintRepositoryUsername},
+			{"password", models.DefaultBlueprintRepositoryPassword},
+			{"url", models.DefaultBlueprintRepositoryUrl},
+		}},
+	}
 
 	d, err := yaml.Marshal(&slices)
 	if err != nil {
@@ -123,7 +134,7 @@ func writeDefaultConfigurationFile() error {
 }
 
 func defaultConfigfilePath() (string, error) {
-    home, err := homedir.Dir()
+	home, err := homedir.Dir()
 	if err != nil {
 		return "", err
 	}

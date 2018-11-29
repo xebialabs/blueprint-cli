@@ -13,9 +13,7 @@ import (
 	"github.com/hinshun/vt10x"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
-	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
 type UserInput struct {
@@ -56,7 +54,10 @@ func SendPromptValues(values map[string]UserInput) func(c *expect.Console) {
 			if err != nil {
 				panic(err)
 			}
-			console.SendLine(input.inputValue)
+			_, err = console.SendLine(input.inputValue)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 }
@@ -83,41 +84,6 @@ func RemoveFiles(glob string) {
 func GetTestTemplateDir(blueprint string) string {
 	pwd, _ := os.Getwd()
 	return strings.Replace(pwd, path.Join("pkg", "xl"), path.Join("templates", "test", blueprint), -1)
-}
-
-func getValidTestBlueprintMetadata() (*BlueprintYaml, error) {
-	metadata := []byte(
-		fmt.Sprintf(`apiVersion: %s
-kind: Blueprint
-metadata:
-spec:
-- name: pass
-  type: Input
-  secret: true
-- name: test
-  type: Input
-  default: lala
-  saveInXlVals: true 
-  description: help text
-- name: fn
-  type: Input
-  value: !fn aws.regions(ecs)[0]
-- name: select
-  type: Select
-  options:
-  - !fn aws.regions(ecs)[0]
-  - b
-  - c
-  default: b
-- name: isit
-  type: Confirm
-- name: isitnot
-  type: Confirm
-- name: dep
-  type: Input
-  dependsOnTrue: isit
-  dependsOnFalse: isitnot`, models.YamlFormatVersion))
-	return parseTemplateMetadata(&metadata)
 }
 
 func TestWriteDataToFile(t *testing.T) {
@@ -183,74 +149,56 @@ func TestAdjustPathSeperatorIfNeeded(t *testing.T) {
 }
 
 func TestCreateBlueprint(t *testing.T) {
+	SkipFinalPrompt = true
 	t.Run("should error on unknown template", func(t *testing.T) {
-		RunInVirtualConsole(t, func(c *expect.Console) {}, func(stdio terminal.Stdio) error {
-			err := CreateBlueprint("abc", []TemplateRegistry{}, "xebialabs", survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
+		err := InstantiateBlueprint("abc", BlueprintRepository{}, "xebialabs")
 
-			require.NotNil(t, err)
-			assert.Equal(t, "template configuration not found for path abc", err.Error())
-
-			return nil
-		})
+		require.NotNil(t, err)
+		assert.Equal(t, "template not found in path abc/blueprint.yml", err.Error())
 	})
 	t.Run("should error on invalid test template", func(t *testing.T) {
-		RunInVirtualConsole(t, func(c *expect.Console) {}, func(stdio terminal.Stdio) error {
-			err := CreateBlueprint(GetTestTemplateDir("invalid"), []TemplateRegistry{}, "xebialabs", survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
+		err := InstantiateBlueprint(GetTestTemplateDir("invalid"), BlueprintRepository{}, "xebialabs")
 
-			require.NotNil(t, err)
-			assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
-
-			return nil
-		})
+		require.NotNil(t, err)
+		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
 	})
-	// todo: tests are hanging randomly!
-	/*t.Run("should create output files for valid test template", func(t *testing.T) {
-		userAnswers := make(map[string]UserInput)
-		userAnswers["AppName"] = UserInput{inputType: TypeInput, inputValue: "test-project"}
-		userAnswers["AWSRegion"] = UserInput{inputType: TypeSelect, inputValue: "eu-west-1"}
+	t.Run("should create output files for valid test template without prompts", func(t *testing.T) {
+		outFolder := "xebialabs"
+		defer RemoveFiles("xld-*.yml")
+		defer RemoveFiles("xlr-*.yml")
+		defer os.RemoveAll(outFolder)
+		// create blueprint
+		err := InstantiateBlueprint(GetTestTemplateDir("valid-no-prompt"), BlueprintRepository{}, outFolder)
+		require.Nil(t, err)
 
-		RunInVirtualConsole(t, SendPromptValues(userAnswers), func(stdio terminal.Stdio) error {
-			// create blueprint
-			err := CreateBlueprint(GetTestTemplateDir("valid"), []TemplateRegistry{}, "xebialabs", survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
-			require.Nil(t, err)
+		// assertions
+		assert.FileExists(t, "xld-environment.yml")
+		assert.FileExists(t, "xld-infrastructure.yml")
+		assert.FileExists(t, "xlr-pipeline.yml")
+		assert.False(t, PathExists("xlr-pipeline-2.yml", false))
+		assert.FileExists(t, path.Join(outFolder, valuesFile))
+		assert.FileExists(t, path.Join(outFolder, secretsFile))
+		assert.FileExists(t, path.Join(outFolder, gitignoreFile))
+		envFile := GetFileContent("xld-environment.yml")
+		assert.Contains(t, envFile, fmt.Sprintf("region: %s", "us-west"))
+		infraFile := GetFileContent("xld-infrastructure.yml")
+		infraChecks := []string{
+			fmt.Sprintf("- name: %s-ecs-fargate-cluster", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-vpc", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-subnet-ipv4-az-1a", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-route-table", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-security-group", "testApp"),
+			fmt.Sprintf("- name: %s-targetgroup", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-alb", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-db-subnet-group", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-dictionary", "testApp"),
+			"MYSQL_DB_ADDRESS: '{{%address%}}'",
+		}
+		for _, infraCheck := range infraChecks {
+			assert.Contains(t, infraFile, infraCheck)
+		}
 
-			// assertions
-			assert.FileExists(t, "xld-environment.yml")
-			assert.FileExists(t, "xld-infrastructure.yml")
-			assert.FileExists(t, "xlr-pipeline.yml")
-			assert.FileExists(t, valuesFile + xlvalsExt)
-			assert.FileExists(t, secretsFile + xlvalsExt)
-			assert.FileExists(t, gitignoreFile)
-			envFile := GetFileContent("xld-environment.yml")
-			assert.Contains(t, envFile, fmt.Sprintf("region: %s", userAnswers["AWSRegion"].inputValue))
-			infraFile := GetFileContent("xld-infrastructure.yml")
-			infraChecks := []string{
-				fmt.Sprintf("- name: %s-ecs-fargate-cluster", userAnswers["AppName"].inputValue),
-				fmt.Sprintf("- name: %s-ecs-vpc", userAnswers["AppName"].inputValue),
-				fmt.Sprintf("- name: %s-ecs-subnet-ipv4-az-1a", userAnswers["AppName"].inputValue),
-				fmt.Sprintf("- name: %s-ecs-route-table", userAnswers["AppName"].inputValue),
-				fmt.Sprintf("- name: %s-ecs-security-group", userAnswers["AppName"].inputValue),
-				fmt.Sprintf("- name: %s-targetgroup", userAnswers["AppName"].inputValue),
-				fmt.Sprintf("- name: %s-ecs-alb", userAnswers["AppName"].inputValue),
-				fmt.Sprintf("- name: %s-ecs-db-subnet-group", userAnswers["AppName"].inputValue),
-				fmt.Sprintf("- name: %s-ecs-dictionary", userAnswers["AppName"].inputValue),
-				"MYSQL_DB_ADDRESS: '{{%address%}}'",
-			}
-			for _, infraCheck := range infraChecks {
-				assert.Contains(t, infraFile, infraCheck)
-			}
-
-	 		// TODO: Check if only saveInXlVals marked fields are in values.xlvals
-
-			// cleanup any files created
-			RemoveFiles("xld-*.yml")
-			RemoveFiles("xlr-*.yml")
-			RemoveFiles(valuesFile + xlvalsExt)
-			RemoveFiles(secretsFile + xlvalsExt)
-			RemoveFiles(gitignoreFile)
-			return err
-		})
-	})*/
+	})
 }
 
 func TestCreateDirectoryIfNeeded(t *testing.T) {
@@ -273,6 +221,72 @@ func TestCreateDirectoryIfNeeded(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := createDirectoryIfNeeded(tt.args.fileName); (err != nil) != tt.wantErr {
 				t.Errorf("createDirectoryIfNeeded() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestShouldSkipFile(t *testing.T) {
+	type args struct {
+		templateConfig TemplateConfig
+		variables      *[]Variable
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			"should return false if dependsOn not defined",
+			args{
+				TemplateConfig{File: "foo.yaml"},
+				nil,
+			},
+			false,
+			false,
+		},
+		{
+			"should return true if dependsOnTrue is defined and its value is false",
+			args{
+				TemplateConfig{File: "foo.yaml", DependsOnTrue: VarField{Val: "foo"}},
+				&[]Variable{
+					{Name: VarField{Val: "foo"}, Value: VarField{Bool: false}},
+				},
+			},
+			true,
+			false,
+		},
+		{
+			"should return true if dependsOnFalse is defined and its value is true",
+			args{
+				TemplateConfig{File: "foo.yaml", DependsOnFalse: VarField{Val: "foo"}},
+				&[]Variable{
+					{Name: VarField{Val: "foo"}, Value: VarField{Bool: true}},
+				},
+			},
+			true,
+			false,
+		},
+		{
+			"should return error if dependsOn value cannot be processed",
+			args{
+				TemplateConfig{File: "foo.yaml", DependsOnFalse: VarField{Val: "foo"}},
+				&[]Variable{},
+			},
+			false,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := shouldSkipFile(tt.args.templateConfig, tt.args.variables)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("shouldSkipFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("shouldSkipFile() = %v, want %v", got, tt.want)
 			}
 		})
 	}

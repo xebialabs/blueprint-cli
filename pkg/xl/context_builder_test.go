@@ -3,12 +3,14 @@ package xl
 import (
 	"bytes"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/spf13/cobra"
+	"github.com/xebialabs/xl-cli/pkg/models"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -29,67 +31,14 @@ func parseURIWithoutError(uri string) url.URL {
 	return *url
 }
 
-func TestGetTemplateRegistries(t *testing.T) {
-	t.Run("get Template Registries from valid config", func(t *testing.T) {
-		yamlConfig := `
-template-registries:
-- name: default
-  url: https://s3.amazonaws.com/xl-cli/blueprints
-- name: custom
-  url: https://s3.amazonaws.com/xl-cli/blueprints/
-  username: admin
-  password: admin
-- url: http://test.com
-`
-		v := viper.New()
-		v.SetConfigType("yaml")
-		err := v.ReadConfig(bytes.NewBuffer([]byte(yamlConfig)))
-		require.Nil(t, err)
-		out, err := getTemplateRegistries(v)
-		require.Nil(t, err)
-		exp := []TemplateRegistry{
-			TemplateRegistry{Name: "default", URL: parseURIWithoutError("https://s3.amazonaws.com/xl-cli/blueprints"), Username: "", Password: ""},
-			TemplateRegistry{Name: "custom", URL: parseURIWithoutError("https://s3.amazonaws.com/xl-cli/blueprints/"), Username: "admin", Password: "admin"},
-			TemplateRegistry{Name: "", URL: parseURIWithoutError("http://test.com"), Username: "", Password: ""},
-		}
-		assert.Equal(t, exp, out)
-	})
-	t.Run("should error on incomplete config", func(t *testing.T) {
-		yamlConfig := `
-template-registries:
-- url: http://test.com
-- name: default
-`
-		v := viper.New()
-		v.SetConfigType("yaml")
-		err := v.ReadConfig(bytes.NewBuffer([]byte(yamlConfig)))
-		require.Nil(t, err)
-		_, err = getTemplateRegistries(v)
-		require.NotNil(t, err)
-	})
-	t.Run("throw error for invalid config", func(t *testing.T) {
-		yamlConfig := `
-template-registries:
-- name: default
-  url: invalidurl;
-`
-		v := viper.New()
-		v.SetConfigType("yaml")
-		err := v.ReadConfig(bytes.NewBuffer([]byte(yamlConfig)))
-		require.Nil(t, err)
-		_, err = getTemplateRegistries(v)
-		require.NotNil(t, err)
-	})
-}
-
 func TestContextBuilder(t *testing.T) {
 	IsVerbose = true
 
 	t.Run("build simple context for XL Deploy", func(t *testing.T) {
 		v := viper.New()
-		v.Set("xl-deploy.url", "http://testxld:6154")
-		v.Set("xl-deploy.username", "deployer")
-		v.Set("xl-deploy.password", "d3ploy1t")
+		v.Set(models.ViperKeyXLDUrl, "http://testxld:6154")
+		v.Set(models.ViperKeyXLDUsername, "deployer")
+		v.Set(models.ViperKeyXLDPassword, "d3ploy1t")
 
 		c, err := BuildContext(v, nil, []string{})
 
@@ -100,18 +49,20 @@ func TestContextBuilder(t *testing.T) {
 		assert.Equal(t, "deployer", c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Username)
 		assert.Equal(t, "d3ploy1t", c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Password)
 		assert.Nil(t, c.XLRelease)
+		assert.Equal(t, BlueprintRepository{}, c.BlueprintRepository)
 	})
 
 	t.Run("build simple context for XL Release", func(t *testing.T) {
 		v := viper.New()
-		v.Set("xl-release.url", "http://masterxlr:6155")
-		v.Set("xl-release.username", "releaser")
-		v.Set("xl-release.password", "r3l34s3")
+		v.Set(models.ViperKeyXLRUrl, "http://masterxlr:6155")
+		v.Set(models.ViperKeyXLRUsername, "releaser")
+		v.Set(models.ViperKeyXLRPassword, "r3l34s3")
 
 		c, err := BuildContext(v, nil, []string{})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
+		assert.Equal(t, BlueprintRepository{}, c.BlueprintRepository)
 		assert.Nil(t, c.XLDeploy)
 		assert.NotNil(t, c.XLRelease)
 		assert.Equal(t, "http://masterxlr:6155", c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Url.String())
@@ -119,18 +70,36 @@ func TestContextBuilder(t *testing.T) {
 		assert.Equal(t, "r3l34s3", c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Password)
 	})
 
+	t.Run("build simple context for Blueprint repository", func(t *testing.T) {
+		v := viper.New()
+		v.Set(models.ViperKeyBlueprintRepositoryUrl, "http://masterxlr:6155")
+		v.Set(models.ViperKeyBlueprintRepositoryUsername, "releaser")
+		v.Set(models.ViperKeyBlueprintRepositoryPassword, "r3l34s3")
+
+		c, err := BuildContext(v, nil, []string{})
+
+		assert.Nil(t, err)
+		assert.NotNil(t, c)
+		assert.Nil(t, c.XLDeploy)
+		assert.Nil(t, c.XLRelease)
+		assert.NotNil(t, c.BlueprintRepository)
+		assert.Equal(t, "http://masterxlr:6155", c.BlueprintRepository.Server.Url.String())
+		assert.Equal(t, "releaser", c.BlueprintRepository.Server.Username)
+		assert.Equal(t, "r3l34s3", c.BlueprintRepository.Server.Password)
+	})
+
 	t.Run("build full context for XL Deploy and XL Release", func(t *testing.T) {
 		v := viper.New()
-		v.Set("xl-deploy.url", "http://testxld:6154")
-		v.Set("xl-deploy.username", "deployer")
-		v.Set("xl-deploy.password", "d3ploy1t")
+		v.Set(models.ViperKeyXLDUrl, "http://testxld:6154")
+		v.Set(models.ViperKeyXLDUsername, "deployer")
+		v.Set(models.ViperKeyXLDPassword, "d3ploy1t")
 		v.Set("xl-deploy.applications-home", "Applications/home/folder")
 		v.Set("xl-deploy.configuration-home", "Configuration/home/folder")
 		v.Set("xl-deploy.environments-home", "Environments/home/folder")
 		v.Set("xl-deploy.infrastructure-home", "Infrastructure/home/folder")
-		v.Set("xl-release.url", "http://masterxlr:6155")
-		v.Set("xl-release.username", "releaser")
-		v.Set("xl-release.password", "r3l34s3")
+		v.Set(models.ViperKeyXLRUrl, "http://masterxlr:6155")
+		v.Set(models.ViperKeyXLRUsername, "releaser")
+		v.Set(models.ViperKeyXLRPassword, "r3l34s3")
 		v.Set("xl-release.home", "XLR/home/folder")
 
 		c, err := BuildContext(v, nil, []string{})
@@ -237,7 +206,7 @@ func TestContextBuilder(t *testing.T) {
 		v.SetConfigFile(configfile)
 		v.ReadInConfig()
 
-		_, err = BuildContext(v,  nil, []string{})
+		_, err = BuildContext(v, nil, []string{})
 		require.Nil(t, err)
 
 		configbytes, err := ioutil.ReadFile(configfile)
@@ -355,7 +324,6 @@ func TestContextBuilder(t *testing.T) {
 		assert.Equal(t, "the name of the value !incorrectKey is invalid. It must start with an alphabetical character or an underscore and be followed by zero or more alphanumerical characters or underscores", err.Error())
 	})
 
-
 	t.Run("Should read values into context", func(t *testing.T) {
 		v := viper.New()
 
@@ -410,7 +378,7 @@ test2=override2
 `)
 		defer os.Remove(propfile2.Name())
 
-		valsFiles := []string{propfile1.Name(),propfile2.Name()}
+		valsFiles := []string{propfile1.Name(), propfile2.Name()}
 
 		context, err2 := BuildContext(v, nil, valsFiles)
 		assert.Nil(t, err2)

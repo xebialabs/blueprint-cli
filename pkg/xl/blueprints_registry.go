@@ -13,37 +13,30 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
-// TemplateConfig holds the merged template file definitions with registry info
+// TemplateConfig holds the merged template file definitions with repository info
 type TemplateConfig struct {
-	File     string
-	FullPath string
-	Registry TemplateRegistry
+	File           string
+	FullPath       string
+	DependsOnTrue  VarField
+	DependsOnFalse VarField
+	Repository     BlueprintRepository
 }
-
-const blueprintMetadataFileName = "blueprint"
 
 var blueprintMetadataFileExtensions = []string{".yaml", ".yml"}
 
-const registryIndexFile = "index.json"
-const templateExtn = ".tmpl"
+const blueprintMetadataFileName = "blueprint"
+const repositoryIndexFile = "index.json"
+const templateExtension = ".tmpl"
 
-func getTemplateTypes(mergedRegistryIndex map[string]TemplateRegistry) []string {
-	var keys []string
-	for k := range mergedRegistryIndex {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}
+// MakeHTTPCallForBlueprintRepositoryFn is the type definition for makeHTTPCallForBlueprintRepository method
+type MakeHTTPCallForBlueprintRepositoryFn func(url string, blueprintRepository BlueprintRepository) ([]byte, int, error)
 
-// MakeHTTPCallForTemplateFn is the type definition for MakeHTTPCallForTemplate method
-type MakeHTTPCallForTemplateFn func(indexURL string, registry TemplateRegistry) ([]byte, int, error)
-
-// makeHTTPCallForTemplate does unauthenticated get requests for template files
-func makeHTTPCallForTemplate(URL string, registry TemplateRegistry) ([]byte, int, error) {
-	request, err := http.NewRequest("GET", URL, nil)
-	if registry.Username != "" && registry.Password != "" {
-		request.SetBasicAuth(registry.Username, registry.Password)
+// makeHTTPCallForBlueprintRepository does unauthenticated get requests for blueprint files
+func makeHTTPCallForBlueprintRepository(url string, blueprintRepository BlueprintRepository) ([]byte, int, error) {
+	// TODO: Try to use BlueprintRepository request methods instead
+	request, err := http.NewRequest("GET", url, nil)
+	if blueprintRepository.Server.Username != "" && blueprintRepository.Server.Password != "" {
+		request.SetBasicAuth(blueprintRepository.Server.Username, blueprintRepository.Server.Password)
 	}
 	if err != nil {
 		return nil, 0, err
@@ -63,18 +56,38 @@ func makeHTTPCallForTemplate(URL string, registry TemplateRegistry) ([]byte, int
 	return bodyText, response.StatusCode, nil
 }
 
-// fetchTemplateFromPath will fetch the template files form the following sources
-// 1. A HTTP URL pointing to single template file
-// 2. A local template file
-func fetchTemplateFromPath(config TemplateConfig, addSuffix bool, makeHTTPCall MakeHTTPCallForTemplateFn) ([]byte, error) {
+func parseRepositoryIndexFile(blueprintRepository BlueprintRepository, makeHTTPCall MakeHTTPCallForBlueprintRepositoryFn) ([]string, error) {
+	indexURL := addSuffixIfNeeded(blueprintRepository.Server.Url.String(), "/") + repositoryIndexFile
+	bodyText, statusCode, err := makeHTTPCall(indexURL, blueprintRepository)
+	if err != nil {
+		return nil, err
+	}
+
+	err = translateHTTPStatusCodeErrors(statusCode, blueprintRepository.Server.Url.String())
+	if err != nil {
+		return nil, err
+	}
+
+	var items []string
+	err = json.Unmarshal(bodyText, &items)
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+// fetchBlueprintFromPath will fetch the blueprint files form the following sources
+// 1. A HTTP URL pointing to single blueprint file
+// 2. A local blueprint file
+func (config *TemplateConfig) fetchBlueprintFromPath(addSuffix bool, makeHTTPCall MakeHTTPCallForBlueprintRepositoryFn) ([]byte, error) {
 	filePath := config.FullPath
 	if addSuffix {
-		filePath = addSuffixIfNeeded(config.FullPath, templateExtn)
+		filePath = addSuffixIfNeeded(config.FullPath, templateExtension)
 	}
 	// determine protocol
 	if strings.HasPrefix(filePath, "http") {
-		// fetch templates from http path
-		bodyText, statusCode, err := makeHTTPCall(filePath, config.Registry)
+		// fetch blueprints from http path
+		bodyText, statusCode, err := makeHTTPCall(filePath, config.Repository)
 		if err != nil {
 			return nil, err
 		}
@@ -83,7 +96,7 @@ func fetchTemplateFromPath(config TemplateConfig, addSuffix bool, makeHTTPCall M
 		if err != nil {
 			return nil, err
 		}
-		Verbose("[registry] Read file %s", filePath)
+		Verbose("[repository] Read file %s", filePath)
 		return bodyText, nil
 	} else if PathExists(filePath, false) {
 		// fetch templates from local path
@@ -96,69 +109,18 @@ func fetchTemplateFromPath(config TemplateConfig, addSuffix bool, makeHTTPCall M
 	return nil, fmt.Errorf("template not found in path %s", filePath)
 }
 
-func getIndexJsonFromRegistry(urlVal string, registry TemplateRegistry, makeHTTPCall MakeHTTPCallForTemplateFn) ([]string, error) {
-	indexURL := addSuffixIfNeeded(urlVal, "/") + registryIndexFile
-	bodyText, statusCode, err := makeHTTPCall(indexURL, registry)
-	if err != nil {
-		return nil, err
+func (config *TemplateConfig) generateFullURLPath(templatePath string, blueprintRepository BlueprintRepository) {
+	repositoryURL := blueprintRepository.Server.Url.String()
+	if repositoryURL != "" {
+		repositoryURL = addSuffixIfNeeded(repositoryURL, "/")
 	}
-
-	err = translateHTTPStatusCodeErrors(statusCode, urlVal)
-	if err != nil {
-		return nil, err
-	}
-
-	var resp []string
-	err = json.Unmarshal(bodyText, &resp)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
+	config.FullPath = fmt.Sprintf("%s%s/%s", repositoryURL, templatePath, config.File)
+	config.Repository = blueprintRepository
 }
 
-// merge the index.json files from all configured registry
-func mergeRegistryIndex(templateRegistries []TemplateRegistry, makeHTTPCall MakeHTTPCallForTemplateFn) (map[string]TemplateRegistry, error) {
-	mergedIndex := make(map[string]TemplateRegistry)
-	for _, registry := range templateRegistries {
-		resp, err := getIndexJsonFromRegistry(registry.URL.String(), registry, makeHTTPCall)
-		if err != nil {
-			return nil, err
-		}
-		Verbose("[registry] Registry index for %s: %s\n", registry.URL.String(), resp)
-		for _, key := range resp {
-			mergedIndex[key] = registry
-		}
-	}
-
-	return mergedIndex, nil
-}
-
-// makeFullURLPath prefixes each template file with full URL of registry and template path
-func makeFullURLPath(index []string, templatePath string, registry TemplateRegistry) []TemplateConfig {
-	var val []TemplateConfig
-	for _, item := range index {
-		config := TemplateConfig{
-			File:     item,
-			FullPath: fmt.Sprintf("%s%s/%s", addSuffixIfNeeded(registry.URL.String(), "/"), templatePath, item),
-			Registry: registry,
-		}
-		val = append(val, config)
-	}
-	return val
-}
-
-func getTemplateConfigs(templatePath string, registry TemplateRegistry, makeHTTPCall MakeHTTPCallForTemplateFn) ([]TemplateConfig, error) {
-	urlVal := addSuffixIfNeeded(registry.URL.String(), "/") + templatePath
-
-	resp, err := getIndexJsonFromRegistry(urlVal, registry, makeHTTPCall)
-	if err != nil {
-		return nil, err
-	}
-	return makeFullURLPath(resp, templatePath, registry), nil
-}
-
-func getFilePathRelativeToTemplatePath(filePath, templatePath string) string {
-	Verbose("[registry] getting FilePath: %s relative to templatePath: %s \n", filePath, templatePath)
+// --utility functions
+func getFilePathRelativeToTemplatePath(filePath string, templatePath string) string {
+	Verbose("[repository] getting FilePath: %s relative to templatePath: %s \n", filePath, templatePath)
 	chunks := strings.Split(filePath, addSuffixIfNeeded(templatePath, string(os.PathSeparator)))
 	if len(chunks) > 1 {
 		return chunks[len(chunks)-1]
@@ -168,9 +130,9 @@ func getFilePathRelativeToTemplatePath(filePath, templatePath string) string {
 
 func getFromRelativeFolder(templatePath string) ([]TemplateConfig, error) {
 	if PathExists(templatePath, true) {
-		Verbose("[registry] Relative path found: %s \n", templatePath)
+		Verbose("[repository] Relative path found: %s \n", templatePath)
 		var templates []TemplateConfig
-		var files []string
+		var filePaths []string
 
 		// Walk the root directory
 		err := filepath.Walk(templatePath, func(path string, fileInfo os.FileInfo, err error) error {
@@ -178,7 +140,7 @@ func getFromRelativeFolder(templatePath string) ([]TemplateConfig, error) {
 				return err
 			}
 			if !fileInfo.IsDir() {
-				files = append(files, path)
+				filePaths = append(filePaths, path)
 			}
 			return nil
 		})
@@ -186,19 +148,22 @@ func getFromRelativeFolder(templatePath string) ([]TemplateConfig, error) {
 			return nil, err
 		}
 
-		if len(files) == 0 {
-			return nil, nil
+		if len(filePaths) == 0 {
+			return nil, fmt.Errorf("path [%s] doesn't include any valid files", templatePath)
 		}
-		sort.Strings(files)
-		for _, filePath := range files {
-			templates = append(templates, TemplateConfig{
-				File:     getFilePathRelativeToTemplatePath(filePath, templatePath),
-				FullPath: filePath,
-			})
+		sort.Strings(filePaths)
+		for _, filePath := range filePaths {
+			file := getFilePathRelativeToTemplatePath(filePath, templatePath)
+			if !strings.Contains(file, blueprintMetadataFileName+".yaml") && !strings.Contains(file, blueprintMetadataFileName+".yml") {
+				templates = append(templates, TemplateConfig{
+					File:     file,
+					FullPath: filePath,
+				})
+			}
 		}
 		return templates, nil
 	}
-	return nil, nil
+	return nil, fmt.Errorf("path [%s] doesn't exist", templatePath)
 }
 
 func createTemplateConfigForSingleFile(blueprintTemplate string) ([]TemplateConfig, error) {
@@ -215,42 +180,75 @@ func createTemplateConfigForSingleFile(blueprintTemplate string) ([]TemplateConf
 	return nil, fmt.Errorf("unknown template specified for Blueprint : %s", blueprintTemplate)
 }
 
-// ask user which template to use if not provided
-func getBlueprintTemplateFromUser(blueprintTemplate string, mergedRegistryIndex map[string]TemplateRegistry, surveyOpts ...survey.AskOpt) string {
+func getBlueprintVariableConfig(templatePath string, blueprintRepository BlueprintRepository, blueprintFileName string, makeHTTPCallFn MakeHTTPCallForBlueprintRepositoryFn) (*[]byte, error) {
+	// read blueprint variables file
+	filePath := fmt.Sprintf("%s/%s", templatePath, blueprintFileName)
+	if blueprintRepository.Server.Url.String() != "" {
+		filePath = fmt.Sprintf("%s%s", addSuffixIfNeeded(blueprintRepository.Server.Url.String(), "/"), filePath)
+	}
+	variableConfigs, err := createTemplateConfigForSingleFile(filePath)
+	variableConfig := variableConfigs[0]
+	variableConfig.Repository = blueprintRepository
+
+	blueprintVars, err := variableConfig.fetchBlueprintFromPath(false, makeHTTPCallFn)
+	if err != nil {
+		return nil, err
+	}
+	return &blueprintVars, nil
+}
+
+func GetBlueprintConfig(templatePath string, blueprintRepository BlueprintRepository, makeHTTPCall ...MakeHTTPCallForBlueprintRepositoryFn) (*BlueprintYaml, error) {
+	makeHTTPCallFn := makeHTTPCallForBlueprintRepository
+	if makeHTTPCall != nil && makeHTTPCall[0] != nil {
+		// this is in order to make this testable with mocks
+		makeHTTPCallFn = makeHTTPCall[0]
+	}
+	// read blueprint metadata file - try both .yml and .yaml extensions
+	var ymlContent *[]byte
+	var blueprintDoc *BlueprintYaml
+	var blueprintReadErr error
+	for _, extension := range blueprintMetadataFileExtensions {
+		ymlContent, blueprintReadErr = getBlueprintVariableConfig(templatePath, blueprintRepository, blueprintMetadataFileName+extension, makeHTTPCallFn)
+		if blueprintReadErr == nil {
+			break
+		}
+	}
+	if blueprintReadErr != nil {
+		return nil, blueprintReadErr
+	}
+	blueprintDoc, err := parseTemplateMetadata(ymlContent, templatePath, blueprintRepository)
+	if err != nil {
+		return nil, err
+	}
+
+	if blueprintDoc.TemplateConfigs == nil {
+		Verbose("[repository] Remote config not found. Fetching from relative path: %s \n", templatePath)
+		templateConfigs, err := getFromRelativeFolder(templatePath)
+		if err != nil {
+			return nil, err
+		}
+		blueprintDoc.TemplateConfigs = templateConfigs
+	}
+
+	return blueprintDoc, err
+}
+
+func GetBlueprintTemplateFromUser(blueprintTemplate string, blueprintRepository BlueprintRepository, surveyOpts ...survey.AskOpt) (string, error) {
 	if blueprintTemplate == "" {
-		options := getTemplateTypes(mergedRegistryIndex)
-		survey.AskOne(
+		blueprints, err := parseRepositoryIndexFile(blueprintRepository, makeHTTPCallForBlueprintRepository)
+		if err != nil {
+			return "", err
+		}
+		_ = survey.AskOne(
 			&survey.Select{
-				Message: "Choose a template:",
-				Options: options,
-				Default: options[0],
+				Message: "Choose a blueprint:",
+				Options: blueprints,
+				Default: blueprints[0],
 			},
 			&blueprintTemplate,
 			survey.Required,
 			surveyOpts...,
 		)
 	}
-	return blueprintTemplate
-}
-
-func getAvailableBlueprintTemplates(blueprintTemplate string, templateRegistries []TemplateRegistry, surveyOpts ...survey.AskOpt) ([]TemplateConfig, string, error) {
-	mergedRegistryIndex, err := mergeRegistryIndex(templateRegistries, makeHTTPCallForTemplate)
-	if err != nil {
-		return nil, "", err
-	}
-	Verbose("[registry] Merged registry index contains %d entries\n", len(mergedRegistryIndex))
-	// get template details
-	templatePath := getBlueprintTemplateFromUser(blueprintTemplate, mergedRegistryIndex, surveyOpts...)
-	Verbose("[registry] Template path: %s \n", templatePath)
-
-	templateRegistry := mergedRegistryIndex[templatePath]
-	templateConfigs, err := getTemplateConfigs(templatePath, templateRegistry, makeHTTPCallForTemplate)
-	if templateConfigs == nil {
-		Verbose("[registry] Remote config not found. Fetching from relative path: %s \n", templatePath)
-		templateConfigs, err = getFromRelativeFolder(templatePath)
-		if err != nil {
-			return nil, "", err
-		}
-	}
-	return templateConfigs, templatePath, err
+	return blueprintTemplate, nil
 }

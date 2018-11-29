@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"net/url"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/xl"
@@ -26,43 +24,20 @@ var blueprintCmd = &cobra.Command{
 }
 
 var blueprintTemplate string
-var templateRegistry string
 
 const outputDir = "xebialabs"
 
 // DoBlueprint creates blueprint templates
 func DoBlueprint(context *xl.Context) {
-	templateRegistries := context.TemplateRegistries
-	templateRegistryURL, err := url.ParseRequestURI(templateRegistry)
-	if err != nil {
-		xl.Fatal("Invalid template-registry URL: %s\n", err)
-	}
-	if templateRegistry != "" && !registryExists(*templateRegistryURL, templateRegistries) {
-		xl.Verbose("appending registry from CLI flag %s\n", templateRegistry)
-		templateRegistries = append(templateRegistries, xl.TemplateRegistry{
-			Name: "adhoc", URL: *templateRegistryURL,
-		})
-	}
-
-	err = xl.CreateBlueprint(blueprintTemplate, templateRegistries, outputDir)
+	err := xl.InstantiateBlueprint(blueprintTemplate, context.BlueprintRepository, outputDir)
 	if err != nil {
 		xl.Fatal("Error while creating Blueprint: %s\n", err)
 	}
-}
-
-func registryExists(templateRegistry url.URL, templateRegistries []xl.TemplateRegistry) bool {
-	for _, v := range templateRegistries {
-		if v.URL == templateRegistry {
-			return true
-		}
-	}
-	return false
 }
 
 func init() {
 	rootCmd.AddCommand(blueprintCmd)
 
 	blueprintFlags := blueprintCmd.Flags()
-	blueprintFlags.StringVarP(&blueprintTemplate, "template", "t", "", "The template path/url to use")
-	blueprintFlags.StringVarP(&templateRegistry, "template-registry", "r", xl.DefaultTemplateRegistry, "Registry URL for Blueprint templates")
+	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The blueprint path/url to use")
 }
