@@ -61,6 +61,19 @@ func TestMakeFullURLPath(t *testing.T) {
 		templateConfig.generateFullURLPath("aws/test", blueprintRepository)
 		assert.Equal(t, TemplateConfig{File: "test1.yml", FullPath: "http://test.registry/blueprint/aws/test/test1.yml", Repository: blueprintRepository}, templateConfig)
 	})
+	t.Run("should modify the template with full path only when its local file", func(t *testing.T) {
+		tmpDir := path.Join("test", "blueprints")
+		os.MkdirAll(tmpDir, os.ModePerm)
+		defer os.RemoveAll("test")
+		d1 := []byte("hello\ngo\n")
+		ioutil.WriteFile(path.Join(tmpDir, "test1.yml"), d1, os.ModePerm)
+		blueprintRepository := BlueprintRepository{SimpleHTTPServer{Url: parseURIWithoutError("http://test.registry/blueprint/")}}
+		templateConfig := TemplateConfig{
+			File: "test1.yml",
+		}
+		templateConfig.generateFullURLPath("test/blueprints", blueprintRepository)
+		assert.Equal(t, TemplateConfig{File: "test1.yml", FullPath: "test/blueprints/test1.yml"}, templateConfig)
+	})
 }
 
 func TestGetFilePathRelativeToTemplatePath(t *testing.T) {
@@ -274,20 +287,26 @@ func TestGetBlueprintVariableConfig(t *testing.T) {
 		wantErr error
 	}{
 		{
-			"read a given blueprint.yaml file from registry",
+			"read a given blueprint.yaml file from repository",
 			args{"test/blueprints", repository, "blueprint.yaml", mockMakeHTTPCallForTemplateFile(t, "http://xebialabs.com/test/blueprints/blueprint.yaml", yaml)},
 			yaml,
 			nil,
 		},
 		{
-			"read a given blueprint.yaml file local file",
+			"read a given blueprint.yaml local file",
 			args{"test/blueprints", BlueprintRepository{}, "blueprint.yaml", nil},
 			yaml,
 			nil,
 		},
 		{
+			"read a given blueprint.yaml local file when repository exists",
+			args{"test/blueprints", repository, "blueprint.yaml", nil},
+			yaml,
+			nil,
+		},
+		{
 			"error on http error",
-			args{"test/blueprints", repository, "blueprint.yaml", mockMakeHTTPCallForTemplateFile(t, "", yaml)},
+			args{"test2/blueprints", repository, "blueprint.yaml", mockMakeHTTPCallForTemplateFile(t, "", yaml)},
 			"",
 			fmt.Errorf("error"),
 		},

@@ -162,7 +162,7 @@ func TestCreateBlueprint(t *testing.T) {
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
 	})
-	t.Run("should create output files for valid test template without prompts", func(t *testing.T) {
+	t.Run("should create output files for valid test template without prompts when no registry is defined", func(t *testing.T) {
 		outFolder := "xebialabs"
 		defer RemoveFiles("xld-*.yml")
 		defer RemoveFiles("xlr-*.yml")
@@ -199,12 +199,51 @@ func TestCreateBlueprint(t *testing.T) {
 		}
 
 	})
+	t.Run("should create output files for valid test template from local path when a registry is defined", func(t *testing.T) {
+		outFolder := "xebialabs"
+		defer RemoveFiles("xld-*.yml")
+		defer RemoveFiles("xlr-*.yml")
+		defer os.RemoveAll(outFolder)
+		// create blueprint
+		repository := BlueprintRepository{SimpleHTTPServer{Url: parseURIWithoutError("https://dist.xebialabs.com/public/blueprints/")}}
+		err := InstantiateBlueprint(GetTestTemplateDir("valid-no-prompt"), repository, outFolder)
+		require.Nil(t, err)
+
+		// assertions
+		assert.FileExists(t, "xld-environment.yml")
+		assert.FileExists(t, "xld-infrastructure.yml")
+		assert.FileExists(t, "xlr-pipeline.yml")
+		assert.False(t, PathExists("xlr-pipeline-2.yml", false))
+		assert.FileExists(t, path.Join(outFolder, valuesFile))
+		assert.FileExists(t, path.Join(outFolder, secretsFile))
+		assert.FileExists(t, path.Join(outFolder, gitignoreFile))
+		envFile := GetFileContent("xld-environment.yml")
+		assert.Contains(t, envFile, fmt.Sprintf("region: %s", "us-west"))
+		infraFile := GetFileContent("xld-infrastructure.yml")
+		infraChecks := []string{
+			fmt.Sprintf("- name: %s-ecs-fargate-cluster", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-vpc", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-subnet-ipv4-az-1a", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-route-table", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-security-group", "testApp"),
+			fmt.Sprintf("- name: %s-targetgroup", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-alb", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-db-subnet-group", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-dictionary", "testApp"),
+			"MYSQL_DB_ADDRESS: '{{%address%}}'",
+		}
+		for _, infraCheck := range infraChecks {
+			assert.Contains(t, infraFile, infraCheck)
+		}
+
+	})
 }
 
 func TestCreateDirectoryIfNeeded(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "pathTest")
 	require.Nil(t, err)
 	defer os.RemoveAll(tmpDir)
+	defer os.RemoveAll("test")
 	type args struct {
 		fileName string
 	}

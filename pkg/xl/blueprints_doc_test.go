@@ -431,29 +431,29 @@ func TestParseTemplateMetadata(t *testing.T) {
 		}, doc.Variables[6])
 	})
 	t.Run("should parse files from valid metadata", func(t *testing.T) {
-		doc, err := getValidTestBlueprintMetadata(templatePath, blueprintRepository)
+		doc, err := getValidTestBlueprintMetadata("templatePath/test", blueprintRepository)
 		require.Nil(t, err)
 		assert.Equal(t, 4, len(doc.TemplateConfigs))
 		assert.Equal(t, TemplateConfig{
 			File:       "xebialabs/foo.yaml",
-			FullPath:   "http://xebialabs.com/test/blueprints/test/blueprints/xebialabs/foo.yaml",
+			FullPath:   "http://xebialabs.com/test/blueprints/templatePath/test/xebialabs/foo.yaml",
 			Repository: blueprintRepository,
 		}, doc.TemplateConfigs[0])
 		assert.Equal(t, TemplateConfig{
 			File:          "readme.md",
-			FullPath:      "http://xebialabs.com/test/blueprints/test/blueprints/readme.md",
+			FullPath:      "http://xebialabs.com/test/blueprints/templatePath/test/readme.md",
 			DependsOnTrue: VarField{Val: "isit"},
 			Repository:    blueprintRepository,
 		}, doc.TemplateConfigs[1])
 		assert.Equal(t, TemplateConfig{
 			File:          "bar.md",
-			FullPath:      "http://xebialabs.com/test/blueprints/test/blueprints/bar.md",
+			FullPath:      "http://xebialabs.com/test/blueprints/templatePath/test/bar.md",
 			DependsOnTrue: VarField{Val: "isitnot"},
 			Repository:    blueprintRepository,
 		}, doc.TemplateConfigs[2])
 		assert.Equal(t, TemplateConfig{
 			File:           "foo.md",
-			FullPath:       "http://xebialabs.com/test/blueprints/test/blueprints/foo.md",
+			FullPath:       "http://xebialabs.com/test/blueprints/templatePath/test/foo.md",
 			DependsOnFalse: VarField{Val: "isitnot"},
 			Repository:     blueprintRepository,
 		}, doc.TemplateConfigs[3])
