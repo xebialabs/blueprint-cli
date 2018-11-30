@@ -39,5 +39,5 @@ func init() {
 	rootCmd.AddCommand(blueprintCmd)
 
 	blueprintFlags := blueprintCmd.Flags()
-	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The blueprint path/url to use")
+	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The blueprint to use, a path relative to the blueprint repository or a local path")
 }

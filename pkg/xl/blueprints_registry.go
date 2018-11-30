@@ -96,7 +96,7 @@ func (config *TemplateConfig) fetchBlueprintFromPath(addSuffix bool, makeHTTPCal
 		if err != nil {
 			return nil, err
 		}
-		Verbose("[repository] Read file %s", filePath)
+		Verbose("[repository] Read file %s\n", filePath)
 		return bodyText, nil
 	} else if PathExists(filePath, false) {
 		// fetch templates from local path
@@ -110,12 +110,15 @@ func (config *TemplateConfig) fetchBlueprintFromPath(addSuffix bool, makeHTTPCal
 }
 
 func (config *TemplateConfig) generateFullURLPath(templatePath string, blueprintRepository BlueprintRepository) {
-	repositoryURL := blueprintRepository.Server.Url.String()
-	if repositoryURL != "" {
-		repositoryURL = addSuffixIfNeeded(repositoryURL, "/")
+	repositoryURL := ""
+	if !PathExists(templatePath, true) {
+		repositoryURL = blueprintRepository.Server.Url.String()
+		if repositoryURL != "" {
+			repositoryURL = addSuffixIfNeeded(repositoryURL, "/")
+		}
+		config.Repository = blueprintRepository
 	}
 	config.FullPath = fmt.Sprintf("%s%s/%s", repositoryURL, templatePath, config.File)
-	config.Repository = blueprintRepository
 }
 
 // --utility functions
@@ -183,12 +186,14 @@ func createTemplateConfigForSingleFile(blueprintTemplate string) ([]TemplateConf
 func getBlueprintVariableConfig(templatePath string, blueprintRepository BlueprintRepository, blueprintFileName string, makeHTTPCallFn MakeHTTPCallForBlueprintRepositoryFn) (*[]byte, error) {
 	// read blueprint variables file
 	filePath := fmt.Sprintf("%s/%s", templatePath, blueprintFileName)
-	if blueprintRepository.Server.Url.String() != "" {
+	if !PathExists(filePath, false) && blueprintRepository.Server.Url.String() != "" {
 		filePath = fmt.Sprintf("%s%s", addSuffixIfNeeded(blueprintRepository.Server.Url.String(), "/"), filePath)
 	}
 	variableConfigs, err := createTemplateConfigForSingleFile(filePath)
 	variableConfig := variableConfigs[0]
-	variableConfig.Repository = blueprintRepository
+	if !PathExists(filePath, false) {
+		variableConfig.Repository = blueprintRepository
+	}
 
 	blueprintVars, err := variableConfig.fetchBlueprintFromPath(false, makeHTTPCallFn)
 	if err != nil {
