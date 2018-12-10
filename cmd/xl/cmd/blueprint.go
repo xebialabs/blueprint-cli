@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
@@ -25,11 +26,9 @@ var blueprintCmd = &cobra.Command{
 
 var blueprintTemplate string
 
-const outputDir = "xebialabs"
-
 // DoBlueprint creates blueprint templates
 func DoBlueprint(context *xl.Context) {
-	err := xl.InstantiateBlueprint(blueprintTemplate, context.BlueprintRepository, outputDir)
+	err := xl.InstantiateBlueprint(blueprintTemplate, context.BlueprintRepository, models.BlueprintOutputDir)
 	if err != nil {
 		xl.Fatal("Error while creating Blueprint: %s\n", err)
 	}

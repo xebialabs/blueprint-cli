@@ -10,6 +10,7 @@ parameters:
 - name: Test
   type: Input
   value: testing
+  saveInXlVals: true
 - name: TestDepends
   type: Confirm
   value: "yes"

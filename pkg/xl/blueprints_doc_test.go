@@ -24,6 +24,7 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
          parameters:
          - name: pass
            type: Input
+           description: password?
            secret: true
          - name: test
            type: Input
@@ -35,17 +36,21 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
            value: !fn aws.regions(ecs)[0]
          - name: select
            type: Select
+           description: select region
            options:
            - !fn aws.regions(ecs)[0]
            - b
            - c
            default: b
          - name: isit
+           description: is it?
            type: Confirm
            value: true
          - name: isitnot
+           description: negative question?
            type: Confirm
          - name: dep
+           description: depends on others
            type: Input
            dependsOnTrue: isit
            dependsOnFalse: isitnot
@@ -60,6 +65,7 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
 `, models.YamlFormatVersion))
 	return parseTemplateMetadata(&metadata, templatePath, blueprintRepository)
 }
+
 func TestGetVariableDefaultVal(t *testing.T) {
 	t.Run("should return empty string when default is not defined", func(t *testing.T) {
 		v := Variable{
@@ -388,9 +394,10 @@ func TestParseTemplateMetadata(t *testing.T) {
 		require.Nil(t, err)
 		assert.Len(t, doc.Variables, 7)
 		assert.Equal(t, Variable{
-			Name:   VarField{Val: "pass"},
-			Type:   VarField{Val: TypeInput},
-			Secret: VarField{Bool: true},
+			Name:        VarField{Val: "pass"},
+			Type:        VarField{Val: TypeInput},
+			Description: VarField{Val: "password?"},
+			Secret:      VarField{Bool: true},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
 			Name:         VarField{Val: "test"},
@@ -405,8 +412,9 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Value: VarField{Val: "aws.regions(ecs)[0]", Tag: tagFn},
 		}, doc.Variables[2])
 		assert.Equal(t, Variable{
-			Name: VarField{Val: "select"},
-			Type: VarField{Val: TypeSelect},
+			Name:        VarField{Val: "select"},
+			Type:        VarField{Val: TypeSelect},
+			Description: VarField{Val: "select region"},
 			Options: []VarField{
 				{Val: "aws.regions(ecs)[0]", Tag: tagFn},
 				{Val: "b"},
@@ -415,17 +423,20 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Default: VarField{Val: "b"},
 		}, doc.Variables[3])
 		assert.Equal(t, Variable{
-			Name:  VarField{Val: "isit"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: true},
+			Name:        VarField{Val: "isit"},
+			Type:        VarField{Val: TypeConfirm},
+			Description: VarField{Val: "is it?"},
+			Value:       VarField{Bool: true},
 		}, doc.Variables[4])
 		assert.Equal(t, Variable{
-			Name: VarField{Val: "isitnot"},
-			Type: VarField{Val: TypeConfirm},
+			Name:        VarField{Val: "isitnot"},
+			Type:        VarField{Val: TypeConfirm},
+			Description: VarField{Val: "negative question?"},
 		}, doc.Variables[5])
 		assert.Equal(t, Variable{
 			Name:           VarField{Val: "dep"},
 			Type:           VarField{Val: TypeInput},
+			Description:    VarField{Val: "depends on others"},
 			DependsOnTrue:  VarField{Val: "isit"},
 			DependsOnFalse: VarField{Val: "isitnot"},
 		}, doc.Variables[6])
@@ -458,58 +469,6 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Repository:     blueprintRepository,
 		}, doc.TemplateConfigs[3])
 	})
-}
-
-func TestPrepareTemplateData(t *testing.T) {
-	// todo: tests are hanging randomly!
-	/*t.Run("should not ask user for further input if confirm variable is false", func(t *testing.T) {
-		doc, err := getValidTestBlueprintMetadata()
-		require.Nil(t, err)
-		userAnswers := make(map[string]UserInput)
-		userAnswers["pass"] = UserInput{inputType: TypeInput, inputValue: "password"}
-		userAnswers["test"] = UserInput{inputType: TypeInput, inputValue: "test"}
-		userAnswers["select"] = UserInput{inputType: TypeSelect, inputValue: "c"}
-		userAnswers["isit"] = UserInput{inputType: TypeConfirm, inputValue: "N"}
-		userAnswers["isitnot"] = UserInput{inputType: TypeConfirm, inputValue: "y"}
-
-		RunInVirtualConsole(t, SendPromptValues(userAnswers), func(stdio terminal.Stdio) error {
-			preparedData, err := doc.prepareTemplateData(survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
-			require.Nil(t, err)
-			require.NotNil(t, preparedData)
-
-			return err
-		})
-	})
-	t.Run("should ask user for further input if confirm variable is true", func(t *testing.T) {
-		doc, err := getValidTestBlueprintMetadata()
-		require.Nil(t, err)
-		userAnswers := make(map[string]UserInput)
-		userAnswers["pass"] = UserInput{inputType: TypeInput, inputValue: "password"}
-		userAnswers["test"] = UserInput{inputType: TypeInput, inputValue: "test"}
-		userAnswers["select"] = UserInput{inputType: TypeSelect, inputValue: "c"}
-		userAnswers["isit"] = UserInput{inputType: TypeConfirm, inputValue: "y"}
-		userAnswers["dep"] = UserInput{inputType: TypeInput, inputValue: "test2"}
-
-		RunInVirtualConsole(t, SendPromptValues(userAnswers), func(stdio terminal.Stdio) error {
-			preparedData, err := doc.prepareTemplateData(survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
-			require.Nil(t, err)
-			require.NotNil(t, preparedData)
-			require.NotNil(t, preparedData.TemplateData)
-			assert.Len(t, preparedData.TemplateData, 6)
-			require.NotNil(t, preparedData.Secrets)
-			assert.Len(t, preparedData.Secrets, 1)
-			assert.Equal(t, "password", *preparedData.Secrets["pass"].(*string))
-			require.NotNil(t, preparedData.Values)
-			assert.Len(t, preparedData.Values, 5)
-			assert.Equal(t, "test", *preparedData.Values["test"].(*string))
-			assert.Equal(t, "c", *preparedData.Values["select"].(*string))
-			assert.Equal(t, "test2", *preparedData.Values["dep"].(*string))
-
-			return err
-		})
-	})*/
-
-	// TODO: Test last confirm for start generation process
 }
 
 func TestProcessCustomFunction(t *testing.T) {

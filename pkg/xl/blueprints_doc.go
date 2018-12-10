@@ -193,9 +193,10 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 		}
 		err = survey.AskOne(
 			&survey.Select{
-				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("Select value for %s?", variable.Name.Val)),
-				Options: options,
-				Default: defaultVal,
+				Message:  prepareQuestionText(variable.Description.Val, fmt.Sprintf("Select value for %s?", variable.Name.Val)),
+				Options:  options,
+				Default:  defaultVal,
+				PageSize: 10,
 			},
 			&answer,
 			validatePrompt(variable.Pattern.Val),
@@ -339,7 +340,10 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 	if !SkipFinalPrompt {
 		// Final prompt from user to start generation process
 		toContinue := false
-		survey.AskOne(&survey.Confirm{Message: "Confirm to generate blueprint files?", Default: true}, &toContinue, nil)
+		err := survey.AskOne(&survey.Confirm{Message: models.BlueprintFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
+		if err != nil {
+			return nil, err
+		}
 		if !toContinue {
 			return nil, fmt.Errorf("blueprint generation cancelled")
 		}

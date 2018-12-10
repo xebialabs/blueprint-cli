@@ -9,57 +9,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Netflix/go-expect"
-	"github.com/hinshun/vt10x"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/AlecAivazis/survey.v1/terminal"
+	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
 type UserInput struct {
-	inputType  string
-	inputValue string
-}
-
-// run test in virtual console
-func RunInVirtualConsole(t *testing.T, procedure func(*expect.Console), test func(terminal.Stdio) error) {
-	c, state, err := vt10x.NewVT10XConsole()
-	require.Nil(t, err)
-	defer c.Close()
-
-	donec := make(chan struct{})
-	go func() {
-		defer close(donec)
-		procedure(c)
-		c.ExpectEOF()
-	}()
-	stdio := terminal.Stdio{In: c.Tty(), Out: c.Tty(), Err: c.Tty()}
-	err = test(stdio)
-	require.Nil(t, err)
-
-	// Close the slave end of the pty, and read the remaining bytes from the master end.
-	c.Tty().Close()
-	<-donec
-
-	// Dump the terminal's screen.
-	t.Log(expect.StripTrailingEmptyLines(state.String()))
-}
-
-// mimic sending prompt values to console
-func SendPromptValues(values map[string]UserInput) func(c *expect.Console) {
-	return func(console *expect.Console) {
-		for k, input := range values {
-			// TODO: If description field exists, expect desc text instead!
-			_, err := console.Expect(expect.String(fmt.Sprintf("%s?", k)))
-			if err != nil {
-				panic(err)
-			}
-			_, err = console.SendLine(input.inputValue)
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
+	inputType    string
+	inputValue   string
+	defaultValue string
+	description  string
 }
 
 // auxiliary functions
@@ -148,7 +107,7 @@ func TestAdjustPathSeperatorIfNeeded(t *testing.T) {
 	})
 }
 
-func TestCreateBlueprint(t *testing.T) {
+func TestInstantiateBlueprint(t *testing.T) {
 	SkipFinalPrompt = true
 	t.Run("should error on unknown template", func(t *testing.T) {
 		err := InstantiateBlueprint("abc", BlueprintRepository{}, "xebialabs")
@@ -235,6 +194,10 @@ func TestCreateBlueprint(t *testing.T) {
 		for _, infraCheck := range infraChecks {
 			assert.Contains(t, infraFile, infraCheck)
 		}
+
+		// Check if only saveInXlVals marked fields are in values.xlvals
+		valuesFileContent := GetFileContent(models.BlueprintOutputDir + string(os.PathSeparator) + valuesFile)
+		assert.Contains(t, valuesFileContent, "Test = testing")
 
 	})
 }
