@@ -24,8 +24,7 @@ pipeline {
 
             steps {
                 checkout scm
-                sh "./gradlew clean build --info"
-
+                sh "./gradlew clean build sonarqube -Dsonar.branch.name=${getBranch()} --info"
                 script {
                   if (fileExists('build/version.dump') == true) {
                     currentVersion = readFile 'build/version.dump'
@@ -53,4 +52,9 @@ pipeline {
             }
         }
     }
+}
+
+def getBranch() {
+    // on simple Jenkins pipeline job the BRANCH_NAME is not filled in, and we run it only on master
+    return env.BRANCH_NAME ?: 'master'
 }
