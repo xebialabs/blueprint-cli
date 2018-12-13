@@ -8,7 +8,7 @@ plugins {
     id 'com.github.blindpirate.gogradle' version '0.10.2'
     id 'pl.allegro.tech.build.axion-release' version '1.9.2'
     id "jp.classmethod.aws" version "0.38"
-    id "org.sonarqube" version '2.6.2'
+    id 'org.sonarqube' version '2.6.2'
 }
 
 apply plugin: 'maven-publish'
@@ -236,6 +236,7 @@ def ldflag(c, v) {
 sonarqube {
     properties {
         property "sonar.projectKey", "xl-cli"
+        property "sonar.projectName", "xl-cli"
         property "sonar.sources", "./"
         property "sonar.exclusions", "**/*_test.go,**/vendor/**"
         property "sonar.go.coverage.reportPaths", ".gogradle/reports/coverage/**/*.out"
