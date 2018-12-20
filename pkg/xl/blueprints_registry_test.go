@@ -346,22 +346,24 @@ func TestGetBlueprintConfig(t *testing.T) {
       kind: Blueprint
       metadata:
         projectName: Test Project
-      parameters:
-      - name: Test
-        type: Input
-        value: testing`
+      spec:
+        parameters:
+        - name: Test
+          type: Input
+          value: testing`
 	yaml2 := `
       apiVersion: xl/v1
       kind: Blueprint
       metadata:
         projectName: Test Project
-      parameters:
-      - name: Test
-        type: Input
-        value: testing
-      files:
-      - path: xld-environment.yml.tmpl
-      - path: xlr-pipeline.yml`
+      spec:
+        parameters:
+        - name: Test
+          type: Input
+          value: testing
+        files:
+        - path: xld-environment.yml.tmpl
+        - path: xlr-pipeline.yml`
 	templatePath := "test/blueprints"
 	repository := BlueprintRepository{SimpleHTTPServer{Url: parseURIWithoutError("http://xebialabs.com")}}
 	tmpDir, err := ioutil.TempDir("", "blueprints")
@@ -405,10 +407,12 @@ func TestGetBlueprintConfig(t *testing.T) {
 				ApiVersion: "xl/v1",
 				Kind:       "Blueprint",
 				Metadata:   map[interface{}]interface{}{"projectName": "Test Project"},
-				Parameters: []interface{}{map[interface{}]interface{}{"name": "Test", "type": "Input", "value": "testing"}},
-				Files: []interface{}{
-					map[interface{}]interface{}{"path": "xld-environment.yml.tmpl"},
-					map[interface{}]interface{}{"path": "xlr-pipeline.yml"},
+				Spec: Spec{
+					Parameters: []interface{}{map[interface{}]interface{}{"name": "Test", "type": "Input", "value": "testing"}},
+					Files: []interface{}{
+						map[interface{}]interface{}{"path": "xld-environment.yml.tmpl"},
+						map[interface{}]interface{}{"path": "xlr-pipeline.yml"},
+					},
 				},
 				TemplateConfigs: []TemplateConfig{
 					{File: "xld-environment.yml.tmpl", FullPath: "http://xebialabs.com/test/blueprints/xld-environment.yml.tmpl", Repository: repository},
@@ -427,7 +431,9 @@ func TestGetBlueprintConfig(t *testing.T) {
 				ApiVersion: "xl/v1",
 				Kind:       "Blueprint",
 				Metadata:   map[interface{}]interface{}{"projectName": "Test Project"},
-				Parameters: []interface{}{map[interface{}]interface{}{"name": "Test", "type": "Input", "value": "testing"}},
+				Spec: Spec{
+					Parameters: []interface{}{map[interface{}]interface{}{"name": "Test", "type": "Input", "value": "testing"}},
+				},
 				TemplateConfigs: []TemplateConfig{
 					{File: path.Join("nested", "test2.yaml.tmpl"), FullPath: tmpDir + "/nested/test2.yaml.tmpl"},
 					{File: "test.yaml.tmpl", FullPath: tmpDir + "/test.yaml.tmpl"},
@@ -445,10 +451,12 @@ func TestGetBlueprintConfig(t *testing.T) {
 				ApiVersion: "xl/v1",
 				Kind:       "Blueprint",
 				Metadata:   map[interface{}]interface{}{"projectName": "Test Project"},
-				Parameters: []interface{}{map[interface{}]interface{}{"name": "Test", "type": "Input", "value": "testing"}},
-				Files: []interface{}{
-					map[interface{}]interface{}{"path": "xld-environment.yml.tmpl"},
-					map[interface{}]interface{}{"path": "xlr-pipeline.yml"},
+				Spec: Spec{
+					Parameters: []interface{}{map[interface{}]interface{}{"name": "Test", "type": "Input", "value": "testing"}},
+					Files: []interface{}{
+						map[interface{}]interface{}{"path": "xld-environment.yml.tmpl"},
+						map[interface{}]interface{}{"path": "xlr-pipeline.yml"},
+					},
 				},
 				TemplateConfigs: []TemplateConfig{
 					{File: "xld-environment.yml.tmpl", FullPath: tmpDir2 + "/xld-environment.yml.tmpl"},

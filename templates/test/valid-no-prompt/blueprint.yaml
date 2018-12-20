@@ -5,39 +5,39 @@ metadata:
   description: Is just a test blueprint project
   author: XebiaLabs
   version: 1.0
+spec:
+  parameters:
+  - name: Test
+    type: Input
+    value: testing
+    saveInXlVals: true
+  - name: TestDepends
+    type: Confirm
+    value: "yes"
+  - name: AppName
+    type: Input
+    pattern: "[a-z-]*"
+    description: Application name, will be used in various AWS resource names
+    value: testApp
+  - name: AWSAccessKey
+    type: Input
+    secret: true
+    value: accesskey
+  - name: AWSAccessSecret
+    type: Input
+    secret: true
+    value: accesssecret
+  - name: AWSRegion
+    type: Select
+    options:
+      - !fn aws.regions(ecs)
+    default: !fn aws.regions(ecs)[0]
+    value: us-west
 
-parameters:
-- name: Test
-  type: Input
-  value: testing
-  saveInXlVals: true
-- name: TestDepends
-  type: Confirm
-  value: "yes"
-- name: AppName
-  type: Input
-  pattern: "[a-z-]*"
-  description: Application name, will be used in various AWS resource names
-  value: testApp
-- name: AWSAccessKey
-  type: Input
-  secret: true
-  value: accesskey
-- name: AWSAccessSecret
-  type: Input
-  secret: true
-  value: accesssecret
-- name: AWSRegion
-  type: Select
-  options:
-    - !fn aws.regions(ecs)
-  default: !fn aws.regions(ecs)[0]
-  value: us-west
-
-files:
-- path: xld-environment.yml.tmpl
-- path: xld-infrastructure.yml.tmpl
-- path: xlr-pipeline-2.yml
-  dependsOnTrue: TestDepends
-- path: xlr-pipeline.yml
-  dependsOnFalse: TestDepends
+  files:
+  - path: xld-environment.yml.tmpl
+  - path: xld-infrastructure.yml.tmpl
+  - path: xlr-pipeline-2.yml
+    dependsOnTrue: TestDepends
+  - path: xlr-pipeline.yml
+    dependsOnFalse: TestDepends

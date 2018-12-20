@@ -21,47 +21,48 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
          apiVersion: %s
          kind: Blueprint
          metadata:
-         parameters:
-         - name: pass
-           type: Input
-           description: password?
-           secret: true
-         - name: test
-           type: Input
-           default: lala
-           saveInXlVals: true 
-           description: help text
-         - name: fn
-           type: Input
-           value: !fn aws.regions(ecs)[0]
-         - name: select
-           type: Select
-           description: select region
-           options:
-           - !fn aws.regions(ecs)[0]
-           - b
-           - c
-           default: b
-         - name: isit
-           description: is it?
-           type: Confirm
-           value: true
-         - name: isitnot
-           description: negative question?
-           type: Confirm
-         - name: dep
-           description: depends on others
-           type: Input
-           dependsOnTrue: isit
-           dependsOnFalse: isitnot
-         files:
-         - path: xebialabs/foo.yaml
-         - path: readme.md
-           dependsOnTrue: isit
-         - path: bar.md
-           dependsOnTrue: isitnot
-         - path: foo.md
-           dependsOnFalse: isitnot
+         spec:
+           parameters:
+           - name: pass
+             type: Input
+             description: password?
+             secret: true
+           - name: test
+             type: Input
+             default: lala
+             saveInXlVals: true 
+             description: help text
+           - name: fn
+             type: Input
+             value: !fn aws.regions(ecs)[0]
+           - name: select
+             type: Select
+             description: select region
+             options:
+             - !fn aws.regions(ecs)[0]
+             - b
+             - c
+             default: b
+           - name: isit
+             description: is it?
+             type: Confirm
+             value: true
+           - name: isitnot
+             description: negative question?
+             type: Confirm
+           - name: dep
+             description: depends on others
+             type: Input
+             dependsOnTrue: isit
+             dependsOnFalse: isitnot
+           files:
+           - path: xebialabs/foo.yaml
+           - path: readme.md
+             dependsOnTrue: isit
+           - path: bar.md
+             dependsOnTrue: isitnot
+           - path: foo.md
+             dependsOnFalse: isitnot
 `, models.YamlFormatVersion))
 	return parseTemplateMetadata(&metadata, templatePath, blueprintRepository)
 }
@@ -319,10 +320,11 @@ func TestParseTemplateMetadata(t *testing.T) {
                 apiVersion: %s
                 kind: Blueprint
                 metadata:
-                parameters:
-                - name: Test
-                  type: Invalid
-                  value: testing`,
+                spec:
+                  parameters:
+                  - name: Test
+                    type: Invalid
+                    value: testing`,
 				models.YamlFormatVersion))
 		_, err := parseTemplateMetadata(&metadata, templatePath, blueprintRepository)
 		require.NotNil(t, err)
@@ -335,9 +337,10 @@ func TestParseTemplateMetadata(t *testing.T) {
               apiVersion: %s
               kind: Blueprint
               metadata:
-              parameters:
-              - name: Test
-                value: testing`, models.YamlFormatVersion))
+              spec:
+                parameters:
+                - name: Test
+                  value: testing`, models.YamlFormatVersion))
 		_, err := parseTemplateMetadata(&metadata, templatePath, blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
@@ -349,10 +352,11 @@ func TestParseTemplateMetadata(t *testing.T) {
               apiVersion: %s
               kind: Blueprint
               metadata:
-              parameters:
-              - name: Test
-                type: Select
-                options:`, models.YamlFormatVersion))
+              spec:
+                parameters:
+                - name: Test
+                  type: Select
+                  options:`, models.YamlFormatVersion))
 		_, err := parseTemplateMetadata(&metadata, templatePath, blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, "at least one option field is need to be set for parameter [Test]", err.Error())
@@ -363,12 +367,13 @@ func TestParseTemplateMetadata(t *testing.T) {
               apiVersion: %s
               kind: Blueprint
               metadata:
-              parameters:
-              - name: Test
-                type: Confirm
-              files:
-              - dependsOnFalse: Test
-              - path: xbc.yaml`, models.YamlFormatVersion))
+              spec:
+                parameters:
+                - name: Test
+                  type: Confirm
+                files:
+                - dependsOnFalse: Test
+                - path: xbc.yaml`, models.YamlFormatVersion))
 		_, err := parseTemplateMetadata(&metadata, "aws/test", blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, "path is missing for file specification in files", err.Error())
@@ -379,14 +384,63 @@ func TestParseTemplateMetadata(t *testing.T) {
               apiVersion: %s
               kind: Blueprint
               metadata:
-              parameters:
-              - name: Test
-                type: Confirm
-              files:
-              - path: ../xbc.yaml`, models.YamlFormatVersion))
+              spec:
+                parameters:
+                - name: Test
+                  type: Confirm
+                files:
+                - path: ../xbc.yaml`, models.YamlFormatVersion))
 		_, err := parseTemplateMetadata(&metadata, "aws/test", blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, "path for file specification cannot start with /, .. or ./", err.Error())
+	})
+	t.Run("should parse nested variables and files from valid legacy metadata", func(t *testing.T) {
+		metadata := []byte(
+			fmt.Sprintf(`
+              apiVersion: %s
+              kind: Blueprint
+              metadata:
+              parameters:
+              - name: pass
+                type: Input
+                description: password?
+                secret: true
+              - name: test
+                type: Input
+                default: lala
+                saveInXlVals: true 
+                description: help text
+              
+              files:
+              - path: xebialabs/foo.yaml
+              - path: readme.md
+                dependsOnTrue: isit`, models.YamlFormatVersion))
+		doc, err := parseTemplateMetadata(&metadata, "aws/test", blueprintRepository)
+		require.Nil(t, err)
+		assert.Equal(t, Variable{
+			Name:        VarField{Val: "pass"},
+			Type:        VarField{Val: TypeInput},
+			Description: VarField{Val: "password?"},
+			Secret:      VarField{Bool: true},
+		}, doc.Variables[0])
+		assert.Equal(t, Variable{
+			Name:         VarField{Val: "test"},
+			Type:         VarField{Val: TypeInput},
+			Default:      VarField{Val: "lala"},
+			Description:  VarField{Val: "help text"},
+			SaveInXlVals: VarField{Bool: true},
+		}, doc.Variables[1])
+		assert.Equal(t, TemplateConfig{
+			File:       "xebialabs/foo.yaml",
+			FullPath:   "http://xebialabs.com/test/blueprints/aws/test/xebialabs/foo.yaml",
+			Repository: blueprintRepository,
+		}, doc.TemplateConfigs[0])
+		assert.Equal(t, TemplateConfig{
+			File:          "readme.md",
+			FullPath:      "http://xebialabs.com/test/blueprints/aws/test/readme.md",
+			DependsOnTrue: VarField{Val: "isit"},
+			Repository:    blueprintRepository,
+		}, doc.TemplateConfigs[1])
 	})
 
 	t.Run("should parse nested variables from valid metadata", func(t *testing.T) {
@@ -581,9 +635,11 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 		{
 			"parse a valid file declaration",
 			BlueprintYaml{
-				Files: []interface{}{
-					map[interface{}]interface{}{"path": "test.yaml"},
-					map[interface{}]interface{}{"path": "test2.yaml"},
+				Spec: Spec{
+					Files: []interface{}{
+						map[interface{}]interface{}{"path": "test.yaml"},
+						map[interface{}]interface{}{"path": "test2.yaml"},
+					},
 				},
 			},
 			args{templatePath, blueprintRepository},
@@ -596,16 +652,18 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 		{
 			"parse a valid file declaration with dependsOn that refers to existing variables",
 			BlueprintYaml{
-				Parameters: []interface{}{
-					map[interface{}]interface{}{"name": "foo", "type": "Confirm", "value": true},
-					map[interface{}]interface{}{"name": "bar", "type": "Confirm", "value": false},
-				},
-				Files: []interface{}{
-					map[interface{}]interface{}{"path": "test.yaml"},
-					map[interface{}]interface{}{"path": "test2.yaml", "dependsOnTrue": "foo"},
-					map[interface{}]interface{}{"path": "test3.yaml", "dependsOnFalse": "bar"},
-					map[interface{}]interface{}{"path": "test4.yaml", "dependsOnTrue": "bar"},
-					map[interface{}]interface{}{"path": "test5.yaml", "dependsOnFalse": "foo"},
+				Spec: Spec{
+					Parameters: []interface{}{
+						map[interface{}]interface{}{"name": "foo", "type": "Confirm", "value": true},
+						map[interface{}]interface{}{"name": "bar", "type": "Confirm", "value": false},
+					},
+					Files: []interface{}{
+						map[interface{}]interface{}{"path": "test.yaml"},
+						map[interface{}]interface{}{"path": "test2.yaml", "dependsOnTrue": "foo"},
+						map[interface{}]interface{}{"path": "test3.yaml", "dependsOnFalse": "bar"},
+						map[interface{}]interface{}{"path": "test4.yaml", "dependsOnTrue": "bar"},
+						map[interface{}]interface{}{"path": "test5.yaml", "dependsOnFalse": "foo"},
+					},
 				},
 				Variables: []Variable{
 					{Name: VarField{Val: "foo"}, Type: VarField{Val: "Confirm"}, Value: VarField{Bool: true}},
@@ -629,8 +687,7 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 				ApiVersion:      tt.fields.ApiVersion,
 				Kind:            tt.fields.Kind,
 				Metadata:        tt.fields.Metadata,
-				Parameters:      tt.fields.Parameters,
-				Files:           tt.fields.Files,
+				Spec:            tt.fields.Spec,
 				TemplateConfigs: tt.fields.TemplateConfigs,
 				Variables:       tt.fields.Variables,
 			}

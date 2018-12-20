@@ -18,7 +18,11 @@
 | **author** | - | XebiaLabs | n |
 | **version** | - | 1.0 | n |
 
-### Parameters Fields
+### Spec fields
+
+The spec field holds parameters and files
+
+#### Parameters Fields
 
 | Field Name | Expected value(s) | Examples | Default Value | Required | Explanation |
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -34,7 +38,7 @@
 | **dependsOnFalse** | - | CreateNewCluster<br>!fn aws.credentials().IsAvailable | - | n | Reverse logic for dependsOn, see above
 | **saveInXlVals** | `true`/`false` | - | `true` for secret fields<br>`false` for other fields | n | If true, output variable will be included in the `values.xlvals` output file. By default every secret field will be written to `secrets.xlvals` file and this setting doesn't effect that functionality |
 
-### Files Fields
+#### Files Fields
 
 | Field Name | Expected value(s) | Examples | Default Value | Required | Explanation |
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

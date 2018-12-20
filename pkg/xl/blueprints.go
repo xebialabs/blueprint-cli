@@ -15,6 +15,7 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
+// SkipFinalPrompt is used in tests to skip the confirmation prompt
 var SkipFinalPrompt = false
 
 const (
@@ -54,7 +55,7 @@ func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable) (bool,
 	return false, nil
 }
 
-// CreateBlueprint is entry point for the cli command
+// InstantiateBlueprint is entry point for the cli command
 func InstantiateBlueprint(blueprintTemplate string, blueprintRepository BlueprintRepository, outputDir string, surveyOpts ...survey.AskOpt) error {
 	blueprintTemplate = adjustPathSeperatorIfNeeded(blueprintTemplate)
 	// get available blueprint templates from merged registry

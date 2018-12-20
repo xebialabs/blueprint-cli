@@ -5,21 +5,22 @@ metadata:
   description: Is just a test blueprint project
   author: XebiaLabs
   version: 1.0
-parameters:
-- name: Test
-  value: testing
-- name: AppName
-  type: Input
-- name: AWSAccessKey
-  type: Input
-  secret: true
-  value: !fn aws.credentials().AccessKeyID
-- name: AWSAccessSecret
-  type: Input
-  secret: true
-  value: !fn aws.credentials().SecretAccessKey
-- name: AWSRegion
-  type: Select
-  options:
-    - !fn aws.regions(ecs)
-  default: !fn aws.regions(ecs)[0]
+spec:
+  parameters:
+  - name: Test
+    value: testing
+  - name: AppName
+    type: Input
+  - name: AWSAccessKey
+    type: Input
+    secret: true
+    value: !fn aws.credentials().AccessKeyID
+  - name: AWSAccessSecret
+    type: Input
+    secret: true
+    value: !fn aws.credentials().SecretAccessKey
+  - name: AWSRegion
+    type: Select
+    options:
+      - !fn aws.regions(ecs)
+    default: !fn aws.regions(ecs)[0]

@@ -40,8 +40,13 @@ type BlueprintYaml struct {
 	Metadata        interface{} `yaml:"metadata,omitempty"`
 	Parameters      interface{} `yaml:"parameters,omitempty"`
 	Files           interface{} `yaml:"files,omitempty"`
+	Spec            Spec
 	TemplateConfigs []TemplateConfig
 	Variables       []Variable
+}
+type Spec struct {
+	Parameters interface{} `yaml:"parameters,omitempty"`
+	Files      interface{} `yaml:"files,omitempty"`
 }
 type VarField struct {
 	Val  string
@@ -114,7 +119,7 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable) (bool, error)
 	return dependsOnVar.Value.Bool, nil
 }
 
-// variable struct functions
+// GetDefaultVal variable struct functions
 func (variable *Variable) GetDefaultVal() string {
 	defaultVal := variable.Default.Val
 	if variable.Default.Tag == tagFn {
@@ -244,7 +249,12 @@ func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprint
 
 // parse doc parameters into list of variables
 func (blueprintDoc *BlueprintYaml) parseParameters() error {
-	parameters := TransformToMap(blueprintDoc.Parameters)
+	var parameters []map[interface{}]interface{}
+	if blueprintDoc.Spec != (Spec{}) {
+		parameters = TransformToMap(blueprintDoc.Spec.Parameters)
+	} else {
+		parameters = TransformToMap(blueprintDoc.Parameters)
+	}
 	for _, m := range parameters {
 		parsedVar, err := parseParameterMap(&m)
 		if err != nil {
@@ -257,7 +267,12 @@ func (blueprintDoc *BlueprintYaml) parseParameters() error {
 
 // parse doc files into list of TemplateConfig
 func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, blueprintRepository BlueprintRepository) error {
-	files := TransformToMap(blueprintDoc.Files)
+	var files []map[interface{}]interface{}
+	if blueprintDoc.Spec != (Spec{}) {
+		files = TransformToMap(blueprintDoc.Spec.Files)
+	} else {
+		files = TransformToMap(blueprintDoc.Files)
+	}
 	for _, m := range files {
 		templateConfig, err := parseFileMap(&m)
 		if err != nil {
