@@ -106,12 +106,12 @@ func (c *Context) GenerateSingleDocument(generateServer string, generateFilename
 	finalPath := url.QueryEscape(generatePath)
 
 	if generateServer == "xl-deploy" {
-		Info("Generating definitions for path %s from XL Deploy to %s\n", finalPath, generateFilename)
+		Info("Generating definitions for path %s from XL Deploy to %s\n", generatePath, generateFilename)
 		return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride)
 	}
 
 	if generateServer == "xl-release" {
-		Info("Generating definitions for path %s from XL Release to %s\n", finalPath, generateFilename)
+		Info("Generating definitions for path %s from XL Release to %s\n", generatePath, generateFilename)
 		return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride)
 	}
 
