@@ -5,8 +5,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"github.com/xebialabs/xl-cli/pkg/xl"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -56,6 +56,7 @@ func CreateTestInfra(viper *viper.Viper) *TestInfra {
 		doc, err := xl.ParseYamlDocument(string(body))
 		check(err)
 		infra.appendDoc(*doc)
+		_, _ = responseWriter.Write([]byte("{}"))
 	}
 
 	xlrHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
@@ -64,6 +65,7 @@ func CreateTestInfra(viper *viper.Viper) *TestInfra {
 		doc, err := xl.ParseYamlDocument(string(body))
 		check(err)
 		infra.appendDoc(*doc)
+		_, _ = responseWriter.Write([]byte("{}"))
 	}
 
 	infra.xldServer = httptest.NewServer(http.HandlerFunc(xldHandler))

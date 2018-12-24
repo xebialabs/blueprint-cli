@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type FileWithDocuments struct {
@@ -142,6 +143,70 @@ func parseDocuments(fileNames []string, seenFiles mapset.Set, parent *string) []
 	return result
 }
 
+func requestTaskId(context *xl.Context, doc *xl.Document, taskId string) (*xl.TaskState, error) {
+	server, err := context.GetDocumentHandlingServer(doc)
+	if err != nil {
+		return nil, err
+	}
+
+	xl.Verbose("Checking task state... ")
+	state, serr := server.GetTaskStatus(taskId)
+	if serr != nil {
+		return nil, serr
+	}
+	xl.Verbose("[%s]\n", state.State)
+
+	if xl.IsVerbose {
+		if len(state.CurrentSteps) > 0 {
+			xl.Verbose("### Currently active task steps:\n")
+			for _, step := range state.CurrentSteps {
+				xl.Verbose("### %s [%s]\n", step.Name, step.State)
+			}
+		}
+	} else {
+		xl.Info(".")
+	}
+	return state, nil
+}
+
+func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes) {
+	if changes != nil && changes.Task != nil {
+		xl.Info("Waiting for task (%s)\n", changes.Task.Id)
+		result, err := requestTaskId(context, doc, changes.Task.Id)
+		for err == nil {
+			switch result.State {
+			case "COMPLETED":
+				fallthrough
+			case "DONE":
+				xl.Verbose("Done.")
+				xl.Info("\n")
+				return
+
+			case "IN_PROGRESS":
+				for _, step := range result.CurrentSteps {
+					if !step.Automated {
+						xl.Fatal("\nUnable to complete the task (%s) automatically as it's current active step is manual.", changes.Task.Id)
+					}
+				}
+
+			case "FAILING":
+				fallthrough
+			case "FAILED":
+				fallthrough
+			case "STOPPED":
+				fallthrough
+			case "ABORTED":
+				xl.Fatal("\nUnable to complete the task (%s) automatically as it's state became [%s]. The task will be rolled back.", changes.Task.Id, result.State)
+			}
+			time.Sleep(2 * time.Second)
+			result, err = requestTaskId(context, doc, changes.Task.Id)
+		}
+		if err != nil {
+			xl.Fatal("\nError waiting for task %s, %s", changes.Task.Id, err)
+		}
+	}
+}
+
 func DoApply(cmd *cobra.Command, applyFilenames []string) {
 	homeValsFiles, e := listHomeXlValsFiles()
 
@@ -182,6 +247,7 @@ func DoApply(cmd *cobra.Command, applyFilenames []string) {
 			if doc.Kind != models.ImportSpecKind {
 				changes, err := context.ProcessSingleDocument(doc, applyDir)
 				printChanges(changes)
+				waitForTasks(context, doc, changes)
 				if err != nil {
 					reportFatalDocumentError(fileWithDocs.fileName, doc, err)
 				}
@@ -208,7 +274,7 @@ func init() {
 
 	applyFlags := applyCmd.Flags()
 	applyFlags.StringArrayVarP(&applyFilenames, "file", "f", []string{}, "Path(s) to the file(s) to apply (required)")
-	applyCmd.MarkFlagRequired("file")
+	_ = applyCmd.MarkFlagRequired("file")
 	applyFlags.StringToStringVar(&applyValues, "values", map[string]string{}, "Values")
 }
 

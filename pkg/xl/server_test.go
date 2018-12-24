@@ -1,6 +1,7 @@
 package xl
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -10,9 +11,10 @@ import (
 )
 
 type DummyHTTPServer struct {
-	capturedPath     string
-	capturedBytes    []byte
-	capturedFilename string
+	capturedPath         string
+	capturedBytes        []byte
+	capturedFilename     string
+	mockTaskInfoResponse string
 }
 
 func (d *DummyHTTPServer) GenerateYamlDoc(path string, generateFilename string, override bool) error {
@@ -31,6 +33,19 @@ func (d *DummyHTTPServer) PostYamlZip(path string, zipfilename string) (*Changes
 	d.capturedBytes = nil
 	d.capturedFilename = zipfilename
 	return nil, nil
+}
+
+func (d *DummyHTTPServer) TaskInfo(resource string) (map[string]interface{}, error) {
+	d.capturedPath = resource
+	d.capturedBytes = nil
+	d.capturedFilename = ""
+
+	var response map[string]interface{}
+	err := json.Unmarshal([]byte(d.mockTaskInfoResponse), &response)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
 }
 
 func TestServer(t *testing.T) {
@@ -102,5 +117,91 @@ spec:
 		assert.Equal(t, "deployit/devops-as-code/apply", dummyServer.capturedPath)
 		assert.Nil(t, dummyServer.capturedBytes)
 		assert.Equal(t, doc.ApplyZip, dummyServer.capturedFilename)
+	})
+
+	t.Run("XLD should properly parse task status", func(t *testing.T) {
+		dummyServer := DummyHTTPServer{
+			mockTaskInfoResponse: `{
+    "id": "12345",
+	"state": "EXECUTING",
+    "activeBlocks": [
+        "0_1_1"
+    ],
+    "block": {
+        "blocks": [
+            {
+                "id": "0_1",
+                "state": "EXECUTING",
+                "description": "Deploy",
+				"phase": "true",
+                "block": {
+                    "id": "0_1_1",
+                    "state": "EXECUTING",
+                    "description": "Update on Localhost"
+                }
+            },
+            {
+                "id": "0_2",
+                "state": "PENDING",
+                "description": "",
+				"phase": "true",
+                "block": {
+                    "id": "0_2_1",
+                    "state": "PENDING",
+                    "description": "Register changes for PetPortal"
+                }
+            }
+        ]
+    }
+}`,
+		}
+		xlDeployServer := XLDeployServer{Server: &dummyServer}
+		state, _ := xlDeployServer.GetTaskStatus("12345")
+		assert.NotNil(t, state)
+		assert.Equal(t, "EXECUTING", state.State)
+		assert.Len(t, state.CurrentSteps, 1)
+		step := state.CurrentSteps[0]
+		assert.Equal(t, "Update on Localhost", step.Name)
+		assert.Equal(t, "EXECUTING", step.State)
+		assert.Equal(t, true, step.Automated)
+	})
+
+	t.Run("XLR should properly parse task status", func(t *testing.T) {
+		dummyServer := DummyHTTPServer{
+			mockTaskInfoResponse: `{
+    "id": "12345",
+    "type": "xlrelease.Release",
+    "status": "FAILING",
+    "currentSimpleTasks": [
+        {
+            "title": "Parallel / Create Environment",
+            "type": "xlrelease.CustomScriptTask",
+            "status": "FAILED",
+            "automated": true
+        },
+        {
+            "title": "Parallel / Do Some manual task",
+            "type": "xlrelease.Task",
+            "status": "IN_PROGRESS",
+            "automated": false
+        }
+    ]
+}`,
+		}
+		xlReleaseServer := XLReleaseServer{Server: &dummyServer}
+		state, _ := xlReleaseServer.GetTaskStatus("12345")
+
+		assert.NotNil(t, state)
+		assert.Equal(t, "FAILING", state.State)
+		assert.Len(t, state.CurrentSteps, 2)
+		step1 := state.CurrentSteps[0]
+		assert.Equal(t, "Parallel / Create Environment", step1.Name)
+		assert.Equal(t, "FAILED", step1.State)
+		assert.Equal(t, true, step1.Automated)
+
+		step2 := state.CurrentSteps[1]
+		assert.Equal(t, "Parallel / Do Some manual task", step2.Name)
+		assert.Equal(t, "IN_PROGRESS", step2.State)
+		assert.Equal(t, false, step2.Automated)
 	})
 }

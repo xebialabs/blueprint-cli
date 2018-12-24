@@ -16,6 +16,7 @@ import (
 )
 
 type HTTPServer interface {
+	TaskInfo(path string) (map[string]interface{}, error)
 	PostYamlDoc(path string, yamlDocBytes []byte) (*Changes, error)
 	PostYamlZip(path string, yamlZipFilename string) (*Changes, error)
 	GenerateYamlDoc(generateFilename string, path string, override bool) error
@@ -29,6 +30,17 @@ type SimpleHTTPServer struct {
 
 var client = &http.Client{}
 
+func buildHeaders(contentType string, acceptType string) map[string]string {
+	result := make(map[string]string)
+	if contentType != "" {
+		result["Content-Type"] = contentType
+	}
+	if acceptType != "" {
+		result["Accept"] = acceptType
+	}
+	return result
+}
+
 func (server *SimpleHTTPServer) GenerateYamlDoc(generateFilename string, requestUrl string, override bool) error {
 	if override == false {
 		if _, err := os.Stat(generateFilename); !os.IsNotExist(err) {
@@ -36,7 +48,7 @@ func (server *SimpleHTTPServer) GenerateYamlDoc(generateFilename string, request
 		}
 	}
 
-	response, err := server.doRequest("GET", requestUrl, "", nil)
+	response, err := server.doRequest("GET", requestUrl, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -81,14 +93,31 @@ func processAsCodeResponse(response http.Response) (*AsCodeResponse, error) {
 		return nil, err
 	}
 	uerr := json.Unmarshal(bodyText, &resp)
-	if err != nil {
+	if uerr != nil {
 		return nil, uerr
 	}
 	return &resp, nil
 }
 
+func (server *SimpleHTTPServer) TaskInfo(resource string) (map[string]interface{}, error) {
+	response, err := server.doRequest("GET", resource, buildHeaders("application/json", "application/json"), nil)
+	if err != nil {
+		return nil, err
+	}
+	var js map[string]interface{}
+	bodyText, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	uerr := json.Unmarshal(bodyText, &js)
+	if uerr != nil {
+		return nil, uerr
+	}
+	return js, nil
+}
+
 func (server *SimpleHTTPServer) PostYamlDoc(resource string, yamlDocBytes []byte) (*Changes, error) {
-	response, err := server.doRequest("POST", resource, "text/vnd.yaml", bytes.NewReader(yamlDocBytes))
+	response, err := server.doRequest("POST", resource, buildHeaders("text/vnd.yaml", ""), bytes.NewReader(yamlDocBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +136,7 @@ func (server *SimpleHTTPServer) PostYamlZip(resource string, yamlZipFilename str
 
 	defer f.Close()
 
-	response, err2 := server.doRequest("POST", resource, "application/zip", f)
+	response, err2 := server.doRequest("POST", resource, buildHeaders("application/zip", ""), f)
 	if err2 != nil {
 		return nil, err2
 	}
@@ -162,7 +191,7 @@ func formatAsCodeError(response http.Response) error {
 	return fmt.Errorf("\nUnexpected response: %s", *asCodeResponse.Errors.Generic)
 }
 
-func (server *SimpleHTTPServer) doRequest(method string, path string, contentType string, body io.Reader) (*http.Response, error) {
+func (server *SimpleHTTPServer) doRequest(method string, path string, headers map[string]string, body io.Reader) (*http.Response, error) {
 	maybeSlash := ""
 	if !strings.HasSuffix(server.Url.String(), "/") {
 		maybeSlash = "/"
@@ -174,9 +203,12 @@ func (server *SimpleHTTPServer) doRequest(method string, path string, contentTyp
 		return nil, err
 	}
 
-	if contentType != "" {
-		request.Header.Set("Content-Type", contentType)
+	if headers != nil {
+		for header, value := range headers {
+			request.Header.Set(header, value)
+		}
 	}
+
 	request.SetBasicAuth(server.Username, server.Password)
 	response, err := client.Do(request)
 

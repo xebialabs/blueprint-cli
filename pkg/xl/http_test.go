@@ -33,6 +33,7 @@ func TestHttp(t *testing.T) {
 			body, err := ioutil.ReadAll(request.Body)
 			assert.Nil(t, err)
 			assert.Equal(t, "document body", string(body))
+			_, _ = responseWriter.Write([]byte("{}"))
 		}
 
 		testServer := httptest.NewServer(http.HandlerFunc(handler))
@@ -96,6 +97,7 @@ func TestHttp(t *testing.T) {
 			}
 
 			assert.Equal(t, filesToUploaded, uploadedFiles)
+			_, _ = responseWriter.Write([]byte("{}"))
 		}
 
 		testServer := httptest.NewServer(http.HandlerFunc(handler))
@@ -166,6 +168,33 @@ func TestHttp(t *testing.T) {
 
 		error := server.GenerateYamlDoc(file.Name(), "generate/Applications", false)
 		assert.Contains(t, error.Error(), "already exists")
+	})
+
+	t.Run("should request task info and transform it to map-like structure", func(t *testing.T) {
+		handler := func(responseWriter http.ResponseWriter, request *http.Request) {
+			assert.Equal(t, "GET", request.Method)
+			assert.Equal(t, "/deployit/tasks/v2/12345", request.URL.Path)
+			assert.Equal(t, "application/json", request.Header.Get("Content-Type"))
+			assert.Equal(t, "application/json", request.Header.Get("Accept"))
+			_, _ = responseWriter.Write([]byte(`{"id":"12345","state":"EXECUTING","blocks":[{"id":"0_1","state":"EXECUTING"}]}`))
+		}
+
+		testServer := httptest.NewServer(http.HandlerFunc(handler))
+		defer testServer.Close()
+
+		res, _ := url.Parse(testServer.URL)
+		server := SimpleHTTPServer{Url: *res, Username: "admin", Password: "admin"}
+
+		response, err := server.TaskInfo("deployit/tasks/v2/12345")
+
+		assert.Equal(t, "12345", response["id"])
+		assert.Equal(t, "EXECUTING", response["state"])
+		blocks := response["blocks"].([]interface{})
+		assert.Len(t, blocks, 1)
+		firstBlock := blocks[0].(map[string]interface{})
+		assert.Equal(t, "0_1", firstBlock["id"])
+		assert.Equal(t, "EXECUTING", firstBlock["state"])
+		assert.Nil(t, err)
 	})
 
 }

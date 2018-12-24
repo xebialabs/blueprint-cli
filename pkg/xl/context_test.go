@@ -34,6 +34,10 @@ func (dummy *DummyXLServer) SendDoc(doc *Document) (*Changes, error) {
 	return nil, nil
 }
 
+func (server *DummyXLServer) GetTaskStatus(taskId string) (*TaskState, error) {
+	return nil, nil
+}
+
 func TestContext(t *testing.T) {
 	t.Run("send YAML document with xl-deploy apiVersion to XL Deploy server", func(t *testing.T) {
 		xld := DummyXLServer{accepts: []string{XldApiVersion}}

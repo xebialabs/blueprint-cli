@@ -60,6 +60,17 @@ type Context struct {
 	values              map[string]string
 }
 
+type CurrentStep struct {
+	Name      string
+	State     string
+	Automated bool
+}
+
+type TaskState struct {
+	State        string
+	CurrentSteps []CurrentStep
+}
+
 func (c *Context) PrintConfiguration() {
 	Info("XL Deploy:\n  URL: %s\n  Username: %s\n  Applications home: %s\n  Environments home: %s\n  Infrastructure home: %s\n  Configuration home: %s\n",
 		c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Url.String(),
@@ -79,6 +90,18 @@ func (c *Context) PrintConfiguration() {
 		c.BlueprintRepository.Server.Username)
 }
 
+func (c *Context) GetDocumentHandlingServer(doc *Document) (XLServer, error) {
+	if c.XLDeploy != nil && c.XLDeploy.AcceptsDoc(doc) {
+		return c.XLDeploy, nil
+	}
+
+	if c.XLRelease != nil && c.XLRelease.AcceptsDoc(doc) {
+		return c.XLRelease, nil
+	}
+
+	return nil, fmt.Errorf("unknown apiVersion: %s", doc.ApiVersion)
+}
+
 func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Changes, error) {
 	err := doc.Preprocess(c, artifactsDir)
 	if err != nil {
@@ -91,15 +114,11 @@ func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Ch
 		return nil, fmt.Errorf("apiVersion missing")
 	}
 
-	if c.XLDeploy != nil && c.XLDeploy.AcceptsDoc(doc) {
-		return c.XLDeploy.SendDoc(doc)
+	server, err := c.GetDocumentHandlingServer(doc)
+	if err != nil {
+		return nil, err
 	}
-
-	if c.XLRelease != nil && c.XLRelease.AcceptsDoc(doc) {
-		return c.XLRelease.SendDoc(doc)
-	}
-
-	return nil, fmt.Errorf("unknown apiVersion: %s", doc.ApiVersion)
+	return server.SendDoc(doc)
 }
 
 func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool) error {

@@ -1,6 +1,9 @@
 package xl
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/thoas/go-funk"
+)
 
 const XldApiVersion = "xl-deploy/v1"
 const XlrApiVersion = "xl-release/v1"
@@ -9,6 +12,7 @@ type XLServer interface {
 	AcceptsDoc(doc *Document) bool
 	PreprocessDoc(doc *Document)
 	SendDoc(doc *Document) (*Changes, error)
+	GetTaskStatus(taskId string) (*TaskState, error)
 	GenerateDoc(filename string, path string, override bool) error
 }
 
@@ -67,6 +71,74 @@ func (server *XLReleaseServer) SendDoc(doc *Document) (*Changes, error) {
 		return nil, fmt.Errorf("file tags found but XL Release does not support file references")
 	}
 	return sendDoc(server.Server, "devops-as-code/apply", doc)
+}
+
+func findCurrentSteps(activeBlocks []interface{}, root []interface{}) []CurrentStep {
+	result := make([]CurrentStep, 0)
+	for _, phaseOrBlock := range root {
+		var currentBlock = phaseOrBlock.(map[string]interface{})
+		if isPhase, phasePropertyExists := currentBlock["phase"]; phasePropertyExists && isPhase.(string) == "true" {
+			currentBlock = currentBlock["block"].(map[string]interface{})
+		}
+
+		if funk.Contains(activeBlocks, currentBlock["id"]) {
+			result = append(result, CurrentStep{
+				Name:      currentBlock["description"].(string),
+				State:     currentBlock["state"].(string),
+				Automated: true,
+			})
+		}
+		if internalBlocks, internalBlocksOk := currentBlock["blocks"]; internalBlocksOk {
+			internalResult := findCurrentSteps(activeBlocks, internalBlocks.([]interface{}))
+			result = append(result, internalResult...)
+		}
+	}
+	return result
+}
+
+func (server *XLDeployServer) GetTaskStatus(taskId string) (*TaskState, error) {
+	js, err := server.Server.TaskInfo("deployit/tasks/v2/" + taskId)
+	if err != nil {
+		return nil, err
+	}
+
+	var currentSteps = make([]CurrentStep, 0)
+	var activeBlocks = make([]interface{}, 0)
+	if currentActiveBlocks, hasActiveBlocks := js["activeBlocks"]; hasActiveBlocks {
+		activeBlocks = currentActiveBlocks.([]interface{})
+	}
+
+	if block, blockOk := js["block"]; blockOk {
+		if blocks, blocksOk := block.(map[string]interface{})["blocks"]; blocksOk {
+			currentSteps = findCurrentSteps(activeBlocks, blocks.([]interface{}))
+		}
+	}
+
+	return &TaskState{
+		State:        js["state"].(string),
+		CurrentSteps: currentSteps,
+	}, nil
+}
+
+func (server *XLReleaseServer) GetTaskStatus(taskId string) (*TaskState, error) {
+	js, err := server.Server.TaskInfo("releases/" + taskId)
+	if err != nil {
+		return nil, err
+	}
+	steps := make([]CurrentStep, 0)
+
+	if currentSimpleTasks, tasksExists := js["currentSimpleTasks"].([]interface{}); tasksExists {
+		for _, task := range currentSimpleTasks {
+			currentTask := task.(map[string]interface{})
+			steps = append(steps, CurrentStep{
+				Name:      currentTask["title"].(string),
+				State:     currentTask["status"].(string),
+				Automated: currentTask["automated"].(bool),
+			})
+		}
+	}
+
+	return &TaskState{State: js["status"].(string), CurrentSteps: steps}, nil
 }
 
 func sendDoc(server HTTPServer, path string, doc *Document) (*Changes, error) {
