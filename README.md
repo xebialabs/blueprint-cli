@@ -1,6 +1,6 @@
 # XL CLI
 
-Project for XL DevOps as Code command line interface.
+Project for XL DevOps as Code command line interface. Released binaries of XL CLI can/should be found at https://dist.xebialabs.com/public/xl-cli/.
 
 ## Environment
 
