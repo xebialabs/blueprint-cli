@@ -19,6 +19,7 @@ type HTTPServer interface {
 	TaskInfo(path string) (map[string]interface{}, error)
 	PostYamlDoc(path string, yamlDocBytes []byte) (*Changes, error)
 	PostYamlZip(path string, yamlZipFilename string) (*Changes, error)
+	DownloadSchema(resource string) ([]byte, error)
 	GenerateYamlDoc(generateFilename string, path string, override bool) error
 }
 
@@ -97,6 +98,18 @@ func processAsCodeResponse(response http.Response) (*AsCodeResponse, error) {
 		return nil, uerr
 	}
 	return &resp, nil
+}
+
+func (server *SimpleHTTPServer) DownloadSchema(resource string) ([]byte, error) {
+	response, err := server.doRequest("GET", resource, buildHeaders("", "application/json"), nil)
+	if err != nil {
+		return nil, err
+	}
+	bodyText, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	return bodyText, nil
 }
 
 func (server *SimpleHTTPServer) TaskInfo(resource string) (map[string]interface{}, error) {

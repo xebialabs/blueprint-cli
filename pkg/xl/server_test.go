@@ -48,6 +48,10 @@ func (d *DummyHTTPServer) TaskInfo(resource string) (map[string]interface{}, err
 	return response, nil
 }
 
+func (server *DummyHTTPServer) DownloadSchema(resource string) ([]byte, error) {
+	return nil, nil
+}
+
 func TestServer(t *testing.T) {
 	t.Run(fmt.Sprintf("XL Deploy should accept %s documents", XldApiVersion), func(t *testing.T) {
 		doc := Document{unmarshalleddocument{"Applications", XldApiVersion, nil, nil}, 0, 0, ""}

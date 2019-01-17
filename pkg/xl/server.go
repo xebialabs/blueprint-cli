@@ -13,6 +13,7 @@ type XLServer interface {
 	PreprocessDoc(doc *Document)
 	SendDoc(doc *Document) (*Changes, error)
 	GetTaskStatus(taskId string) (*TaskState, error)
+	GetSchema() ([]byte, error)
 	GenerateDoc(filename string, path string, override bool) error
 }
 
@@ -71,6 +72,15 @@ func (server *XLReleaseServer) SendDoc(doc *Document) (*Changes, error) {
 		return nil, fmt.Errorf("file tags found but XL Release does not support file references")
 	}
 	return sendDoc(server.Server, "devops-as-code/apply", doc)
+}
+
+func (server *XLDeployServer) GetSchema() ([]byte, error) {
+	return server.Server.DownloadSchema("deployit/devops-as-code/schema")
+}
+
+func (server *XLReleaseServer) GetSchema() ([]byte, error) {
+	// @todo not yet implemented on server
+	return nil, nil
 }
 
 func findCurrentSteps(activeBlocks []interface{}, root []interface{}) []CurrentStep {

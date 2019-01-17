@@ -42,8 +42,8 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse(testServer.URL)
 		server := SimpleHTTPServer{Url: *res, Username: "admin", Password: "admin"}
 
-		_, error := server.PostYamlDoc("devops-as-code/apply", []byte("document body"))
-		assert.Nil(t, error)
+		_, e := server.PostYamlDoc("devops-as-code/apply", []byte("document body"))
+		assert.Nil(t, e)
 	})
 
 	t.Run("should post ZIP", func(t *testing.T) {
@@ -69,7 +69,8 @@ func TestHttp(t *testing.T) {
 				assert.Fail(t, "cannot write request body to temporary file", "cannot write request body to temporary file: %s", err)
 				return
 			}
-			uploadedZip.Close()
+			e := uploadedZip.Close()
+			assert.Nil(t, e)
 
 			r, err := os.Open(uploadedZip.Name())
 			if err != nil {
@@ -106,8 +107,8 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse(testServer.URL)
 		server := SimpleHTTPServer{Url: *res, Username: "root", Password: "s3cr3t"}
 
-		_, error := server.PostYamlZip("apply", zipToUpload.Name())
-		assert.Nil(t, error)
+		_, e := server.PostYamlZip("apply", zipToUpload.Name())
+		assert.Nil(t, e)
 	})
 
 	t.Run("should generate yaml and depending files", func(t *testing.T) {
@@ -125,7 +126,8 @@ func TestHttp(t *testing.T) {
 			if err != nil {
 				panic(err)
 			}
-			responseWriter.Write(b)
+			_, e := responseWriter.Write(b)
+			assert.Nil(t, e)
 		}
 
 		file, err := ioutil.TempFile("", "generated.yaml")
@@ -140,8 +142,8 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse(testServer.URL)
 		server := SimpleHTTPServer{Url: *res, Username: "root", Password: "s3cr3t"}
 
-		error := server.GenerateYamlDoc(file.Name(), "generate/Applications", true)
-		assert.Nil(t, error)
+		e := server.GenerateYamlDoc(file.Name(), "generate/Applications", true)
+		assert.Nil(t, e)
 
 		b, err := ioutil.ReadFile(file.Name())
 		if err != nil {
@@ -166,8 +168,30 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse("http://test")
 		server := SimpleHTTPServer{Url: *res, Username: "", Password: ""}
 
-		error := server.GenerateYamlDoc(file.Name(), "generate/Applications", false)
-		assert.Contains(t, error.Error(), "already exists")
+		e := server.GenerateYamlDoc(file.Name(), "generate/Applications", false)
+		assert.Contains(t, e.Error(), "already exists")
+	})
+
+	t.Run("should generate schema", func(t *testing.T) {
+		handler := func(responseWriter http.ResponseWriter, request *http.Request) {
+			assert.Equal(t, "GET", request.Method)
+			assert.Equal(t, "/deployit/devops-as-code/schema", request.URL.Path)
+			assert.Equal(t, "Basic "+base64.StdEncoding.EncodeToString([]byte("root:s3cr3t")), request.Header.Get("Authorization"))
+
+			_, e := responseWriter.Write([]byte("schemabody"))
+			assert.Nil(t, e)
+		}
+
+		testServer := httptest.NewServer(http.HandlerFunc(handler))
+		defer testServer.Close()
+
+		res, _ := url.Parse(testServer.URL)
+		server := SimpleHTTPServer{Url: *res, Username: "root", Password: "s3cr3t"}
+
+		bytes, e := server.DownloadSchema("deployit/devops-as-code/schema")
+		assert.Nil(t, e)
+
+		assert.Equal(t, "schemabody", string(bytes))
 	})
 
 	t.Run("should request task info and transform it to map-like structure", func(t *testing.T) {
@@ -196,7 +220,6 @@ func TestHttp(t *testing.T) {
 		assert.Equal(t, "EXECUTING", firstBlock["state"])
 		assert.Nil(t, err)
 	})
-
 }
 
 func createZip(t *testing.T, filesToUploaded map[string]string) *os.File {
