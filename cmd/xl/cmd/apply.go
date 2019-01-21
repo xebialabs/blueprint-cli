@@ -185,24 +185,28 @@ func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes) {
 			case "IN_PROGRESS":
 				for _, step := range result.CurrentSteps {
 					if !step.Automated {
-						xl.Fatal("\nUnable to complete the task (%s) automatically as it's current active step is manual.", changes.Task.Id)
+						xl.Fatal("\nUnable to complete the task (%s) automatically as it's current active step is manual.\n", changes.Task.Id)
 					}
 				}
 
 			case "FAILING":
+				fallthrough
+			case "CANCELING":
+				fallthrough
+			case "CANCELLED":
 				fallthrough
 			case "FAILED":
 				fallthrough
 			case "STOPPED":
 				fallthrough
 			case "ABORTED":
-				xl.Fatal("\nUnable to complete the task (%s) automatically as it's state became [%s]. The task will be rolled back.", changes.Task.Id, result.State)
+				xl.Fatal("\nUnable to complete the task (%s) automatically as it's state became [%s]. The task will be rolled back.\n", changes.Task.Id, result.State)
 			}
 			time.Sleep(2 * time.Second)
 			result, err = requestTaskId(context, doc, changes.Task.Id)
 		}
 		if err != nil {
-			xl.Fatal("\nError waiting for task %s, %s", changes.Task.Id, err)
+			xl.Fatal("\nError waiting for task %s, %s\n", changes.Task.Id, err)
 		}
 	}
 }
