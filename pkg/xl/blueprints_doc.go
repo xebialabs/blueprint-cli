@@ -26,12 +26,13 @@ const (
 
 // InputType constants
 const (
-	TypeInput   = "Input"
-	TypeSelect  = "Select"
-	TypeConfirm = "Confirm"
+	TypeInput      = "Input"
+	TypeEditor     = "Editor"
+	TypeSelect     = "Select"
+	TypeConfirm    = "Confirm"
 )
 
-var validTypes = []string{TypeInput, TypeSelect, TypeConfirm}
+var validTypes = []string{TypeInput, TypeEditor, TypeSelect, TypeConfirm}
 
 // Blueprint YAML doc definition
 type BlueprintYaml struct {
@@ -177,6 +178,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 	switch variable.Type.Val {
 	case TypeInput:
 		if variable.Secret.Bool == true {
+			// TODO: Investigate support for default value
 			err = survey.AskOne(
 				&survey.Password{Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))},
 				&answer,
@@ -185,12 +187,27 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 			)
 		} else {
 			err = survey.AskOne(
-				&survey.Input{Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)), Default: defaultVal},
+				&survey.Input{
+					Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
+					Default: defaultVal,
+				},
 				&answer,
 				validatePrompt(variable.Pattern.Val),
 				surveyOpts...,
 			)
 		}
+	case TypeEditor:
+		err = survey.AskOne(
+			&survey.Editor{
+				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
+				Default: defaultVal,
+				HideDefault: true,
+				AppendDefault: true,
+			},
+			&answer,
+			validatePrompt(variable.Pattern.Val),
+			surveyOpts...,
+		)
 	case TypeSelect:
 		options := variable.GetOptions()
 		if err != nil {
@@ -210,7 +227,10 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 	case TypeConfirm:
 		var confirm bool
 		err = survey.AskOne(
-			&survey.Confirm{Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("%s?", variable.Name.Val))},
+			// TODO: Set default value for confirm
+			&survey.Confirm{
+				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("%s?", variable.Name.Val)),
+			},
 			&confirm,
 			validatePrompt(variable.Pattern.Val),
 			surveyOpts...,
