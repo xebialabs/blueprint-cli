@@ -2,9 +2,6 @@ package xl
 
 import (
 	"fmt"
-	"github.com/Netflix/go-expect"
-	"github.com/hinshun/vt10x"
-	"gopkg.in/AlecAivazis/survey.v1"
 	"io/ioutil"
 	"os"
 	"path"
@@ -16,70 +13,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/yaml"
-	"gopkg.in/AlecAivazis/survey.v1/terminal"
 )
-
-type UserInput struct {
-	Type  string
-	Name  string
-	Value string
-	Desc  string
-}
-
-// run test in virtual console
-func RunInVirtualConsole(t *testing.T, procedure func(*expect.Console), test func(terminal.Stdio) error) {
-	console, state, err := vt10x.NewVT10XConsole()
-	require.Nil(t, err)
-	defer console.Close()
-
-	donec := make(chan struct{})
-	go func() {
-		defer close(donec)
-		procedure(console)
-		_, err := console.ExpectEOF()
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	stdio := terminal.Stdio{In: console.Tty(), Out: console.Tty(), Err: console.Tty()}
-	err = test(stdio)
-	require.Nil(t, err)
-
-	// Close the slave end of the pty, and read the remaining bytes from the master end.
-	err = console.Tty().Close()
-	if err != nil {
-		panic(err)
-	}
-	<-donec
-
-	// Dump the terminal's screen.
-	t.Log(expect.StripTrailingEmptyLines(state.String()))
-}
-
-// mimic sending prompt value to the console
-func SendPromptValue(input UserInput) func(c *expect.Console) {
-	return func(console *expect.Console) {
-		var err error
-
-		// Expect question
-		if input.Desc != "" {
-			_, err = console.ExpectString(input.Desc)
-		} else {
-			_, err = console.Expect(expect.String(fmt.Sprintf("%s?", input.Name)))
-
-		}
-		if err != nil {
-			panic(err)
-		}
-
-		// Send answer to console
-		_, err = console.SendLine(input.Value)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
 
 func getValidTestBlueprintMetadata(templatePath string, blueprintRepository BlueprintRepository) (*BlueprintYaml, error) {
 	metadata := []byte(
@@ -131,106 +65,6 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
              dependsOnFalse: isitnot
 `, models.YamlFormatVersion))
 	return parseTemplateMetadata(&metadata, templatePath, blueprintRepository)
-}
-
-func performGetUserInputTest(t *testing.T, userInput string, expectedResult string, variable Variable) {
-	t.Run(fmt.Sprintf("should get user input for variable %s-%s", variable.Type.Val, variable.Name.Val), func(t *testing.T) {
-		input := UserInput{
-			Type:  variable.Type.Val,
-			Name:  variable.Name.Val,
-			Desc:  variable.Description.Val,
-			Value: userInput,
-		}
-		RunInVirtualConsole(t, SendPromptValue(input), func(stdio terminal.Stdio) error {
-			readValue, err := variable.GetUserInput(variable.GetDefaultVal(), survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
-			require.Nil(t, err)
-			require.NotNil(t, readValue)
-			assert.Equal(t, expectedResult, readValue)
-			return err
-		})
-	})
-}
-
-func TestGetUserInputForBlueprintVariable(t *testing.T) {
-	// Type: INPUT
-	performGetUserInputTest(
-		t, "some input from user", "some input from user",
-		Variable{
-			Type:        VarField{Val: TypeInput},
-			Name:        VarField{Val: "test input"},
-			Description: VarField{Val: "What is the value of test input?"},
-		},
-	)
-	performGetUserInputTest(
-		t, "", "default val",
-		Variable{
-			Type:        VarField{Val: TypeInput},
-			Name:        VarField{Val: "test input with default value"},
-			Description: VarField{Val: "What is the value of test input?"},
-			Default:     VarField{Val: "default val"},
-		},
-	)
-
-	// Type: Password
-	performGetUserInputTest(
-		t, "pass123", "pass123",
-		Variable{
-			Type:        VarField{Val: TypeInput},
-			Secret:      VarField{Bool: true},
-			Name:        VarField{Val: "db pass"},
-			Description: VarField{Val: "What is the DB password?"},
-		},
-	)
-
-	// Type: Editor: unfortunately it's nearly impossible to test editor at the moment
-	// since we will need to know which editor will be used in the test and the keys to send to it
-
-	// Type: Select
-	performGetUserInputTest(
-		t, "first", "first",
-		Variable{
-			Type:        VarField{Val: TypeSelect},
-			Options:     []VarField{
-				{Val: "first"},
-				{Val: "second"},
-				{Val: "third"},
-			},
-			Name:        VarField{Val: "selection"},
-			Description: VarField{Val: "Select one:"},
-		},
-	)
-	performGetUserInputTest(
-		t, "", "second",
-		Variable{
-			Type:        VarField{Val: TypeSelect},
-			Options:     []VarField{
-				{Val: "first"},
-				{Val: "second"},
-				{Val: "third"},
-			},
-			Name:        VarField{Val: "selection with default"},
-			Description: VarField{Val: "Select one:"},
-			Default:     VarField{Val: "second"},
-		},
-	)
-
-	// Type: Confirm
-	performGetUserInputTest(
-		t, "Y", "true",
-		Variable{
-			Type:        VarField{Val: TypeConfirm},
-			Name:        VarField{Val: "is it true"},
-			Description: VarField{Val: "Is it true?"},
-		},
-	)
-	performGetUserInputTest(
-		t, "N", "false",
-		Variable{
-			Type:        VarField{Val: TypeConfirm},
-			Name:        VarField{Val: "is it false"},
-			Description: VarField{Val: "Is it false?"},
-		},
-	)
 }
 
 func TestGetVariableDefaultVal(t *testing.T) {
