@@ -220,6 +220,25 @@ func TestHttp(t *testing.T) {
 		assert.Equal(t, "EXECUTING", firstBlock["state"])
 		assert.Nil(t, err)
 	})
+
+	t.Run("should print renew license link when license invalid", func(t *testing.T) {
+		handler := func(responseWriter http.ResponseWriter, request *http.Request) {
+			responseWriter.WriteHeader(402)
+		}
+
+		testServer := httptest.NewServer(http.HandlerFunc(handler))
+		defer testServer.Close()
+
+		res, _ := url.Parse(testServer.URL)
+		server := SimpleHTTPServer{Url: *res, Username: "admin", Password: "admin"}
+
+		response, err := server.PostYamlDoc("", []byte(""))
+
+		assert.Nil(t, response)
+		assert.Equal(t, err.Error(), fmt.Sprintf("402 License invalid. Please renew you license at %s/productregistration ", server.Url.String()))
+	})
+
+
 }
 
 func createZip(t *testing.T, filesToUploaded map[string]string) *os.File {

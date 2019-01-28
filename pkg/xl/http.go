@@ -232,7 +232,8 @@ func (server *SimpleHTTPServer) doRequest(method string, path string, headers ma
 	if response.StatusCode == 401 {
 		return nil, fmt.Errorf("401 Request unauthorized. Please check your credentials.")
 	} else if response.StatusCode == 402 {
-		return nil, fmt.Errorf("402 License problem. Please verify your server license.")
+		baseURL := server.Url.Scheme + "://" + server.Url.Host
+		return nil, fmt.Errorf("402 License invalid. Please renew you license at %s/productregistration ", baseURL)
 	} else if response.StatusCode == 403 {
 		return nil, fmt.Errorf("403 Request forbidden. Please check your permissions on the server.")
 	} else if response.StatusCode == 404 {
