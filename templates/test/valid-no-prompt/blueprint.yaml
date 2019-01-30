@@ -35,7 +35,7 @@ spec:
     value: "yes"
   - name: AppName
     type: Input
-    pattern: "[a-z-]*"
+    pattern: "[a-zA-Z-]*"
     description: Application name, will be used in various AWS resource names
     value: testApp
   - name: AWSAccessKey

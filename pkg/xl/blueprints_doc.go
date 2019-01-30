@@ -180,13 +180,18 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 	switch variable.Type.Val {
 	case TypeInput:
 		if variable.Secret.Bool == true {
-			// TODO: Investigate support for default value
 			err = survey.AskOne(
 				&survey.Password{Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))},
 				&answer,
-				validatePrompt(variable.Pattern.Val),
+				validatePrompt(variable.Pattern.Val, true),
 				surveyOpts...,
 			)
+
+			// if user bypassed question, replace with default value
+			if answer == "" {
+				Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Val, defaultVal)
+				answer = defaultVal
+			}
 		} else {
 			err = survey.AskOne(
 				&survey.Input{
@@ -194,7 +199,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 					Default: defaultVal,
 				},
 				&answer,
-				validatePrompt(variable.Pattern.Val),
+				validatePrompt(variable.Pattern.Val, false),
 				surveyOpts...,
 			)
 		}
@@ -207,7 +212,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 				AppendDefault: true,
 			},
 			&answer,
-			validatePrompt(variable.Pattern.Val),
+			validatePrompt(variable.Pattern.Val, false),
 			surveyOpts...,
 		)
 	case TypeFile:
@@ -241,7 +246,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 				PageSize: 10,
 			},
 			&answer,
-			validatePrompt(variable.Pattern.Val),
+			validatePrompt(variable.Pattern.Val, false),
 			surveyOpts...,
 		)
 	case TypeConfirm:
@@ -252,7 +257,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 				Default: variable.Default.Bool,
 			},
 			&confirm,
-			validatePrompt(variable.Pattern.Val),
+			validatePrompt(variable.Pattern.Val, false),
 			surveyOpts...,
 		)
 		if err != nil {
@@ -543,12 +548,17 @@ func parseFileMap(m *map[interface{}]interface{}) (TemplateConfig, error) {
 }
 
 // --utility functions
-func validatePrompt(pattern string) func(val interface{}) error {
+func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error {
 	return func(val interface{}) error {
-		err := survey.Required(val)
-		if err != nil {
-			return err
+		Verbose("---> Verification for val: %s\n", val)
+		// if empty value is not allowed, check for any value
+		if !allowEmpty {
+			err := survey.Required(val)
+			if err != nil {
+				return err
+			}
 		}
+
 		if pattern != "" {
 			// the reflect value of the result
 			value := reflect.ValueOf(val)
