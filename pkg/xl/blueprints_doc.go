@@ -247,9 +247,9 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 	case TypeConfirm:
 		var confirm bool
 		err = survey.AskOne(
-			// TODO: Set default value for confirm
 			&survey.Confirm{
 				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("%s?", variable.Name.Val)),
+				Default: variable.Default.Bool,
 			},
 			&confirm,
 			validatePrompt(variable.Pattern.Val),
