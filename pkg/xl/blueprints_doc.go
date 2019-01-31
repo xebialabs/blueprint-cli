@@ -550,7 +550,6 @@ func parseFileMap(m *map[interface{}]interface{}) (TemplateConfig, error) {
 // --utility functions
 func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error {
 	return func(val interface{}) error {
-		Verbose("---> Verification for val: %s\n", val)
 		// if empty value is not allowed, check for any value
 		if !allowEmpty {
 			err := survey.Required(val)

@@ -619,6 +619,43 @@ func TestValidatePrompt(t *testing.T) {
 	}
 }
 
+func TestValidateFilePath(t *testing.T) {
+	tmpDir := path.Join("test", "file-input")
+	type args struct {
+		value         string
+		fileExists    bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want error
+	}{
+		{"should pass on existing valid file path input", args{path.Join(tmpDir, "valid.txt"), true}, nil},
+		{"should fail on non-existing file path input", args{"not-valid.txt", false}, fmt.Errorf("file not found on path not-valid.txt")},
+		{"should fail on directory path input", args{tmpDir, false}, fmt.Errorf("given path is a directory, file path is needed")},
+		{"should fail on empty input", args{"", false}, fmt.Errorf("Value is required")},
+	}
+	for _, tt := range tests {
+		// Create needed temporary directory for tests
+		os.MkdirAll(tmpDir, os.ModePerm)
+		defer os.RemoveAll("test")
+
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.args.fileExists {
+				contents := []byte("hello\ngo\n")
+				ioutil.WriteFile(tt.args.value, contents, os.ModePerm)
+			}
+
+			got := validateFilePath()(tt.args.value)
+			if tt.want == nil || got == nil {
+				assert.Equal(t, tt.want, got)
+			} else {
+				assert.Equal(t, tt.want.Error(), got.Error())
+			}
+		})
+	}
+}
+
 func TestBlueprintYaml_parseFiles(t *testing.T) {
 	templatePath := "aws/monolith"
 	blueprintRepository := BlueprintRepository{Server: SimpleHTTPServer{Url: parseURIWithoutError("http://xebialabs.com/test/blueprints")}}
