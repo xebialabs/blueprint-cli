@@ -577,37 +577,76 @@ func TestProcessCustomFunction(t *testing.T) {
 
 func TestValidatePrompt(t *testing.T) {
 	type args struct {
-		pattern string
-		value   string
+		pattern       string
+		value         string
+		emtpyAllowed  bool
 	}
 	tests := []struct {
 		name string
 		args args
 		want error
 	}{
-		{"should fail required validation on empty value", args{"", ""}, fmt.Errorf("Value is required")},
-		{"should fail required validation on empty value with pattern", args{".", ""}, fmt.Errorf("Value is required")},
-		{"should pass required validation on valid value", args{"", "test"}, nil},
-		{"should fail pattern validation on invalid value", args{"[a-z]*", "123"}, fmt.Errorf("Value should match pattern [a-z]*")},
-		{"should pass pattern validation on valid value", args{"[a-z]*", "abc"}, nil},
-		{"should pass pattern validation on valid value with extra start/end tag on pattern", args{"^[a-z]*$", "abc"}, nil},
-		{"should pass pattern validation on valid value with fixed pattern", args{"test", "test"}, nil},
-		{"should fail pattern validation on invalid value with fixed pattern", args{"test", "abcd"}, fmt.Errorf("Value should match pattern test")},
+		{"should pass on empty value since empty values are allowed in secret fields", args{"", "", true}, nil},
+		{"should fail required validation on empty value", args{"", "", false}, fmt.Errorf("Value is required")},
+		{"should fail required validation on empty value with pattern", args{".", "", false}, fmt.Errorf("Value is required")},
+		{"should pass required validation on valid value", args{"", "test", false}, nil},
+		{"should fail pattern validation on invalid value", args{"[a-z]*", "123", false}, fmt.Errorf("Value should match pattern [a-z]*")},
+		{"should pass pattern validation on valid value", args{"[a-z]*", "abc", false}, nil},
+		{"should pass pattern validation on valid value with extra start/end tag on pattern", args{"^[a-z]*$", "abc", false}, nil},
+		{"should pass pattern validation on valid value with fixed pattern", args{"test", "test", false}, nil},
+		{"should fail pattern validation on invalid value with fixed pattern", args{"test", "abcd", false}, fmt.Errorf("Value should match pattern test")},
 		{
 			"should fail pattern validation on valid value with complex pattern",
-			args{`\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`, "123.123.123.256"},
+			args{`\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`, "123.123.123.256", false},
 			fmt.Errorf(`Value should match pattern \b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`),
 		},
 		{
 			"should pass pattern validation on valid value with complex pattern",
-			args{`\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`, "255.255.255.255"},
+			args{`\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`, "255.255.255.255", false},
 			nil,
 		},
-		{"should fail pattern validation on invalid pattern", args{"[[", "abcd"}, fmt.Errorf("error parsing regexp: missing closing ]: `[[$`")},
+		{"should fail pattern validation on invalid pattern", args{"[[", "abcd", false}, fmt.Errorf("error parsing regexp: missing closing ]: `[[$`")},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := validatePrompt(tt.args.pattern)(tt.args.value)
+			got := validatePrompt(tt.args.pattern, tt.args.emtpyAllowed)(tt.args.value)
+			if tt.want == nil || got == nil {
+				assert.Equal(t, tt.want, got)
+			} else {
+				assert.Equal(t, tt.want.Error(), got.Error())
+			}
+		})
+	}
+}
+
+func TestValidateFilePath(t *testing.T) {
+	tmpDir := path.Join("test", "file-input")
+	type args struct {
+		value         string
+		fileExists    bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want error
+	}{
+		{"should pass on existing valid file path input", args{path.Join(tmpDir, "valid.txt"), true}, nil},
+		{"should fail on non-existing file path input", args{"not-valid.txt", false}, fmt.Errorf("file not found on path not-valid.txt")},
+		{"should fail on directory path input", args{tmpDir, false}, fmt.Errorf("given path is a directory, file path is needed")},
+		{"should fail on empty input", args{"", false}, fmt.Errorf("Value is required")},
+	}
+	for _, tt := range tests {
+		// Create needed temporary directory for tests
+		os.MkdirAll(tmpDir, os.ModePerm)
+		defer os.RemoveAll("test")
+
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.args.fileExists {
+				contents := []byte("hello\ngo\n")
+				ioutil.WriteFile(tt.args.value, contents, os.ModePerm)
+			}
+
+			got := validateFilePath()(tt.args.value)
 			if tt.want == nil || got == nil {
 				assert.Equal(t, tt.want, got)
 			} else {
@@ -703,9 +742,6 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 }
 
 func TestParseFileMap(t *testing.T) {
-	type args struct {
-		m *map[interface{}]interface{}
-	}
 	tests := []struct {
 		name    string
 		args    *map[interface{}]interface{}

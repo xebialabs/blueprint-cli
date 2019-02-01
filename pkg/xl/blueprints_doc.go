@@ -3,6 +3,7 @@ package xl
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -26,12 +27,14 @@ const (
 
 // InputType constants
 const (
-	TypeInput   = "Input"
-	TypeSelect  = "Select"
-	TypeConfirm = "Confirm"
+	TypeInput      = "Input"
+	TypeEditor     = "Editor"
+	TypeFile       = "File"
+	TypeSelect     = "Select"
+	TypeConfirm    = "Confirm"
 )
 
-var validTypes = []string{TypeInput, TypeSelect, TypeConfirm}
+var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfirm}
 
 // Blueprint YAML doc definition
 type BlueprintYaml struct {
@@ -177,20 +180,64 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 	switch variable.Type.Val {
 	case TypeInput:
 		if variable.Secret.Bool == true {
+			questionMsg := prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))
+			if defaultVal != "" {
+				questionMsg += fmt.Sprintf(" (%s)", defaultVal)
+			}
 			err = survey.AskOne(
-				&survey.Password{Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))},
+				&survey.Password{Message: questionMsg},
 				&answer,
-				validatePrompt(variable.Pattern.Val),
+				validatePrompt(variable.Pattern.Val, true),
 				surveyOpts...,
 			)
+
+			// if user bypassed question, replace with default value
+			if answer == "" {
+				Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Val, defaultVal)
+				answer = defaultVal
+			}
 		} else {
 			err = survey.AskOne(
-				&survey.Input{Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)), Default: defaultVal},
+				&survey.Input{
+					Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
+					Default: defaultVal,
+				},
 				&answer,
-				validatePrompt(variable.Pattern.Val),
+				validatePrompt(variable.Pattern.Val, false),
 				surveyOpts...,
 			)
 		}
+	case TypeEditor:
+		err = survey.AskOne(
+			&survey.Editor{
+				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
+				Default: defaultVal,
+				HideDefault: true,
+				AppendDefault: true,
+			},
+			&answer,
+			validatePrompt(variable.Pattern.Val, false),
+			surveyOpts...,
+		)
+	case TypeFile:
+		var filePath string
+		err = survey.AskOne(
+			&survey.Input{
+				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the file path (relative/absolute) for %s?", variable.Name.Val)),
+				Default: defaultVal,
+			},
+			&filePath,
+			validateFilePath(),
+			surveyOpts...,
+		)
+
+		// read file contents & save as answer
+		Verbose("[input] Reading file contents from path: %s\n", filePath)
+		data, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			return "", err
+		}
+		answer = string(data)
 	case TypeSelect:
 		options := variable.GetOptions()
 		if err != nil {
@@ -204,15 +251,18 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 				PageSize: 10,
 			},
 			&answer,
-			validatePrompt(variable.Pattern.Val),
+			validatePrompt(variable.Pattern.Val, false),
 			surveyOpts...,
 		)
 	case TypeConfirm:
 		var confirm bool
 		err = survey.AskOne(
-			&survey.Confirm{Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("%s?", variable.Name.Val))},
+			&survey.Confirm{
+				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("%s?", variable.Name.Val)),
+				Default: variable.Default.Bool,
+			},
 			&confirm,
-			validatePrompt(variable.Pattern.Val),
+			validatePrompt(variable.Pattern.Val, false),
 			surveyOpts...,
 		)
 		if err != nil {
@@ -383,6 +433,11 @@ func validateVariables(variables *[]Variable) error {
 		if userVar.Type.Val == TypeSelect && len(userVar.Options) == 0 {
 			return fmt.Errorf("at least one option field is need to be set for parameter [%s]", userVar.Name.Val)
 		}
+
+		// validate file case
+		if userVar.Type.Val == TypeFile && !isStringEmpty(userVar.Value.Val) {
+			return fmt.Errorf("'value' field is not allowed for file input type")
+		}
 	}
 	return nil
 }
@@ -498,12 +553,16 @@ func parseFileMap(m *map[interface{}]interface{}) (TemplateConfig, error) {
 }
 
 // --utility functions
-func validatePrompt(pattern string) func(val interface{}) error {
+func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error {
 	return func(val interface{}) error {
-		err := survey.Required(val)
-		if err != nil {
-			return err
+		// if empty value is not allowed, check for any value
+		if !allowEmpty {
+			err := survey.Required(val)
+			if err != nil {
+				return err
+			}
 		}
+
 		if pattern != "" {
 			// the reflect value of the result
 			value := reflect.ValueOf(val)
@@ -514,6 +573,28 @@ func validatePrompt(pattern string) func(val interface{}) error {
 			}
 			if !match {
 				return fmt.Errorf("Value should match pattern %s", pattern)
+			}
+		}
+		return nil
+	}
+}
+
+func validateFilePath() func(val interface{}) error {
+	return func(val interface{}) error {
+		err := survey.Required(val)
+		if err != nil {
+			return err
+		}
+		filePath := val.(string)
+
+		if filePath != "" {
+			info, err := os.Stat(filePath)
+			if err != nil {
+				Verbose("[input] error in file stat: %s\n", err.Error())
+				return fmt.Errorf("file not found on path %s", filePath)
+			}
+			if info.IsDir() {
+				return fmt.Errorf("given path is a directory, file path is needed")
 			}
 		}
 		return nil
