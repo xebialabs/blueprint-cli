@@ -121,17 +121,25 @@ func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Ch
 	return server.SendDoc(doc)
 }
 
-func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool) error {
+func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool, generatePermissions bool, users bool, roles bool) error {
 	finalPath := url.QueryEscape(generatePath)
 
 	if generateServer == "xl-deploy" {
-		Info("Generating definitions for path %s from XL Deploy to %s\n", generatePath, generateFilename)
-		return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride)
+		if generatePath != "" {
+			Info("Generating definitions for path %s from XL Deploy to %s\n", generatePath, generateFilename)
+		} else {
+			Info("Generating definitions from XL Deploy to %s\n", generateFilename)
+		}
+		return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles)
 	}
 
 	if generateServer == "xl-release" {
-		Info("Generating definitions for path %s from XL Release to %s\n", generatePath, generateFilename)
-		return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride)
+		if generatePath != "" {
+			Info("Generating definitions for path %s from XL Release to %s\n", generatePath, generateFilename)
+		} else {
+			Info("Generating definitions from XL Release to %s\n", generateFilename)
+		}
+		return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles)
 	}
 
 	return fmt.Errorf("unknown server type: %s", generateServer)

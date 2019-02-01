@@ -10,6 +10,9 @@ var generateFilename string
 var generatePath string
 var generateServer string
 var generateOverride bool
+var globalPermissions bool
+var users bool
+var roles bool
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
@@ -29,7 +32,7 @@ var generateCmd = &cobra.Command{
 }
 
 func DoGenerate(context *xl.Context) {
-	err := context.GenerateSingleDocument(generateServer, generateFilename, generatePath, generateOverride)
+	err := context.GenerateSingleDocument(generateServer, generateFilename, generatePath, generateOverride, globalPermissions, users, roles)
 	if err != nil {
 		xl.Fatal("Error while generating document: %s\n", err)
 	}
@@ -41,8 +44,10 @@ func init() {
 	generateFlags := generateCmd.Flags()
 	generateFlags.StringVarP(&generateFilename, "file", "f", "", "Path of the file where the generated yaml file will be stored (required)")
 	generateCmd.MarkFlagRequired("file")
-	generateFlags.StringVarP(&generatePath, "path", "p", "", "Server path which will be used for definitions generation (required)")
-	generateCmd.MarkFlagRequired("path")
+	generateFlags.StringVarP(&generatePath, "path", "p", "", "Server path which will be used for definitions generation")
 	generateFlags.StringVarP(&generateServer, "server", "s", "xl-deploy", "Which server to generate from, either \"xl-deploy\" or \"xl-release\"")
 	generateFlags.BoolVarP(&generateOverride, "override", "o", false, "Set to true to override the generated file")
+	generateFlags.BoolVarP(&globalPermissions, "globalPermissions", "g", false, "Add to the generated file all the global permissions")
+	generateFlags.BoolVarP(&users, "users", "u", false, "Add to the generated file all the users in system")
+	generateFlags.BoolVarP(&roles, "roles", "r", false, "Add to the generated file all the roles in system")
 }
