@@ -220,6 +220,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 		err = survey.AskOne(
 			&survey.Input{
 				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the file path (relative/absolute) for %s?", variable.Name.Val)),
+				Default: defaultVal,
 			},
 			&filePath,
 			validateFilePath(),
@@ -430,8 +431,8 @@ func validateVariables(variables *[]Variable) error {
 		}
 
 		// validate file case
-		if userVar.Type.Val == TypeFile && (!isStringEmpty(userVar.Default.Val) || !isStringEmpty(userVar.Value.Val)) {
-			return fmt.Errorf("'default' and 'value' fields are not allowed for file input type")
+		if userVar.Type.Val == TypeFile && !isStringEmpty(userVar.Value.Val) {
+			return fmt.Errorf("'value' field is not allowed for file input type")
 		}
 	}
 	return nil
