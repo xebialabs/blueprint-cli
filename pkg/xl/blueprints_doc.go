@@ -180,8 +180,12 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 	switch variable.Type.Val {
 	case TypeInput:
 		if variable.Secret.Bool == true {
+			questionMsg := prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))
+			if defaultVal != "" {
+				questionMsg += fmt.Sprintf(" (%s)", defaultVal)
+			}
 			err = survey.AskOne(
-				&survey.Password{Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))},
+				&survey.Password{Message: questionMsg},
 				&answer,
 				validatePrompt(variable.Pattern.Val, true),
 				surveyOpts...,

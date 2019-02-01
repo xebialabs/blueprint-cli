@@ -27,7 +27,7 @@ The spec field holds parameters and files
 | Field Name | Expected value(s) | Examples | Default Value | Required | Explanation |
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **name** | - | AppName | - | y | Variable name, to be used in templates |
-| **type** | `Input`/`Select`/`Confirm` | | - | y | Type of the prompt input |
+| **type** | `Input`/`Select`/`Confirm`/`Editor`/`File` | | - | y | Type of the prompt input |
 | **value** | - | eu-west-1<br>!fn aws.regions(ecs)[0] | - | n | If present, user will not be asked a question to provide value |
 | **default** | - | Awesome App | - | n | Default value, will be present during the question prompt. Also will be the variable value if question is skipped. |
 | **description** | - | Application name, will be used in various AWS resource names | - | n | If present, will be used instead of default question text |
@@ -37,6 +37,8 @@ The spec field holds parameters and files
 | **dependsOnTrue** | - | CreateNewCluster<br>!fn aws.credentials().IsAvailable | - | n | If this question is need to be asked to user depending on the value of another, dependsOn field can be defined.<br>A valid variable name should be given and the variable name used should have been defined before order-wise. Function tags also can be used, but expected result should always be boolean. |
 | **dependsOnFalse** | - | CreateNewCluster<br>!fn aws.credentials().IsAvailable | - | n | Reverse logic for dependsOn, see above
 | **saveInXlVals** | `true`/`false` | - | `true` for secret fields<br>`false` for other fields | n | If true, output variable will be included in the `values.xlvals` output file. By default every secret field will be written to `secrets.xlvals` file and this setting doesn't effect that functionality |
+
+> Note: `File` type doesn't support `value` parameter. `default` parameter for this field expects to have a file path instead of final value string.
 
 #### Files Fields
 
