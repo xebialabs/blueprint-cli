@@ -115,9 +115,11 @@ func writeDefaultConfigurationFile() error {
 			{"url", models.DefaultXlReleaseUrl},
 		}},
 		{"blueprint-repository", yaml.MapSlice{
-			{"username", models.DefaultBlueprintRepositoryUsername},
-			{"password", models.DefaultBlueprintRepositoryPassword},
-			{"url", models.DefaultBlueprintRepositoryUrl},
+			{"provider", models.DefaultBlueprintRepositoryProvider},
+			{"owner", models.DefaultBlueprintRepositoryOwner},
+			{"token", models.DefaultBlueprintRepositoryToken},
+			{"name", models.DefaultBlueprintRepositoryName},
+			{"branch", models.DefaultBlueprintRepositoryBranch},
 		}},
 	}
 

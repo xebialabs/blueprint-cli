@@ -88,28 +88,28 @@ func TestWriteConfigToFile(t *testing.T) {
 
 func TestAdjustPathSeperatorIfNeeded(t *testing.T) {
 	t.Run("should produce standard path using the host os seperator", func(t *testing.T) {
-		assert.Equal(t, "", adjustPathSeperatorIfNeeded(""))
-		assert.Equal(t, "test", adjustPathSeperatorIfNeeded("test"))
-		assert.Equal(t, path.Join("..", "test"), adjustPathSeperatorIfNeeded("../test"))
-		assert.Equal(t, path.Join("..", "microservice", "blueprint.yaml"), adjustPathSeperatorIfNeeded(`..\microservice\blueprint.yaml`))
-		assert.Equal(t, path.Join("..", "microservice", "blueprint.yaml"), adjustPathSeperatorIfNeeded(`../microservice\blueprint.yaml`))
-		assert.Equal(t, path.Join("..", "microservice", "blueprint.yaml"), adjustPathSeperatorIfNeeded(`../microservice/blueprint.yaml`))
-		assert.Equal(t, path.Join("test", "test", "again"), adjustPathSeperatorIfNeeded(`test/test\again`))
-		assert.Equal(t, path.Join("test", "test", "again"), adjustPathSeperatorIfNeeded(`test\test\again`))
-		assert.Equal(t, path.Join("test", "test", "again"), adjustPathSeperatorIfNeeded(`test/test/again`))
+		assert.Equal(t, "", AdjustPathSeperatorIfNeeded(""))
+		assert.Equal(t, "test", AdjustPathSeperatorIfNeeded("test"))
+		assert.Equal(t, path.Join("..", "test"), AdjustPathSeperatorIfNeeded("../test"))
+		assert.Equal(t, path.Join("..", "microservice", "blueprint.yaml"), AdjustPathSeperatorIfNeeded(`..\microservice\blueprint.yaml`))
+		assert.Equal(t, path.Join("..", "microservice", "blueprint.yaml"), AdjustPathSeperatorIfNeeded(`../microservice\blueprint.yaml`))
+		assert.Equal(t, path.Join("..", "microservice", "blueprint.yaml"), AdjustPathSeperatorIfNeeded(`../microservice/blueprint.yaml`))
+		assert.Equal(t, path.Join("test", "test", "again"), AdjustPathSeperatorIfNeeded(`test/test\again`))
+		assert.Equal(t, path.Join("test", "test", "again"), AdjustPathSeperatorIfNeeded(`test\test\again`))
+		assert.Equal(t, path.Join("test", "test", "again"), AdjustPathSeperatorIfNeeded(`test/test/again`))
 	})
 }
 
 func TestInstantiateBlueprint(t *testing.T) {
 	SkipFinalPrompt = true
 	t.Run("should error on unknown template", func(t *testing.T) {
-		err := InstantiateBlueprint("abc", BlueprintRepository{}, "xebialabs")
+		err := InstantiateBlueprint(true, "abc", DefaultBlueprintContext, "xebialabs")
 
 		require.NotNil(t, err)
 		assert.Equal(t, "template not found in path abc/blueprint.yml", err.Error())
 	})
 	t.Run("should error on invalid test template", func(t *testing.T) {
-		err := InstantiateBlueprint(GetTestTemplateDir("invalid"), BlueprintRepository{}, "xebialabs")
+		err := InstantiateBlueprint(true, GetTestTemplateDir("invalid"), DefaultBlueprintContext, "xebialabs")
 
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
@@ -120,14 +120,14 @@ func TestInstantiateBlueprint(t *testing.T) {
 		defer RemoveFiles("xlr-*.yml")
 		defer os.RemoveAll(outFolder)
 		// create blueprint
-		err := InstantiateBlueprint(GetTestTemplateDir("valid-no-prompt"), BlueprintRepository{}, outFolder)
+		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), DefaultBlueprintContext, outFolder)
 		require.Nil(t, err)
 
 		// assertions
 		assert.FileExists(t, "xld-environment.yml")
 		assert.FileExists(t, "xld-infrastructure.yml")
-		assert.FileExists(t, "xlr-pipeline.yml")
-		assert.False(t, PathExists("xlr-pipeline-2.yml", false))
+		assert.False(t, PathExists("xlr-pipeline.yml", false))
+		assert.True(t, PathExists("xlr-pipeline-2.yml", false))
 		assert.FileExists(t, path.Join(outFolder, valuesFile))
 		assert.FileExists(t, path.Join(outFolder, secretsFile))
 		assert.FileExists(t, path.Join(outFolder, gitignoreFile))
@@ -157,15 +157,14 @@ func TestInstantiateBlueprint(t *testing.T) {
 		defer RemoveFiles("xlr-*.yml")
 		defer os.RemoveAll(outFolder)
 		// create blueprint
-		repository := BlueprintRepository{SimpleHTTPServer{Url: parseURIWithoutError("https://dist.xebialabs.com/public/blueprints/")}}
-		err := InstantiateBlueprint(GetTestTemplateDir("valid-no-prompt"), repository, outFolder)
+		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), DefaultBlueprintContext, outFolder)
 		require.Nil(t, err)
 
 		// assertions
 		assert.FileExists(t, "xld-environment.yml")
 		assert.FileExists(t, "xld-infrastructure.yml")
-		assert.FileExists(t, "xlr-pipeline.yml")
-		assert.False(t, PathExists("xlr-pipeline-2.yml", false))
+		assert.False(t, PathExists("xlr-pipeline.yml", false))
+		assert.True(t, PathExists("xlr-pipeline-2.yml", false))
 		assert.FileExists(t, path.Join(outFolder, valuesFile))
 		assert.Contains(t, GetFileContent(path.Join(outFolder, valuesFile)), `FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5\nQJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ\nomhDPbq8F84KRsRwCgT05mTrxhBtgqGuCHXcr115iUuUNW7dzzP5iXAgEp4Apa30NHzNsy5TUoIZGDJceO2BmAAmG4HS0cZ\notIXJ2BJEx95SGnqO4kZFoRJzghlZMWs50PkskI5JTM6tHFmtZIdYbo7ZvbA0LP71QtTbSDziqDzXoi5uwxpwaDO95fPYv0\nN1ajgotzn4czgX4hA8gFIipmUUA2AYfgQ5jZQ4I9zO5rxxj80lPWFNOnrHzD1jWZAhLgdpyWldWLt9NbcWegrgLpI\nhRA08PILJnV2z79aTfylL7Y3zJ2urSjr0XIbTWQlWwZ1VXBm13IbRffbku0qjFmSuxDrKFCwGEBtRZ4RnseholT8DA0yDIjPCsfY2jo\nCjljgZHYRoIe4E8WsMt0zzp9G0UP7It6jzJok3yk9Ril48yLthkPvyJ4qoH2PTLx8xBeGBJLKmHT9ojDbWQxOXpml72ati\n4jcxmZfSgDUqMPmTRHPqZ47k6f3XTrPxqIDJ8SzOj09OaKzjSYyZnxIEokm1JotTaqhZa64zptKlbuY0kblSbFAGFFQZnn7RjkU3ZKq872gTDh\nAdteR98sbMdmMGipaxgYbCfuomBEdxldjlApbwDiswJkOQIY0Vypwt95M3LAWha4zACRwrYz7rVqDBJqpo6hFh3V6zBRQR2C6GINUJZq3KWWz\nXAI0ncPo95GDraIFnaStGFHu6R1WC7oopSFS6kgbhJL6noGgMjxbmnPzDA8sXVo1GEtyq79oG2CTHBbrODI9KhsKYy3B0\n8Prpu561H6kDtwIyZqZQXHppVaeFbrGlWAsQpp5su5iHhfFllVaCsDI8kYmmy4JdtOEmPYNL3pF7Uf35X0LIdJKb54czjwBuc2rbbifX9mIn30I8tTgq\n9ldZFjj0SwtTxN1hjYh5pRRTdKZkuwNv6v9L0iPitR6YwuCQaIx1LlymGwfR1Zo6u4gLDCqBYjLz2s1jc7o5dhdmVXmMHKFjWrTaVbanLiwJuNWDQb1e14UikLg\nP4l6RiCx5nNF2wbSQ7uYrvDpYa6ToKysXVUTAPLxG3C4BirrQDaSnTThTzMC7GUAmxKAK3tnBHXEqOIsnYZ3rD92iUr2XI65oFIbIT\nXUrYNapiDWYsPEGTaQTX8L1ZkrFaQTL8wC1Zko8aZFfzqmYbNi5OvJydnWWoaRc0eyvnFmtNh0utLQZEME4DXCU3RxET3q6pwsid8DolT1FZtWBE0V3F0XM\nffWx27IYj63dyTtT4UoJwtTgdtXeHAG4a0AGvbfM9p462qEbV3rMNynLWyzQDc3sN6nI-`)
 		assert.FileExists(t, path.Join(outFolder, secretsFile))

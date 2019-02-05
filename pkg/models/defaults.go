@@ -1,5 +1,26 @@
 package models
 
+import (
+	"fmt"
+	"strings"
+)
+
+// Repository provider enum - used in blueprint repository configuration
+const (
+	ProviderMock       string = "mock"
+	ProviderGitHub     string = "github"
+)
+var RepoProviders = []string { ProviderMock, ProviderGitHub }
+
+func GetRepoProvider(s string) (string, error) {
+	for _, repoProvider := range RepoProviders {
+		if repoProvider == strings.ToLower(s) {
+			return repoProvider, nil
+		}
+	}
+	return "", fmt.Errorf("%s is not supported as repository provider", s)
+}
+
 const (
 	DefaultXlDeployUrl                  = "http://localhost:4516/"
 	DefaultXlDeployUsername             = "admin"
@@ -9,7 +30,9 @@ const (
 	DefaultXlReleaseUsername            = "admin"
 	DefaultXlReleasePassword            = "admin"
 
-	DefaultBlueprintRepositoryUrl       = "https://dist.xebialabs.com/public/blueprints"
-	DefaultBlueprintRepositoryUsername  = ""
-	DefaultBlueprintRepositoryPassword  = ""
+	DefaultBlueprintRepositoryName      = "blueprints"
+	DefaultBlueprintRepositoryOwner     = "xebialabs"
+	DefaultBlueprintRepositoryToken     = ""
+	DefaultBlueprintRepositoryBranch    = "master"
+	DefaultBlueprintRepositoryProvider  = ProviderGitHub
 )

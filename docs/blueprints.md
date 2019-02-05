@@ -28,7 +28,7 @@ The spec field holds parameters and files
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **name** | - | AppName | - | y | Variable name, to be used in templates |
 | **type** | `Input`/`Select`/`Confirm`/`Editor`/`File` | | - | y | Type of the prompt input |
-| **value** | - | eu-west-1<br>!fn aws.regions(ecs)[0] | - | n | If present, user will not be asked a question to provide value |
+| **value** | - | eu-west-1<br>!fn aws.regions(ecs)[0] | - | n | If present, user will not be asked a question to provide value. "yes" or "no" with quotes should be used in Confirm type variables. |
 | **default** | - | Awesome App | - | n | Default value, will be present during the question prompt. Also will be the variable value if question is skipped. |
 | **description** | - | Application name, will be used in various AWS resource names | - | n | If present, will be used instead of default question text |
 | **secret** | `true`/`false` | - | `false` | n | Variables that are marked as secret are saved in `secrets.xlvals` files so that they won't be checked in GIT repo and will not be replaced by default in the template files |

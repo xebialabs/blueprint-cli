@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/magiconair/properties"
+	"github.com/xebialabs/xl-cli/pkg/models"
 
 	"github.com/Masterminds/sprig"
 	"gopkg.in/AlecAivazis/survey.v1"
@@ -19,11 +20,11 @@ import (
 var SkipFinalPrompt = false
 
 const (
-	valuesFile        = "values.xlvals"
-	valuesFileHeader  = "# This file includes all non-secret values, you can add variables here and then refer them with '!value' tag in YAML files"
-	secretsFile       = "secrets.xlvals"
-	secretsFileHeader = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
-	gitignoreFile     = ".gitignore"
+	valuesFile           = "values.xlvals"
+	valuesFileHeader     = "# This file includes all non-secret values, you can add variables here and then refer them with '!value' tag in YAML files"
+	secretsFile          = "secrets.xlvals"
+	secretsFileHeader    = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
+	gitignoreFile        = ".gitignore"
 )
 
 func getFuncMaps() template.FuncMap {
@@ -32,7 +33,7 @@ func getFuncMaps() template.FuncMap {
 	return funcMaps
 }
 
-func adjustPathSeperatorIfNeeded(blueprintTemplate string) string {
+func AdjustPathSeperatorIfNeeded(blueprintTemplate string) string {
 	re := regexp.MustCompile(`[\/\\]`)
 	return re.ReplaceAllString(blueprintTemplate, string(os.PathSeparator))
 }
@@ -56,16 +57,32 @@ func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable) (bool,
 }
 
 // InstantiateBlueprint is entry point for the cli command
-func InstantiateBlueprint(blueprintTemplate string, blueprintRepository BlueprintRepository, outputDir string, surveyOpts ...survey.AskOpt) error {
-	blueprintTemplate = adjustPathSeperatorIfNeeded(blueprintTemplate)
-	// get available blueprint templates from merged registry
-	templatePath, err := GetBlueprintTemplateFromUser(blueprintTemplate, blueprintRepository, surveyOpts...)
-	if err != nil {
-		return err
+func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprintContext *BlueprintContext, outputDir string, surveyOpts ...survey.AskOpt) error {
+	var err error
+	var blueprints map[string]*models.BlueprintRemote
+
+	// if remote mode, initialize repository client
+	if !blueprintLocalMode {
+		Verbose("[cmd] Reading blueprints from remote provider: %s\n", blueprintContext.Provider)
+		blueprints, err = blueprintContext.initRepoClient()
+		if err != nil {
+			return err
+		}
+
+		// if template path is not defined in cmd, get user selection
+		if templatePath == "" {
+			templatePath, err = blueprintContext.askUserToChooseBlueprint(blueprints, templatePath, surveyOpts...)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		templatePath = AdjustPathSeperatorIfNeeded(templatePath)
 	}
 
-	Verbose("[cmd] Reading Blueprint from %s\n", templatePath)
-	blueprintDoc, err := GetBlueprintConfig(templatePath, blueprintRepository)
+	// get local/remote blueprint definition
+	Verbose("[cmd] Parsing Blueprint from %s\n", templatePath)
+	blueprintDoc, err := blueprintContext.parseDefinitionFile(blueprintLocalMode, blueprints, templatePath)
 	if err != nil {
 		return err
 	}
@@ -107,12 +124,12 @@ func InstantiateBlueprint(blueprintTemplate string, blueprintRepository Blueprin
 		}
 
 		// read template contents
-		Verbose("[file] Fetching template file %s\n", config.FullPath)
-		templateContent, err := config.fetchBlueprintFromPath(strings.HasSuffix(config.File, templateExtension), makeHTTPCallForBlueprintRepository)
+		Verbose("[file] Fetching template file %s from %s\n", config.File, config.FullPath)
+		templateContent, err := blueprintContext.fetchFileContents(config.FullPath, blueprintLocalMode, strings.HasSuffix(config.File, templateExtension))
 		if err != nil {
 			return err
 		}
-		templateString := string(templateContent)
+		templateString := string(*templateContent)
 
 		// process the template file (filter based on extension)
 		if strings.HasSuffix(config.File, templateExtension) {

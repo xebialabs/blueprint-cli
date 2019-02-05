@@ -8,11 +8,13 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/repository"
 	"github.com/xebialabs/yaml"
 	"gopkg.in/AlecAivazis/survey.v1"
 )
@@ -275,7 +277,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 }
 
 // parse blueprint definition doc
-func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprintRepository BlueprintRepository) (*BlueprintYaml, error) {
+func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintYaml, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(*blueprintVars))
 	decoder.SetStrict(true)
 	doc := BlueprintYaml{}
@@ -289,12 +291,58 @@ func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprint
 	if err != nil {
 		return nil, err
 	}
-	err = doc.parseFiles(templatePath, blueprintRepository)
+	err = doc.parseFiles(templatePath, blueprintRepository, isLocal)
 	if err != nil {
 		return nil, err
 	}
 	err = doc.validate()
 	return &doc, err
+}
+
+// verify blueprint directory & generate full paths for local files
+func (blueprintDoc *BlueprintYaml) verifyTemplateDirAndGenFullPaths(templatePath string) error {
+	if PathExists(templatePath, true) {
+		Verbose("[repository] Verifying local path and files within: %s \n", templatePath)
+		var filePaths []string
+
+		// walk the root directory
+		err := filepath.Walk(templatePath, func(path string, fileInfo os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !fileInfo.IsDir() {
+				filePaths = append(filePaths, path)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		if len(filePaths) == 0 {
+			return fmt.Errorf("path [%s] doesn't include any valid files", templatePath)
+		}
+
+		// generate full local paths
+		sort.Strings(filePaths)
+		for _, filePath := range filePaths {
+			relativePath := getFilePathRelativeToTemplatePath(filePath, templatePath)
+			_, filename := filepath.Split(filePath)
+			if filename != repository.BlueprintMetadataFileName+".yaml" && filename != repository.BlueprintMetadataFileName+".yml" {
+				// Append full path to existing file, or create new one
+				configIndex := findInTemplateConfigs(blueprintDoc.TemplateConfigs, relativePath)
+				if configIndex == -1 {
+					blueprintDoc.TemplateConfigs = append(blueprintDoc.TemplateConfigs, TemplateConfig{
+						File:     relativePath,
+						FullPath: filePath,
+					})
+				} else {
+					blueprintDoc.TemplateConfigs[configIndex].FullPath = filePath
+				}
+			}
+		}
+		return nil
+	}
+	return fmt.Errorf("path [%s] doesn't exist", templatePath)
 }
 
 // parse doc parameters into list of variables
@@ -316,7 +364,7 @@ func (blueprintDoc *BlueprintYaml) parseParameters() error {
 }
 
 // parse doc files into list of TemplateConfig
-func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, blueprintRepository BlueprintRepository) error {
+func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, blueprintRepository *BlueprintContext, isLocal bool) error {
 	var files []map[interface{}]interface{}
 	if blueprintDoc.Spec != (Spec{}) {
 		files = TransformToMap(blueprintDoc.Spec.Files)
@@ -328,7 +376,10 @@ func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, blueprintRepo
 		if err != nil {
 			return err
 		}
-		templateConfig.generateFullURLPath(templatePath, blueprintRepository)
+		if isLocal {
+			// If local mode, fix path separator in needed cases
+			templateConfig.File = AdjustPathSeperatorIfNeeded(templateConfig.File)
+		}
 		blueprintDoc.TemplateConfigs = append(blueprintDoc.TemplateConfigs, templateConfig)
 	}
 	return nil
@@ -379,6 +430,18 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 		// skip user input if value field is present
 		if variable.Value.Val != "" {
 			parsedVal := variable.GetValueFieldVal()
+
+			// handle confirm type specially
+			if variable.Type.Val == TypeConfirm {
+				switch strings.ToLower(parsedVal) {
+				case "yes":
+					parsedVal = "true"
+					variable.Value.Bool = true
+				case "no":
+					parsedVal = "false"
+				}
+				blueprintDoc.Variables[i] = variable
+			}
 
 			// check if resulting value is non-empty
 			if parsedVal != "" {
@@ -682,4 +745,13 @@ func processCustomFunction(fnStr string) ([]string, error) {
 	} else {
 		return nil, fmt.Errorf("invalid syntax in function reference: %s", fnStr)
 	}
+}
+
+func findInTemplateConfigs(templateConfigs []TemplateConfig, filename string) int {
+	for i, config := range templateConfigs {
+		if config.File == filename {
+			return i
+		}
+	}
+	return -1
 }

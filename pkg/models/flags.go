@@ -17,11 +17,15 @@ const (
 	ViperKeyXLRUsername = "xl-release.username"
 	ViperKeyXLRPassword = "xl-release.password"
 
-	FlagBlueprintRepositoryUrl      = "blueprint-repository-url"
-	FlagBlueprintRepositoryUsername = "blueprint-repository-username"
-	FlagBlueprintRepositoryPassword = "blueprint-repository-password"
+	FlagBlueprintRepositoryProvider  = "blueprint-repository-provider"
+	FlagBlueprintRepositoryName      = "blueprint-repository-name"
+	FlagBlueprintRepositoryOwner     = "blueprint-repository-owner"
+	FlagBlueprintRepositoryBranch    = "blueprint-repository-branch"
+	FlagBlueprintRepositoryToken     = "blueprint-repository-token"
 
-	ViperKeyBlueprintRepositoryUrl      = "blueprint-repository.url"
-	ViperKeyBlueprintRepositoryUsername = "blueprint-repository.username"
-	ViperKeyBlueprintRepositoryPassword = "blueprint-repository.password"
+	ViperKeyBlueprintRepositoryProvider  = "blueprint-repository.provider"
+	ViperKeyBlueprintRepositoryName      = "blueprint-repository.name"
+	ViperKeyBlueprintRepositoryOwner     = "blueprint-repository.owner"
+	ViperKeyBlueprintRepositoryBranch    = "blueprint-repository.branch"
+	ViperKeyBlueprintRepositoryToken     = "blueprint-repository.token"
 )

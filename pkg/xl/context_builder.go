@@ -35,18 +35,22 @@ func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 	viper.BindPFlag(models.ViperKeyXLRUsername, rootFlags.Lookup(models.FlagXlrUser))
 	viper.BindPFlag(models.ViperKeyXLRPassword, rootFlags.Lookup(models.FlagXlrPass))
 
-	rootFlags.String(models.FlagBlueprintRepositoryUrl, models.DefaultBlueprintRepositoryUrl, "URL for the blueprint repository")
-	rootFlags.String(models.FlagBlueprintRepositoryUsername, models.DefaultBlueprintRepositoryUsername, "Username for the blueprint repository")
-	rootFlags.String(models.FlagBlueprintRepositoryPassword, models.DefaultBlueprintRepositoryPassword, "Password for the blueprint repository")
-	viper.BindPFlag(models.ViperKeyBlueprintRepositoryUrl, rootFlags.Lookup(models.FlagBlueprintRepositoryUrl))
-	viper.BindPFlag(models.ViperKeyBlueprintRepositoryUsername, rootFlags.Lookup(models.FlagBlueprintRepositoryUsername))
-	viper.BindPFlag(models.ViperKeyBlueprintRepositoryPassword, rootFlags.Lookup(models.FlagBlueprintRepositoryPassword))
+	rootFlags.String(models.FlagBlueprintRepositoryProvider, models.DefaultBlueprintRepositoryProvider, "Provider for the blueprint repository")
+	rootFlags.String(models.FlagBlueprintRepositoryName, models.DefaultBlueprintRepositoryName, "Name of the blueprint repository")
+	rootFlags.String(models.FlagBlueprintRepositoryOwner, models.DefaultBlueprintRepositoryOwner, "Owner of the blueprint repository")
+	rootFlags.String(models.FlagBlueprintRepositoryBranch, models.DefaultBlueprintRepositoryBranch, "Branch of the blueprint repository")
+	rootFlags.String(models.FlagBlueprintRepositoryToken, models.DefaultBlueprintRepositoryToken, "API Token for the blueprint repository")
+	viper.BindPFlag(models.ViperKeyBlueprintRepositoryProvider, rootFlags.Lookup(models.FlagBlueprintRepositoryProvider))
+	viper.BindPFlag(models.ViperKeyBlueprintRepositoryName, rootFlags.Lookup(models.FlagBlueprintRepositoryName))
+	viper.BindPFlag(models.ViperKeyBlueprintRepositoryOwner, rootFlags.Lookup(models.FlagBlueprintRepositoryOwner))
+	viper.BindPFlag(models.ViperKeyBlueprintRepositoryBranch, rootFlags.Lookup(models.FlagBlueprintRepositoryBranch))
+	viper.BindPFlag(models.ViperKeyBlueprintRepositoryToken, rootFlags.Lookup(models.FlagBlueprintRepositoryToken))
 }
 
 func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles []string) (*Context, error) {
 	var xlDeploy *XLDeployServer
 	var xlRelease *XLReleaseServer
-	var blueprintRepository BlueprintRepository
+	var blueprintContext *BlueprintContext
 
 	xldServerConfig, err := readServerConfig(v, "xl-deploy", true)
 	if err != nil {
@@ -69,12 +73,9 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles 
 		xlRelease.Home = v.GetString("xl-release.home")
 	}
 
-	blueprintRepositoryServer, err := readServerConfig(v, "blueprint-repository", false)
+	blueprintContext, err = readBlueprintRepoConfig(v, "blueprint-repository")
 	if err != nil {
 		return nil, err
-	}
-	if blueprintRepositoryServer != nil {
-		blueprintRepository = BlueprintRepository{Server: *blueprintRepositoryServer}
 	}
 
 	// Get cobra flag values
@@ -88,7 +89,7 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles 
 	return &Context{
 		XLDeploy:            xlDeploy,
 		XLRelease:           xlRelease,
-		BlueprintRepository: blueprintRepository,
+		BlueprintContext:    blueprintContext,
 		values:              values,
 	}, nil
 }
@@ -126,6 +127,31 @@ func ProcessCredentials() error {
 	return processServerCredentials("RELEASE")
 }
 
+func readBlueprintRepoConfig(v *viper.Viper, prefix string) (*BlueprintContext, error) {
+	repoProvider, err := models.GetRepoProvider(v.GetString(fmt.Sprintf("%s.provider", prefix)))
+	if err != nil {
+		return nil, err
+	}
+
+	name := v.GetString(fmt.Sprintf("%s.name", prefix))
+	if name == "" {
+		return nil, fmt.Errorf("blueprint repo name cannot be empty")
+	}
+
+	branch := v.GetString(fmt.Sprintf("%s.branch", prefix))
+	if branch == "" {
+		branch = "master"
+	}
+
+	return &BlueprintContext{
+		Provider: repoProvider,
+		Name: name,
+		Owner: v.GetString(fmt.Sprintf("%s.owner", prefix)),
+		Token: v.GetString(fmt.Sprintf("%s.token", prefix)),
+		Branch: branch,
+	}, nil
+}
+
 func readServerConfig(v *viper.Viper, prefix string, credentialsRequired bool) (*SimpleHTTPServer, error) {
 	urlString := v.GetString(fmt.Sprintf("%s.url", prefix))
 	if urlString == "" {
@@ -151,10 +177,6 @@ func readServerConfig(v *viper.Viper, prefix string, credentialsRequired bool) (
 		Url:      *u,
 		Username: username,
 		Password: password,
-	}, nil
-
-	return &SimpleHTTPServer{
-		Url: *u,
 	}, nil
 }
 

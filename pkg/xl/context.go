@@ -49,15 +49,19 @@ type AsCodeResponse struct {
 	RawBody string
 }
 
-type BlueprintRepository struct {
-	Server SimpleHTTPServer
+type BlueprintContext struct {
+	Provider   string
+	Name       string
+	Owner      string
+	Token      string
+	Branch     string
 }
 
 type Context struct {
-	XLDeploy            XLServer
-	XLRelease           XLServer
-	BlueprintRepository BlueprintRepository
-	values              map[string]string
+	XLDeploy         XLServer
+	XLRelease        XLServer
+	BlueprintContext *BlueprintContext
+	values           map[string]string
 }
 
 type CurrentStep struct {
@@ -85,9 +89,11 @@ func (c *Context) PrintConfiguration() {
 		c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Username,
 		c.XLRelease.(*XLReleaseServer).Home)
 
-	Info("Blueprint Repository:\n  URL: %s\n  Username: %s\n",
-		c.BlueprintRepository.Server.Url.String(),
-		c.BlueprintRepository.Server.Username)
+	Info("Blueprint Context:\n  Provider: %s\n  Repository name: %s\n  Owner: %s\n  Branch: %s\n",
+		c.BlueprintContext.Provider,
+		c.BlueprintContext.Name,
+		c.BlueprintContext.Owner,
+		c.BlueprintContext.Branch)
 }
 
 func (c *Context) GetDocumentHandlingServer(doc *Document) (XLServer, error) {

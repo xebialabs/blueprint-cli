@@ -24,11 +24,12 @@ var blueprintCmd = &cobra.Command{
 	},
 }
 
+var blueprintLocalMode bool
 var blueprintTemplate string
 
 // DoBlueprint creates blueprint templates
 func DoBlueprint(context *xl.Context) {
-	err := xl.InstantiateBlueprint(blueprintTemplate, context.BlueprintRepository, models.BlueprintOutputDir)
+	err := xl.InstantiateBlueprint(blueprintLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
 		xl.Fatal("Error while creating Blueprint: %s\n", err)
 	}
@@ -38,5 +39,6 @@ func init() {
 	rootCmd.AddCommand(blueprintCmd)
 
 	blueprintFlags := blueprintCmd.Flags()
-	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The blueprint to use, a path relative to the blueprint repository or a local path")
+	blueprintFlags.BoolVarP(&blueprintLocalMode, "local", "l", false, "Enable local blueprint mode, by default remote mode is enabled")
+	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The blueprint to use, a path relative to the blueprint repository or a local path to a blueprint")
 }
