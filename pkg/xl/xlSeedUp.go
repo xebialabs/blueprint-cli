@@ -58,7 +58,7 @@ func RunXlSeed(context *Context) {
 	blueprintTemplate, err := getBlueprintLocation()
 
 	Verbose("Starting Blueprint questions to generate necessary files")
-	err = InstantiateBlueprint(blueprintTemplate, context.BlueprintRepository, models.BlueprintOutputDir)
+	err = InstantiateBlueprint(false, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
 		Fatal("Error while creating Blueprint: %s\n", err)
 	}
