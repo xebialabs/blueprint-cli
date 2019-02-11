@@ -125,6 +125,26 @@ func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Ch
 	return server.SendDoc(doc)
 }
 
+func (c *Context) FakeProcessSingleDocument(doc *Document, artifactsDir string, fileName string) ([]byte, error) {
+	err := doc.Preprocess(c, artifactsDir)
+	if err != nil {
+		return nil, err
+	}
+
+	defer doc.Cleanup()
+
+	documentBytes, err := doc.RenderYamlDocument()
+
+	//ioutil.WriteFile(fileName, documentBytes, 0644)
+
+
+	if doc.ApiVersion == "" {
+		return nil, fmt.Errorf("apiVersion missing")
+	}
+
+	return documentBytes, err
+}
+
 func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool, generatePermissions bool, users bool, roles bool) error {
 	finalPath := url.QueryEscape(generatePath)
 
