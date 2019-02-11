@@ -78,7 +78,7 @@ func runImage() command{
 
 	dockerRunImage := command {
 		docker,
-		[]string{ "run", "-v", dir + ":/data", seedImage,  "--init", "common.yaml", "xebialabs.yaml", "--network=host"},
+		[]string{ "run", "-v", dir + ":/data", seedImage,  "--init", "xebialabs/common.yaml", "xebialabs.yaml", "--network=host"},
 	}
 
 	return dockerRunImage
