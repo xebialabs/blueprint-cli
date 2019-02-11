@@ -78,7 +78,7 @@ func runImage() command{
 
 	dockerRunImage := command {
 		docker,
-		[]string{ "run", "-v", dir + ":/data", seedImage,  "--init", "xebialabs/common.yaml", "xebialabs.yaml", "--network=host"},
+		[]string{ "run", "--network=host", "-v", dir + ":/data", seedImage,  "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
 	}
 
 	return dockerRunImage
@@ -153,7 +153,7 @@ func fakeApplyFiles() {
 		for i, doc := range fileWithDocs.documents {
 			existingFileContents, _:= context.FakeProcessSingleDocument(doc, applyDir, fileWithDocs.fileName)
 
-			if i != len(fileWithDocs.documents) {
+			if i != len(fileWithDocs.documents) - 1 {
 				fileSeparator := []byte("\n---\n")
 				existingFileContents = append(existingFileContents, fileSeparator...)
 			}
@@ -171,7 +171,7 @@ func getFiles() []string {
 	if err != nil {
 		Fatal("Error while creating Blueprint: %s\n", err)
 	}
-	files = append(files, "common.yaml")
+	//files = append(files, "xebialabs/common.yaml")
 
 	return files
 }
