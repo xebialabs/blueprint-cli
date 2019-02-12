@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 func (c *Context) GenerateSchema(schemaFilename string, generateXld bool, generateXlr bool, override bool) error {
@@ -12,7 +14,7 @@ func (c *Context) GenerateSchema(schemaFilename string, generateXld bool, genera
 			return fmt.Errorf("file `%s` already exists", schemaFilename)
 		}
 		server := c.XLDeploy
-		Info("Downloading XL Deploy IDE Schema...\n")
+		util.Info("Downloading XL Deploy IDE Schema...\n")
 		bytes, e := server.GetSchema()
 		if e != nil {
 			return e

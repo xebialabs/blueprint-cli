@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
@@ -21,9 +22,9 @@ var generateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		context, err := xl.BuildContext(viper.GetViper(), nil, []string{})
 		if err != nil {
-			xl.Fatal("Error while reading configuration: %s\n", err)
+			util.Fatal("Error while reading configuration: %s\n", err)
 		}
-		if xl.IsVerbose {
+		if util.IsVerbose {
 			context.PrintConfiguration()
 		}
 
@@ -34,7 +35,7 @@ var generateCmd = &cobra.Command{
 func DoGenerate(context *xl.Context) {
 	err := context.GenerateSingleDocument(generateServer, generateFilename, generatePath, generateOverride, globalPermissions, users, roles)
 	if err != nil {
-		xl.Fatal("Error while generating document: %s\n", err)
+		util.Fatal("Error while generating document: %s\n", err)
 	}
 }
 

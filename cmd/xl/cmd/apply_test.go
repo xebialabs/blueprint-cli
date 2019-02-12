@@ -2,17 +2,19 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
 var TestCmd = &cobra.Command{
@@ -78,7 +80,7 @@ func CreateTestInfra(viper *viper.Viper) *TestInfra {
 
 func TestApply(t *testing.T) {
 
-	xl.IsVerbose = true
+	util.IsVerbose = true
 
 	t.Run("should apply multiple yaml files in right order with value replacement to both xlr and xld", func(t *testing.T) {
 		tempDir1 := createTempDir("firstDir")

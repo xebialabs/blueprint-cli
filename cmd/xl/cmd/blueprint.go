@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
@@ -14,9 +15,9 @@ var blueprintCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		context, err := xl.BuildContext(viper.GetViper(), nil, nil)
 		if err != nil {
-			xl.Fatal("Error while reading configuration: %s\n", err)
+			util.Fatal("Error while reading configuration: %s\n", err)
 		}
-		if xl.IsVerbose {
+		if util.IsVerbose {
 			context.PrintConfiguration()
 		}
 
@@ -31,7 +32,7 @@ var blueprintTemplate string
 func DoBlueprint(context *xl.Context) {
 	err := xl.InstantiateBlueprint(blueprintLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
-		xl.Fatal("Error while creating Blueprint: %s\n", err)
+		util.Fatal("Error while creating Blueprint: %s\n", err)
 	}
 }
 

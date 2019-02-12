@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/mholt/archiver"
-	"github.com/olekukonko/tablewriter"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +11,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/mholt/archiver"
+	"github.com/olekukonko/tablewriter"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 type HTTPServer interface {
@@ -177,7 +179,7 @@ func formatAsCodeError(response http.Response) error {
 	}
 
 	if asCodeResponse.Errors == nil {
-		Verbose("Unexpected response: %s \n", asCodeResponse.RawBody)
+		util.Verbose("Unexpected response: %s \n", asCodeResponse.RawBody)
 		return fmt.Errorf("Unexpected server problem. Please contact your system administrator. Run with verbose flag for more details")
 	}
 

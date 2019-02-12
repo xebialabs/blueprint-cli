@@ -1,12 +1,13 @@
-package xl
+package util
 
 import (
 	"fmt"
-	"github.com/thoas/go-funk"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+
+	funk "github.com/thoas/go-funk"
 )
 
 func FindByExtInDirSorted(parentPath string, ext string) ([]string, error) {

@@ -3,6 +3,8 @@ package xl
 import (
 	"fmt"
 	"net/url"
+
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 type ChangedCis struct {
@@ -50,11 +52,11 @@ type AsCodeResponse struct {
 }
 
 type BlueprintContext struct {
-	Provider   string
-	Name       string
-	Owner      string
-	Token      string
-	Branch     string
+	Provider string
+	Name     string
+	Owner    string
+	Token    string
+	Branch   string
 }
 
 type Context struct {
@@ -76,7 +78,7 @@ type TaskState struct {
 }
 
 func (c *Context) PrintConfiguration() {
-	Info("XL Deploy:\n  URL: %s\n  Username: %s\n  Applications home: %s\n  Environments home: %s\n  Infrastructure home: %s\n  Configuration home: %s\n",
+	util.Info("XL Deploy:\n  URL: %s\n  Username: %s\n  Applications home: %s\n  Environments home: %s\n  Infrastructure home: %s\n  Configuration home: %s\n",
 		c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Url.String(),
 		c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Username,
 		c.XLDeploy.(*XLDeployServer).ApplicationsHome,
@@ -84,12 +86,12 @@ func (c *Context) PrintConfiguration() {
 		c.XLDeploy.(*XLDeployServer).InfrastructureHome,
 		c.XLDeploy.(*XLDeployServer).ConfigurationHome)
 
-	Info("XL Release:\n  URL: %s\n  Username: %s\n  Home: %s\n",
+	util.Info("XL Release:\n  URL: %s\n  Username: %s\n  Home: %s\n",
 		c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Url.String(),
 		c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Username,
 		c.XLRelease.(*XLReleaseServer).Home)
 
-	Info("Blueprint Context:\n  Provider: %s\n  Repository name: %s\n  Owner: %s\n  Branch: %s\n",
+	util.Info("Blueprint Context:\n  Provider: %s\n  Repository name: %s\n  Owner: %s\n  Branch: %s\n",
 		c.BlueprintContext.Provider,
 		c.BlueprintContext.Name,
 		c.BlueprintContext.Owner,
@@ -132,18 +134,18 @@ func (c *Context) GenerateSingleDocument(generateServer string, generateFilename
 
 	if generateServer == "xl-deploy" {
 		if generatePath != "" {
-			Info("Generating definitions for path %s from XL Deploy to %s\n", generatePath, generateFilename)
+			util.Info("Generating definitions for path %s from XL Deploy to %s\n", generatePath, generateFilename)
 		} else {
-			Info("Generating definitions from XL Deploy to %s\n", generateFilename)
+			util.Info("Generating definitions from XL Deploy to %s\n", generateFilename)
 		}
 		return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles)
 	}
 
 	if generateServer == "xl-release" {
 		if generatePath != "" {
-			Info("Generating definitions for path %s from XL Release to %s\n", generatePath, generateFilename)
+			util.Info("Generating definitions for path %s from XL Release to %s\n", generatePath, generateFilename)
 		} else {
-			Info("Generating definitions from XL Release to %s\n", generateFilename)
+			util.Info("Generating definitions from XL Release to %s\n", generateFilename)
 		}
 		return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles)
 	}

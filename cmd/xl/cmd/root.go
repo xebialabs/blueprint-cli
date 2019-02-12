@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 	"github.com/xebialabs/yaml"
 )
@@ -32,7 +33,7 @@ releases, pipelines, applications and target environments.`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		xl.Fatal("Error occurred when running command: %s\n", err)
+		util.Fatal("Error occurred when running command: %s\n", err)
 	}
 }
 
@@ -45,11 +46,11 @@ func init() {
 func initConfig() {
 	err := xl.ProcessCredentials()
 	if err != nil {
-		xl.Fatal("Error processing server credentials:\n%s", err)
+		util.Fatal("Error processing server credentials:\n%s", err)
 	}
 
-	if xl.IsQuiet && xl.IsVerbose {
-		xl.Fatal("Cannot use --quiet (-q) and --verbose (-v) flags together\n")
+	if util.IsQuiet && util.IsVerbose {
+		util.Fatal("Cannot use --quiet (-q) and --verbose (-v) flags together\n")
 	}
 
 	if cfgFile != "" {
@@ -60,7 +61,7 @@ func initConfig() {
 	} else {
 		configfilePath, err := defaultConfigfilePath()
 		if err != nil {
-			xl.Fatal("Could not get config file location:\n%s", err)
+			util.Fatal("Could not get config file location:\n%s", err)
 		} else {
 			if _, err := os.Stat(configfilePath); !os.IsNotExist(err) {
 				viper.SetConfigFile(configfilePath)
@@ -76,17 +77,17 @@ func initConfig() {
 
 	err = viper.ReadInConfig()
 	if err == nil {
-		xl.Verbose("Using configuration file: %s\n", viper.ConfigFileUsed())
+		util.Verbose("Using configuration file: %s\n", viper.ConfigFileUsed())
 	} else {
 		switch err.(type) {
 		case viper.ConfigFileNotFoundError:
-			xl.Verbose("No configuration file found. Using default configuration and command line options\n")
+			util.Verbose("No configuration file found. Using default configuration and command line options\n")
 			err := writeDefaultConfigurationFile()
 			if err != nil {
-				xl.Info("Could not write default configuration: %s/n", err.Error())
+				util.Info("Could not write default configuration: %s/n", err.Error())
 			}
 		default:
-			xl.Fatal("Cannot read config file %s: %s\n", viper.ConfigFileUsed(), err)
+			util.Fatal("Cannot read config file %s: %s\n", viper.ConfigFileUsed(), err)
 		}
 	}
 }
@@ -100,7 +101,7 @@ func writeDefaultConfigurationFile() error {
 		os.Mkdir(filepath.Dir(configFileUsed), 0750)
 	}
 
-	xl.Verbose("Writing default configuration to %s\n", configFileUsed)
+	util.Verbose("Writing default configuration to %s\n", configFileUsed)
 
 	// using MapSlice to maintain order of keys
 	slices := yaml.MapSlice{
