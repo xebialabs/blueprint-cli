@@ -98,13 +98,6 @@ func RunXlSeed(context *Context) {
 
 	fakeApplyFiles()
 
-
-
-
-
-
-
-
 	// TODO: Ask for the version to deploy ?
 	Info("Blueprint created successfully! Spinning up xl seed!! \n")
 	_, errorStr := ExecuteCommandAndShowLogs(dockerPullImage)

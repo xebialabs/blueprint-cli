@@ -96,7 +96,7 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 	}
 	spec := util.TransformToMap(doc.Spec)
 
-	err := doc.processListOfMaps(spec, &c)
+	err := doc.processListOfMaps(spec, &c, true)
 
 	if c.zipfile != nil {
 		defer func() {
@@ -139,9 +139,66 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 	return err
 }
 
-func (doc *Document) processListOfMaps(l []map[interface{}]interface{}, c *processingContext) error {
+func (doc *Document) ConditionalPreprocess(context *Context, artifactsDir string, fileProcess bool) error {
+	c := processingContext{context, artifactsDir, nil, nil, make(map[string]bool), 0}
+
+	if c.context != nil {
+		if c.context.XLDeploy != nil && c.context.XLDeploy.AcceptsDoc(doc) {
+			c.context.XLDeploy.PreprocessDoc(doc)
+		}
+
+		if c.context.XLRelease != nil && c.context.XLRelease.AcceptsDoc(doc) {
+			c.context.XLRelease.PreprocessDoc(doc)
+		}
+	}
+	spec := TransformToMap(doc.Spec)
+
+	err := doc.processListOfMaps(spec, &c, fileProcess)
+
+	if c.zipfile != nil {
+		defer func() {
+			if c.zipwriter != nil {
+				c.zipwriter.Close()
+			}
+			c.zipfile.Close()
+			if doc.ApplyZip == "" {
+				os.Remove(c.zipfile.Name())
+			}
+		}()
+	}
+
+	if err != nil {
+		if c.zipfile != nil {
+			os.Remove(c.zipfile.Name())
+		}
+		return err
+	}
+
+	if c.zipwriter != nil {
+		yamlwriter, err := c.zipwriter.Create("index.yaml")
+		if err != nil {
+			return err
+		}
+
+		docBytes, err := doc.RenderYamlDocument()
+		if err != nil {
+			return err
+		}
+
+		_, err = yamlwriter.Write(docBytes)
+		if err != nil {
+			return err
+		}
+
+		doc.ApplyZip = c.zipfile.Name()
+	}
+
+	return err
+}
+
+func (doc *Document) processListOfMaps(l []map[interface{}]interface{}, c *processingContext, fileProcess bool) error {
 	for _, v := range l {
-		err := doc.processMap(v, c)
+		err := doc.processMap(v, c, fileProcess)
 		if err != nil {
 			return err
 		}
@@ -149,9 +206,9 @@ func (doc *Document) processListOfMaps(l []map[interface{}]interface{}, c *proce
 	return nil
 }
 
-func (doc *Document) processList(l []interface{}, c *processingContext) error {
+func (doc *Document) processList(l []interface{}, c *processingContext, fileProcess bool) error {
 	for i, v := range l {
-		newV, err := doc.processValue(v, c)
+		newV, err := doc.processValue(v, c, fileProcess)
 		if err != nil {
 			return err
 		}
@@ -160,9 +217,9 @@ func (doc *Document) processList(l []interface{}, c *processingContext) error {
 	return nil
 }
 
-func (doc *Document) processMap(m map[interface{}]interface{}, c *processingContext) error {
+func (doc *Document) processMap(m map[interface{}]interface{}, c *processingContext, fileProcess bool) error {
 	for k, v := range m {
-		newV, err := doc.processValue(v, c)
+		newV, err := doc.processValue(v, c, fileProcess)
 		if err != nil {
 			return err
 		}
@@ -171,25 +228,25 @@ func (doc *Document) processMap(m map[interface{}]interface{}, c *processingCont
 	return nil
 }
 
-func (doc *Document) processValue(v interface{}, c *processingContext) (interface{}, error) {
+func (doc *Document) processValue(v interface{}, c *processingContext, fileProcess bool) (interface{}, error) {
 	switch tv := v.(type) {
 	case []interface{}:
-		err := doc.processList(tv, c)
+		err := doc.processList(tv, c, fileProcess)
 		if err != nil {
 			return nil, err
 		}
 	case map[interface{}]interface{}:
-		err := doc.processMap(tv, c)
+		err := doc.processMap(tv, c, fileProcess)
 		if err != nil {
 			return nil, err
 		}
 	case []map[interface{}]interface{}:
-		err := doc.processListOfMaps(tv, c)
+		err := doc.processListOfMaps(tv, c, fileProcess)
 		if err != nil {
 			return nil, err
 		}
 	case yaml.CustomTag:
-		newV, err := doc.processCustomTag(&tv, c)
+		newV, err := doc.processCustomTag(&tv, c, fileProcess)
 		if err != nil {
 			return nil, err
 		}
@@ -198,12 +255,12 @@ func (doc *Document) processValue(v interface{}, c *processingContext) (interfac
 	return v, nil
 }
 
-func (doc *Document) processCustomTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
+func (doc *Document) processCustomTag(tag *yaml.CustomTag, c *processingContext, fileProcess bool) (interface{}, error) {
 	switch tag.Tag {
 	case "!value":
 		return doc.processValueTag(tag, c)
 	case "!file":
-		return doc.processFileTag(tag, c)
+		return doc.processFileTag(tag, c, fileProcess)
 	case "!format":
 		return doc.processFormatTag(tag, c)
 	default:
@@ -226,16 +283,13 @@ func (doc *Document) processValueTag(tag *yaml.CustomTag, c *processingContext) 
 	return value, nil
 }
 
-func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
-	doc.normalizeFileTag(tag, c)
+func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext, fileProcess bool) (interface{}, error) {
+	if !fileProcess {
+		return tag, nil
+	} else {
+		doc.normalizeFileTag(tag, c)
 
-	err := doc.validateFileTag(tag, c)
-	if err != nil {
-		return nil, err
-	}
-
-	if c.zipwriter == nil {
-		zipfile, err := ioutil.TempFile("", "yaml")
+		err := doc.validateFileTag(tag, c)
 		if err != nil {
 			return nil, err
 		}
@@ -244,19 +298,34 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 		c.zipwriter = zip.NewWriter(c.zipfile)
 	}
 
-	relativeFilename := tag.Value
+		if c.zipwriter == nil {
+			zipfile, err := ioutil.TempFile("", "yaml")
+			if err != nil {
+				return nil, err
+			}
+			Verbose("\tfirst !file tag found, creating temporary ZIP file %s\n", zipfile.Name())
+			c.zipfile = zipfile
+			c.zipwriter = zip.NewWriter(c.zipfile)
+		}
 
 	if _, found := c.seenFiles[relativeFilename]; found {
 		util.Verbose("\tfile %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
 		return tag, nil
 	}
 
-	fileTag, writeError := doc.writeFileOrDir(tag, relativeFilename, c)
-	if writeError != nil {
-		return nil, writeError
+		if _, found := c.seenFiles[relativeFilename]; found {
+			Verbose("\tfile %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
+			return tag, nil
+		}
+
+
+		fileTag, writeError := doc.writeFileOrDir(tag, relativeFilename, c)
+		if writeError != nil {
+			return nil, writeError
+		}
+		c.seenFiles[relativeFilename] = true
+		return fileTag, nil
 	}
-	c.seenFiles[relativeFilename] = true
-	return fileTag, nil
 }
 
 func (doc *Document) normalizeFileTag(tag *yaml.CustomTag, c *processingContext) {
