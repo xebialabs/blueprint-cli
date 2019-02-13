@@ -1,26 +1,29 @@
 package github
 
 import (
+	"bytes"
 	"fmt"
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
 
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
+
 	"github.com/google/go-github/github"
-	"github.com/xebialabs/xl-cli/pkg/repository"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/repository"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 type GitHubBlueprintRepository struct {
 	Context context.Context
-	Client *github.Client
-	Name string
-	Owner string
-	Branch string
-	Token string
+	Client  *github.Client
+	Name    string
+	Owner   string
+	Branch  string
+	Token   string
 }
 
 func NewGitHubBlueprintRepository(name string, owner string, branch string, token string) *GitHubBlueprintRepository {
@@ -104,7 +107,25 @@ func (repo *GitHubBlueprintRepository) GetFileContents(filePath string) (*[]byte
 		&github.RepositoryContentGetOptions{Ref: repo.Branch},
 	)
 	if err != nil {
-		return nil, err
+		returnError := true
+		if giterr, ok := err.(*github.ErrorResponse); ok {
+			if giterr != nil && giterr.Errors != nil {
+				for _, entry := range giterr.Errors {
+					if entry.Code == "too_large" {
+						returnError = false
+						util.Verbose("[github] File '%s' is larger than 1MB, retrying with blob API\n", filePath)
+						contentBytes, _, err := repo.GetLargeFileContents(filePath)
+						if err != nil {
+							return nil, err
+						}
+						return &contentBytes, nil
+					}
+				}
+			}
+		}
+		if returnError {
+			return nil, err
+		}
 	}
 	content, err := fileContent.GetContent()
 	if err != nil {
@@ -112,6 +133,30 @@ func (repo *GitHubBlueprintRepository) GetFileContents(filePath string) (*[]byte
 	}
 	contentBytes := []byte(content)
 	return &contentBytes, nil
+}
+
+func (repo *GitHubBlueprintRepository) GetLargeFileContents(filePath string) ([]byte, int64, error) {
+	reader, err := repo.Client.Repositories.DownloadContents(
+		repo.Context,
+		repo.Owner,
+		repo.Name,
+		filePath,
+		&github.RepositoryContentGetOptions{Ref: repo.Branch},
+	)
+	if err != nil {
+		return nil, 0, err
+	}
+	buffer := new(bytes.Buffer)
+	size, err := buffer.ReadFrom(reader)
+	if err != nil {
+		return nil, 0, err
+	}
+	err = reader.Close()
+	if err != nil {
+		return nil, 0, err
+	}
+	util.Verbose("[github] Read '%d' bytes of file '%s'\n", size, filePath)
+	return buffer.Bytes(), size, nil
 }
 
 // utility functions
@@ -122,7 +167,7 @@ func createRemoteFileDefinition(blueprints map[string]*models.BlueprintRemote, c
 	}
 	return models.RemoteFile{
 		Filename: filename,
-		Path: entry.GetPath(),
-		Url: parsedUrl,
+		Path:     entry.GetPath(),
+		Url:      parsedUrl,
 	}
 }
