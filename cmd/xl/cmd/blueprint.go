@@ -42,5 +42,5 @@ func init() {
 
 	blueprintFlags := blueprintCmd.Flags()
 	blueprintFlags.BoolVarP(&blueprintLocalMode, "local", "l", false, "Enable local file mode, by default remote file mode is used")
-	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The blueprint to use, a folder path relative to the blueprint repository or a local folder path containing a blueprint")
+	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local folder path")
 }
