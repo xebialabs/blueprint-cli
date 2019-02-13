@@ -140,7 +140,7 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 }
 
 func (doc *Document) ConditionalPreprocess(context *Context, artifactsDir string, fileProcess bool) error {
-	c := processingContext{context, artifactsDir, nil, nil, make(map[string]bool), 0}
+	c := processingContext{context,  artifactsDir, nil, nil, make(map[string]bool), 0}
 
 	if c.context != nil {
 		if c.context.XLDeploy != nil && c.context.XLDeploy.AcceptsDoc(doc) {
@@ -154,44 +154,6 @@ func (doc *Document) ConditionalPreprocess(context *Context, artifactsDir string
 	spec := TransformToMap(doc.Spec)
 
 	err := doc.processListOfMaps(spec, &c, fileProcess)
-
-	if c.zipfile != nil {
-		defer func() {
-			if c.zipwriter != nil {
-				c.zipwriter.Close()
-			}
-			c.zipfile.Close()
-			if doc.ApplyZip == "" {
-				os.Remove(c.zipfile.Name())
-			}
-		}()
-	}
-
-	if err != nil {
-		if c.zipfile != nil {
-			os.Remove(c.zipfile.Name())
-		}
-		return err
-	}
-
-	if c.zipwriter != nil {
-		yamlwriter, err := c.zipwriter.Create("index.yaml")
-		if err != nil {
-			return err
-		}
-
-		docBytes, err := doc.RenderYamlDocument()
-		if err != nil {
-			return err
-		}
-
-		_, err = yamlwriter.Write(docBytes)
-		if err != nil {
-			return err
-		}
-
-		doc.ApplyZip = c.zipfile.Name()
-	}
 
 	return err
 }

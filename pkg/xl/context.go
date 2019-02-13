@@ -135,9 +135,6 @@ func (c *Context) FakeProcessSingleDocument(doc *Document, artifactsDir string, 
 
 	documentBytes, err := doc.RenderYamlDocument()
 
-	//ioutil.WriteFile(fileName, documentBytes, 0644)
-
-
 	if doc.ApiVersion == "" {
 		return nil, fmt.Errorf("apiVersion missing")
 	}

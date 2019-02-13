@@ -30,7 +30,6 @@ type FileWithDocuments struct {
 	fileName  string
 }
 
-var applyFilenames []string
 var applyValues map[string]string
 
 func getBlueprintLocation(surveyOpts ...survey.AskOpt) (string, error) {
@@ -100,21 +99,19 @@ func RunXlSeed(context *Context) {
 
 	// TODO: Ask for the version to deploy ?
 	Info("Blueprint created successfully! Spinning up xl seed!! \n")
-	_, errorStr := ExecuteCommandAndShowLogs(dockerPullImage)
-
-	if errorStr != "" {
-		Fatal("Error while pulling the xl seed image: %s\n", errorStr)
-	}
-
-	Info("Running xl-seed\n")
-	_, errorStr = ExecuteCommandAndShowLogs(runImage())
-
-	if errorStr != "" {
-		Fatal("Error while running the xl seed image: %s\n", errorStr)
-	}
-
+	runAndCaptureResponse("pulling", dockerPullImage)
+	runAndCaptureResponse("running", runImage())
 	// TODO: fetch URLs of XLD and XLR
 	Info("Seed successfully started the services!\n")
+}
+
+func runAndCaptureResponse(status string, cmd command) {
+
+	_, errorStr := ExecuteCommandAndShowLogs(cmd)
+
+	if errorStr != "" {
+		Fatal("Error while %s the xl seed image: %s\n", status, errorStr)
+	}
 }
 
 func fakeApplyFiles() {
@@ -150,7 +147,9 @@ func fakeApplyFiles() {
 				fileSeparator := []byte("\n---\n")
 				existingFileContents = append(existingFileContents, fileSeparator...)
 			}
+
 			fileContents = append(fileContents, existingFileContents...)
+
 		}
 
 		ioutil.WriteFile(fileWithDocs.fileName, fileContents, 0644)
@@ -161,10 +160,10 @@ func fakeApplyFiles() {
 
 func getFiles() []string {
 	files, err := filepath.Glob("**/*.yaml")
+
 	if err != nil {
 		Fatal("Error while creating Blueprint: %s\n", err)
 	}
-	//files = append(files, "xebialabs/common.yaml")
 
 	return files
 }
