@@ -3,10 +3,10 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
-	"github.com/xebialabs/xl-cli/pkg/blueprint"
 )
 
 var blueprintCmd = &cobra.Command{
@@ -41,6 +41,6 @@ func init() {
 	rootCmd.AddCommand(blueprintCmd)
 
 	blueprintFlags := blueprintCmd.Flags()
-	blueprintFlags.BoolVarP(&blueprintLocalMode, "local", "l", false, "Enable local blueprint mode, by default remote mode is enabled")
-	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The blueprint to use, a path relative to the blueprint repository or a local path to a blueprint")
+	blueprintFlags.BoolVarP(&blueprintLocalMode, "local", "l", false, "Enable local file mode, by default remote file mode is used")
+	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The blueprint to use, a folder path relative to the blueprint repository or a local folder path containing a blueprint")
 }
