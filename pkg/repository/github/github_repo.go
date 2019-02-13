@@ -107,23 +107,14 @@ func (repo *GitHubBlueprintRepository) GetFileContents(filePath string) (*[]byte
 		&github.RepositoryContentGetOptions{Ref: repo.Branch},
 	)
 	if err != nil {
-		returnError := true
-		if giterr, ok := err.(*github.ErrorResponse); ok {
-			if giterr != nil && giterr.Errors != nil {
-				for _, entry := range giterr.Errors {
-					if entry.Code == "too_large" {
-						returnError = false
-						util.Verbose("[github] File '%s' is larger than 1MB, retrying with blob API\n", filePath)
-						contentBytes, _, err := repo.GetLargeFileContents(filePath)
-						if err != nil {
-							return nil, err
-						}
-						return &contentBytes, nil
-					}
-				}
+		if isTooLargeBlobError(err) {
+			util.Verbose("[github] File '%s' is larger than 1MB, retrying with blob API\n", filePath)
+			contentBytes, _, err := repo.GetLargeFileContents(filePath)
+			if err != nil {
+				return nil, err
 			}
-		}
-		if returnError {
+			return &contentBytes, nil
+		} else {
 			return nil, err
 		}
 	}
@@ -149,6 +140,7 @@ func (repo *GitHubBlueprintRepository) GetLargeFileContents(filePath string) ([]
 	buffer := new(bytes.Buffer)
 	size, err := buffer.ReadFrom(reader)
 	if err != nil {
+		reader.Close()
 		return nil, 0, err
 	}
 	err = reader.Close()
@@ -170,4 +162,17 @@ func createRemoteFileDefinition(blueprints map[string]*models.BlueprintRemote, c
 		Path:     entry.GetPath(),
 		Url:      parsedUrl,
 	}
+}
+
+func isTooLargeBlobError(err error) bool {
+	if giterr, ok := err.(*github.ErrorResponse); ok {
+		if giterr != nil && giterr.Errors != nil {
+			for _, entry := range giterr.Errors {
+				if entry.Code == "too_large" {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
