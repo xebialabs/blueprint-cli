@@ -1,4 +1,4 @@
-package xl
+package blueprint
 
 import (
 	"bytes"
@@ -350,9 +350,9 @@ func (blueprintDoc *BlueprintYaml) verifyTemplateDirAndGenFullPaths(templatePath
 func (blueprintDoc *BlueprintYaml) parseParameters() error {
 	var parameters []map[interface{}]interface{}
 	if blueprintDoc.Spec != (Spec{}) {
-		parameters = TransformToMap(blueprintDoc.Spec.Parameters)
+		parameters = util.TransformToMap(blueprintDoc.Spec.Parameters)
 	} else {
-		parameters = TransformToMap(blueprintDoc.Parameters)
+		parameters = util.TransformToMap(blueprintDoc.Parameters)
 	}
 	for _, m := range parameters {
 		parsedVar, err := parseParameterMap(&m)
@@ -368,9 +368,9 @@ func (blueprintDoc *BlueprintYaml) parseParameters() error {
 func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, blueprintRepository *BlueprintContext, isLocal bool) error {
 	var files []map[interface{}]interface{}
 	if blueprintDoc.Spec != (Spec{}) {
-		files = TransformToMap(blueprintDoc.Spec.Files)
+		files = util.TransformToMap(blueprintDoc.Spec.Files)
 	} else {
-		files = TransformToMap(blueprintDoc.Files)
+		files = util.TransformToMap(blueprintDoc.Files)
 	}
 	for _, m := range files {
 		templateConfig, err := parseFileMap(&m)
@@ -409,7 +409,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 		defaultVal := variable.GetDefaultVal()
 
 		// skip question based on DependsOn fields
-		if !isStringEmpty(variable.DependsOnTrue.Val) {
+		if !util.IsStringEmpty(variable.DependsOnTrue.Val) {
 			dependsOnTrueVal, err := ParseDependsOnValue(variable.DependsOnTrue, &blueprintDoc.Variables)
 			if err != nil {
 				return nil, err
@@ -418,7 +418,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 				continue
 			}
 		}
-		if !isStringEmpty(variable.DependsOnFalse.Val) {
+		if !util.IsStringEmpty(variable.DependsOnFalse.Val) {
 			dependsOnFalseVal, err := ParseDependsOnValue(variable.DependsOnFalse, &blueprintDoc.Variables)
 			if err != nil {
 				return nil, err
@@ -484,12 +484,12 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 func validateVariables(variables *[]Variable) error {
 	for _, userVar := range *variables {
 		// validate non-empty
-		if isStringEmpty(userVar.Name.Val) || isStringEmpty(userVar.Type.Val) {
+		if util.IsStringEmpty(userVar.Name.Val) || util.IsStringEmpty(userVar.Type.Val) {
 			return fmt.Errorf("parameter [%s] is missing required fields: [type]", userVar.Name.Val)
 		}
 
 		// validate type field
-		if !isStringInSlice(userVar.Type.Val, validTypes) {
+		if !util.IsStringInSlice(userVar.Type.Val, validTypes) {
 			return fmt.Errorf("type [%s] is not valid for parameter [%s]", userVar.Type.Val, userVar.Name.Val)
 		}
 
@@ -499,7 +499,7 @@ func validateVariables(variables *[]Variable) error {
 		}
 
 		// validate file case
-		if userVar.Type.Val == TypeFile && !isStringEmpty(userVar.Value.Val) {
+		if userVar.Type.Val == TypeFile && !util.IsStringEmpty(userVar.Value.Val) {
 			return fmt.Errorf("'value' field is not allowed for file input type")
 		}
 	}
@@ -509,7 +509,7 @@ func validateVariables(variables *[]Variable) error {
 func validateFiles(configs *[]TemplateConfig) error {
 	for _, file := range *configs {
 		// validate non-empty
-		if isStringEmpty(file.File) {
+		if util.IsStringEmpty(file.File) {
 			return fmt.Errorf("path is missing for file specification in files")
 		}
 		if filepath.IsAbs(file.File) || strings.HasPrefix(file.File, "..") || strings.HasPrefix(file.File, "."+string(os.PathSeparator)) {

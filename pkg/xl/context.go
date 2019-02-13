@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
@@ -51,18 +52,10 @@ type AsCodeResponse struct {
 	RawBody string
 }
 
-type BlueprintContext struct {
-	Provider string
-	Name     string
-	Owner    string
-	Token    string
-	Branch   string
-}
-
 type Context struct {
 	XLDeploy         XLServer
 	XLRelease        XLServer
-	BlueprintContext *BlueprintContext
+	BlueprintContext *blueprint.BlueprintContext
 	values           map[string]string
 }
 

@@ -5,10 +5,11 @@ import (
 
 	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
-const XldApiVersion = "xl-deploy/v1"
-const XlrApiVersion = "xl-release/v1"
+const XldApiVersion = models.XldApiVersion
+const XlrApiVersion = models.XlrApiVersion
 
 type XLServer interface {
 	AcceptsDoc(doc *Document) bool

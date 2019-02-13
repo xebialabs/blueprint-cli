@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
@@ -51,7 +52,7 @@ func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles []string) (*Context, error) {
 	var xlDeploy *XLDeployServer
 	var xlRelease *XLReleaseServer
-	var blueprintContext *BlueprintContext
+	var blueprintContext *blueprint.BlueprintContext
 
 	xldServerConfig, err := readServerConfig(v, "xl-deploy", true)
 	if err != nil {
@@ -128,7 +129,7 @@ func ProcessCredentials() error {
 	return processServerCredentials("RELEASE")
 }
 
-func readBlueprintRepoConfig(v *viper.Viper, prefix string) (*BlueprintContext, error) {
+func readBlueprintRepoConfig(v *viper.Viper, prefix string) (*blueprint.BlueprintContext, error) {
 	repoProvider, err := models.GetRepoProvider(v.GetString(fmt.Sprintf("%s.provider", prefix)))
 	if err != nil {
 		return nil, err
@@ -144,7 +145,7 @@ func readBlueprintRepoConfig(v *viper.Viper, prefix string) (*BlueprintContext, 
 		branch = "master"
 	}
 
-	return &BlueprintContext{
+	return &blueprint.BlueprintContext{
 		Provider: repoProvider,
 		Name:     name,
 		Owner:    v.GetString(fmt.Sprintf("%s.owner", prefix)),

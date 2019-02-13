@@ -1,4 +1,4 @@
-package xl
+package blueprint
 
 import (
 	"fmt"
@@ -36,7 +36,7 @@ func RemoveFiles(glob string) {
 }
 func GetTestTemplateDir(blueprint string) string {
 	pwd, _ := os.Getwd()
-	return strings.Replace(pwd, path.Join("pkg", "xl"), path.Join("templates", "test", blueprint), -1)
+	return strings.Replace(pwd, path.Join("pkg", "blueprint"), path.Join("templates", "test", blueprint), -1)
 }
 
 func TestWriteDataToFile(t *testing.T) {

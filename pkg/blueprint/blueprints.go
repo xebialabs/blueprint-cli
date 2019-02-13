@@ -1,4 +1,4 @@
-package xl
+package blueprint
 
 import (
 	"os"
@@ -30,7 +30,7 @@ const (
 
 func getFuncMaps() template.FuncMap {
 	funcMaps := sprig.TxtFuncMap()
-	funcMaps["kebabcase"] = toKebabCase
+	funcMaps["kebabcase"] = util.ToKebabCase
 	return funcMaps
 }
 
@@ -40,14 +40,14 @@ func AdjustPathSeperatorIfNeeded(blueprintTemplate string) string {
 }
 
 func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable) (bool, error) {
-	if !isStringEmpty(templateConfig.DependsOnTrue.Val) {
+	if !util.IsStringEmpty(templateConfig.DependsOnTrue.Val) {
 		dependsOnTrueVal, err := ParseDependsOnValue(templateConfig.DependsOnTrue, variables)
 		if err != nil {
 			return false, err
 		}
 		return !dependsOnTrueVal, nil
 	}
-	if !isStringEmpty(templateConfig.DependsOnFalse.Val) {
+	if !util.IsStringEmpty(templateConfig.DependsOnFalse.Val) {
 		dependsOnFalseVal, err := ParseDependsOnValue(templateConfig.DependsOnFalse, variables)
 		if err != nil {
 			return false, err

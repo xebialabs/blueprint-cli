@@ -1,4 +1,4 @@
-package xl
+package blueprint
 
 import (
 	"fmt"
@@ -297,7 +297,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 		metadata := []byte("test: blueprint")
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
-		assert.Equal(t, fmt.Sprintf("yaml: unmarshal errors:\n  line 1: field test not found in type xl.BlueprintYaml"), err.Error())
+		assert.Equal(t, fmt.Sprintf("yaml: unmarshal errors:\n  line 1: field test not found in type blueprint.BlueprintYaml"), err.Error())
 	})
 
 	t.Run("should error on missing api version", func(t *testing.T) {
@@ -536,7 +536,7 @@ func TestVerifyTemplateDirAndGenFullPaths(t *testing.T) {
 		ioutil.WriteFile(path.Join(tmpDir, "test2.yaml.tmpl"), d1, os.ModePerm)
 
 		blueprintDoc := BlueprintYaml{
-			TemplateConfigs:[]TemplateConfig{
+			TemplateConfigs: []TemplateConfig{
 				{File: "test.yaml.tmpl"},
 				{File: "test2.yaml.tmpl"},
 			},
@@ -558,7 +558,7 @@ func TestVerifyTemplateDirAndGenFullPaths(t *testing.T) {
 		ioutil.WriteFile(path.Join(tmpDir, "nested", "test2.yaml.tmpl"), d1, os.ModePerm)
 
 		blueprintDoc := BlueprintYaml{
-			TemplateConfigs:[]TemplateConfig{
+			TemplateConfigs: []TemplateConfig{
 				{File: path.Join("nested", "test2.yaml.tmpl")},
 				{File: "test.yaml.tmpl"},
 			},
@@ -582,7 +582,7 @@ func TestVerifyTemplateDirAndGenFullPaths(t *testing.T) {
 		ioutil.WriteFile(path.Join(tmpDir, "nested", "test2.yaml.tmpl"), d1, os.ModePerm)
 
 		blueprintDoc := BlueprintYaml{
-			TemplateConfigs:[]TemplateConfig{
+			TemplateConfigs: []TemplateConfig{
 				{File: path.Join("nested", "test2.yaml.tmpl")},
 				{File: "test.yaml.tmpl"},
 			},
@@ -667,9 +667,9 @@ func TestProcessCustomFunction(t *testing.T) {
 
 func TestValidatePrompt(t *testing.T) {
 	type args struct {
-		pattern       string
-		value         string
-		emtpyAllowed  bool
+		pattern      string
+		value        string
+		emtpyAllowed bool
 	}
 	tests := []struct {
 		name string
@@ -712,8 +712,8 @@ func TestValidatePrompt(t *testing.T) {
 func TestValidateFilePath(t *testing.T) {
 	tmpDir := path.Join("test", "file-input")
 	type args struct {
-		value         string
-		fileExists    bool
+		value      string
+		fileExists bool
 	}
 	tests := []struct {
 		name string

@@ -6,6 +6,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 )
 
 var blueprintCmd = &cobra.Command{
@@ -30,7 +31,7 @@ var blueprintTemplate string
 
 // DoBlueprint creates blueprint templates
 func DoBlueprint(context *xl.Context) {
-	err := xl.InstantiateBlueprint(blueprintLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
+	err := blueprint.InstantiateBlueprint(blueprintLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s\n", err)
 	}

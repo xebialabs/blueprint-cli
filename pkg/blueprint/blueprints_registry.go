@@ -1,4 +1,4 @@
-package xl
+package blueprint
 
 import (
 	"fmt"
@@ -30,6 +30,14 @@ type TemplateConfig struct {
 const templateExtension = ".tmpl"
 
 var blueprintRepository repository.BlueprintRepository
+
+type BlueprintContext struct {
+	Provider string
+	Name     string
+	Owner    string
+	Token    string
+	Branch   string
+}
 
 /*
  * ---------------------------
@@ -70,7 +78,7 @@ func (blueprintContext *BlueprintContext) parseRepositoryTree() (map[string]*mod
 
 	// Clear non-blueprint items in result map
 	for path := range blueprints {
-		if !isStringInSlice(path, blueprintDirs) {
+		if !util.IsStringInSlice(path, blueprintDirs) {
 			delete(blueprints, path)
 		}
 	}
@@ -105,7 +113,7 @@ func (blueprintContext *BlueprintContext) askUserToChooseBlueprint(blueprints ma
 
 func (blueprintContext *BlueprintContext) fetchFileContents(filePath string, blueprintLocalMode bool, addSuffix bool) (*[]byte, error) {
 	if addSuffix {
-		filePath = addSuffixIfNeeded(filePath, templateExtension)
+		filePath = util.AddSuffixIfNeeded(filePath, templateExtension)
 	}
 
 	// local/remote
@@ -205,7 +213,7 @@ func (blueprintContext *BlueprintContext) parseLocalDefinitionFile(templatePath 
  */
 func getFilePathRelativeToTemplatePath(filePath string, templatePath string) string {
 	util.Verbose("[repository] getting FilePath: %s relative to templatePath: %s \n", filePath, templatePath)
-	chunks := strings.Split(filePath, addSuffixIfNeeded(templatePath, string(os.PathSeparator)))
+	chunks := strings.Split(filePath, util.AddSuffixIfNeeded(templatePath, string(os.PathSeparator)))
 	if len(chunks) > 1 {
 		return chunks[len(chunks)-1]
 	}

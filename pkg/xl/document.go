@@ -94,7 +94,7 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 			c.context.XLRelease.PreprocessDoc(doc)
 		}
 	}
-	spec := TransformToMap(doc.Spec)
+	spec := util.TransformToMap(doc.Spec)
 
 	err := doc.processListOfMaps(spec, &c)
 
@@ -335,36 +335,4 @@ func (doc *Document) Cleanup() {
 		os.Remove(doc.ApplyZip)
 		doc.ApplyZip = ""
 	}
-}
-
-func TransformToMap(spec interface{}) []map[interface{}]interface{} {
-	var convertedMap []map[interface{}]interface{}
-
-	switch typeVal := spec.(type) {
-	case []interface{}:
-		list := make([]map[interface{}]interface{}, 0)
-		for _, v := range typeVal {
-			list = append(list, v.(map[interface{}]interface{}))
-		}
-		temporaryList := make([]map[interface{}]interface{}, len(list))
-
-		for i, v := range list {
-			temporaryList[i] = v
-		}
-
-		convertedMap = temporaryList
-	case []map[interface{}]interface{}:
-		convertedMap = typeVal
-	case map[interface{}]interface{}:
-		list := [...]map[interface{}]interface{}{typeVal}
-		temporaryList := make([]map[interface{}]interface{}, 1)
-
-		for i, v := range list {
-			temporaryList[i] = v
-		}
-
-		convertedMap = temporaryList
-	}
-
-	return convertedMap
 }

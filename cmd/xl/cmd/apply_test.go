@@ -42,7 +42,7 @@ func (infra *TestInfra) doc(index int) xl.Document {
 }
 
 func (infra *TestInfra) spec(index int) []map[interface{}]interface{} {
-	return xl.TransformToMap(infra.doc(index).Spec)
+	return util.TransformToMap(infra.doc(index).Spec)
 }
 
 func (infra *TestInfra) metadata(index int) map[interface{}]interface{} {

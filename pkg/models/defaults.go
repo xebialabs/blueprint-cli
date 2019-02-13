@@ -36,3 +36,7 @@ const (
 	DefaultBlueprintRepositoryBranch    = "master"
 	DefaultBlueprintRepositoryProvider  = ProviderGitHub
 )
+
+
+const XldApiVersion = "xl-deploy/v1"
+const XlrApiVersion = "xl-release/v1"
