@@ -6,13 +6,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/xebialabs/xl-cli/cmd/xl/cmd/wrapper"
-	"github.com/xebialabs/xl-cli/pkg/xl"
 	"os"
 	"path/filepath"
 	"runtime"
 	"text/template"
+
+	"github.com/spf13/cobra"
+	"github.com/xebialabs/xl-cli/cmd/xl/cmd/wrapper"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 type WrapperConfig struct {
@@ -74,16 +75,16 @@ var wrapperCmd = &cobra.Command{
 	Short: "Generate XL wrapper",
 	Long:  "Generate XL wrapper files and configuration",
 	Run: func(cmd *cobra.Command, args []string) {
-		xl.Verbose("Generating wrapper files... ")
+		util.Verbose("Generating wrapper files... ")
 		var err = writeFiles(WrapperConfig{
 			CliVersion:        CliVersion,
 			CliBaseUrl:        CliBaseUrl,
 			WrapperConfigName: "wrapper.conf",
 		})
 		if err != nil {
-			xl.Fatal("\nError creating wrapper files: %s\n", err)
+			util.Fatal("\nError creating wrapper files: %s\n", err)
 		} else {
-			xl.Verbose("done.\n")
+			util.Verbose("done.\n")
 		}
 	},
 }

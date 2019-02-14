@@ -1,8 +1,7 @@
-package xl
+package blueprint
 
 import (
 	"fmt"
-	"gopkg.in/AlecAivazis/survey.v1"
 	"io/ioutil"
 	"os"
 	"path"
@@ -10,10 +9,13 @@ import (
 	"sort"
 	"strings"
 
+	"gopkg.in/AlecAivazis/survey.v1"
+
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/repository"
-	"github.com/xebialabs/xl-cli/pkg/repository/mock"
 	"github.com/xebialabs/xl-cli/pkg/repository/github"
+	"github.com/xebialabs/xl-cli/pkg/repository/mock"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 // TemplateConfig holds the merged template file definitions with repository info
@@ -26,7 +28,16 @@ type TemplateConfig struct {
 }
 
 const templateExtension = ".tmpl"
+
 var blueprintRepository repository.BlueprintRepository
+
+type BlueprintContext struct {
+	Provider string
+	Name     string
+	Owner    string
+	Token    string
+	Branch   string
+}
 
 /*
  * ---------------------------
@@ -67,7 +78,7 @@ func (blueprintContext *BlueprintContext) parseRepositoryTree() (map[string]*mod
 
 	// Clear non-blueprint items in result map
 	for path := range blueprints {
-		if !isStringInSlice(path, blueprintDirs) {
+		if !util.IsStringInSlice(path, blueprintDirs) {
 			delete(blueprints, path)
 		}
 	}
@@ -102,13 +113,13 @@ func (blueprintContext *BlueprintContext) askUserToChooseBlueprint(blueprints ma
 
 func (blueprintContext *BlueprintContext) fetchFileContents(filePath string, blueprintLocalMode bool, addSuffix bool) (*[]byte, error) {
 	if addSuffix {
-		filePath = addSuffixIfNeeded(filePath, templateExtension)
+		filePath = util.AddSuffixIfNeeded(filePath, templateExtension)
 	}
 
 	// local/remote
 	if !blueprintLocalMode {
 		return blueprintContext.fetchRemoteFile(filePath)
-	} else if PathExists(filePath, false) {
+	} else if util.PathExists(filePath, false) {
 		// fetch templates from local path
 		content, err := ioutil.ReadFile(filePath)
 		if err != nil {
@@ -179,7 +190,7 @@ func (blueprintContext *BlueprintContext) parseLocalDefinitionFile(templatePath 
 		}
 	}
 	if err != nil {
-		return nil ,err
+		return nil, err
 	}
 	blueprintDoc, err := parseTemplateMetadata(ymlContent, templatePath, blueprintContext, true)
 	if err != nil {
@@ -201,8 +212,8 @@ func (blueprintContext *BlueprintContext) parseLocalDefinitionFile(templatePath 
  * -----------------
  */
 func getFilePathRelativeToTemplatePath(filePath string, templatePath string) string {
-	Verbose("[repository] getting FilePath: %s relative to templatePath: %s \n", filePath, templatePath)
-	chunks := strings.Split(filePath, addSuffixIfNeeded(templatePath, string(os.PathSeparator)))
+	util.Verbose("[repository] getting FilePath: %s relative to templatePath: %s \n", filePath, templatePath)
+	chunks := strings.Split(filePath, util.AddSuffixIfNeeded(templatePath, string(os.PathSeparator)))
 	if len(chunks) > 1 {
 		return chunks[len(chunks)-1]
 	}

@@ -1,14 +1,15 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"fmt"
-	"strings"
-	"os"
-	"github.com/gobuffalo/packr"
-	"sort"
 	"io"
-	"github.com/xebialabs/xl-cli/pkg/xl"
+	"os"
+	"sort"
+	"strings"
+
+	"github.com/gobuffalo/packr"
+	"github.com/spf13/cobra"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 var licenseCmd = &cobra.Command{
@@ -24,7 +25,7 @@ func PrintLicenses(out io.Writer) {
 	box := packr.NewBox("../../../licenses")
 	all := box.List()
 	if len(all) == 0 {
-		xl.Fatal("No license data found")
+		util.Fatal("No license data found")
 	}
 	sort.Strings(all)
 	fmt.Fprintf(out, "## Licenses information\n\n")
@@ -59,7 +60,7 @@ func exandName(licName string) string {
 func cutExtension(licName string) string {
 	extLength := len("-license.MD")
 	if len(licName) > extLength {
-		return substr(licName, 0, len(licName) - extLength)
+		return substr(licName, 0, len(licName)-extLength)
 	} else {
 		return licName
 	}

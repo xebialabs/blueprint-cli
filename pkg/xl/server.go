@@ -2,11 +2,14 @@ package xl
 
 import (
 	"fmt"
+
 	"github.com/thoas/go-funk"
+	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
-const XldApiVersion = "xl-deploy/v1"
-const XlrApiVersion = "xl-release/v1"
+const XldApiVersion = models.XldApiVersion
+const XlrApiVersion = models.XlrApiVersion
 
 type XLServer interface {
 	AcceptsDoc(doc *Document) bool
@@ -155,7 +158,7 @@ func (server *XLReleaseServer) GetTaskStatus(taskId string) (*TaskState, error) 
 
 func sendDoc(server HTTPServer, path string, doc *Document) (*Changes, error) {
 	if doc.ApplyZip != "" {
-		Verbose("\tdocument contains !file tags, sending ZIP file with YAML document and artifacts to server\n")
+		util.Verbose("\tdocument contains !file tags, sending ZIP file with YAML document and artifacts to server\n")
 		return server.PostYamlZip(path, doc.ApplyZip)
 	} else {
 		documentBytes, err := doc.RenderYamlDocument()

@@ -2,14 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/deckarep/golang-set"
-	"github.com/mitchellh/go-homedir"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/thoas/go-funk"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io"
 	"os"
 	"path"
@@ -17,6 +9,16 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/deckarep/golang-set"
+	"github.com/mitchellh/go-homedir"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/thoas/go-funk"
+	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
 type FileWithDocuments struct {
@@ -41,7 +43,7 @@ var applyCmd = &cobra.Command{
 func printCiIds(op string, ids *[]string) {
 	if ids != nil && len(*ids) > 0 {
 		for _, id := range *ids {
-			xl.Info(fmt.Sprintf("%s %s\n", op, id))
+			util.Info(fmt.Sprintf("%s %s\n", op, id))
 		}
 	}
 }
@@ -55,7 +57,7 @@ func printChangedCis(changedCis *xl.ChangedCis) {
 
 func printTaskInfo(task *xl.TaskInfo) {
 	if task != nil {
-		xl.Info(fmt.Sprintf("Task [%s] started (%s)\n", task.Description, task.Id))
+		util.Info(fmt.Sprintf("Task [%s] started (%s)\n", task.Description, task.Id))
 	}
 }
 
@@ -68,22 +70,22 @@ func printChanges(changes *xl.Changes) {
 
 func checkForEmptyImport(importedFile string) {
 	if len(strings.TrimSpace(importedFile)) == 0 {
-		xl.Fatal("The 'imports' field contains empty elements.\n")
+		util.Fatal("The 'imports' field contains empty elements.\n")
 	}
 }
 
 func extractImports(baseDir string, doc *xl.Document) []string {
 	if doc.Metadata != nil && doc.Metadata["imports"] != nil {
 		if imports, ok := doc.Metadata["imports"].([]interface{}); !ok {
-			xl.Fatal("The 'imports' field has wrong format. Must be a list of strings.\n")
+			util.Fatal("The 'imports' field has wrong format. Must be a list of strings.\n")
 		} else {
 			delete(doc.Metadata, "imports")
 			importedFiles, _ := funk.Map(imports, func(i interface{}) string {
 				importedFile, _ := i.(string)
 				checkForEmptyImport(importedFile)
-				err := xl.ValidateFilePath(importedFile, "imports")
+				err := util.ValidateFilePath(importedFile, "imports")
 				if err != nil {
-					xl.Fatal(err.Error())
+					util.Fatal(err.Error())
 				}
 				return filepath.Join(baseDir, filepath.FromSlash(importedFile))
 			}).([]string)
@@ -96,13 +98,13 @@ func extractImports(baseDir string, doc *xl.Document) []string {
 func readDocumentsFromFile(fileName string, parent *string) FileWithDocuments {
 	reader, err := os.Open(fileName)
 	if err != nil {
-		xl.Fatal("Error while opening XL YAML file %s: %s\n", fileName, err)
+		util.Fatal("Error while opening XL YAML file %s: %s\n", fileName, err)
 	}
 	imports := make([]string, 0)
 	documents := make([]*xl.Document, 0)
 	docReader := xl.NewDocumentReader(reader)
-	baseDir := xl.AbsoluteFileDir(fileName)
-	xl.Verbose("Reading file: %s, base dir: %s\n", fileName, baseDir)
+	baseDir := util.AbsoluteFileDir(fileName)
+	util.Verbose("Reading file: %s, base dir: %s\n", fileName, baseDir)
 	for {
 		doc, err := docReader.ReadNextYamlDocument()
 		if err != nil {
@@ -123,7 +125,7 @@ func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
 	funk.ForEach(filesWithDocs, func(file FileWithDocuments) {
 		funk.ForEach(file.documents, func(doc *xl.Document) {
 			if doc.Kind == models.ImportSpecKind && doc.ApiVersion != models.YamlFormatVersion {
-				xl.Fatal("unknown apiVersion for %s spec kind: %s\n", models.ImportSpecKind, doc.ApiVersion)
+				util.Fatal("unknown apiVersion for %s spec kind: %s\n", models.ImportSpecKind, doc.ApiVersion)
 			}
 		})
 	})
@@ -149,43 +151,43 @@ func requestTaskId(context *xl.Context, doc *xl.Document, taskId string) (*xl.Ta
 		return nil, err
 	}
 
-	xl.Verbose("Checking task state... ")
+	util.Verbose("Checking task state... ")
 	state, serr := server.GetTaskStatus(taskId)
 	if serr != nil {
 		return nil, serr
 	}
-	xl.Verbose("[%s]\n", state.State)
+	util.Verbose("[%s]\n", state.State)
 
-	if xl.IsVerbose {
+	if util.IsVerbose {
 		if len(state.CurrentSteps) > 0 {
-			xl.Verbose("### Currently active task steps:\n")
+			util.Verbose("### Currently active task steps:\n")
 			for _, step := range state.CurrentSteps {
-				xl.Verbose("### %s [%s]\n", step.Name, step.State)
+				util.Verbose("### %s [%s]\n", step.Name, step.State)
 			}
 		}
 	} else {
-		xl.Info(".")
+		util.Info(".")
 	}
 	return state, nil
 }
 
 func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes) {
 	if changes != nil && changes.Task != nil {
-		xl.Info("Waiting for task (%s)\n", changes.Task.Id)
+		util.Info("Waiting for task (%s)\n", changes.Task.Id)
 		result, err := requestTaskId(context, doc, changes.Task.Id)
 		for err == nil {
 			switch result.State {
 			case "COMPLETED":
 				fallthrough
 			case "DONE":
-				xl.Verbose("Done.")
-				xl.Info("\n")
+				util.Verbose("Done.")
+				util.Info("\n")
 				return
 
 			case "IN_PROGRESS":
 				for _, step := range result.CurrentSteps {
 					if !step.Automated {
-						xl.Fatal("\nUnable to complete the task (%s) automatically as it's current active step is manual.\n", changes.Task.Id)
+						util.Fatal("\nUnable to complete the task (%s) automatically as it's current active step is manual.\n", changes.Task.Id)
 					}
 				}
 
@@ -200,13 +202,13 @@ func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes) {
 			case "STOPPED":
 				fallthrough
 			case "ABORTED":
-				xl.Fatal("\nUnable to complete the task (%s) automatically as it's state became [%s]. The task will be rolled back.\n", changes.Task.Id, result.State)
+				util.Fatal("\nUnable to complete the task (%s) automatically as it's state became [%s]. The task will be rolled back.\n", changes.Task.Id, result.State)
 			}
 			time.Sleep(2 * time.Second)
 			result, err = requestTaskId(context, doc, changes.Task.Id)
 		}
 		if err != nil {
-			xl.Fatal("\nError waiting for task %s, %s\n", changes.Task.Id, err)
+			util.Fatal("\nError waiting for task %s, %s\n", changes.Task.Id, err)
 		}
 	}
 }
@@ -215,39 +217,39 @@ func DoApply(cmd *cobra.Command, applyFilenames []string) {
 	homeValsFiles, e := listHomeXlValsFiles()
 
 	if e != nil {
-		xl.Fatal("Error while reading value files from home: %s\n", e)
+		util.Fatal("Error while reading value files from home: %s\n", e)
 	}
 
-	docs := parseDocuments(xl.ToAbsolutePaths(applyFilenames), mapset.NewSet(), nil)
+	docs := parseDocuments(util.ToAbsolutePaths(applyFilenames), mapset.NewSet(), nil)
 
-	xl.VerboseSeparator()
+	util.VerboseSeparator()
 	for _, fileWithDocs := range docs {
 
-		var applyFile = xl.PrintableFileName(fileWithDocs.fileName)
+		var applyFile = util.PrintableFileName(fileWithDocs.fileName)
 		if fileWithDocs.parent != nil {
-			var parentFile = xl.PrintableFileName(*fileWithDocs.parent)
-			xl.Info("Applying %s (imported by %s)\n", applyFile, parentFile)
+			var parentFile = util.PrintableFileName(*fileWithDocs.parent)
+			util.Info("Applying %s (imported by %s)\n", applyFile, parentFile)
 		} else {
-			xl.Info("Applying %s\n", applyFile)
+			util.Info("Applying %s\n", applyFile)
 		}
 
 		projectValsFiles, err := listRelativeXlValsFiles(filepath.Dir(fileWithDocs.fileName))
 		if err != nil {
-			xl.Fatal("Error while reading value files for %s from project: %s\n", fileWithDocs.fileName, err)
+			util.Fatal("Error while reading value files for %s from project: %s\n", fileWithDocs.fileName, err)
 		}
 
 		allValsFiles := append(homeValsFiles, projectValsFiles...)
 
 		context, err := xl.BuildContext(viper.GetViper(), &applyValues, allValsFiles)
 		if err != nil {
-			xl.Fatal("Error while reading configuration: %s\n", err)
+			util.Fatal("Error while reading configuration: %s\n", err)
 		}
 
 		applyDir := filepath.Dir(fileWithDocs.fileName)
 
 		for _, doc := range fileWithDocs.documents {
-			xl.Verbose("---\n")
-			xl.Verbose("Applying document at line %d\n", doc.Line)
+			util.Verbose("---\n")
+			util.Verbose("Applying document at line %d\n", doc.Line)
 			if doc.Kind != models.ImportSpecKind {
 				changes, err := context.ProcessSingleDocument(doc, applyDir)
 				printChanges(changes)
@@ -256,10 +258,10 @@ func DoApply(cmd *cobra.Command, applyFilenames []string) {
 					reportFatalDocumentError(fileWithDocs.fileName, doc, err)
 				}
 			} else {
-				xl.Info("Done\n")
+				util.Info("Done\n")
 			}
 		}
-		xl.VerboseSeparator()
+		util.VerboseSeparator()
 	}
 }
 
@@ -270,7 +272,7 @@ func reportFatalDocumentError(applyFilename string, doc *xl.Document, err error)
 		err = errors.Wrap(err, "Possible missing triple dash (---) to separate multiple YAML documents")
 	}
 
-	xl.Fatal("Error while processing YAML document at line %d of XL YAML file %s: %s\n", doc.Line, applyFilename, err)
+	util.Fatal("Error while processing YAML document at line %d of XL YAML file %s: %s\n", doc.Line, applyFilename, err)
 }
 
 func init() {
@@ -291,7 +293,7 @@ func listHomeXlValsFiles() ([]string, error) {
 	if _, err := os.Stat(xebialabsFolder); os.IsNotExist(err) {
 		return []string{}, nil
 	}
-	valfiles, err := xl.FindByExtInDirSorted(xebialabsFolder, ".xlvals")
+	valfiles, err := util.FindByExtInDirSorted(xebialabsFolder, ".xlvals")
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +301,7 @@ func listHomeXlValsFiles() ([]string, error) {
 }
 
 func listRelativeXlValsFiles(dir string) ([]string, error) {
-	valfiles, err := xl.FindByExtInDirSorted(dir, ".xlvals")
+	valfiles, err := util.FindByExtInDirSorted(dir, ".xlvals")
 	if err != nil {
 		return nil, err
 	}

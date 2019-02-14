@@ -10,11 +10,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 var TestCmd = &cobra.Command{
@@ -30,7 +31,7 @@ func getMinimalViperConf() *viper.Viper {
 }
 
 func TestContextBuilder(t *testing.T) {
-	IsVerbose = true
+	util.IsVerbose = true
 
 	t.Run("build simple context for XL Deploy", func(t *testing.T) {
 		v := getMinimalViperConf()

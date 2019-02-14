@@ -1,9 +1,10 @@
 package github
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestGithubRepositoryClient(t *testing.T) {
@@ -39,4 +40,82 @@ func TestGithubRepositoryClient(t *testing.T) {
 		require.NotNil(t, blueprints)
 		assert.Empty(t, blueprints)
 	})
+}
+
+func TestGitHubBlueprintRepository_GetFileContents(t *testing.T) {
+	repo := NewGitHubBlueprintRepository("blueprints", "xebialabs", "master", "")
+	tests := []struct {
+		name     string
+		filePath string
+		want     bool
+		wantErr  bool
+	}{
+		{
+			"should error when file not found",
+			"test",
+			false,
+			true,
+		},
+		{
+			"should fetch file of size less than 1MB",
+			"aws/datalake/cloudformation/data-lake-api.yaml",
+			true,
+			false,
+		},
+		{
+			"should fetch blob of size more than 1MB",
+			"aws/datalake/cloudformation/data-lake-artifacts.zip",
+			true,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := repo.GetFileContents(tt.filePath)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GitHubBlueprintRepository.GetFileContents() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.want {
+				if got == nil {
+					t.Errorf("GitHubBlueprintRepository.GetFileContents() is nil, expected not nil")
+				}
+			}
+		})
+	}
+}
+
+func TestGitHubBlueprintRepository_GetLargeFileContents(t *testing.T) {
+	repo := NewGitHubBlueprintRepository("blueprints", "xebialabs", "master", "")
+	tests := []struct {
+		name     string
+		filePath string
+		want     int64
+		wantErr  bool
+	}{
+		{
+			"should error on invalid filepath",
+			"aws/datalake/cloudformation/foo.zip",
+			0,
+			true,
+		},
+		{
+			"should fetch blob of size more than 1MB",
+			"aws/datalake/cloudformation/data-lake-artifacts.zip",
+			15111927,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, size, err := repo.GetLargeFileContents(tt.filePath)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GitHubBlueprintRepository.GetLargeFileContents() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if size != tt.want {
+				t.Errorf("GitHubBlueprintRepository.GetLargeFileContents() got = %v, want %v", size, tt.want)
+			}
+		})
+	}
 }

@@ -14,15 +14,15 @@ type FnResult interface {
 
 // Blueprint Remote Definition
 type RemoteFile struct {
-	Filename      string
-	Path          string
-	Url           *url.URL
+	Filename string
+	Path     string
+	Url      *url.URL
 }
 type BlueprintRemote struct {
-	Name             string
-	Path             string
-	DefinitionFile   RemoteFile
-	Files            []RemoteFile
+	Name           string
+	Path           string
+	DefinitionFile RemoteFile
+	Files          []RemoteFile
 }
 
 func NewBlueprintRemote(name string, path string) *BlueprintRemote {

@@ -3,14 +3,16 @@ package xl
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/xebialabs/yaml"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/yaml"
 )
 
 func writeFile(path string, content []byte) {
@@ -82,9 +84,9 @@ spec:
 		assert.NotNil(t, doc.Metadata)
 		assert.Equal(t, "Applications/Cloud", doc.Metadata["Applications-home"])
 		assert.NotNil(t, doc.Spec)
-		spec := TransformToMap(doc.Spec)
+		spec := util.TransformToMap(doc.Spec)
 		assert.Equal(t, "Applications/AWS", spec[0]["name"])
-		children := spec[0]["children"].([]interface {})
+		children := spec[0]["children"].([]interface{})
 		firstChild := children[0].(map[interface{}]interface{})
 		assert.Equal(t, "rest-o-rant-ecs-service", firstChild["name"])
 		children2 := firstChild["children"].([]interface{})
@@ -116,7 +118,7 @@ spec:
 		assert.Equal(t, XldApiVersion, doc.ApiVersion)
 		assert.Equal(t, "Applications", doc.Kind)
 		assert.NotNil(t, doc.Spec)
-		spec := TransformToMap(doc.Spec)
+		spec := util.TransformToMap(doc.Spec)
 		assert.Equal(t, "Applications/AWS1", spec[0]["name"])
 
 		doc, err = docreader.ReadNextYamlDocument()
@@ -126,7 +128,7 @@ spec:
 		assert.Equal(t, XlrApiVersion, doc.ApiVersion)
 		assert.Equal(t, "Template", doc.Kind)
 		assert.NotNil(t, doc.Spec)
-		spec = TransformToMap(doc.Spec)
+		spec = util.TransformToMap(doc.Spec)
 		assert.Equal(t, "Template1", spec[0]["name"])
 
 		doc, err = docreader.ReadNextYamlDocument()
@@ -134,7 +136,7 @@ spec:
 		assert.Nil(t, err)
 		assert.NotNil(t, doc)
 		assert.NotNil(t, doc.Spec)
-		spec = TransformToMap(doc.Spec)
+		spec = util.TransformToMap(doc.Spec)
 		assert.Equal(t, "Template2", spec[0]["name"])
 	})
 
@@ -176,9 +178,9 @@ spec:
 
 		assert.Nil(t, err1)
 		assert.NotNil(t, doc1)
-		spec1 := TransformToMap(doc1.Spec)
+		spec1 := util.TransformToMap(doc1.Spec)
 		assert.Equal(t, "PetClinic-ear", spec1[0]["name"])
-		v1 = spec1[0]["children"]                     // spec[0].children
+		v1 = spec1[0]["children"]                          // spec[0].children
 		v2 := v1.([]interface{})[0]                        // spec[0].children[0]
 		v3 := v2.(map[interface{}]interface{})["children"] // spec[0].children[0].children
 		v4 := v3.([]interface{})[0]                        // spec[0].children[0].children[0]
@@ -189,7 +191,7 @@ spec:
 
 		assert.Nil(t, err2)
 		assert.NotNil(t, doc2)
-		spec2 := TransformToMap(doc2.Spec)
+		spec2 := util.TransformToMap(doc2.Spec)
 		assert.Equal(t, "server", spec2[0]["name"])
 		assert.Equal(t, yaml.CustomTag{"!value", "server.root.password"}, spec2[0]["password"])
 
@@ -197,7 +199,7 @@ spec:
 
 		assert.Nil(t, err3)
 		assert.NotNil(t, doc3)
-		spec3 := TransformToMap(doc3.Spec)
+		spec3 := util.TransformToMap(doc3.Spec)
 		fmt.Println(fmt.Sprintf("%s", doc3.Spec))
 		assert.Equal(t, yaml.CustomTag{"!format", "%server_url%%%35%%"}, spec3[0]["address"])
 	})
@@ -326,7 +328,7 @@ spec:
 		err = doc.Preprocess(context, "")
 
 		assert.Nil(t, err)
-		assert.Equal(t, "server.example.com", TransformToMap(doc.Spec)[0]["address"])
+		assert.Equal(t, "server.example.com", util.TransformToMap(doc.Spec)[0]["address"])
 	})
 
 	t.Run("should report error when !value tag refers to unknown value", func(t *testing.T) {
@@ -378,7 +380,7 @@ spec:`, XldApiVersion) + `
 		err = doc.Preprocess(context, "")
 
 		assert.Nil(t, err)
-		assert.Equal(t, "theuselessweb.com/%35%", TransformToMap(doc.Spec)[0]["username"])
+		assert.Equal(t, "theuselessweb.com/%35%", util.TransformToMap(doc.Spec)[0]["username"])
 	})
 
 	t.Run("should process !format tag", func(t *testing.T) {
@@ -393,13 +395,13 @@ spec:`, XldApiVersion) + `
 		require.Nil(t, err)
 		require.NotNil(t, doc)
 
-		values := map[string]string{"server_url":"testhost"}
+		values := map[string]string{"server_url": "testhost"}
 		context := &Context{values: values}
 
 		err = doc.Preprocess(context, "")
 
 		assert.Nil(t, err)
-		assert.Equal(t, "testhost%35%", TransformToMap(doc.Spec)[0]["url"])
+		assert.Equal(t, "testhost%35%", util.TransformToMap(doc.Spec)[0]["url"])
 	})
 
 	t.Run("should report error when !format tag have a reference to unknown value", func(t *testing.T) {
@@ -454,7 +456,7 @@ spec:
 		fileContents := readZipContent(t, doc, doc.ApplyZip)
 		assert.Contains(t, fileContents, "index.yaml")
 		indexDocument, err := ParseYamlDocument(string(fileContents["index.yaml"]))
-		indexDocumentSpec := TransformToMap(indexDocument.Spec)
+		indexDocumentSpec := util.TransformToMap(indexDocument.Spec)
 		Applications_PetClinic_1_0_conf_file := indexDocumentSpec[0]["children"].([]interface{})[0].(map[interface{}]interface{})["children"].([]interface{})[0].(map[interface{}]interface{})["file"].(yaml.CustomTag)
 		assert.Contains(t, fileContents, Applications_PetClinic_1_0_conf_file.Value)
 		assert.Equal(t, artifactContents, string(fileContents[Applications_PetClinic_1_0_conf_file.Value]))
@@ -530,12 +532,11 @@ spec:
 		fileContents := readZipContent(t, doc, doc.ApplyZip)
 		assert.Contains(t, fileContents, "index.yaml")
 		indexDocument, err := ParseYamlDocument(string(fileContents["index.yaml"]))
-		indexDocumentSpec := TransformToMap(indexDocument.Spec)
+		indexDocumentSpec := util.TransformToMap(indexDocument.Spec)
 		Applications_PetClinic_1_0_conf_file := indexDocumentSpec[0]["children"].([]interface{})[0].(map[interface{}]interface{})["children"].([]interface{})[0].(map[interface{}]interface{})["file"].(yaml.CustomTag)
 		assert.Contains(t, fileContents, Applications_PetClinic_1_0_conf_file.Value)
 		assert.Equal(t, artifactContents, string(fileContents[Applications_PetClinic_1_0_conf_file.Value]))
 	})
-
 
 	t.Run("should render YAML document", func(t *testing.T) {
 		yamlDoc := fmt.Sprintf(`apiVersion: %s

@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
@@ -27,14 +29,14 @@ var schemaCmd = &cobra.Command{
 	Long:  `Generate a schema to be used with your IDE. This schema can be used together with VSCode and the Devops As Code by XebiaLabs extension.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if !(generateXld || generateXlr) {
-			xl.Fatal("Error missing product flags. You need to specify a product you want to generate a schema for. " +
+			util.Fatal("Error missing product flags. You need to specify a product you want to generate a schema for. " +
 				"Try adding --xl-deploy or --xl-release or both.\n")
 		}
 		context, err := xl.BuildContext(viper.GetViper(), nil, []string{})
 		if err != nil {
-			xl.Fatal("Error while reading configuration: %s\n", err)
+			util.Fatal("Error while reading configuration: %s\n", err)
 		}
-		if xl.IsVerbose {
+		if util.IsVerbose {
 			context.PrintConfiguration()
 		}
 		DoGenerateSchema(context)
@@ -44,7 +46,7 @@ var schemaCmd = &cobra.Command{
 func DoGenerateSchema(context *xl.Context) {
 	err := context.GenerateSchema(schemaFilename, generateXld, generateXlr, override)
 	if err != nil {
-		xl.Fatal("Error while generating schema: %s\n", err)
+		util.Fatal("Error while generating schema: %s\n", err)
 	}
 }
 

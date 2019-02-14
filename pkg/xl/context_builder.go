@@ -14,13 +14,15 @@ import (
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 	rootFlags := command.PersistentFlags()
 	rootFlags.StringVar(cfgFile, "config", "", "config file (default: $HOME/.xebialabs/config.yaml)")
-	rootFlags.BoolVarP(&IsQuiet, "quiet", "q", false, "suppress all output, except for errors")
-	rootFlags.BoolVarP(&IsVerbose, "verbose", "v", false, "verbose output")
+	rootFlags.BoolVarP(&util.IsQuiet, "quiet", "q", false, "suppress all output, except for errors")
+	rootFlags.BoolVarP(&util.IsVerbose, "verbose", "v", false, "verbose output")
 	rootFlags.String(models.FlagXldUrl, models.DefaultXlDeployUrl, "URL to access the XL Deploy server")
 	rootFlags.String(models.FlagXldUser, models.DefaultXlDeployUsername, "Username to access the XL Deploy server")
 	rootFlags.String(models.FlagXldPass, models.DefaultXlDeployPassword, "Password to access the XL Deploy server")
@@ -50,7 +52,7 @@ func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles []string) (*Context, error) {
 	var xlDeploy *XLDeployServer
 	var xlRelease *XLReleaseServer
-	var blueprintContext *BlueprintContext
+	var blueprintContext *blueprint.BlueprintContext
 
 	xldServerConfig, err := readServerConfig(v, "xl-deploy", true)
 	if err != nil {
@@ -87,10 +89,10 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles 
 	}
 
 	return &Context{
-		XLDeploy:            xlDeploy,
-		XLRelease:           xlRelease,
-		BlueprintContext:    blueprintContext,
-		values:              values,
+		XLDeploy:         xlDeploy,
+		XLRelease:        xlRelease,
+		BlueprintContext: blueprintContext,
+		values:           values,
 	}, nil
 }
 
@@ -127,7 +129,7 @@ func ProcessCredentials() error {
 	return processServerCredentials("RELEASE")
 }
 
-func readBlueprintRepoConfig(v *viper.Viper, prefix string) (*BlueprintContext, error) {
+func readBlueprintRepoConfig(v *viper.Viper, prefix string) (*blueprint.BlueprintContext, error) {
 	repoProvider, err := models.GetRepoProvider(v.GetString(fmt.Sprintf("%s.provider", prefix)))
 	if err != nil {
 		return nil, err
@@ -143,12 +145,12 @@ func readBlueprintRepoConfig(v *viper.Viper, prefix string) (*BlueprintContext, 
 		branch = "master"
 	}
 
-	return &BlueprintContext{
+	return &blueprint.BlueprintContext{
 		Provider: repoProvider,
-		Name: name,
-		Owner: v.GetString(fmt.Sprintf("%s.owner", prefix)),
-		Token: v.GetString(fmt.Sprintf("%s.token", prefix)),
-		Branch: branch,
+		Name:     name,
+		Owner:    v.GetString(fmt.Sprintf("%s.owner", prefix)),
+		Token:    v.GetString(fmt.Sprintf("%s.token", prefix)),
+		Branch:   branch,
 	}, nil
 }
 
@@ -217,7 +219,7 @@ func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles 
 
 	// Add all values files variables
 	funk.ForEach(valueFiles, func(valueFile string) {
-		Verbose("Using value file %s\n", valueFile)
+		util.Verbose("Using value file %s\n", valueFile)
 	})
 	valuesMap := properties.MustLoadFiles(valueFiles, properties.UTF8, false).Map()
 	for k, v := range valuesMap {
@@ -254,7 +256,7 @@ func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles 
 	}
 
 	// print values without defaults
-	if IsVerbose {
+	if util.IsVerbose {
 		printValues(m)
 	}
 
@@ -276,8 +278,8 @@ func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles 
 func printValues(values map[string]string) {
 	var keys = funk.Keys(values).([]string)
 	sort.Strings(keys)
-	Verbose("Values:\n")
+	util.Verbose("Values:\n")
 	funk.ForEach(keys, func(key string) {
-		Verbose("%s: %s\n", key, values[key])
+		util.Verbose("%s: %s\n", key, values[key])
 	})
 }

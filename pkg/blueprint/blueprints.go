@@ -1,4 +1,4 @@
-package xl
+package blueprint
 
 import (
 	"os"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/magiconair/properties"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 
 	"github.com/Masterminds/sprig"
 	"gopkg.in/AlecAivazis/survey.v1"
@@ -20,16 +21,16 @@ import (
 var SkipFinalPrompt = false
 
 const (
-	valuesFile           = "values.xlvals"
-	valuesFileHeader     = "# This file includes all non-secret values, you can add variables here and then refer them with '!value' tag in YAML files"
-	secretsFile          = "secrets.xlvals"
-	secretsFileHeader    = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
-	gitignoreFile        = ".gitignore"
+	valuesFile        = "values.xlvals"
+	valuesFileHeader  = "# This file includes all non-secret values, you can add variables here and then refer them with '!value' tag in YAML files"
+	secretsFile       = "secrets.xlvals"
+	secretsFileHeader = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
+	gitignoreFile     = ".gitignore"
 )
 
 func getFuncMaps() template.FuncMap {
 	funcMaps := sprig.TxtFuncMap()
-	funcMaps["kebabcase"] = toKebabCase
+	funcMaps["kebabcase"] = util.ToKebabCase
 	return funcMaps
 }
 
@@ -39,14 +40,14 @@ func AdjustPathSeperatorIfNeeded(blueprintTemplate string) string {
 }
 
 func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable) (bool, error) {
-	if !isStringEmpty(templateConfig.DependsOnTrue.Val) {
+	if !util.IsStringEmpty(templateConfig.DependsOnTrue.Val) {
 		dependsOnTrueVal, err := ParseDependsOnValue(templateConfig.DependsOnTrue, variables)
 		if err != nil {
 			return false, err
 		}
 		return !dependsOnTrueVal, nil
 	}
-	if !isStringEmpty(templateConfig.DependsOnFalse.Val) {
+	if !util.IsStringEmpty(templateConfig.DependsOnFalse.Val) {
 		dependsOnFalseVal, err := ParseDependsOnValue(templateConfig.DependsOnFalse, variables)
 		if err != nil {
 			return false, err
@@ -63,7 +64,7 @@ func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprin
 
 	// if remote mode, initialize repository client
 	if !blueprintLocalMode {
-		Verbose("[cmd] Reading blueprints from remote provider: %s\n", blueprintContext.Provider)
+		util.Verbose("[cmd] Reading blueprints from remote provider: %s\n", blueprintContext.Provider)
 		blueprints, err = blueprintContext.initRepoClient()
 		if err != nil {
 			return err
@@ -81,19 +82,19 @@ func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprin
 	}
 
 	// get local/remote blueprint definition
-	Verbose("[cmd] Parsing Blueprint from %s\n", templatePath)
+	util.Verbose("[cmd] Parsing Blueprint from %s\n", templatePath)
 	blueprintDoc, err := blueprintContext.parseDefinitionFile(blueprintLocalMode, blueprints, templatePath)
 	if err != nil {
 		return err
 	}
-	Verbose("[dataPrep] Got blueprint metadata: %#v\n", blueprintDoc.Metadata)
+	util.Verbose("[dataPrep] Got blueprint metadata: %#v\n", blueprintDoc.Metadata)
 
 	// ask for user input
 	preparedData, err := blueprintDoc.prepareTemplateData(surveyOpts...)
 	if err != nil {
 		return err
 	}
-	Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
+	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
 	// save prepared data to values & secrets files
 	err = writeConfigToFile(valuesFileHeader, preparedData.Values, path.Join(outputDir, valuesFile))
@@ -119,12 +120,12 @@ func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprin
 			return err
 		}
 		if skipFile {
-			Verbose("[file] skipping file [%s] since it has dependsOn value set\n", config.File)
+			util.Verbose("[file] skipping file [%s] since it has dependsOn value set\n", config.File)
 			continue
 		}
 
 		// read template contents
-		Verbose("[file] Fetching template file %s from %s\n", config.File, config.FullPath)
+		util.Verbose("[file] Fetching template file %s from %s\n", config.File, config.FullPath)
 		templateContent, err := blueprintContext.fetchFileContents(config.FullPath, blueprintLocalMode, strings.HasSuffix(config.File, templateExtension))
 		if err != nil {
 			return err
@@ -133,7 +134,7 @@ func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprin
 
 		// process the template file (filter based on extension)
 		if strings.HasSuffix(config.File, templateExtension) {
-			Verbose("[file] Processing template file %s\n", config.FullPath)
+			util.Verbose("[file] Processing template file %s\n", config.FullPath)
 
 			// read & process the template
 			tmpl := template.Must(template.New(config.File).Funcs(getFuncMaps()).Parse(templateString))
@@ -151,7 +152,7 @@ func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprin
 			}
 		} else {
 			// handle non-template files - copy as-it-is
-			Verbose("[file] Copying file %s\n", config.FullPath)
+			util.Verbose("[file] Copying file %s\n", config.FullPath)
 			err = writeDataToFile(config.File, &templateString)
 			if err != nil {
 				return err
@@ -163,8 +164,8 @@ func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprin
 
 func createDirectoryIfNeeded(fileName string) error {
 	dir, _ := filepath.Split(fileName)
-	if dir != "" && !PathExists(dir, true) {
-		Verbose("[file] Creating sub-directory %s\n", dir)
+	if dir != "" && !util.PathExists(dir, true) {
+		util.Verbose("[file] Creating sub-directory %s\n", dir)
 		return os.MkdirAll(dir, os.ModePerm)
 	}
 	return nil
@@ -177,7 +178,7 @@ func writeDataToFile(outputFileName string, data *string) error {
 		return err
 	}
 
-	Verbose("[file] Creating blueprint output file %s\n", outputFileName)
+	util.Verbose("[file] Creating blueprint output file %s\n", outputFileName)
 	file, err := os.Create(outputFileName)
 	if err != nil {
 		return err
@@ -186,7 +187,7 @@ func writeDataToFile(outputFileName string, data *string) error {
 	if err != nil {
 		return err
 	}
-	Verbose("\tWrote %d bytes \n", out)
+	util.Verbose("\tWrote %d bytes \n", out)
 	err = file.Sync()
 	if err != nil {
 		return err
@@ -195,7 +196,7 @@ func writeDataToFile(outputFileName string, data *string) error {
 	if err != nil {
 		return err
 	}
-	Info("[file] Blueprint output file '%s' generated successfully\n", outputFileName)
+	util.Info("[file] Blueprint output file '%s' generated successfully\n", outputFileName)
 	return nil
 }
 
@@ -233,7 +234,7 @@ func writeConfigToFile(header string, config map[string]interface{}, filename st
 	if err != nil {
 		return err
 	}
-	Verbose("\tWrote %d bytes \n", bytesWrittenHeader+bytesWrittenConfig)
-	Info("[file] Blueprint output file '%s' generated successfully\n", filename)
+	util.Verbose("\tWrote %d bytes \n", bytesWrittenHeader+bytesWrittenConfig)
+	util.Info("[file] Blueprint output file '%s' generated successfully\n", filename)
 	return nil
 }

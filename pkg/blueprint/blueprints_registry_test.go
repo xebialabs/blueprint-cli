@@ -1,4 +1,4 @@
-package xl
+package blueprint
 
 import (
 	"fmt"
@@ -14,9 +14,9 @@ import (
 
 var DefaultBlueprintContext = &BlueprintContext{
 	Provider: models.ProviderMock,
-	Name: "blueprints",
-	Owner: "xebialabs",
-	Branch: "test",
+	Name:     "blueprints",
+	Owner:    "xebialabs",
+	Branch:   "test",
 }
 
 // remote provider tests
@@ -25,10 +25,10 @@ func TestBlueprintContextFunctionsForRemote(t *testing.T) {
 	t.Run("should return error when trying to init from an invalid blueprint context", func(t *testing.T) {
 		context := &BlueprintContext{
 			Provider: "false-provider",
-			Name: "blueprints",
-			Owner: "xebialabs",
-			Branch: "master",
-			Token: "",
+			Name:     "blueprints",
+			Owner:    "xebialabs",
+			Branch:   "master",
+			Token:    "",
 		}
 		_, err := context.initRepoClient()
 		require.NotNil(t, err)
@@ -80,7 +80,7 @@ func TestFetchTemplateFromPath(t *testing.T) {
 		accessSecret: {{.AccessSecret}}
 		
 		---	
-		  `, XldApiVersion)
+		  `, models.XldApiVersion)
 
 	t.Run("should fetch a template from local path", func(t *testing.T) {
 		blueprintContext := BlueprintContext{}
@@ -106,7 +106,7 @@ func TestFetchTemplateFromPath(t *testing.T) {
 		out, err := blueprintContext.fetchFileContents(templateConfig.FullPath, true, true)
 		require.Nil(t, out)
 		require.NotNil(t, err)
-		assert.Equal(t, "template not found in path " + tmpPath, err.Error())
+		assert.Equal(t, "template not found in path "+tmpPath, err.Error())
 	})
 }
 

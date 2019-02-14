@@ -1,12 +1,13 @@
-package xl
+package util
 
 import (
 	"fmt"
-	"github.com/thoas/go-funk"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+
+	funk "github.com/thoas/go-funk"
 )
 
 func FindByExtInDirSorted(parentPath string, ext string) ([]string, error) {
@@ -60,4 +61,36 @@ func PrintableFileName(path string) string {
 	} else {
 		return filepath.Base(path)
 	}
+}
+
+func TransformToMap(spec interface{}) []map[interface{}]interface{} {
+	var convertedMap []map[interface{}]interface{}
+
+	switch typeVal := spec.(type) {
+	case []interface{}:
+		list := make([]map[interface{}]interface{}, 0)
+		for _, v := range typeVal {
+			list = append(list, v.(map[interface{}]interface{}))
+		}
+		temporaryList := make([]map[interface{}]interface{}, len(list))
+
+		for i, v := range list {
+			temporaryList[i] = v
+		}
+
+		convertedMap = temporaryList
+	case []map[interface{}]interface{}:
+		convertedMap = typeVal
+	case map[interface{}]interface{}:
+		list := [...]map[interface{}]interface{}{typeVal}
+		temporaryList := make([]map[interface{}]interface{}, 1)
+
+		for i, v := range list {
+			temporaryList[i] = v
+		}
+
+		convertedMap = temporaryList
+	}
+
+	return convertedMap
 }

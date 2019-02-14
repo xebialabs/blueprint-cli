@@ -9,9 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jhoonb/archivex"
-	"github.com/xebialabs/yaml"
 	"strconv"
+
+	"github.com/jhoonb/archivex"
+	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/yaml"
 )
 
 type Document struct {
@@ -92,7 +94,7 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 			c.context.XLRelease.PreprocessDoc(doc)
 		}
 	}
-	spec := TransformToMap(doc.Spec)
+	spec := util.TransformToMap(doc.Spec)
 
 	err := doc.processListOfMaps(spec, &c)
 
@@ -219,7 +221,7 @@ func (doc *Document) processValueTag(tag *yaml.CustomTag, c *processingContext) 
 		return nil, fmt.Errorf("No value found for !value %s", tag.Value)
 	}
 
-	Verbose("\tSubstituting value for [%s]\n", tag.Value)
+	util.Verbose("\tSubstituting value for [%s]\n", tag.Value)
 
 	return value, nil
 }
@@ -237,7 +239,7 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 		if err != nil {
 			return nil, err
 		}
-		Verbose("\tfirst !file tag found, creating temporary ZIP file %s\n", zipfile.Name())
+		util.Verbose("\tfirst !file tag found, creating temporary ZIP file %s\n", zipfile.Name())
 		c.zipfile = zipfile
 		c.zipwriter = zip.NewWriter(c.zipfile)
 	}
@@ -245,7 +247,7 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 	relativeFilename := tag.Value
 
 	if _, found := c.seenFiles[relativeFilename]; found {
-		Verbose("\tfile %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
+		util.Verbose("\tfile %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
 		return tag, nil
 	}
 
@@ -266,7 +268,7 @@ func (doc *Document) validateFileTag(tag *yaml.CustomTag, c *processingContext) 
 		return fmt.Errorf("cannot process !file tags if artifactsDir has not been set")
 	}
 	filename := tag.Value
-	return ValidateFilePath(filename, "!file tag")
+	return util.ValidateFilePath(filename, "!file tag")
 }
 
 func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, relativeFilename string, c *processingContext) (interface{}, error) {
@@ -283,10 +285,10 @@ func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, relativeFilename string
 
 	mode := fi.Mode()
 	if mode.IsDir() {
-		Verbose("\tadding directory for !file %s\n", relativeFilename)
+		util.Verbose("\tadding directory for !file %s\n", relativeFilename)
 		return tag, doc.writeDirectory(zipEntryFilename, absoluteFilename, c)
 	} else {
-		Verbose("\tadding file for !file %s\n", relativeFilename)
+		util.Verbose("\tadding file for !file %s\n", relativeFilename)
 		return tag, doc.writeFile(zipEntryFilename, absoluteFilename, c)
 	}
 }
@@ -329,40 +331,8 @@ func (doc *Document) RenderYamlDocument() ([]byte, error) {
 
 func (doc *Document) Cleanup() {
 	if doc.ApplyZip != "" {
-		Verbose("\tdeleting temporary file %s\n", doc.ApplyZip)
+		util.Verbose("\tdeleting temporary file %s\n", doc.ApplyZip)
 		os.Remove(doc.ApplyZip)
 		doc.ApplyZip = ""
 	}
-}
-
-func TransformToMap(spec interface{}) []map[interface{}]interface{} {
-	var convertedMap []map[interface{}]interface{}
-
-	switch typeVal := spec.(type) {
-	case []interface{}:
-		list := make([]map[interface{}]interface{}, 0)
-		for _, v := range typeVal {
-			list = append(list, v.(map[interface{}]interface{}))
-		}
-		temporaryList := make([]map[interface{}]interface{}, len(list))
-
-		for i, v := range list {
-			temporaryList[i] = v
-		}
-
-		convertedMap = temporaryList
-	case []map[interface{}]interface{}:
-		convertedMap = typeVal
-	case map[interface{}]interface{}:
-		list := [...]map[interface{}]interface{}{typeVal}
-		temporaryList := make([]map[interface{}]interface{}, 1)
-
-		for i, v := range list {
-			temporaryList[i] = v
-		}
-
-		convertedMap = temporaryList
-	}
-
-	return convertedMap
 }

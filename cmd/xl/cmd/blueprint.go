@@ -3,7 +3,9 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
@@ -14,9 +16,9 @@ var blueprintCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		context, err := xl.BuildContext(viper.GetViper(), nil, nil)
 		if err != nil {
-			xl.Fatal("Error while reading configuration: %s\n", err)
+			util.Fatal("Error while reading configuration: %s\n", err)
 		}
-		if xl.IsVerbose {
+		if util.IsVerbose {
 			context.PrintConfiguration()
 		}
 
@@ -29,9 +31,9 @@ var blueprintTemplate string
 
 // DoBlueprint creates blueprint templates
 func DoBlueprint(context *xl.Context) {
-	err := xl.InstantiateBlueprint(blueprintLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
+	err := blueprint.InstantiateBlueprint(blueprintLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
-		xl.Fatal("Error while creating Blueprint: %s\n", err)
+		util.Fatal("Error while creating Blueprint: %s\n", err)
 	}
 }
 
@@ -39,6 +41,6 @@ func init() {
 	rootCmd.AddCommand(blueprintCmd)
 
 	blueprintFlags := blueprintCmd.Flags()
-	blueprintFlags.BoolVarP(&blueprintLocalMode, "local", "l", false, "Enable local blueprint mode, by default remote mode is enabled")
-	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The blueprint to use, a path relative to the blueprint repository or a local path to a blueprint")
+	blueprintFlags.BoolVarP(&blueprintLocalMode, "local", "l", false, "Enable local file mode, by default remote file mode is used")
+	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local folder path")
 }

@@ -1,4 +1,4 @@
-package xl
+package blueprint
 
 import (
 	"bytes"
@@ -15,6 +15,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/repository"
+	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/yaml"
 	"gopkg.in/AlecAivazis/survey.v1"
 )
@@ -29,11 +30,11 @@ const (
 
 // InputType constants
 const (
-	TypeInput      = "Input"
-	TypeEditor     = "Editor"
-	TypeFile       = "File"
-	TypeSelect     = "Select"
-	TypeConfirm    = "Confirm"
+	TypeInput   = "Input"
+	TypeEditor  = "Editor"
+	TypeFile    = "File"
+	TypeSelect  = "Select"
+	TypeConfirm = "Confirm"
 )
 
 var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfirm}
@@ -109,7 +110,7 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable) (bool, error)
 		if len(values) == 0 {
 			return false, fmt.Errorf("function [%s] results is empty", fieldVal)
 		}
-		Verbose("[fn] Processed value of function [%s] is: %s\n", fieldVal, values[0])
+		util.Verbose("[fn] Processed value of function [%s] is: %s\n", fieldVal, values[0])
 
 		dependsOnVal, err := strconv.ParseBool(values[0])
 		if err != nil {
@@ -130,10 +131,10 @@ func (variable *Variable) GetDefaultVal() string {
 	if variable.Default.Tag == tagFn {
 		values, err := processCustomFunction(defaultVal)
 		if err != nil {
-			Info("Error while processing default value !fn %s for %s. %s", defaultVal, variable.Name.Val, err.Error())
+			util.Info("Error while processing default value !fn %s for %s. %s", defaultVal, variable.Name.Val, err.Error())
 			defaultVal = ""
 		} else {
-			Verbose("[fn] Processed value of function [%s] is: %s\n", defaultVal, values[0])
+			util.Verbose("[fn] Processed value of function [%s] is: %s\n", defaultVal, values[0])
 			return values[0]
 		}
 	}
@@ -149,10 +150,10 @@ func (variable *Variable) GetValueFieldVal() string {
 	if variable.Value.Tag == tagFn {
 		values, err := processCustomFunction(variable.Value.Val)
 		if err != nil {
-			Info("Error while processing !fn %s. Please update the value for %s manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
+			util.Info("Error while processing !fn %s. Please update the value for %s manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
 			return ""
 		}
-		Verbose("[fn] Processed value of function [%s] is: %s\n", variable.Value.Val, values[0])
+		util.Verbose("[fn] Processed value of function [%s] is: %s\n", variable.Value.Val, values[0])
 		return values[0]
 	}
 	return variable.Value.Val
@@ -164,10 +165,10 @@ func (variable *Variable) GetOptions() []string {
 		if option.Tag == tagFn {
 			opts, err := processCustomFunction(option.Val)
 			if err != nil {
-				Info("Error while processing !fn %s. Please update the value for %s manually. %s", option.Val, variable.Name.Val, err.Error())
+				util.Info("Error while processing !fn %s. Please update the value for %s manually. %s", option.Val, variable.Name.Val, err.Error())
 				return nil
 			}
-			Verbose("[fn] Processed value of function [%s] is: %s\n", option.Val, opts)
+			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Val, opts)
 			options = append(options, opts...)
 		} else {
 			options = append(options, option.Val)
@@ -195,7 +196,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 
 			// if user bypassed question, replace with default value
 			if answer == "" {
-				Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Val, defaultVal)
+				util.Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Val, defaultVal)
 				answer = defaultVal
 			}
 		} else {
@@ -212,9 +213,9 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 	case TypeEditor:
 		err = survey.AskOne(
 			&survey.Editor{
-				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
-				Default: defaultVal,
-				HideDefault: true,
+				Message:       prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
+				Default:       defaultVal,
+				HideDefault:   true,
 				AppendDefault: true,
 			},
 			&answer,
@@ -234,7 +235,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 		)
 
 		// read file contents & save as answer
-		Verbose("[input] Reading file contents from path: %s\n", filePath)
+		util.Verbose("[input] Reading file contents from path: %s\n", filePath)
 		data, err := ioutil.ReadFile(filePath)
 		if err != nil {
 			return "", err
@@ -301,8 +302,8 @@ func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprint
 
 // verify blueprint directory & generate full paths for local files
 func (blueprintDoc *BlueprintYaml) verifyTemplateDirAndGenFullPaths(templatePath string) error {
-	if PathExists(templatePath, true) {
-		Verbose("[repository] Verifying local path and files within: %s \n", templatePath)
+	if util.PathExists(templatePath, true) {
+		util.Verbose("[repository] Verifying local path and files within: %s \n", templatePath)
 		var filePaths []string
 
 		// walk the root directory
@@ -349,9 +350,9 @@ func (blueprintDoc *BlueprintYaml) verifyTemplateDirAndGenFullPaths(templatePath
 func (blueprintDoc *BlueprintYaml) parseParameters() error {
 	var parameters []map[interface{}]interface{}
 	if blueprintDoc.Spec != (Spec{}) {
-		parameters = TransformToMap(blueprintDoc.Spec.Parameters)
+		parameters = util.TransformToMap(blueprintDoc.Spec.Parameters)
 	} else {
-		parameters = TransformToMap(blueprintDoc.Parameters)
+		parameters = util.TransformToMap(blueprintDoc.Parameters)
 	}
 	for _, m := range parameters {
 		parsedVar, err := parseParameterMap(&m)
@@ -367,9 +368,9 @@ func (blueprintDoc *BlueprintYaml) parseParameters() error {
 func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, blueprintRepository *BlueprintContext, isLocal bool) error {
 	var files []map[interface{}]interface{}
 	if blueprintDoc.Spec != (Spec{}) {
-		files = TransformToMap(blueprintDoc.Spec.Files)
+		files = util.TransformToMap(blueprintDoc.Spec.Files)
 	} else {
-		files = TransformToMap(blueprintDoc.Files)
+		files = util.TransformToMap(blueprintDoc.Files)
 	}
 	for _, m := range files {
 		templateConfig, err := parseFileMap(&m)
@@ -408,7 +409,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 		defaultVal := variable.GetDefaultVal()
 
 		// skip question based on DependsOn fields
-		if !isStringEmpty(variable.DependsOnTrue.Val) {
+		if !util.IsStringEmpty(variable.DependsOnTrue.Val) {
 			dependsOnTrueVal, err := ParseDependsOnValue(variable.DependsOnTrue, &blueprintDoc.Variables)
 			if err != nil {
 				return nil, err
@@ -417,7 +418,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 				continue
 			}
 		}
-		if !isStringEmpty(variable.DependsOnFalse.Val) {
+		if !util.IsStringEmpty(variable.DependsOnFalse.Val) {
 			dependsOnFalseVal, err := ParseDependsOnValue(variable.DependsOnFalse, &blueprintDoc.Variables)
 			if err != nil {
 				return nil, err
@@ -446,15 +447,15 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 			// check if resulting value is non-empty
 			if parsedVal != "" {
 				saveItemToTemplateDataMap(&variable, data, parsedVal)
-				Verbose("[dataPrep] Skipping question for parameter [%s] because value [%s] is present\n", variable.Name.Val, variable.Value.Val)
+				util.Verbose("[dataPrep] Skipping question for parameter [%s] because value [%s] is present\n", variable.Name.Val, variable.Value.Val)
 				continue
 			} else {
-				Verbose("[dataPrep] Parsed value for parameter [%s] is empty, therefore not being skipped\n", variable.Name.Val)
+				util.Verbose("[dataPrep] Parsed value for parameter [%s] is empty, therefore not being skipped\n", variable.Name.Val)
 			}
 		}
 
 		// ask question based on type to get value - if value field is not present
-		Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Val, variable.Type.Val)
+		util.Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Val, variable.Type.Val)
 		answer, err := variable.GetUserInput(defaultVal, surveyOpts...)
 		if err != nil {
 			return nil, err
@@ -483,12 +484,12 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 func validateVariables(variables *[]Variable) error {
 	for _, userVar := range *variables {
 		// validate non-empty
-		if isStringEmpty(userVar.Name.Val) || isStringEmpty(userVar.Type.Val) {
+		if util.IsStringEmpty(userVar.Name.Val) || util.IsStringEmpty(userVar.Type.Val) {
 			return fmt.Errorf("parameter [%s] is missing required fields: [type]", userVar.Name.Val)
 		}
 
 		// validate type field
-		if !isStringInSlice(userVar.Type.Val, validTypes) {
+		if !util.IsStringInSlice(userVar.Type.Val, validTypes) {
 			return fmt.Errorf("type [%s] is not valid for parameter [%s]", userVar.Type.Val, userVar.Name.Val)
 		}
 
@@ -498,7 +499,7 @@ func validateVariables(variables *[]Variable) error {
 		}
 
 		// validate file case
-		if userVar.Type.Val == TypeFile && !isStringEmpty(userVar.Value.Val) {
+		if userVar.Type.Val == TypeFile && !util.IsStringEmpty(userVar.Value.Val) {
 			return fmt.Errorf("'value' field is not allowed for file input type")
 		}
 	}
@@ -508,7 +509,7 @@ func validateVariables(variables *[]Variable) error {
 func validateFiles(configs *[]TemplateConfig) error {
 	for _, file := range *configs {
 		// validate non-empty
-		if isStringEmpty(file.File) {
+		if util.IsStringEmpty(file.File) {
 			return fmt.Errorf("path is missing for file specification in files")
 		}
 		if filepath.IsAbs(file.File) || strings.HasPrefix(file.File, "..") || strings.HasPrefix(file.File, "."+string(os.PathSeparator)) {
@@ -575,7 +576,7 @@ func parseParameterMap(m *map[interface{}]interface{}) (Variable, error) {
 				return Variable{}, fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
 			}
 		case nil:
-			Verbose("[dataPrep] Got empty metadata variable field with key [%s]\n", k)
+			util.Verbose("[dataPrep] Got empty metadata variable field with key [%s]\n", k)
 		default:
 			return Variable{}, fmt.Errorf("unknown variable type [%s]", val)
 		}
@@ -653,7 +654,7 @@ func validateFilePath() func(val interface{}) error {
 		if filePath != "" {
 			info, err := os.Stat(filePath)
 			if err != nil {
-				Verbose("[input] error in file stat: %s\n", err.Error())
+				util.Verbose("[input] error in file stat: %s\n", err.Error())
 				return fmt.Errorf("file not found on path %s", filePath)
 			}
 			if info.IsDir() {
@@ -667,7 +668,7 @@ func validateFilePath() func(val interface{}) error {
 func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsOn bool, dataMap *PreparedData, defaultVal string, condition bool) bool {
 	if dependsOn == condition {
 		saveItemToTemplateDataMap(currentVar, dataMap, defaultVal)
-		Verbose("[dataPrep] Skipping question for parameter [%s] because DependsOn [%s] value is %t\n", currentVar.Name.Val, dependsOnVal, condition)
+		util.Verbose("[dataPrep] Skipping question for parameter [%s] because DependsOn [%s] value is %t\n", currentVar.Name.Val, dependsOnVal, condition)
 		return true
 	}
 	return false
@@ -704,7 +705,7 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 
 func processCustomFunction(fnStr string) ([]string, error) {
 	// validate function call string (DOMAIN.MODULE(PARAMS...).ATTR|[INDEX])
-	Verbose("[fn] Calling fn [%s] for getting template variable value\n", fnStr)
+	util.Verbose("[fn] Calling fn [%s] for getting template variable value\n", fnStr)
 	if regExFn.MatchString(fnStr) {
 		groups := regExFn.FindStringSubmatch(fnStr)
 		if len(groups) != 6 {
