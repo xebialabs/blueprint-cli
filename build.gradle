@@ -133,6 +133,8 @@ build {
     // The ${} placeholder will be rendered in cross-compile
     go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
     dumpVersion
+
+    finalizedBy ':copyVendor' // so that editors can find the source of dependencies
 }
 
 aws {

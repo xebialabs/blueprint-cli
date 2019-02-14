@@ -395,6 +395,25 @@ func TestParseTemplateMetadata(t *testing.T) {
 		require.NotNil(t, err)
 		assert.Equal(t, "path for file specification cannot start with /, .. or ./", err.Error())
 	})
+	t.Run("should error on duplicate variable names", func(t *testing.T) {
+		metadata := []byte(
+			fmt.Sprintf(`
+              apiVersion: %s
+              kind: Blueprint
+              metadata:
+              spec:
+                parameters:
+                - name: Test
+                  type: Input
+                  default: 1
+                - name: Test
+                  type: Input
+                  default: 2
+                files:`, models.YamlFormatVersion))
+		_, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
+		require.NotNil(t, err)
+		assert.Equal(t, "variable names must be unique within blueprint 'parameters' definition", err.Error())
+	})
 	t.Run("should parse nested variables and files from valid legacy metadata", func(t *testing.T) {
 		metadata := []byte(
 			fmt.Sprintf(`

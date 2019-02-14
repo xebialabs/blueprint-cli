@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/repository"
@@ -482,6 +483,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 }
 
 func validateVariables(variables *[]Variable) error {
+	var variableNames []string
 	for _, userVar := range *variables {
 		// validate non-empty
 		if util.IsStringEmpty(userVar.Name.Val) || util.IsStringEmpty(userVar.Type.Val) {
@@ -502,6 +504,13 @@ func validateVariables(variables *[]Variable) error {
 		if userVar.Type.Val == TypeFile && !util.IsStringEmpty(userVar.Value.Val) {
 			return fmt.Errorf("'value' field is not allowed for file input type")
 		}
+
+		variableNames = append(variableNames, userVar.Name.Val)
+	}
+
+	// Check if there are duplicate variable names
+	if len(funk.UniqString(variableNames)) != len(*variables) {
+		return fmt.Errorf("variable names must be unique within blueprint 'parameters' definition")
 	}
 	return nil
 }
