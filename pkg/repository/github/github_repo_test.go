@@ -1,14 +1,24 @@
 package github
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+func getGitHubTokenFromEnvVar(t *testing.T) string {
+	token := os.Getenv("XL_CLI_GITHUB_TOKEN")
+	if token != "" {
+		t.Log(fmt.Sprintf("Found GitHub token in env vars!"))
+	}
+	return token
+}
+
 func TestGithubRepositoryClient(t *testing.T) {
-	repo := NewGitHubBlueprintRepository("blueprints", "xebialabs", "master", "")
+	repo := NewGitHubBlueprintRepository("blueprints", "xebialabs", "master", getGitHubTokenFromEnvVar(t))
 
 	t.Run("should get list of blueprints from default xl repo", func(t *testing.T) {
 		blueprints, dirs, err := repo.ListBlueprintsFromRepo()
@@ -43,7 +53,7 @@ func TestGithubRepositoryClient(t *testing.T) {
 }
 
 func TestGitHubBlueprintRepository_GetFileContents(t *testing.T) {
-	repo := NewGitHubBlueprintRepository("blueprints", "xebialabs", "master", "")
+	repo := NewGitHubBlueprintRepository("blueprints", "xebialabs", "master", getGitHubTokenFromEnvVar(t))
 	tests := []struct {
 		name     string
 		filePath string
@@ -86,7 +96,7 @@ func TestGitHubBlueprintRepository_GetFileContents(t *testing.T) {
 }
 
 func TestGitHubBlueprintRepository_GetLargeFileContents(t *testing.T) {
-	repo := NewGitHubBlueprintRepository("blueprints", "xebialabs", "master", "")
+	repo := NewGitHubBlueprintRepository("blueprints", "xebialabs", "master", getGitHubTokenFromEnvVar(t))
 	tests := []struct {
 		name     string
 		filePath string
