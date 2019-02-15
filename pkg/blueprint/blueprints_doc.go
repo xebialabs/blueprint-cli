@@ -25,7 +25,7 @@ import (
 // Constants
 const (
 	FnAWS      = "aws"
-	FnOsHelper = "osHelper"
+	FnOs       = "os"
 
 	tagFn       = "!fn"
 	fmtTagValue = "!value %s"
@@ -750,7 +750,7 @@ func processCustomFunction(fnStr string) ([]string, error) {
 					return nil, err
 				}
 				return awsResult.GetResult(module, attr, index)
-			case FnOsHelper:
+			case FnOs:
 				return osHelper.FindOperatingSystem(&osHelper.OperatingSystem{})
 			default:
 				return nil, fmt.Errorf("unknown function type: %s", domain)
