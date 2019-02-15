@@ -8,7 +8,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
-type ChangedCis struct {
+type ChangedIds struct {
 	Created *[]string
 	Updated *[]string
 }
@@ -42,8 +42,11 @@ type TaskInfo struct {
 }
 
 type Changes struct {
-	Cis  *ChangedCis
-	Task *TaskInfo
+	Cis         *ChangedIds
+	Task        *TaskInfo
+	Users       *ChangedIds
+	Permissions *ChangedIds
+	Roles       *ChangedIds
 }
 
 type AsCodeResponse struct {

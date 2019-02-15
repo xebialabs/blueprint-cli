@@ -40,7 +40,7 @@ var applyCmd = &cobra.Command{
 	},
 }
 
-func printCiIds(op string, ids *[]string) {
+func printIds(op string, ids *[]string) {
 	if ids != nil && len(*ids) > 0 {
 		for _, id := range *ids {
 			util.Info(fmt.Sprintf("%s %s\n", op, id))
@@ -48,10 +48,10 @@ func printCiIds(op string, ids *[]string) {
 	}
 }
 
-func printChangedCis(changedCis *xl.ChangedCis) {
-	if changedCis != nil {
-		printCiIds("Created", changedCis.Created)
-		printCiIds("Updated", changedCis.Updated)
+func printChangedIds(entityName string, ids *xl.ChangedIds) {
+	if ids != nil {
+		printIds(fmt.Sprintf("Created %s:", entityName), ids.Created)
+		printIds(fmt.Sprintf("Updated %s:", entityName), ids.Updated)
 	}
 }
 
@@ -63,8 +63,11 @@ func printTaskInfo(task *xl.TaskInfo) {
 
 func printChanges(changes *xl.Changes) {
 	if changes != nil {
-		printChangedCis(changes.Cis)
 		printTaskInfo(changes.Task)
+		printChangedIds("ci", changes.Cis)
+		printChangedIds("user", changes.Users)
+		printChangedIds("permission", changes.Permissions)
+		printChangedIds("role", changes.Roles)
 	}
 }
 
