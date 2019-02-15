@@ -24,8 +24,8 @@ import (
 
 // Constants
 const (
-	FnAWS      = "aws"
-	FnOs       = "os"
+	FnAWS = "aws"
+	FnOs  = "os"
 
 	tagFn       = "!fn"
 	fmtTagValue = "!value %s"
