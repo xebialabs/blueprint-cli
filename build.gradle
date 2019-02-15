@@ -26,7 +26,7 @@ dependencies {
         // *** WARNING *** since we now have license information embedded in the application
         // You need to do some additional steps when adding a library. See README for more details
         // *** NOTICE **** always verify the information from the tool since its based on heuristics
-        build name: 'github.com/gobuffalo/packr',           tag: 'v2.0.0-beta.18'
+        build name: 'github.com/gobuffalo/packr',           tag: 'v2.0.1'
         build name: 'github.com/spf13/cobra',               tag: 'v0.0.3'
         build name: 'github.com/spf13/viper',               tag: 'v1.1.0'
         build name: 'github.com/mitchellh/go-homedir',      tag: 'v1.0.0'
