@@ -42,7 +42,7 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse(testServer.URL)
 		server := SimpleHTTPServer{Url: *res, Username: "admin", Password: "admin"}
 
-		_, e := server.PostYamlDoc("devops-as-code/apply", []byte("document body"))
+		_, e := server.ApplyYamlDoc("devops-as-code/apply", []byte("document body"))
 		assert.Nil(t, e)
 	})
 
@@ -107,7 +107,7 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse(testServer.URL)
 		server := SimpleHTTPServer{Url: *res, Username: "root", Password: "s3cr3t"}
 
-		_, e := server.PostYamlZip("apply", zipToUpload.Name())
+		_, e := server.ApplyYamlZip("apply", zipToUpload.Name())
 		assert.Nil(t, e)
 	})
 
@@ -232,12 +232,11 @@ func TestHttp(t *testing.T) {
 		res, _ := url.Parse(testServer.URL)
 		server := SimpleHTTPServer{Url: *res, Username: "admin", Password: "admin"}
 
-		response, err := server.PostYamlDoc("", []byte(""))
+		response, err := server.ApplyYamlDoc("", []byte(""))
 
 		assert.Nil(t, response)
 		assert.Equal(t, err.Error(), fmt.Sprintf("402 License invalid. Please renew you license at %s/productregistration ", server.Url.String()))
 	})
-
 
 }
 

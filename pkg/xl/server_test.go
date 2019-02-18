@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -21,17 +22,24 @@ func (d *DummyHTTPServer) GenerateYamlDoc(path string, generateFilename string, 
 	return nil
 }
 
-func (d *DummyHTTPServer) PostYamlDoc(path string, yamlDocBytes []byte) (*Changes, error) {
+func (d *DummyHTTPServer) ApplyYamlDoc(path string, yamlDocBytes []byte) (*Changes, error) {
 	d.capturedPath = path
 	d.capturedBytes = yamlDocBytes
 	d.capturedFilename = ""
 	return nil, nil
 }
 
-func (d *DummyHTTPServer) PostYamlZip(path string, zipfilename string) (*Changes, error) {
+func (d *DummyHTTPServer) ApplyYamlZip(path string, zipfilename string) (*Changes, error) {
 	d.capturedPath = path
 	d.capturedBytes = nil
 	d.capturedFilename = zipfilename
+	return nil, nil
+}
+
+func (d *DummyHTTPServer) PreviewYamlDoc(path string, yamlDocBytes []byte) (*models.PreviewResponse, error) {
+	d.capturedPath = path
+	d.capturedBytes = yamlDocBytes
+	d.capturedFilename = ""
 	return nil, nil
 }
 
@@ -88,7 +96,7 @@ func TestServer(t *testing.T) {
 		}
 		defer os.RemoveAll(artifactsDir)
 		artifactContents := "cats=5\ndogs=8\n"
-		ioutil.WriteFile(filepath.Join(artifactsDir, "petclinic.properties"), []byte(artifactContents), 0644)
+		_ = ioutil.WriteFile(filepath.Join(artifactsDir, "petclinic.properties"), []byte(artifactContents), 0644)
 
 		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
@@ -112,7 +120,7 @@ spec:
 		xlDeployServer := XLDeployServer{Server: &dummyServer}
 		context := &Context{XLDeploy: &XLDeployServer{Server: &dummyServer}, XLRelease: &XLReleaseServer{Server: &DummyHTTPServer{}}}
 
-		doc.Preprocess(context, artifactsDir)
+		_ = doc.Preprocess(context, artifactsDir)
 		defer doc.Cleanup()
 
 		_, err = xlDeployServer.SendDoc(doc)
@@ -120,7 +128,7 @@ spec:
 		assert.Nil(t, err)
 		assert.Equal(t, "deployit/devops-as-code/apply", dummyServer.capturedPath)
 		assert.Nil(t, dummyServer.capturedBytes)
-		assert.Equal(t, doc.ApplyZip, dummyServer.capturedFilename)
+		assert.Equal(t, doc.Zip, dummyServer.capturedFilename)
 	})
 
 	t.Run("XLD should properly parse task status", func(t *testing.T) {

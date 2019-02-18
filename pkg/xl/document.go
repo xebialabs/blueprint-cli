@@ -18,9 +18,9 @@ import (
 
 type Document struct {
 	unmarshalleddocument
-	Line     int
-	Column   int
-	ApplyZip string
+	Line   int
+	Column int
+	Zip    string
 }
 
 type DocumentReader struct {
@@ -104,7 +104,7 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 				c.zipwriter.Close()
 			}
 			c.zipfile.Close()
-			if doc.ApplyZip == "" {
+			if doc.Zip == "" {
 				os.Remove(c.zipfile.Name())
 			}
 		}()
@@ -133,7 +133,7 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 			return err
 		}
 
-		doc.ApplyZip = c.zipfile.Name()
+		doc.Zip = c.zipfile.Name()
 	}
 
 	return err
@@ -300,7 +300,7 @@ func (doc *Document) writeDirectory(zipEntryFilename string, fullFilename string
 	}
 
 	z := &archivex.ZipFile{}
-	z.CreateWriter(zipEntryFilename, w)
+	_ = z.CreateWriter(zipEntryFilename, w)
 	defer z.Close()
 	return z.AddAll(fullFilename, false)
 }
@@ -317,7 +317,7 @@ func (doc *Document) writeFile(zipEntryFilename string, fullFilename string, c *
 		return err
 	}
 
-	io.Copy(w, r)
+	_, _ = io.Copy(w, r)
 	return nil
 }
 
@@ -330,9 +330,9 @@ func (doc *Document) RenderYamlDocument() ([]byte, error) {
 }
 
 func (doc *Document) Cleanup() {
-	if doc.ApplyZip != "" {
-		util.Verbose("\tdeleting temporary file %s\n", doc.ApplyZip)
-		os.Remove(doc.ApplyZip)
-		doc.ApplyZip = ""
+	if doc.Zip != "" {
+		util.Verbose("\tdeleting temporary file %s\n", doc.Zip)
+		_ = os.Remove(doc.Zip)
+		doc.Zip = ""
 	}
 }
