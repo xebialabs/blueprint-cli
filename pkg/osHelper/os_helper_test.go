@@ -42,7 +42,7 @@ func TestApiServerUrlOnMacos(t *testing.T) {
 
 func TestApiServerUrlOnLinux(t *testing.T) {
 	currentOperatingSystem = "linux"
-	testScenarios(t, ms, "https://host.docker.internal:6443/")
+	testScenarios(t, ms, "https://localhost:6443/")
 }
 
 func TestApiServerUrlOnOther(t *testing.T) {
