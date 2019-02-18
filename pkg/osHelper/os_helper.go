@@ -29,9 +29,6 @@ type IOperatingSystem interface {
 func (result *OSFnResult) GetResult(module string, attr string, index int) ([]string, error) {
 	switch module {
 	case DefaultApiServerUrl:
-		if index != -1 {
-			return result.kubeURL[index : index+1], nil
-		}
 		return result.kubeURL, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid OS module", module)

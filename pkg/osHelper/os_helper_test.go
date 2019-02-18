@@ -60,14 +60,6 @@ func TestApiServerURL(t *testing.T) {
 		assert.Len(t, apiServerURL, 1)
 	})
 
-	t.Run("should return the URL when the index is passed", func(t *testing.T) {
-		result, err := CallOSFuncByName(DefaultApiServerUrl)
-		require.Nil(t, err)
-		apiServerURL, err := result.GetResult(DefaultApiServerUrl, "", 0)
-		require.Nil(t, err)
-		assert.Len(t, apiServerURL, 1)
-	})
-
 	t.Run("should error when the function is not available", func(t *testing.T) {
 		_, err := CallOSFuncByName("CallSomeNonExistentFunction")
 		require.NotNil(t, err)
