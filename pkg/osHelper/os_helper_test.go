@@ -53,9 +53,9 @@ func TestApiServerUrlOnOther(t *testing.T) {
 
 func TestApiServerURL(t *testing.T) {
 	t.Run("should return the URL based on the Operating System", func(t *testing.T) {
-		result, err := CallOSFuncByName(DefaultApiServerUrl)
+		result, err := CallOSFuncByName(_DefaultApiServerUrl)
 		require.Nil(t, err)
-		apiServerURL, err := result.GetResult(DefaultApiServerUrl, "", -1)
+		apiServerURL, err := result.GetResult(_DefaultApiServerUrl, "", -1)
 		require.Nil(t, err)
 		assert.Len(t, apiServerURL, 1)
 	})
@@ -66,7 +66,7 @@ func TestApiServerURL(t *testing.T) {
 	})
 
 	t.Run("should return error when GetResult is called with non existent function", func(t *testing.T) {
-		result, err := CallOSFuncByName(DefaultApiServerUrl)
+		result, err := CallOSFuncByName(_DefaultApiServerUrl)
 		require.Nil(t, err)
 		_, err = result.GetResult("CallSomeNonExistentFunction", "", 0)
 		require.NotNil(t, err)

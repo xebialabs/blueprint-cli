@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	DefaultApiServerUrl = "defaultapiserverurl"
+	_DefaultApiServerUrl = "defaultapiserverurl"
 )
 
 type OSFnResult struct {
@@ -28,7 +28,7 @@ type IOperatingSystem interface {
 
 func (result *OSFnResult) GetResult(module string, attr string, index int) ([]string, error) {
 	switch module {
-	case DefaultApiServerUrl:
+	case _DefaultApiServerUrl:
 		return result.kubeURL, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid OS module", module)
@@ -48,7 +48,7 @@ func defaultApiServerUrl(ios IOperatingSystem) ([]string, error) {
 // CallOSFuncByName calls related OS module function with parameters provided
 func CallOSFuncByName(module string, params ...string) (models.FnResult, error) {
 	switch strings.ToLower(module) {
-	case DefaultApiServerUrl:
+	case _DefaultApiServerUrl:
 		url, _ := defaultApiServerUrl(&OperatingSystem{})
 		return &OSFnResult{kubeURL: url}, nil
 	default:
