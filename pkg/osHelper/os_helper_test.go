@@ -24,7 +24,7 @@ func (s *MockOperatingSystem) getOs() string {
 }
 
 func testScenarios(t *testing.T, ms *MockOperatingSystem, apiServerURL string) {
-	value, err := FindOperatingSystem(ms)
+	value, err := defaultApiServerUrl(ms)
 	require.Nil(t, err)
 	assert.NotEmpty(t, value)
 	assert.Len(t, value, 1)
@@ -51,6 +51,35 @@ func TestApiServerUrlOnOther(t *testing.T) {
 	testScenarios(t, ms, "https://localhost:6443/")
 }
 
+func TestApiServerURL(t *testing.T) {
+	t.Run("should return the URL based on the Operating System", func(t *testing.T) {
+		result, err := CallOSFuncByName(DefaultApiServerUrl)
+		require.Nil(t, err)
+		apiServerURL, err := result.GetResult(DefaultApiServerUrl, "", -1)
+		require.Nil(t, err)
+		assert.Len(t, apiServerURL, 1)
+	})
+
+	t.Run("should return the URL when the index is passed", func(t *testing.T) {
+		result, err := CallOSFuncByName(DefaultApiServerUrl)
+		require.Nil(t, err)
+		apiServerURL, err := result.GetResult(DefaultApiServerUrl, "", 0)
+		require.Nil(t, err)
+		assert.Len(t, apiServerURL, 1)
+	})
+
+	t.Run("should error when the function is not available", func(t *testing.T) {
+		_, err := CallOSFuncByName("CallSomeNonExistentFunction")
+		require.NotNil(t, err)
+	})
+
+	t.Run("should return error when GetResult is called with non existent function", func(t *testing.T) {
+		result, err := CallOSFuncByName(DefaultApiServerUrl)
+		require.Nil(t, err)
+		_, err = result.GetResult("CallSomeNonExistentFunction", "", 0)
+		require.NotNil(t, err)
+	})
+}
 func TestOperatingSystem(t *testing.T) {
 	ms := OperatingSystem{}
 	assert.EqualValues(t, ms.getOs(), runtime.GOOS)

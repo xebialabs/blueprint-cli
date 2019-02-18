@@ -682,6 +682,18 @@ func TestProcessCustomFunction(t *testing.T) {
 		accessKey := vals[0]
 		require.NotNil(t, accessKey)
 	})
+
+	//OS
+	t.Run("should error on unknown OS module", func(t *testing.T) {
+		_, err := processCustomFunction("os.test()")
+		require.NotNil(t, err)
+		assert.Equal(t, "test is not a valid OS module", err.Error())
+	})
+	t.Run("should return an URL for os.defaultapiserverurl function", func(t *testing.T) {
+		apiServerURL, err := processCustomFunction("os.defaultapiserverurl()")
+		require.Nil(t, err)
+		assert.Len(t, apiServerURL, 1)
+	})
 }
 
 func TestValidatePrompt(t *testing.T) {

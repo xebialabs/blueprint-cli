@@ -751,7 +751,11 @@ func processCustomFunction(fnStr string) ([]string, error) {
 				}
 				return awsResult.GetResult(module, attr, index)
 			case FnOs:
-				return osHelper.FindOperatingSystem(&osHelper.OperatingSystem{})
+				osResult, err := osHelper.CallOSFuncByName(module, params...)
+				if err != nil {
+					return nil, err
+				}
+				return osResult.GetResult(module, attr, index)
 			default:
 				return nil, fmt.Errorf("unknown function type: %s", domain)
 			}
