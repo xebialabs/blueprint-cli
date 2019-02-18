@@ -11,6 +11,7 @@ import (
 
 var applyFilenames []string
 var applyValues map[string]string
+var applyDetach bool
 
 var applyCmd = &cobra.Command{
 	Use:   "apply",
@@ -78,8 +79,8 @@ func requestTaskId(context *xl.Context, doc *xl.Document, taskId string) (*xl.Ta
 	return state, nil
 }
 
-func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes) {
-	if changes != nil && changes.Task != nil {
+func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes, shouldDetach bool) {
+	if changes != nil && changes.Task != nil && !shouldDetach {
 		util.Info("Waiting for task (%s)\n", changes.Task.Id)
 		result, err := requestTaskId(context, doc, changes.Task.Id)
 		for err == nil {
@@ -120,18 +121,18 @@ func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes) {
 	}
 }
 
-func applyDocument(context *xl.Context, fileWithDocs xl.FileWithDocuments, doc *xl.Document) {
+func applyDocument(context *xl.Context, fileWithDocs xl.FileWithDocuments, doc *xl.Document, shouldDetach bool) {
 	applyDir := filepath.Dir(fileWithDocs.FileName)
 	changes, err := context.ProcessSingleDocument(doc, applyDir)
 	printChanges(changes)
-	waitForTasks(context, doc, changes)
+	waitForTasks(context, doc, changes, shouldDetach)
 	if err != nil {
 		xl.ReportFatalDocumentError(fileWithDocs.FileName, doc, err)
 	}
 }
 
 func DoApply(applyFilenames []string) {
-	xl.ForEachDocument("Applying", applyFilenames, applyValues, applyDocument)
+	xl.ForEachDocument("Applying", applyFilenames, applyValues, applyDetach, applyDocument)
 }
 
 func init() {
@@ -141,4 +142,5 @@ func init() {
 	applyFlags.StringArrayVarP(&applyFilenames, "file", "f", []string{}, "Path(s) to the file(s) to apply (required)")
 	_ = applyCmd.MarkFlagRequired("file")
 	applyFlags.StringToStringVar(&applyValues, "values", map[string]string{}, "Values")
+	applyFlags.BoolVarP(&applyDetach, "detach", "d", false, "Detach the client at the moment of starting a deploy or release")
 }
