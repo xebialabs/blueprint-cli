@@ -1,10 +1,12 @@
-package xl
+package util
 
 import (
 	"io"
 	"os"
 	"os/exec"
 	"sync"
+
+	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
 func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
@@ -30,9 +32,9 @@ func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 	}
 }
 
-func ExecuteCommandAndShowLogs(command command) (string, string) {
+func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
 
-	cmd := exec.Command(command.name, command.args...)
+	cmd := exec.Command(command.Name, command.Args...)
 
 	var stdout, stderr []byte
 	var errStdout, errStderr error

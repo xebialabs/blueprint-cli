@@ -140,7 +140,7 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 }
 
 func (doc *Document) ConditionalPreprocess(context *Context, artifactsDir string, fileProcess bool) error {
-	c := processingContext{context,  artifactsDir, nil, nil, make(map[string]bool), 0}
+	c := processingContext{context, artifactsDir, nil, nil, make(map[string]bool), 0}
 
 	if c.context != nil {
 		if c.context.XLDeploy != nil && c.context.XLDeploy.AcceptsDoc(doc) {
@@ -151,7 +151,7 @@ func (doc *Document) ConditionalPreprocess(context *Context, artifactsDir string
 			c.context.XLRelease.PreprocessDoc(doc)
 		}
 	}
-	spec := TransformToMap(doc.Spec)
+	spec := util.TransformToMap(doc.Spec)
 
 	err := doc.processListOfMaps(spec, &c, fileProcess)
 
@@ -255,31 +255,23 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext, f
 		if err != nil {
 			return nil, err
 		}
-		util.Verbose("\tfirst !file tag found, creating temporary ZIP file %s\n", zipfile.Name())
-		c.zipfile = zipfile
-		c.zipwriter = zip.NewWriter(c.zipfile)
-	}
 
 		if c.zipwriter == nil {
 			zipfile, err := ioutil.TempFile("", "yaml")
 			if err != nil {
 				return nil, err
 			}
-			Verbose("\tfirst !file tag found, creating temporary ZIP file %s\n", zipfile.Name())
+			util.Verbose("\tfirst !file tag found, creating temporary ZIP file %s\n", zipfile.Name())
 			c.zipfile = zipfile
 			c.zipwriter = zip.NewWriter(c.zipfile)
 		}
 
-	if _, found := c.seenFiles[relativeFilename]; found {
-		util.Verbose("\tfile %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
-		return tag, nil
-	}
+		relativeFilename := tag.Value
 
 		if _, found := c.seenFiles[relativeFilename]; found {
-			Verbose("\tfile %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
+			util.Verbose("\tfile %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
 			return tag, nil
 		}
-
 
 		fileTag, writeError := doc.writeFileOrDir(tag, relativeFilename, c)
 		if writeError != nil {
