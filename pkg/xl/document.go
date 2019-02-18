@@ -16,11 +16,18 @@ import (
 	"github.com/xebialabs/yaml"
 )
 
+type ToProcess struct {
+	File   bool
+	Format bool
+	Value  bool
+}
+
 type Document struct {
 	unmarshalleddocument
 	Line     int
 	Column   int
 	ApplyZip string
+	Process  ToProcess
 }
 
 type DocumentReader struct {
@@ -57,6 +64,10 @@ func NewDocumentReader(reader io.Reader) *DocumentReader {
 }
 
 func (reader *DocumentReader) ReadNextYamlDocument() (*Document, error) {
+	return reader.ReadNextYamlDocumentWithProcess(ToProcess{true, true, true})
+}
+
+func (reader *DocumentReader) ReadNextYamlDocumentWithProcess(process ToProcess) (*Document, error) {
 	pdoc := unmarshalleddocument{}
 	line, column, err := reader.decoder.DecodeWithPosition(&pdoc)
 
@@ -67,10 +78,10 @@ func (reader *DocumentReader) ReadNextYamlDocument() (*Document, error) {
 	}
 
 	if err != nil {
-		return &Document{unmarshalleddocument{}, line, column, ""}, err
+		return &Document{unmarshalleddocument{}, line, column, "", process}, err
 	}
 
-	doc := Document{pdoc, line, column, ""}
+	doc := Document{pdoc, line, column, "", process}
 	if doc.Metadata == nil {
 		doc.Metadata = map[interface{}]interface{}{}
 	}
@@ -96,7 +107,7 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 	}
 	spec := util.TransformToMap(doc.Spec)
 
-	err := doc.processListOfMaps(spec, &c, true)
+	err := doc.processListOfMaps(spec, &c)
 
 	if c.zipfile != nil {
 		defer func() {
@@ -139,7 +150,7 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 	return err
 }
 
-func (doc *Document) ConditionalPreprocess(context *Context, artifactsDir string, fileProcess bool) error {
+func (doc *Document) ConditionalPreprocess(context *Context, artifactsDir string) error {
 	c := processingContext{context, artifactsDir, nil, nil, make(map[string]bool), 0}
 
 	if c.context != nil {
@@ -153,14 +164,14 @@ func (doc *Document) ConditionalPreprocess(context *Context, artifactsDir string
 	}
 	spec := util.TransformToMap(doc.Spec)
 
-	err := doc.processListOfMaps(spec, &c, fileProcess)
+	err := doc.processListOfMaps(spec, &c)
 
 	return err
 }
 
-func (doc *Document) processListOfMaps(l []map[interface{}]interface{}, c *processingContext, fileProcess bool) error {
+func (doc *Document) processListOfMaps(l []map[interface{}]interface{}, c *processingContext) error {
 	for _, v := range l {
-		err := doc.processMap(v, c, fileProcess)
+		err := doc.processMap(v, c)
 		if err != nil {
 			return err
 		}
@@ -168,9 +179,9 @@ func (doc *Document) processListOfMaps(l []map[interface{}]interface{}, c *proce
 	return nil
 }
 
-func (doc *Document) processList(l []interface{}, c *processingContext, fileProcess bool) error {
+func (doc *Document) processList(l []interface{}, c *processingContext) error {
 	for i, v := range l {
-		newV, err := doc.processValue(v, c, fileProcess)
+		newV, err := doc.processValue(v, c)
 		if err != nil {
 			return err
 		}
@@ -179,9 +190,9 @@ func (doc *Document) processList(l []interface{}, c *processingContext, fileProc
 	return nil
 }
 
-func (doc *Document) processMap(m map[interface{}]interface{}, c *processingContext, fileProcess bool) error {
+func (doc *Document) processMap(m map[interface{}]interface{}, c *processingContext) error {
 	for k, v := range m {
-		newV, err := doc.processValue(v, c, fileProcess)
+		newV, err := doc.processValue(v, c)
 		if err != nil {
 			return err
 		}
@@ -190,25 +201,25 @@ func (doc *Document) processMap(m map[interface{}]interface{}, c *processingCont
 	return nil
 }
 
-func (doc *Document) processValue(v interface{}, c *processingContext, fileProcess bool) (interface{}, error) {
+func (doc *Document) processValue(v interface{}, c *processingContext) (interface{}, error) {
 	switch tv := v.(type) {
 	case []interface{}:
-		err := doc.processList(tv, c, fileProcess)
+		err := doc.processList(tv, c)
 		if err != nil {
 			return nil, err
 		}
 	case map[interface{}]interface{}:
-		err := doc.processMap(tv, c, fileProcess)
+		err := doc.processMap(tv, c)
 		if err != nil {
 			return nil, err
 		}
 	case []map[interface{}]interface{}:
-		err := doc.processListOfMaps(tv, c, fileProcess)
+		err := doc.processListOfMaps(tv, c)
 		if err != nil {
 			return nil, err
 		}
 	case yaml.CustomTag:
-		newV, err := doc.processCustomTag(&tv, c, fileProcess)
+		newV, err := doc.processCustomTag(&tv, c)
 		if err != nil {
 			return nil, err
 		}
@@ -217,12 +228,12 @@ func (doc *Document) processValue(v interface{}, c *processingContext, fileProce
 	return v, nil
 }
 
-func (doc *Document) processCustomTag(tag *yaml.CustomTag, c *processingContext, fileProcess bool) (interface{}, error) {
+func (doc *Document) processCustomTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
 	switch tag.Tag {
 	case "!value":
 		return doc.processValueTag(tag, c)
 	case "!file":
-		return doc.processFileTag(tag, c, fileProcess)
+		return doc.processFileTag(tag, c)
 	case "!format":
 		return doc.processFormatTag(tag, c)
 	default:
@@ -245,8 +256,8 @@ func (doc *Document) processValueTag(tag *yaml.CustomTag, c *processingContext) 
 	return value, nil
 }
 
-func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext, fileProcess bool) (interface{}, error) {
-	if !fileProcess {
+func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
+	if !doc.Process.File {
 		return tag, nil
 	} else {
 		doc.normalizeFileTag(tag, c)

@@ -78,7 +78,7 @@ func readDocumentsFromFile(fileName string, parent *string) FileWithDocuments {
 	baseDir := util.AbsoluteFileDir(fileName)
 	util.Verbose("Reading file: %s, base dir: %s\n", fileName, baseDir)
 	for {
-		doc, err := docReader.ReadNextYamlDocument()
+		doc, err := docReader.ReadNextYamlDocumentWithProcess(ToProcess{false, true, true})
 		if err != nil {
 			if err == io.EOF {
 				break

@@ -126,7 +126,7 @@ func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Ch
 }
 
 func (c *Context) FakeProcessSingleDocument(doc *Document, artifactsDir string, fileName string) ([]byte, error) {
-	err := doc.ConditionalPreprocess(c, artifactsDir, false)
+	err := doc.ConditionalPreprocess(c, artifactsDir)
 	if err != nil {
 		return nil, err
 	}
