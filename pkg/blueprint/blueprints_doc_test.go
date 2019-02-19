@@ -689,8 +689,8 @@ func TestProcessCustomFunction(t *testing.T) {
 		require.NotNil(t, err)
 		assert.Equal(t, "test is not a valid OS module", err.Error())
 	})
-	t.Run("should return an URL for os.defaultapiserverurl function", func(t *testing.T) {
-		apiServerURL, err := processCustomFunction("os.defaultapiserverurl()")
+	t.Run("should return an URL for os._defaultapiserverurl function", func(t *testing.T) {
+		apiServerURL, err := processCustomFunction("os._defaultapiserverurl()")
 		require.Nil(t, err)
 		assert.Len(t, apiServerURL, 1)
 	})
