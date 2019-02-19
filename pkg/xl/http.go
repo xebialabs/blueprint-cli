@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -19,8 +20,9 @@ import (
 
 type HTTPServer interface {
 	TaskInfo(path string) (map[string]interface{}, error)
-	PostYamlDoc(path string, yamlDocBytes []byte) (*Changes, error)
-	PostYamlZip(path string, yamlZipFilename string) (*Changes, error)
+	ApplyYamlDoc(path string, yamlDocBytes []byte) (*Changes, error)
+	ApplyYamlZip(path string, yamlZipFilename string) (*Changes, error)
+	PreviewYamlDoc(path string, yamlDocBytes []byte) (*models.PreviewResponse, error)
 	DownloadSchema(resource string) ([]byte, error)
 	GenerateYamlDoc(generateFilename string, path string, override bool) error
 }
@@ -102,6 +104,20 @@ func processAsCodeResponse(response http.Response) (*AsCodeResponse, error) {
 	return &resp, nil
 }
 
+func processPreviewResponse(response http.Response) (*models.PreviewResponse, error) {
+	var resp models.PreviewResponse
+	bodyText, err := ioutil.ReadAll(response.Body)
+	resp.RawBody = string(bodyText)
+	if err != nil {
+		return nil, err
+	}
+	uerr := json.Unmarshal(bodyText, &resp)
+	if uerr != nil {
+		return nil, uerr
+	}
+	return &resp, nil
+}
+
 func (server *SimpleHTTPServer) DownloadSchema(resource string) ([]byte, error) {
 	response, err := server.doRequest("GET", resource, buildHeaders("", "application/json"), nil)
 	if err != nil {
@@ -131,7 +147,7 @@ func (server *SimpleHTTPServer) TaskInfo(resource string) (map[string]interface{
 	return js, nil
 }
 
-func (server *SimpleHTTPServer) PostYamlDoc(resource string, yamlDocBytes []byte) (*Changes, error) {
+func (server *SimpleHTTPServer) ApplyYamlDoc(resource string, yamlDocBytes []byte) (*Changes, error) {
 	response, err := server.doRequest("POST", resource, buildHeaders("text/vnd.yaml", ""), bytes.NewReader(yamlDocBytes))
 	if err != nil {
 		return nil, err
@@ -143,7 +159,7 @@ func (server *SimpleHTTPServer) PostYamlDoc(resource string, yamlDocBytes []byte
 	return asCodeResponse.Changes, nil
 }
 
-func (server *SimpleHTTPServer) PostYamlZip(resource string, yamlZipFilename string) (*Changes, error) {
+func (server *SimpleHTTPServer) ApplyYamlZip(resource string, yamlZipFilename string) (*Changes, error) {
 	f, err := os.Open(yamlZipFilename)
 	if err != nil {
 		return nil, err
@@ -160,6 +176,18 @@ func (server *SimpleHTTPServer) PostYamlZip(resource string, yamlZipFilename str
 		return nil, e
 	}
 	return asCodeResponse.Changes, nil
+}
+
+func (server *SimpleHTTPServer) PreviewYamlDoc(resource string, yamlDocBytes []byte) (*models.PreviewResponse, error) {
+	response, err := server.doRequest("POST", resource, buildHeaders("text/vnd.yaml", ""), bytes.NewReader(yamlDocBytes))
+	if err != nil {
+		return nil, err
+	}
+	previewResponse, e := processPreviewResponse(*response)
+	if e != nil {
+		return nil, e
+	}
+	return previewResponse, nil
 }
 
 func printTable(initialString string, header []string, data [][]string) error {

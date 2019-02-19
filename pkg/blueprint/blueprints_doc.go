@@ -15,6 +15,7 @@ import (
 	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/osHelper"
 	"github.com/xebialabs/xl-cli/pkg/repository"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/yaml"
@@ -24,6 +25,7 @@ import (
 // Constants
 const (
 	FnAWS = "aws"
+	FnOs  = "os"
 
 	tagFn       = "!fn"
 	fmtTagValue = "!value %s"
@@ -748,6 +750,12 @@ func processCustomFunction(fnStr string) ([]string, error) {
 					return nil, err
 				}
 				return awsResult.GetResult(module, attr, index)
+			case FnOs:
+				osResult, err := osHelper.CallOSFuncByName(module, params...)
+				if err != nil {
+					return nil, err
+				}
+				return osResult.GetResult(module, attr, index)
 			default:
 				return nil, fmt.Errorf("unknown function type: %s", domain)
 			}

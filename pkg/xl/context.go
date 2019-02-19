@@ -2,6 +2,7 @@ package xl
 
 import (
 	"fmt"
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"net/url"
 
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
@@ -106,7 +107,7 @@ func (c *Context) GetDocumentHandlingServer(doc *Document) (XLServer, error) {
 	return nil, fmt.Errorf("unknown apiVersion: %s", doc.ApiVersion)
 }
 
-func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Changes, error) {
+func (c *Context) preProcessAndGetServer(doc *Document, artifactsDir string) (XLServer, error) {
 	err := doc.Preprocess(c, artifactsDir)
 	if err != nil {
 		return nil, err
@@ -117,8 +118,15 @@ func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Ch
 	if doc.ApiVersion == "" {
 		return nil, fmt.Errorf("apiVersion missing")
 	}
-
 	server, err := c.GetDocumentHandlingServer(doc)
+	if err != nil {
+		return nil, err
+	}
+	return server, nil
+}
+
+func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Changes, error) {
+	server, err := c.preProcessAndGetServer(doc, artifactsDir)
 	if err != nil {
 		return nil, err
 	}
@@ -140,6 +148,14 @@ func (c *Context) FakeProcessSingleDocument(doc *Document, artifactsDir string, 
 	}
 
 	return documentBytes, err
+}
+
+func (c *Context) PreviewSingleDocument(doc *Document, artifactsDir string) (*models.PreviewResponse, error) {
+	server, err := c.preProcessAndGetServer(doc, artifactsDir)
+	if err != nil {
+		return nil, err
+	}
+	return server.PreviewDoc(doc)
 }
 
 func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool, generatePermissions bool, users bool, roles bool) error {

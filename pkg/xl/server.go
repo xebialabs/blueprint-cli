@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/thoas/go-funk"
-	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 const XldApiVersion = models.XldApiVersion
@@ -15,6 +15,7 @@ type XLServer interface {
 	AcceptsDoc(doc *Document) bool
 	PreprocessDoc(doc *Document)
 	SendDoc(doc *Document) (*Changes, error)
+	PreviewDoc(doc *Document) (*models.PreviewResponse, error)
 	GetTaskStatus(taskId string) (*TaskState, error)
 	GetSchema() ([]byte, error)
 	GenerateDoc(filename string, path string, override bool, generatePermissions bool, users bool, roles bool) error
@@ -72,11 +73,22 @@ func (server *XLDeployServer) SendDoc(doc *Document) (*Changes, error) {
 	return sendDoc(server.Server, "deployit/devops-as-code/apply", doc)
 }
 
+func (server *XLDeployServer) PreviewDoc(doc *Document) (*models.PreviewResponse, error) {
+	return previewDoc(server.Server, "deployit/devops-as-code/preview", doc)
+}
+
 func (server *XLReleaseServer) SendDoc(doc *Document) (*Changes, error) {
-	if doc.ApplyZip != "" {
+	if doc.Zip != "" {
 		return nil, fmt.Errorf("file tags found but XL Release does not support file references")
 	}
 	return sendDoc(server.Server, "devops-as-code/apply", doc)
+}
+
+func (server *XLReleaseServer) PreviewDoc(doc *Document) (*models.PreviewResponse, error) {
+	if doc.Zip != "" {
+		return nil, fmt.Errorf("file tags found but XL Release does not support file references")
+	}
+	return previewDoc(server.Server, "devops-as-code/preview", doc)
 }
 
 func (server *XLDeployServer) GetSchema() ([]byte, error) {
@@ -157,14 +169,22 @@ func (server *XLReleaseServer) GetTaskStatus(taskId string) (*TaskState, error) 
 }
 
 func sendDoc(server HTTPServer, path string, doc *Document) (*Changes, error) {
-	if doc.ApplyZip != "" {
+	if doc.Zip != "" {
 		util.Verbose("\tdocument contains !file tags, sending ZIP file with YAML document and artifacts to server\n")
-		return server.PostYamlZip(path, doc.ApplyZip)
+		return server.ApplyYamlZip(path, doc.Zip)
 	} else {
 		documentBytes, err := doc.RenderYamlDocument()
 		if err != nil {
 			return nil, err
 		}
-		return server.PostYamlDoc(path, documentBytes)
+		return server.ApplyYamlDoc(path, documentBytes)
 	}
+}
+
+func previewDoc(server HTTPServer, path string, doc *Document) (*models.PreviewResponse, error) {
+	documentBytes, err := doc.RenderYamlDocument()
+	if err != nil {
+		return nil, err
+	}
+	return server.PreviewYamlDoc(path, documentBytes)
 }

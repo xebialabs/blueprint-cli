@@ -40,18 +40,18 @@ func prepareArtifactsDir(t *testing.T, dir string, folderName string, fileConten
 func readZipContent(t *testing.T, doc *Document, path string) map[string][]byte {
 	zipR, err := zip.OpenReader(path)
 	if err != nil {
-		assert.FailNow(t, "cannot open generated ZIP file [%s]: %s", doc.ApplyZip, err)
+		assert.FailNow(t, "cannot open generated ZIP file [%s]: %s", doc.Zip, err)
 	}
 
 	fileContents := make(map[string][]byte)
 	for _, f := range zipR.File {
 		fr, err := f.Open()
 		if err != nil {
-			assert.FailNow(t, "cannot open entry [%s] in generated ZIP file [%s]: %s", f.Name, doc.ApplyZip, err)
+			assert.FailNow(t, "cannot open entry [%s] in generated ZIP file [%s]: %s", f.Name, doc.Zip, err)
 		}
 		contents, err := ioutil.ReadAll(fr)
 		if err != nil {
-			assert.FailNow(t, "cannot read entry [%s] in generated ZIP file [%s]: %s", f.Name, doc.ApplyZip, err)
+			assert.FailNow(t, "cannot read entry [%s] in generated ZIP file [%s]: %s", f.Name, doc.Zip, err)
 		}
 		fileContents[f.Name] = contents
 	}
@@ -452,8 +452,8 @@ spec:
 		defer doc.Cleanup()
 
 		assert.Nil(t, errp)
-		assert.NotNil(t, doc.ApplyZip)
-		fileContents := readZipContent(t, doc, doc.ApplyZip)
+		assert.NotNil(t, doc.Zip)
+		fileContents := readZipContent(t, doc, doc.Zip)
 		assert.Contains(t, fileContents, "index.yaml")
 		indexDocument, err := ParseYamlDocument(string(fileContents["index.yaml"]))
 		indexDocumentSpec := util.TransformToMap(indexDocument.Spec)
@@ -528,8 +528,8 @@ spec:
 		defer doc.Cleanup()
 
 		assert.Nil(t, errp)
-		assert.NotNil(t, doc.ApplyZip)
-		fileContents := readZipContent(t, doc, doc.ApplyZip)
+		assert.NotNil(t, doc.Zip)
+		fileContents := readZipContent(t, doc, doc.Zip)
 		assert.Contains(t, fileContents, "index.yaml")
 		indexDocument, err := ParseYamlDocument(string(fileContents["index.yaml"]))
 		indexDocumentSpec := util.TransformToMap(indexDocument.Spec)
@@ -664,9 +664,9 @@ spec:
 		defer doc.Cleanup()
 
 		assert.Nil(t, errp)
-		assert.NotNil(t, doc.ApplyZip)
+		assert.NotNil(t, doc.Zip)
 
-		fileContents := readZipContent(t, doc, doc.ApplyZip)
+		fileContents := readZipContent(t, doc, doc.Zip)
 		assert.Contains(t, fileContents, "index.yaml")
 		fileName := "1/" + folderDirZip
 		assert.Contains(t, fileContents, fileName)
