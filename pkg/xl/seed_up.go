@@ -14,7 +14,7 @@ import (
 )
 
 var docker = "docker"
-var seedImage = "xl-docker.xebialabs.com/xl-seed:0.0.1"
+var seedImage = "xl-docker.xebialabs.com/xl-seed:demo"
 
 var dockerPullImage = models.Command{
 	docker,
@@ -68,7 +68,7 @@ func runImage() models.Command {
 
 	dockerRunImage := models.Command{
 		docker,
-		[]string{"run", "--network=host", "-v", dir + ":/data", seedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
+		[]string{"run", "-v", dir + ":/data", seedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
 	}
 
 	return dockerRunImage
