@@ -21,13 +21,6 @@ var dockerPullImage = models.Command{
 	[]string{"pull", seedImage},
 }
 
-type FileWithDocuments struct {
-	imports   []string
-	parent    *string
-	documents []*Document
-	fileName  string
-}
-
 var applyValues map[string]string
 
 func getBlueprintLocation(surveyOpts ...survey.AskOpt) (string, error) {
@@ -116,32 +109,32 @@ func fakeApplyFiles() {
 
 	files := getFiles()
 
-	docs := ParseDocuments(util.ToAbsolutePaths(files), mapset.NewSet(), nil)
+	docs := ParseDocuments(util.ToAbsolutePaths(files), mapset.NewSet(), nil, ToProcess{false, true, true})
 
 	for _, fileWithDocs := range docs {
-		var applyFile = util.PrintableFileName(fileWithDocs.fileName)
+		var applyFile = util.PrintableFileName(fileWithDocs.FileName)
 
-		if fileWithDocs.parent != nil {
-			var parentFile = util.PrintableFileName(*fileWithDocs.parent)
+		if fileWithDocs.Parent != nil {
+			var parentFile = util.PrintableFileName(*fileWithDocs.Parent)
 			util.Info("Applying %s (imported by %s)\n", applyFile, parentFile)
 		} else {
 			util.Info("Applying %s\n", applyFile)
 		}
 
-		allValsFiles := getValFiles(fileWithDocs.fileName)
+		allValsFiles := getValFiles(fileWithDocs.FileName)
 
 		context, err := BuildContext(viper.GetViper(), &applyValues, allValsFiles)
 		if err != nil {
 			util.Fatal("Error while reading configuration: %s\n", err)
 		}
 
-		applyDir := filepath.Dir(fileWithDocs.fileName)
+		applyDir := filepath.Dir(fileWithDocs.FileName)
 		var fileContents []byte
 
-		for i, doc := range fileWithDocs.documents {
-			existingFileContents, _ := context.FakeProcessSingleDocument(doc, applyDir, fileWithDocs.fileName)
+		for i, doc := range fileWithDocs.Documents {
+			existingFileContents, _ := context.FakeProcessSingleDocument(doc, applyDir, fileWithDocs.FileName)
 
-			if i != len(fileWithDocs.documents)-1 {
+			if i != len(fileWithDocs.Documents)-1 {
 				fileSeparator := []byte("\n---\n")
 				existingFileContents = append(existingFileContents, fileSeparator...)
 			}
@@ -150,6 +143,32 @@ func fakeApplyFiles() {
 
 		}
 
-		ioutil.WriteFile(fileWithDocs.fileName, fileContents, 0644)
+		ioutil.WriteFile(fileWithDocs.FileName, fileContents, 0644)
 	}
+}
+
+func getFiles() []string {
+	files, err := filepath.Glob("**/*.yaml")
+
+	if err != nil {
+		util.Fatal("Error while finding YAML files: %s\n", err)
+	}
+
+	return files
+}
+
+func getValFiles(fileName string) []string {
+	homeValsFiles, e := ListHomeXlValsFiles()
+
+	if e != nil {
+		util.Fatal("Error while reading value files from home: %s\n", e)
+	}
+
+	relativeValsFiles, e := ListRelativeXlValsFiles(filepath.Dir(fileName))
+
+	if e != nil {
+		util.Fatal("Error while reading value files from xl: %s\n", e)
+	}
+
+	return append(homeValsFiles, relativeValsFiles...)
 }

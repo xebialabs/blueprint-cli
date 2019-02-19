@@ -1,17 +1,18 @@
 package xl
 
 import (
+	"io"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+
 	"github.com/deckarep/golang-set"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
-	"io"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
 )
 
 type FileWithDocuments struct {
@@ -68,7 +69,7 @@ func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
 	})
 }
 
-func readDocumentsFromFile(fileName string, parent *string) FileWithDocuments {
+func readDocumentsFromFile(fileName string, parent *string, process ToProcess) FileWithDocuments {
 	reader, err := os.Open(fileName)
 	if err != nil {
 		util.Fatal("Error while opening XL YAML file %s: %s\n", fileName, err)
@@ -79,7 +80,7 @@ func readDocumentsFromFile(fileName string, parent *string) FileWithDocuments {
 	baseDir := util.AbsoluteFileDir(fileName)
 	util.Verbose("Reading file: %s, base dir: %s\n", fileName, baseDir)
 	for {
-		doc, err := docReader.ReadNextYamlDocument()
+		doc, err := docReader.ReadNextYamlDocumentWithProcess(process)
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -94,14 +95,14 @@ func readDocumentsFromFile(fileName string, parent *string) FileWithDocuments {
 	return FileWithDocuments{imports, parent, documents, fileName}
 }
 
-func parseDocuments(fileNames []string, seenFiles mapset.Set, parent *string) []FileWithDocuments {
+func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, process ToProcess) []FileWithDocuments {
 	result := make([]FileWithDocuments, 0)
 	for _, fileName := range fileNames {
 		if !seenFiles.Contains(fileName) {
-			fileWithDocuments := readDocumentsFromFile(fileName, parent)
+			fileWithDocuments := readDocumentsFromFile(fileName, parent, process)
 			result = append(result, fileWithDocuments)
 			seenFiles.Add(fileName)
-			result = append(parseDocuments(fileWithDocuments.Imports, seenFiles, &fileName), result...)
+			result = append(ParseDocuments(fileWithDocuments.Imports, seenFiles, &fileName, process), result...)
 		}
 	}
 	validateFileWithDocs(result)
@@ -117,7 +118,7 @@ func ForEachDocument(operationName string, fileNames []string, values map[string
 		util.Fatal("Error while reading value files from home: %s\n", e)
 	}
 
-	docs := parseDocuments(util.ToAbsolutePaths(fileNames), mapset.NewSet(), nil)
+	docs := ParseDocuments(util.ToAbsolutePaths(fileNames), mapset.NewSet(), nil, ToProcess{true, true, true})
 	util.VerboseSeparator()
 	for _, fileWithDocs := range docs {
 		var currentFile = util.PrintableFileName(fileWithDocs.FileName)

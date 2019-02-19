@@ -3,14 +3,13 @@ package xl
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/xebialabs/xl-cli/pkg/models"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
 type DummyHTTPServer struct {
