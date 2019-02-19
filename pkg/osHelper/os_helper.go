@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	_DefaultApiServerUrl = "defaultapiserverurl"
+	_DefaultApiServerUrl = "_defaultapiserverurl"
 )
 
 type OSFnResult struct {
