@@ -37,11 +37,11 @@ func (result *OSFnResult) GetResult(module string, attr string, index int) ([]st
 
 func defaultApiServerUrl(ios IOperatingSystem) ([]string, error) {
 	if ios.getOs() == "windows" {
-		return []string{"https://host.docker.internal:6445/"}, nil
+		return []string{"https://host.docker.internal:6445"}, nil
 	} else if ios.getOs() == "darwin" {
-		return []string{"https://host.docker.internal:6443/"}, nil
+		return []string{"https://host.docker.internal:6443"}, nil
 	} else {
-		return []string{"https://localhost:6443/"}, nil
+		return []string{"https://localhost:6443"}, nil
 	}
 }
 
