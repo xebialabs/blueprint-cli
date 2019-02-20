@@ -13,12 +13,14 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
-var docker = "docker"
-var seedImage = "xl-docker.xebialabs.com/xl-seed:demo"
+const (
+	Docker = "docker"
+	SeedImage = "xl-docker.xebialabs.com/xl-seed:demo"
+)
 
 var pullSeedImage = models.Command{
-	Name: docker,
-	Args: []string{"pull", seedImage},
+	Name: Docker,
+	Args: []string{"pull", SeedImage},
 }
 
 var applyValues map[string]string
@@ -67,13 +69,16 @@ func runSeed() models.Command {
 	}
 
 	return models.Command {
-		Name: docker,
-		Args: []string{"run", "-v", dir + ":/data", seedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
+		Name: Docker,
+		Args: []string{"run", "-v", dir + ":/data", SeedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
 	}
 }
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
 func InvokeBlueprintAndSeed(context *Context) {
+	// Skip Generate blueprint file
+	blueprint.SkipFinalPrompt = true
+
 	// TODO: Check for Docker installation
 	util.Verbose("Fetching the blueprint template location")
 	isLocal, err := isLocal()
