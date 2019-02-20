@@ -69,7 +69,6 @@ func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
 		Fatal("failed to capture stdout or stderr\n")
 	}
 	outStr, errStr := string(stdout), string(stderr)
-	Info("\nout:\n%s\nerr:\n%s\n", outStr, errStr)
 
 	return outStr, errStr
 }

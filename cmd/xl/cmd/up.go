@@ -26,7 +26,7 @@ var upCmd = &cobra.Command{
 
 func DoUp(context *xl.Context) {
 	util.Verbose("Running XL Seed")
-	xl.RunXlSeed(context)
+	xl.InvokeBlueprintAndSeed(context)
 }
 
 func init() {

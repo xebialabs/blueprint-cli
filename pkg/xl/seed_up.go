@@ -16,9 +16,9 @@ import (
 var docker = "docker"
 var seedImage = "xl-docker.xebialabs.com/xl-seed:demo"
 
-var dockerPullImage = models.Command{
-	docker,
-	[]string{"pull", seedImage},
+var pullSeedImage = models.Command{
+	Name: docker,
+	Args: []string{"pull", seedImage},
 }
 
 var applyValues map[string]string
@@ -59,22 +59,21 @@ func isLocal(surveyOpts ...survey.AskOpt) (bool, error) {
 	return isLocal, nil
 }
 
-func runImage() models.Command {
+func runSeed() models.Command {
 	dir, err := os.Getwd()
 
 	if err != nil {
 		util.Fatal("Error while getting current work directory")
 	}
 
-	dockerRunImage := models.Command{
-		docker,
-		[]string{"run", "-v", dir + ":/data", seedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
+	return models.Command {
+		Name: docker,
+		Args: []string{"run", "-v", dir + ":/data", seedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
 	}
-
-	return dockerRunImage
 }
 
-func RunXlSeed(context *Context) {
+// InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
+func InvokeBlueprintAndSeed(context *Context) {
 	// TODO: Check for Docker installation
 	util.Verbose("Fetching the blueprint template location")
 	isLocal, err := isLocal()
@@ -86,28 +85,32 @@ func RunXlSeed(context *Context) {
 		util.Fatal("Error while creating Blueprint: %s\n", err)
 	}
 
-	fakeApplyFiles()
+	applyFilesAndSave()
 
-	// TODO: Ask for the version to deploy ?
+	// TODO: Ask for the version to deploy
 	util.Info("Blueprint created successfully! Spinning up xl seed!! \n")
-	runAndCaptureResponse("pulling", dockerPullImage)
-	runAndCaptureResponse("running", runImage())
+	runAndCaptureResponse("pulling", pullSeedImage)
+	runAndCaptureResponse("running", runSeed())
 	// TODO: fetch URLs of XLD and XLR
 	util.Info("Seed successfully started the services!\n")
 }
 
 func runAndCaptureResponse(status string, cmd models.Command) {
 
-	_, errorStr := util.ExecuteCommandAndShowLogs(cmd)
+	outStr, errorStr := util.ExecuteCommandAndShowLogs(cmd)
+
+	if outStr != "" {
+		util.Info("%s \n", outStr)
+	}
 
 	if errorStr != "" {
 		util.Fatal("Error while %s the xl seed image: %s\n", status, errorStr)
 	}
 }
 
-func fakeApplyFiles() {
+func applyFilesAndSave() {
 
-	files := getFiles()
+	files := getYamlFiles()
 
 	docs := ParseDocuments(util.ToAbsolutePaths(files), mapset.NewSet(), nil, ToProcess{false, true, true})
 
@@ -132,7 +135,7 @@ func fakeApplyFiles() {
 		var fileContents []byte
 
 		for i, doc := range fileWithDocs.Documents {
-			existingFileContents, _ := context.FakeProcessSingleDocument(doc, applyDir, fileWithDocs.FileName)
+			existingFileContents, _ := context.processSingleDocumentAndGetContents(doc, applyDir, fileWithDocs.FileName)
 
 			if i != len(fileWithDocs.Documents)-1 {
 				fileSeparator := []byte("\n---\n")
@@ -147,7 +150,7 @@ func fakeApplyFiles() {
 	}
 }
 
-func getFiles() []string {
+func getYamlFiles() []string {
 	files, err := filepath.Glob("**/*.yaml")
 
 	if err != nil {

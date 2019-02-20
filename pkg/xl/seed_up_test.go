@@ -117,7 +117,7 @@ spec:
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 
-		fakeApplyFiles()
+		applyFilesAndSave()
 
 		fileContents, err := ioutil.ReadFile(filepath.Join(blueprintDir, "yaml1.yaml"))
 		check(err)
