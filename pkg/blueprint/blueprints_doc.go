@@ -145,7 +145,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) string
 	if variable.Default.Tag == tagFn {
 		values, err := processCustomFunction(defaultVal)
 		if err != nil {
-			util.Info("Error while processing default value !fn %s for %s. %s", defaultVal, variable.Name.Val, err.Error())
+			util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
 			defaultVal = ""
 		} else {
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", defaultVal, values[0])
@@ -155,7 +155,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) string
 	if variable.Default.Tag == tagExpression {
 		value, err := ProcessCustomExpression(defaultVal, variables)
 		if err != nil {
-			util.Info("Error while processing default value !expression %s for %s. %s", defaultVal, variable.Name.Val, err.Error())
+			util.Info("Error while processing default value !expression [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
 			defaultVal = ""
 		} else {
 			processedVal := fmt.Sprint(value)
@@ -175,7 +175,7 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) st
 	if variable.Value.Tag == tagFn {
 		values, err := processCustomFunction(variable.Value.Val)
 		if err != nil {
-			util.Info("Error while processing !fn %s. Please update the value for %s manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
+			util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
 			return ""
 		}
 		util.Verbose("[fn] Processed value of function [%s] is: %s\n", variable.Value.Val, values[0])
@@ -184,7 +184,7 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) st
 	if variable.Value.Tag == tagExpression {
 		value, err := ProcessCustomExpression(variable.Value.Val, parameters)
 		if err != nil {
-			util.Info("Error while processing !expression %s. Please update the value for %s manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
+			util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
 			return ""
 		} else {
 			processedVal := fmt.Sprint(value)
@@ -201,7 +201,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 		if option.Tag == tagFn {
 			opts, err := processCustomFunction(option.Val)
 			if err != nil {
-				util.Info("Error while processing !fn %s. Please update the value for %s manually. %s", option.Val, variable.Name.Val, err.Error())
+				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
 				return nil
 			}
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Val, opts)
@@ -209,13 +209,16 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 		} else if option.Tag == tagExpression {
 			opts, err := ProcessCustomExpression(option.Val, parameters)
 			if err != nil {
-				util.Info("Error while processing !expression %s. Please update the value for %s manually. %s", option.Val, variable.Name.Val, err.Error())
+				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
 				return nil
 			}
 			processedOptions, ok := opts.([]string)
 			if ok {
 				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Val, processedOptions)
 				options = append(options, processedOptions...)
+			} else {
+				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, "Return type should be a string array")
+				return nil
 			}
 		} else {
 			options = append(options, option.Val)

@@ -318,6 +318,19 @@ func TestGetOptions(t *testing.T) {
 		assert.True(t, len(values) == 2)
 	})
 
+	t.Run("should return nil values for invalid return type in expression options tag", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeSelect},
+			Options: []VarField{{Val: "Foo ? Bar : (1, 2, 3)", Tag: "!expression"}},
+		}
+		values := v.GetOptions(map[string]interface{}{
+			"Foo": false,
+			"Bar": []string{"test", "foo"},
+		})
+		assert.Nil(t, values)
+	})
+
 	t.Run("should return nil on invalid expression tag for options", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Val: "test"},
