@@ -54,7 +54,7 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
            - name: dep
              description: depends on others
              type: Input
-             dependsOnTrue: isit
+             dependsOnTrue: !expression "isit == true"
              dependsOnFalse: isitnot
            files:
            - path: xebialabs/foo.yaml
@@ -63,10 +63,12 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
            - path: bar.md
              dependsOnTrue: isitnot
            - path: foo.md
-             dependsOnFalse: isitnot
+             dependsOnFalse: !expression "!!isitnot" 
 `, models.YamlFormatVersion))
 	return parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 }
+
+var dummyData = make(map[string]interface{})
 
 func TestGetVariableDefaultVal(t *testing.T) {
 	t.Run("should return empty string when default is not defined", func(t *testing.T) {
@@ -74,7 +76,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Name: VarField{Val: "test"},
 			Type: VarField{Val: TypeInput},
 		}
-		defaultVal := v.GetDefaultVal()
+		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
 	})
 
@@ -84,7 +86,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Val: TypeInput},
 			Default: VarField{Val: "default_val"},
 		}
-		defaultVal := v.GetDefaultVal()
+		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "default_val", defaultVal)
 	})
 
@@ -93,7 +95,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Name: VarField{Val: "test"},
 			Type: VarField{Val: TypeConfirm},
 		}
-		defaultVal := v.GetDefaultVal()
+		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "false", defaultVal)
 	})
 
@@ -103,7 +105,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Val: TypeInput},
 			Default: VarField{Val: "aws.regs", Tag: tagFn},
 		}
-		defaultVal := v.GetDefaultVal()
+		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
 	})
 
@@ -113,30 +115,81 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Val: TypeInput},
 			Default: VarField{Val: "aws.regions(ecs)[0]", Tag: tagFn},
 		}
-		defaultVal := v.GetDefaultVal()
+		defaultVal := v.GetDefaultVal(dummyData)
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
 		sort.Strings(regionsList)
 		assert.Equal(t, regionsList[0], defaultVal)
 	})
+
+	t.Run("should return empty string when invalid expression tag in default field", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeInput},
+			Default: VarField{Val: "aws.regs", Tag: tagExpression},
+		}
+		defaultVal := v.GetDefaultVal(dummyData)
+		assert.Equal(t, "", defaultVal)
+	})
+
+	t.Run("should return output on valid expression tag in default field", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeInput},
+			Default: VarField{Val: "'foo' + 'bar'", Tag: tagExpression},
+		}
+		defaultVal := v.GetDefaultVal(dummyData)
+		assert.Equal(t, "foobar", defaultVal)
+		v = Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeInput},
+			Default: VarField{Val: "Foo > 10", Tag: tagExpression},
+		}
+		defaultVal = v.GetDefaultVal(map[string]interface{}{
+			"Foo": 100,
+		})
+		assert.Equal(t, "true", defaultVal)
+	})
 }
 
 func TestParseDependsOnValue(t *testing.T) {
-	t.Run("should error when unknown function in dependsOn", func(t *testing.T) {
+	t.Run("should error when unknown function in DependsOnTrue", func(t *testing.T) {
 		v := Variable{
 			Name:          VarField{Val: "test"},
 			Type:          VarField{Val: TypeInput},
 			DependsOnTrue: VarField{Val: "aws.creds", Tag: "!fn"},
 		}
-		_, err := ParseDependsOnValue(v.DependsOnTrue, &[]Variable{})
+		_, err := ParseDependsOnValue(v.DependsOnTrue, &[]Variable{}, dummyData)
 		require.NotNil(t, err)
 	})
-	t.Run("should return parsed bool value for dependsOnFn field", func(t *testing.T) {
+	t.Run("should return parsed bool value for DependsOnTrue field from function", func(t *testing.T) {
 		v := Variable{
 			Name:          VarField{Val: "test"},
 			Type:          VarField{Val: TypeInput},
 			DependsOnTrue: VarField{Val: "aws.credentials().IsAvailable", Tag: "!fn"},
 		}
-		_, err := ParseDependsOnValue(v.DependsOnTrue, &[]Variable{})
+		out, err := ParseDependsOnValue(v.DependsOnTrue, &[]Variable{}, dummyData)
+		require.Nil(t, err)
+		assert.Equal(t, true, out)
+	})
+	t.Run("should error when invalid expression in DependsOnTrue", func(t *testing.T) {
+		v := Variable{
+			Name:          VarField{Val: "test"},
+			Type:          VarField{Val: TypeInput},
+			DependsOnTrue: VarField{Val: "aws.creds", Tag: "!expression"},
+		}
+		_, err := ParseDependsOnValue(v.DependsOnTrue, &[]Variable{}, dummyData)
+		require.NotNil(t, err)
+	})
+	t.Run("should return parsed bool value for DependsOnTrue field from expression", func(t *testing.T) {
+		v := Variable{
+			Name:          VarField{Val: "test"},
+			Type:          VarField{Val: TypeInput},
+			DependsOnTrue: VarField{Val: "Foo > 10", Tag: "!expression"},
+		}
+
+		_, err := ParseDependsOnValue(v.DependsOnTrue, &[]Variable{}, map[string]interface{}{
+			"Foo": 100,
+		})
 		require.Nil(t, err)
 	})
 	t.Run("should return bool value from referenced var for dependsOn field", func(t *testing.T) {
@@ -151,7 +204,7 @@ func TestParseDependsOnValue(t *testing.T) {
 			Type:          VarField{Val: TypeInput},
 			DependsOnTrue: VarField{Val: "confirm"},
 		}
-		val, err := ParseDependsOnValue(vars[1].DependsOnTrue, &vars)
+		val, err := ParseDependsOnValue(vars[1].DependsOnTrue, &vars, dummyData)
 		require.Nil(t, err)
 		assert.Equal(t, vars[0].Value.Bool, val)
 	})
@@ -164,7 +217,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Val: TypeInput},
 			Value: VarField{Val: "testing"},
 		}
-		val := v.GetValueFieldVal()
+		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "testing", val)
 	})
 
@@ -174,7 +227,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Val: TypeInput},
 			Value: VarField{Val: "aws.regs", Tag: tagFn},
 		}
-		val := v.GetValueFieldVal()
+		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "", val)
 	})
 
@@ -184,10 +237,39 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Val: TypeInput},
 			Value: VarField{Val: "aws.regions(ecs)[0]", Tag: tagFn},
 		}
-		val := v.GetValueFieldVal()
+		val := v.GetValueFieldVal(dummyData)
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
 		sort.Strings(regionsList)
 		assert.Equal(t, regionsList[0], val)
+	})
+
+	t.Run("should return empty on invalid expression tag in value field", func(t *testing.T) {
+		v := Variable{
+			Name:  VarField{Val: "test"},
+			Type:  VarField{Val: TypeInput},
+			Value: VarField{Val: "aws.regs()", Tag: tagExpression},
+		}
+		val := v.GetValueFieldVal(dummyData)
+		assert.Equal(t, "", val)
+	})
+
+	t.Run("should return expression output on valid expression tag in value field", func(t *testing.T) {
+		v := Variable{
+			Name:  VarField{Val: "test"},
+			Type:  VarField{Val: TypeInput},
+			Value: VarField{Val: "'foo' + 'bar'", Tag: tagExpression},
+		}
+		defaultVal := v.GetValueFieldVal(dummyData)
+		assert.Equal(t, "foobar", defaultVal)
+		v = Variable{
+			Name:  VarField{Val: "test"},
+			Type:  VarField{Val: TypeInput},
+			Value: VarField{Val: "Foo > 10", Tag: tagExpression},
+		}
+		defaultVal = v.GetValueFieldVal(map[string]interface{}{
+			"Foo": 100,
+		})
+		assert.Equal(t, "true", defaultVal)
 	})
 }
 
@@ -511,7 +593,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Name:           VarField{Val: "dep"},
 			Type:           VarField{Val: TypeInput},
 			Description:    VarField{Val: "depends on others"},
-			DependsOnTrue:  VarField{Val: "isit"},
+			DependsOnTrue:  VarField{Val: "isit == true", Tag: tagExpression},
 			DependsOnFalse: VarField{Val: "isitnot"},
 		}, doc.Variables[6])
 	})
@@ -539,7 +621,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 		assert.Equal(t, TemplateConfig{
 			File:           "foo.md",
 			FullPath:       "",
-			DependsOnFalse: VarField{Val: "isitnot"},
+			DependsOnFalse: VarField{Val: "!!isitnot", Tag: tagExpression},
 			Repository:     blueprintRepository,
 		}, doc.TemplateConfigs[3])
 	})

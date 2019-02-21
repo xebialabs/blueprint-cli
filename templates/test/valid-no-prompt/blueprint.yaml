@@ -57,6 +57,6 @@ spec:
   - path: xld-environment.yml.tmpl
   - path: xld-infrastructure.yml.tmpl
   - path: xlr-pipeline-2.yml
-    dependsOnTrue: TestDepends
+    dependsOnTrue: !expression "AWSRegion == 'us-west' && AppName != 'foo'"
   - path: xlr-pipeline.yml
     dependsOnFalse: TestDepends

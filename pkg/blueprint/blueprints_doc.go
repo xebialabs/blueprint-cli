@@ -181,7 +181,7 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) st
 		util.Verbose("[fn] Processed value of function [%s] is: %s\n", variable.Value.Val, values[0])
 		return values[0]
 	}
-	if variable.Default.Tag == tagExpression {
+	if variable.Value.Tag == tagExpression {
 		value, err := ProcessCustomExpression(variable.Value.Val, parameters)
 		if err != nil {
 			util.Info("Error while processing !expression %s. Please update the value for %s manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
@@ -613,7 +613,7 @@ func parseParameterMap(m *map[interface{}]interface{}) (Variable, error) {
 		case yaml.CustomTag:
 			// Set string field with YAML tag
 			switch val.Tag {
-			case tagFn:
+			case tagFn, tagExpression:
 				field := getVariableField(&parsedVar, strings.Title(k.(string)))
 				setVariableField(&field, &VarField{Val: val.Value, Tag: val.Tag})
 			default:
@@ -644,7 +644,7 @@ func parseFileMap(m *map[interface{}]interface{}) (TemplateConfig, error) {
 			case yaml.CustomTag:
 				// Set string field with YAML tag
 				switch val.Tag {
-				case tagFn:
+				case tagFn, tagExpression:
 					field := reflect.ValueOf(&config).Elem().FieldByName(strings.Title(keyName))
 					setVariableField(&field, &VarField{Val: val.Value, Tag: val.Tag})
 				default:
