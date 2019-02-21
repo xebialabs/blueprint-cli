@@ -52,7 +52,7 @@ The spec field holds parameters and files
 
 ### Function tag (`!fn`)
 
-Blueprints support custom functions to be used within variable definitions and file declarations (`spec` part in YAML file).
+Blueprints support custom functions to be used within variable definitions and file declarations (`spec` part in YAML file). Function tag can be used in `value`, `default`, `options`, `dependsOnTrue` and `dependsOnFalse` fields.
 
 Custom function syntax: `!fn DOMAIN.MODULE (PARAMETERS...).ATTRIBUTE|[INDEX]`
 
@@ -65,7 +65,9 @@ Custom function syntax: `!fn DOMAIN.MODULE (PARAMETERS...).ATTRIBUTE|[INDEX]`
 
 ### Expression tag (`!expression`)
 
-Blueprints support custom expressions to be used within variable definitions and file declarations (`spec` part in YAML file).
+Blueprints support custom expressions to be used within variable definitions and file declarations (`spec` part in YAML file). Expression tag can be used in `value`, `default`, `options`, `dependsOnTrue` and `dependsOnFalse` fields. 
+
+You can use a variable defined in the parameter section inside an expression. Variable names are case sensitive and you should define the variable before it is used in an expression, in other words you can't refer to a variable that will be defined after the expression in defined in the `blueprint.yaml` file.
 
 Custom expression syntax: `!expression "EXPRESSION"`
 

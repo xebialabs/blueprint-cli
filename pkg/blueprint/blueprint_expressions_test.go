@@ -62,6 +62,18 @@ func Test_processCustomExpression(t *testing.T) {
 			false,
 		},
 		{
+			"should return an array when ternary expression is evaluated",
+			args{
+				"Foo ? Bar : (1, 2, 3)",
+				map[string]interface{}{
+					"Foo": true,
+					"Bar": []string{"test", "foo"},
+				},
+			},
+			[]string{"test", "foo"},
+			false,
+		},
+		{
 			"should return true when logical expression is evaluated",
 			args{
 				"Foo == 10 && Bar != 10",

@@ -195,7 +195,7 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) st
 	return variable.Value.Val
 }
 
-func (variable *Variable) GetOptions() []string {
+func (variable *Variable) GetOptions(parameters map[string]interface{}) []string {
 	var options []string
 	for _, option := range variable.Options {
 		if option.Tag == tagFn {
@@ -206,6 +206,17 @@ func (variable *Variable) GetOptions() []string {
 			}
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Val, opts)
 			options = append(options, opts...)
+		} else if option.Tag == tagExpression {
+			opts, err := ProcessCustomExpression(option.Val, parameters)
+			if err != nil {
+				util.Info("Error while processing !expression %s. Please update the value for %s manually. %s", option.Val, variable.Name.Val, err.Error())
+				return nil
+			}
+			processedOptions, ok := opts.([]string)
+			if ok {
+				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Val, processedOptions)
+				options = append(options, processedOptions...)
+			}
 		} else {
 			options = append(options, option.Val)
 		}
@@ -213,7 +224,7 @@ func (variable *Variable) GetOptions() []string {
 	return options
 }
 
-func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.AskOpt) (string, error) {
+func (variable *Variable) GetUserInput(defaultVal string, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (string, error) {
 	var answer string
 	var err error
 	switch variable.Type.Val {
@@ -278,7 +289,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 		}
 		answer = string(data)
 	case TypeSelect:
-		options := variable.GetOptions()
+		options := variable.GetOptions(parameters)
 		if err != nil {
 			return "", err
 		}
@@ -492,7 +503,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 
 		// ask question based on type to get value - if value field is not present
 		util.Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Val, variable.Type.Val)
-		answer, err := variable.GetUserInput(defaultVal, surveyOpts...)
+		answer, err := variable.GetUserInput(defaultVal, data.TemplateData, surveyOpts...)
 		if err != nil {
 			return nil, err
 		}

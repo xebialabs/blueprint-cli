@@ -280,7 +280,7 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Val: TypeSelect},
 			Options: []VarField{{Val: "a"}, {Val: "b"}, {Val: "c"}},
 		}
-		values := v.GetOptions()
+		values := v.GetOptions(dummyData)
 		assert.Len(t, values, 3)
 		assert.Equal(t, []string{"a", "b", "c"}, values)
 	})
@@ -291,7 +291,7 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Val: TypeSelect},
 			Options: []VarField{{Val: "aws.regions(ecs)", Tag: "!fn"}},
 		}
-		values := v.GetOptions()
+		values := v.GetOptions(dummyData)
 		assert.True(t, len(values) > 1)
 	})
 
@@ -301,7 +301,30 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Val: TypeSelect},
 			Options: []VarField{{Val: "aws.regs", Tag: "!fn"}},
 		}
-		out := v.GetOptions()
+		out := v.GetOptions(dummyData)
+		require.Nil(t, out)
+	})
+
+	t.Run("should return generated values for expression options tag", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeSelect},
+			Options: []VarField{{Val: "Foo ? Bar : (1, 2, 3)", Tag: "!expression"}},
+		}
+		values := v.GetOptions(map[string]interface{}{
+			"Foo": true,
+			"Bar": []string{"test", "foo"},
+		})
+		assert.True(t, len(values) == 2)
+	})
+
+	t.Run("should return nil on invalid expression tag for options", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeSelect},
+			Options: []VarField{{Val: "aws.regs()", Tag: "!expression"}},
+		}
+		out := v.GetOptions(dummyData)
 		require.Nil(t, out)
 	})
 }
