@@ -126,6 +126,32 @@ func Test_processCustomExpression(t *testing.T) {
 			float64(2),
 			false,
 		},
+		{
+			"should return true when a complex logical expression is evaluated",
+			args{
+				"((Foo == 10 && Bar != 10) ? Bar: Foo) == 200 && (Fooz == 'test' || 'test' == Fooz) && (Fooz + Foo == 'test10') && Foo != 20",
+				map[string]interface{}{
+					"Foo":  10,
+					"Bar":  200,
+					"Fooz": "test",
+				},
+			},
+			true,
+			false,
+		},
+		{
+			"should return 3 when a complex math expression is evaluated",
+			args{
+				"ceil(min(Foo / Bar * Fooz, Foo * 0.5 ) * round(2.8956))",
+				map[string]interface{}{
+					"Foo":  100,
+					"Bar":  200,
+					"Fooz": 1.88888,
+				},
+			},
+			float64(3),
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
