@@ -25,8 +25,9 @@ import (
 const (
 	FnAWS = "aws"
 
-	tagFn       = "!fn"
-	fmtTagValue = "!value %s"
+	tagFn         = "!fn"
+	tagExpression = "!expression"
+	fmtTagValue   = "!value %s"
 )
 
 // InputType constants
@@ -100,7 +101,7 @@ func setVariableField(field *reflect.Value, value *VarField) {
 	}
 }
 
-func ParseDependsOnValue(varField VarField, variables *[]Variable) (bool, error) {
+func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
 	tagVal := varField.Tag
 	fieldVal := varField.Val
 	if tagVal == tagFn {
@@ -119,6 +120,18 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable) (bool, error)
 		}
 		return dependsOnVal, nil
 	}
+	if tagVal == tagExpression {
+		value, err := ProcessCustomExpression(fieldVal, parameters)
+		if err != nil {
+			return false, err
+		}
+		dependsOnVal, ok := value.(bool)
+		if ok {
+			util.Verbose("[expression] Processed value of expression [%s] is: %v\n", fieldVal, dependsOnVal)
+			return dependsOnVal, nil
+		}
+		return false, fmt.Errorf("Expression [%s] result is invalid for a boolean field", fieldVal)
+	}
 	dependsOnVar, err := findVariableByName(variables, fieldVal)
 	if err != nil {
 		return false, err
@@ -127,7 +140,7 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable) (bool, error)
 }
 
 // GetDefaultVal variable struct functions
-func (variable *Variable) GetDefaultVal() string {
+func (variable *Variable) GetDefaultVal(variables map[string]interface{}) string {
 	defaultVal := variable.Default.Val
 	if variable.Default.Tag == tagFn {
 		values, err := processCustomFunction(defaultVal)
@@ -139,6 +152,17 @@ func (variable *Variable) GetDefaultVal() string {
 			return values[0]
 		}
 	}
+	if variable.Default.Tag == tagExpression {
+		value, err := ProcessCustomExpression(defaultVal, variables)
+		if err != nil {
+			util.Info("Error while processing default value !expression %s for %s. %s", defaultVal, variable.Name.Val, err.Error())
+			defaultVal = ""
+		} else {
+			processedVal := fmt.Sprint(value)
+			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", defaultVal, processedVal)
+			return processedVal
+		}
+	}
 
 	// return false if this is a skipped confirm question
 	if defaultVal == "" && variable.Type.Val == TypeConfirm {
@@ -147,7 +171,7 @@ func (variable *Variable) GetDefaultVal() string {
 	return defaultVal
 }
 
-func (variable *Variable) GetValueFieldVal() string {
+func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) string {
 	if variable.Value.Tag == tagFn {
 		values, err := processCustomFunction(variable.Value.Val)
 		if err != nil {
@@ -156,6 +180,17 @@ func (variable *Variable) GetValueFieldVal() string {
 		}
 		util.Verbose("[fn] Processed value of function [%s] is: %s\n", variable.Value.Val, values[0])
 		return values[0]
+	}
+	if variable.Default.Tag == tagExpression {
+		value, err := ProcessCustomExpression(variable.Value.Val, parameters)
+		if err != nil {
+			util.Info("Error while processing !expression %s. Please update the value for %s manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
+			return ""
+		} else {
+			processedVal := fmt.Sprint(value)
+			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", variable.Value.Val, processedVal)
+			return processedVal
+		}
 	}
 	return variable.Value.Val
 }
@@ -407,11 +442,11 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 	data := NewPreparedData()
 	for i, variable := range blueprintDoc.Variables {
 		// process default field value
-		defaultVal := variable.GetDefaultVal()
+		defaultVal := variable.GetDefaultVal(data.TemplateData)
 
 		// skip question based on DependsOn fields
 		if !util.IsStringEmpty(variable.DependsOnTrue.Val) {
-			dependsOnTrueVal, err := ParseDependsOnValue(variable.DependsOnTrue, &blueprintDoc.Variables)
+			dependsOnTrueVal, err := ParseDependsOnValue(variable.DependsOnTrue, &blueprintDoc.Variables, data.TemplateData)
 			if err != nil {
 				return nil, err
 			}
@@ -420,7 +455,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 			}
 		}
 		if !util.IsStringEmpty(variable.DependsOnFalse.Val) {
-			dependsOnFalseVal, err := ParseDependsOnValue(variable.DependsOnFalse, &blueprintDoc.Variables)
+			dependsOnFalseVal, err := ParseDependsOnValue(variable.DependsOnFalse, &blueprintDoc.Variables, data.TemplateData)
 			if err != nil {
 				return nil, err
 			}
@@ -431,7 +466,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 
 		// skip user input if value field is present
 		if variable.Value.Val != "" {
-			parsedVal := variable.GetValueFieldVal()
+			parsedVal := variable.GetValueFieldVal(data.TemplateData)
 
 			// handle confirm type specially
 			if variable.Type.Val == TypeConfirm {
