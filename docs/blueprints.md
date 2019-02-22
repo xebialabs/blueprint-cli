@@ -114,7 +114,7 @@ Or you can use backslashes to escape only the minus sign.
 Backslashes can be used anywhere in an expression to escape the very next character. Square bracketed parameter names can be used instead of plain parameter names at any time.
 
 
-#### Available custom functions for expression:
+#### Available custom functions for expressions:
 
 You can use the provided functions in an expression
 
