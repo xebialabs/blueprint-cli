@@ -88,9 +88,10 @@ func (c *Context) PrintConfiguration() {
 		c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Username,
 		c.XLRelease.(*XLReleaseServer).Home)
 
-	util.Info("Blueprint Context:\n  Provider: %s\n  Repository name: %s\n  Owner: %s\n  Branch: %s\n",
+	util.Info("Blueprint Context:\n  Provider: %s\n  Repository name: %s\n  Repository URL: %s\n  Owner: %s\n  Branch: %s\n",
 		c.BlueprintContext.Provider,
 		c.BlueprintContext.Name,
+		c.BlueprintContext.Url.String(),
 		c.BlueprintContext.Owner,
 		c.BlueprintContext.Branch)
 }

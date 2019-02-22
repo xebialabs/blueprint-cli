@@ -39,11 +39,13 @@ func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 
 	rootFlags.String(models.FlagBlueprintRepositoryProvider, models.DefaultBlueprintRepositoryProvider, "Provider for the blueprint repository")
 	rootFlags.String(models.FlagBlueprintRepositoryName, models.DefaultBlueprintRepositoryName, "Name of the blueprint repository")
+	rootFlags.String(models.FlagBlueprintRepositoryUrl, models.DefaultBlueprintRepositoryUrl, "URL of the blueprint repository")
 	rootFlags.String(models.FlagBlueprintRepositoryOwner, models.DefaultBlueprintRepositoryOwner, "Owner of the blueprint repository")
 	rootFlags.String(models.FlagBlueprintRepositoryBranch, models.DefaultBlueprintRepositoryBranch, "Branch of the blueprint repository")
 	rootFlags.String(models.FlagBlueprintRepositoryToken, models.DefaultBlueprintRepositoryToken, "API Token for the blueprint repository")
 	viper.BindPFlag(models.ViperKeyBlueprintRepositoryProvider, rootFlags.Lookup(models.FlagBlueprintRepositoryProvider))
 	viper.BindPFlag(models.ViperKeyBlueprintRepositoryName, rootFlags.Lookup(models.FlagBlueprintRepositoryName))
+	viper.BindPFlag(models.ViperKeyBlueprintRepositoryUrl, rootFlags.Lookup(models.FlagBlueprintRepositoryUrl))
 	viper.BindPFlag(models.ViperKeyBlueprintRepositoryOwner, rootFlags.Lookup(models.FlagBlueprintRepositoryOwner))
 	viper.BindPFlag(models.ViperKeyBlueprintRepositoryBranch, rootFlags.Lookup(models.FlagBlueprintRepositoryBranch))
 	viper.BindPFlag(models.ViperKeyBlueprintRepositoryToken, rootFlags.Lookup(models.FlagBlueprintRepositoryToken))
@@ -145,9 +147,19 @@ func readBlueprintRepoConfig(v *viper.Viper, prefix string) (*blueprint.Blueprin
 		branch = "master"
 	}
 
+	var repoUrl *url.URL
+	urlString := v.GetString(fmt.Sprintf("%s.url", prefix))
+	if urlString != "" {
+		repoUrl, err = url.Parse(urlString)
+		if err != nil {
+			return nil, fmt.Errorf("blueprint repository URL cannot be parsed: %s", err.Error())
+		}
+	}
+
 	return &blueprint.BlueprintContext{
 		Provider: repoProvider,
 		Name:     name,
+		Url:      repoUrl,
 		Owner:    v.GetString(fmt.Sprintf("%s.owner", prefix)),
 		Token:    v.GetString(fmt.Sprintf("%s.token", prefix)),
 		Branch:   branch,

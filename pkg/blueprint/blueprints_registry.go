@@ -3,6 +3,7 @@ package blueprint
 import (
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/repository"
 	"github.com/xebialabs/xl-cli/pkg/repository/github"
+	"github.com/xebialabs/xl-cli/pkg/repository/http"
 	"github.com/xebialabs/xl-cli/pkg/repository/mock"
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
@@ -34,6 +36,7 @@ var blueprintRepository repository.BlueprintRepository
 type BlueprintContext struct {
 	Provider string
 	Name     string
+	Url      *url.URL
 	Owner    string
 	Token    string
 	Branch   string
@@ -59,6 +62,13 @@ func (blueprintContext *BlueprintContext) initRepoClient() (map[string]*models.B
 			blueprintContext.Branch,
 			blueprintContext.Token,
 		)
+	case models.ProviderHttp:
+		blueprintRepository = http.NewHttpBlueprintRepository(
+			blueprintContext.Name,
+			blueprintContext.Url,
+			blueprintContext.Owner,
+			blueprintContext.Token,
+		)
 	default:
 		return nil, fmt.Errorf("no blueprint provider implementation found for %s", blueprintContext.Provider)
 	}
@@ -77,9 +87,9 @@ func (blueprintContext *BlueprintContext) parseRepositoryTree() (map[string]*mod
 	}
 
 	// Clear non-blueprint items in result map
-	for path := range blueprints {
-		if !util.IsStringInSlice(path, blueprintDirs) {
-			delete(blueprints, path)
+	for blueprintPath := range blueprints {
+		if !util.IsStringInSlice(blueprintPath, blueprintDirs) {
+			delete(blueprints, blueprintPath)
 		}
 	}
 	return blueprints, nil
