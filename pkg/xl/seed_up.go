@@ -1,6 +1,7 @@
 package xl
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/repository"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"gopkg.in/AlecAivazis/survey.v1"
 )
@@ -156,13 +158,20 @@ func applyFilesAndSave() {
 }
 
 func getYamlFiles() []string {
-	files, err := filepath.Glob("**/*.yaml")
+	var ymlFiles []string
 
-	if err != nil {
-		util.Fatal("Error while finding YAML files: %s\n", err)
+	for _, pattern := range repository.BlueprintMetadataFileExtensions {
+		glob := fmt.Sprintf("**/*%s",pattern )
+		files, err := filepath.Glob(glob)
+
+		if err != nil {
+			util.Fatal("Error while finding YAML files: %s\n", err)
+		}
+
+		ymlFiles = append(ymlFiles, files...)
 	}
 
-	return files
+	return ymlFiles
 }
 
 func getValFiles(fileName string) []string {
