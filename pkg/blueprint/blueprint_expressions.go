@@ -7,7 +7,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
-// ProcessCustomExpression evaluates the expressions passed in the blueprint.yaml file using https://github.com/Knetic/govaluat
+// ProcessCustomExpression evaluates the expressions passed in the blueprint.yaml file using https://github.com/Knetic/govaluate
 // {parameters} are the result of the spec -> parameters defined in the blueprint yaml. Parameters needs to be defined before use.
 func ProcessCustomExpression(exStr string, parameters map[string]interface{}) (interface{}, error) {
 	util.Verbose("[expression] Evaluating expression [%s]\n", exStr)
