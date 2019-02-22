@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/repository"
+	"github.com/xebialabs/xl-cli/pkg/util"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -29,7 +30,6 @@ func NewHttpBlueprintRepository(name string, repoUrl *url.URL, username string, 
 	repo.Client = &http.Client{}
 	repo.Name = name
 	repo.RepoUrl = repoUrl
-	// TODO: LOVE-628 Support for username & password
 	repo.Username = username
 	repo.Password = password
 
@@ -100,10 +100,19 @@ func (repo *HttpBlueprintRepository) checkBlueprintDefinitionFile(blueprintDir s
 }
 
 func (repo *HttpBlueprintRepository) getResponseFromUrl(filePath string) (*http.Response, error) {
-	reqUrl, _ := url.Parse(repo.RepoUrl.String())
-	reqUrl.Path = path.Join(repo.RepoUrl.Path, filePath)
-	print(fmt.Sprintf("===> %s\n", reqUrl.String()))
-	response, err := repo.Client.Get(reqUrl.String())
+	requestUrl, _ := url.Parse(repo.RepoUrl.String())
+	requestUrl.Path = path.Join(repo.RepoUrl.Path, filePath)
+
+	request, err := http.NewRequest(http.MethodGet, requestUrl.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	if repo.Username != "" {
+		util.Verbose("[http-repo] Setting basic auth headers for request '%s' with user '%s'\n", request.URL.String(), repo.Username)
+		request.SetBasicAuth(repo.Username, repo.Password)
+	}
+
+	response, err := repo.Client.Do(request)
 	if err != nil {
 		return nil, err
 	}
