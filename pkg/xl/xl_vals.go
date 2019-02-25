@@ -1,10 +1,11 @@
 package xl
 
 import (
-	"github.com/mitchellh/go-homedir"
-	"github.com/xebialabs/xl-cli/pkg/util"
 	"os"
 	"path"
+
+	"github.com/mitchellh/go-homedir"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 func ListHomeXlValsFiles() ([]string, error) {

@@ -16,11 +16,18 @@ import (
 	"github.com/xebialabs/yaml"
 )
 
+type ToProcess struct {
+	File   bool
+	Format bool
+	Value  bool
+}
+
 type Document struct {
 	unmarshalleddocument
 	Line   int
 	Column int
 	Zip    string
+	Process  ToProcess
 }
 
 type DocumentReader struct {
@@ -57,6 +64,10 @@ func NewDocumentReader(reader io.Reader) *DocumentReader {
 }
 
 func (reader *DocumentReader) ReadNextYamlDocument() (*Document, error) {
+	return reader.ReadNextYamlDocumentWithProcess(ToProcess{true, true, true})
+}
+
+func (reader *DocumentReader) ReadNextYamlDocumentWithProcess(process ToProcess) (*Document, error) {
 	pdoc := unmarshalleddocument{}
 	line, column, err := reader.decoder.DecodeWithPosition(&pdoc)
 
@@ -67,10 +78,10 @@ func (reader *DocumentReader) ReadNextYamlDocument() (*Document, error) {
 	}
 
 	if err != nil {
-		return &Document{unmarshalleddocument{}, line, column, ""}, err
+		return &Document{unmarshalleddocument{}, line, column, "", process}, err
 	}
 
-	doc := Document{pdoc, line, column, ""}
+	doc := Document{pdoc, line, column, "", process}
 	if doc.Metadata == nil {
 		doc.Metadata = map[interface{}]interface{}{}
 	}
@@ -135,6 +146,25 @@ func (doc *Document) Preprocess(context *Context, artifactsDir string) error {
 
 		doc.Zip = c.zipfile.Name()
 	}
+
+	return err
+}
+
+func (doc *Document) ConditionalPreprocess(context *Context, artifactsDir string) error {
+	c := processingContext{context, artifactsDir, nil, nil, make(map[string]bool), 0}
+
+	if c.context != nil {
+		if c.context.XLDeploy != nil && c.context.XLDeploy.AcceptsDoc(doc) {
+			c.context.XLDeploy.PreprocessDoc(doc)
+		}
+
+		if c.context.XLRelease != nil && c.context.XLRelease.AcceptsDoc(doc) {
+			c.context.XLRelease.PreprocessDoc(doc)
+		}
+	}
+	spec := util.TransformToMap(doc.Spec)
+
+	err := doc.processListOfMaps(spec, &c)
 
 	return err
 }
@@ -227,36 +257,40 @@ func (doc *Document) processValueTag(tag *yaml.CustomTag, c *processingContext) 
 }
 
 func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
-	doc.normalizeFileTag(tag, c)
+	if !doc.Process.File {
+		return tag, nil
+	} else {
+		doc.normalizeFileTag(tag, c)
 
-	err := doc.validateFileTag(tag, c)
-	if err != nil {
-		return nil, err
-	}
-
-	if c.zipwriter == nil {
-		zipfile, err := ioutil.TempFile("", "yaml")
+		err := doc.validateFileTag(tag, c)
 		if err != nil {
 			return nil, err
 		}
-		util.Verbose("\tfirst !file tag found, creating temporary ZIP file %s\n", zipfile.Name())
-		c.zipfile = zipfile
-		c.zipwriter = zip.NewWriter(c.zipfile)
-	}
 
-	relativeFilename := tag.Value
+		if c.zipwriter == nil {
+			zipfile, err := ioutil.TempFile("", "yaml")
+			if err != nil {
+				return nil, err
+			}
+			util.Verbose("\tfirst !file tag found, creating temporary ZIP file %s\n", zipfile.Name())
+			c.zipfile = zipfile
+			c.zipwriter = zip.NewWriter(c.zipfile)
+		}
 
-	if _, found := c.seenFiles[relativeFilename]; found {
-		util.Verbose("\tfile %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
-		return tag, nil
-	}
+		relativeFilename := tag.Value
 
-	fileTag, writeError := doc.writeFileOrDir(tag, relativeFilename, c)
-	if writeError != nil {
-		return nil, writeError
+		if _, found := c.seenFiles[relativeFilename]; found {
+			util.Verbose("\tfile %s has already been added to the ZIP file. Skipping it\n", relativeFilename)
+			return tag, nil
+		}
+
+		fileTag, writeError := doc.writeFileOrDir(tag, relativeFilename, c)
+		if writeError != nil {
+			return nil, writeError
+		}
+		c.seenFiles[relativeFilename] = true
+		return fileTag, nil
 	}
-	c.seenFiles[relativeFilename] = true
-	return fileTag, nil
 }
 
 func (doc *Document) normalizeFileTag(tag *yaml.CustomTag, c *processingContext) {
