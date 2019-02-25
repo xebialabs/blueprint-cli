@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/deckarep/golang-set"
 	"github.com/spf13/viper"
@@ -107,13 +108,28 @@ func runAndCaptureResponse(status string, cmd models.Command) {
 	outStr, errorStr := util.ExecuteCommandAndShowLogs(cmd)
 
 	if outStr != "" {
-		util.Info("%s \n", outStr)
+		createLogFile("xl-seed-log.txt", outStr)
+		indx := strings.Index(outStr, "***************")
+		if indx != -1 {
+			util.Info(outStr[indx:])
+		}
 	}
 
 	if errorStr != "" {
+		createLogFile("xl-seed-error.txt", errorStr)
 		util.Fatal("Error while %s the xl seed image: %s\n", status, errorStr)
 	}
 }
+
+func createLogFile(fileName string, contents string) {
+	f,err :=os.Create(fileName)
+	if err != nil {
+		util.Fatal(" Error creating a file %s",err)
+	}
+	f.WriteString(contents)
+	f.Close()
+}
+
 
 func applyFilesAndSave() {
 

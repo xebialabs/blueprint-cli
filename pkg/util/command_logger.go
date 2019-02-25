@@ -1,13 +1,18 @@
 package util
 
 import (
+	"github.com/briandowns/spinner"
 	"io"
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 
 	"github.com/xebialabs/xl-cli/pkg/models"
 )
+
+var isStart = false
+var prevIndx = -1
 
 func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 	var out []byte
@@ -17,9 +22,11 @@ func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 		if n > 0 {
 			d := buf[:n]
 			out = append(out, d...)
-			_, err := w.Write(d)
-			if err != nil {
-				return out, err
+			if IsVerbose {
+				_, err := w.Write(d)
+				if err != nil {
+					return out, err
+				}
 			}
 		}
 		if err != nil {
@@ -35,6 +42,11 @@ func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
 
 	cmd := exec.Command(command.Name, command.Args...)
+	if !IsVerbose {
+		s := spinner.New(spinner.CharSets[4], 100*time.Millisecond)
+		s.Start()
+		defer s.Stop()
+	}
 
 	var stdout, stderr []byte
 	var errStdout, errStderr error
@@ -47,9 +59,6 @@ func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
 		Fatal("cmd.Start() failed with '%s'\n", err)
 	}
 
-	// cmd.Wait() should be called only after we finish reading
-	// from stdoutIn and stderrIn.
-	// wg ensures that we finish
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
