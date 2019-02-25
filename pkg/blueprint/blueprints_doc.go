@@ -104,7 +104,8 @@ func setVariableField(field *reflect.Value, value *VarField) {
 func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
 	tagVal := varField.Tag
 	fieldVal := varField.Val
-	if tagVal == tagFn {
+	switch tagVal {
+	case tagFn:
 		values, err := processCustomFunction(fieldVal)
 		if err != nil {
 			return false, err
@@ -119,8 +120,7 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 			return false, err
 		}
 		return dependsOnVal, nil
-	}
-	if tagVal == tagExpression {
+	case tagExpression:
 		value, err := ProcessCustomExpression(fieldVal, parameters)
 		if err != nil {
 			return false, err
@@ -142,7 +142,8 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 // GetDefaultVal variable struct functions
 func (variable *Variable) GetDefaultVal(variables map[string]interface{}) string {
 	defaultVal := variable.Default.Val
-	if variable.Default.Tag == tagFn {
+	switch variable.Default.Tag {
+	case tagFn:
 		values, err := processCustomFunction(defaultVal)
 		if err != nil {
 			util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
@@ -151,8 +152,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) string
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", defaultVal, values[0])
 			return values[0]
 		}
-	}
-	if variable.Default.Tag == tagExpression {
+	case tagExpression:
 		value, err := ProcessCustomExpression(defaultVal, variables)
 		if err != nil {
 			util.Info("Error while processing default value !expression [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
@@ -172,7 +172,8 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) string
 }
 
 func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) string {
-	if variable.Value.Tag == tagFn {
+	switch variable.Value.Tag {
+	case tagFn:
 		values, err := processCustomFunction(variable.Value.Val)
 		if err != nil {
 			util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
@@ -180,8 +181,7 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) st
 		}
 		util.Verbose("[fn] Processed value of function [%s] is: %s\n", variable.Value.Val, values[0])
 		return values[0]
-	}
-	if variable.Value.Tag == tagExpression {
+	case tagExpression:
 		value, err := ProcessCustomExpression(variable.Value.Val, parameters)
 		if err != nil {
 			util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
@@ -198,7 +198,8 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) st
 func (variable *Variable) GetOptions(parameters map[string]interface{}) []string {
 	var options []string
 	for _, option := range variable.Options {
-		if option.Tag == tagFn {
+		switch option.Tag {
+		case tagFn:
 			opts, err := processCustomFunction(option.Val)
 			if err != nil {
 				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
@@ -206,7 +207,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 			}
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Val, opts)
 			options = append(options, opts...)
-		} else if option.Tag == tagExpression {
+		case tagExpression:
 			opts, err := ProcessCustomExpression(option.Val, parameters)
 			if err != nil {
 				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
@@ -220,7 +221,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, "Return type should be a string array")
 				return nil
 			}
-		} else {
+		default:
 			options = append(options, option.Val)
 		}
 	}
