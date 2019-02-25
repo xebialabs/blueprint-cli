@@ -228,7 +228,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 	return options
 }
 
-func (variable *Variable) GetUserInput(defaultVal string, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (string, error) {
+func (variable *Variable) GetUserInput(defaultVal string, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (interface{}, error) {
 	var answer string
 	var err error
 	switch variable.Type.Val {
@@ -322,9 +322,11 @@ func (variable *Variable) GetUserInput(defaultVal string, parameters map[string]
 		if err != nil {
 			return "", err
 		}
-		answer = strconv.FormatBool(confirm)
 		variable.Value.Bool = confirm
+		// TypeConfirm returns a boolean type
+		return confirm, nil
 	}
+	// This always returns string
 	return answer, err
 }
 
@@ -483,21 +485,13 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 		if variable.Value.Val != "" {
 			parsedVal := variable.GetValueFieldVal(data.TemplateData)
 
-			// handle confirm type specially
-			if variable.Type.Val == TypeConfirm {
-				switch strings.ToLower(parsedVal) {
-				case "yes":
-					parsedVal = "true"
-					variable.Value.Bool = true
-				case "no":
-					parsedVal = "false"
-				}
-				blueprintDoc.Variables[i] = variable
-			}
-
 			// check if resulting value is non-empty
 			if parsedVal != "" {
-				saveItemToTemplateDataMap(&variable, data, parsedVal)
+				if variable.Type.Val == TypeConfirm {
+					saveItemToTemplateDataMap(&variable, data, variable.Value.Bool)
+				} else {
+					saveItemToTemplateDataMap(&variable, data, parsedVal)
+				}
 				util.Verbose("[dataPrep] Skipping question for parameter [%s] because value [%s] is present\n", variable.Name.Val, variable.Value.Val)
 				continue
 			} else {
@@ -597,7 +591,7 @@ func parseParameterMap(m *map[interface{}]interface{}) (Variable, error) {
 		case bool:
 			// Set boolean field
 			field := getVariableField(&parsedVar, strings.Title(k.(string)))
-			setVariableField(&field, &VarField{Bool: val})
+			setVariableField(&field, &VarField{Val: strconv.FormatBool(val), Bool: val})
 		case []interface{}:
 			// Set []VarField
 			field := getVariableField(&parsedVar, strings.Title(k.(string)))
@@ -749,7 +743,7 @@ func findVariableByName(variables *[]Variable, name string) (*Variable, error) {
 	return nil, fmt.Errorf("no variable found in list by name [%s]", name)
 }
 
-func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data string) {
+func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
 	if variable.Secret.Bool == true {
 		preparedData.Secrets[variable.Name.Val] = data
 		preparedData.TemplateData[variable.Name.Val] = fmt.Sprintf(fmtTagValue, variable.Name.Val)

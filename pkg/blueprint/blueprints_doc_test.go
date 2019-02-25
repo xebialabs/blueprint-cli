@@ -54,7 +54,7 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
            - name: dep
              description: depends on others
              type: Input
-             dependsOnTrue: !expression "isit == true"
+             dependsOnTrue: !expression "isit && true"
              dependsOnFalse: isitnot
            files:
            - path: xebialabs/foo.yaml
@@ -197,7 +197,7 @@ func TestParseDependsOnValue(t *testing.T) {
 		vars[0] = Variable{
 			Name:  VarField{Val: "confirm"},
 			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: true},
+			Value: VarField{Bool: true, Val: "true"},
 		}
 		vars[1] = Variable{
 			Name:          VarField{Val: "test"},
@@ -348,7 +348,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 		variables[0] = Variable{
 			Name:  VarField{Val: "confirm"},
 			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: true},
+			Value: VarField{Bool: true, Val: "true"},
 		}
 		variables[1] = Variable{
 			Name:           VarField{Val: "test"},
@@ -362,7 +362,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 		variables[0] = Variable{
 			Name:  VarField{Val: "confirm"},
 			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: false},
+			Value: VarField{Bool: false, Val: "false"},
 		}
 		variables[1] = Variable{
 			Name:          VarField{Val: "test"},
@@ -377,7 +377,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 		variables[0] = Variable{
 			Name:  VarField{Val: "confirm"},
 			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: false},
+			Value: VarField{Bool: false, Val: "false"},
 		}
 		variables[1] = Variable{
 			Name:           VarField{Val: "test"},
@@ -391,7 +391,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 		variables[0] = Variable{
 			Name:  VarField{Val: "confirm"},
 			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: true},
+			Value: VarField{Bool: true, Val: "true"},
 		}
 		variables[1] = Variable{
 			Name:          VarField{Val: "test"},
@@ -559,14 +559,14 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Name:        VarField{Val: "pass"},
 			Type:        VarField{Val: TypeInput},
 			Description: VarField{Val: "password?"},
-			Secret:      VarField{Bool: true},
+			Secret:      VarField{Bool: true, Val: "true"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
 			Name:         VarField{Val: "test"},
 			Type:         VarField{Val: TypeInput},
 			Default:      VarField{Val: "lala"},
 			Description:  VarField{Val: "help text"},
-			SaveInXlVals: VarField{Bool: true},
+			SaveInXlVals: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[1])
 		assert.Equal(t, TemplateConfig{
 			File:       "xebialabs/foo.yaml",
@@ -589,14 +589,14 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Name:        VarField{Val: "pass"},
 			Type:        VarField{Val: TypeInput},
 			Description: VarField{Val: "password?"},
-			Secret:      VarField{Bool: true},
+			Secret:      VarField{Bool: true, Val: "true"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
 			Name:         VarField{Val: "test"},
 			Type:         VarField{Val: TypeInput},
 			Default:      VarField{Val: "lala"},
 			Description:  VarField{Val: "help text"},
-			SaveInXlVals: VarField{Bool: true},
+			SaveInXlVals: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[1])
 		assert.Equal(t, Variable{
 			Name:  VarField{Val: "fn"},
@@ -618,7 +618,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Name:        VarField{Val: "isit"},
 			Type:        VarField{Val: TypeConfirm},
 			Description: VarField{Val: "is it?"},
-			Value:       VarField{Bool: true},
+			Value:       VarField{Bool: true, Val: "true"},
 		}, doc.Variables[4])
 		assert.Equal(t, Variable{
 			Name:        VarField{Val: "isitnot"},
@@ -629,7 +629,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Name:           VarField{Val: "dep"},
 			Type:           VarField{Val: TypeInput},
 			Description:    VarField{Val: "depends on others"},
-			DependsOnTrue:  VarField{Val: "isit == true", Tag: tagExpression},
+			DependsOnTrue:  VarField{Val: "isit && true", Tag: tagExpression},
 			DependsOnFalse: VarField{Val: "isitnot"},
 		}, doc.Variables[6])
 	})
@@ -932,17 +932,17 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 					},
 				},
 				Variables: []Variable{
-					{Name: VarField{Val: "foo"}, Type: VarField{Val: "Confirm"}, Value: VarField{Bool: true}},
-					{Name: VarField{Val: "bar"}, Type: VarField{Val: "Confirm"}, Value: VarField{Bool: false}},
+					{Name: VarField{Val: "foo"}, Type: VarField{Val: "Confirm"}, Value: VarField{Bool: true, Val: "true"}},
+					{Name: VarField{Val: "bar"}, Type: VarField{Val: "Confirm"}, Value: VarField{Bool: false, Val: "false"}},
 				},
 			},
 			args{templatePath, blueprintRepository},
 			[]TemplateConfig{
 				{File: "test.yaml", FullPath: "", Repository: blueprintRepository},
-				{File: "test2.yaml", FullPath: "", Repository: blueprintRepository, DependsOnTrue: VarField{Val: "foo", Bool: false, Tag: ""}},
-				{File: "test3.yaml", FullPath: "", Repository: blueprintRepository, DependsOnFalse: VarField{Val: "bar", Bool: false, Tag: ""}},
-				{File: "test4.yaml", FullPath: "", Repository: blueprintRepository, DependsOnTrue: VarField{Val: "bar", Bool: false, Tag: ""}},
-				{File: "test5.yaml", FullPath: "", Repository: blueprintRepository, DependsOnFalse: VarField{Val: "foo", Bool: false, Tag: ""}},
+				{File: "test2.yaml", FullPath: "", Repository: blueprintRepository, DependsOnTrue: VarField{Val: "foo", Tag: ""}},
+				{File: "test3.yaml", FullPath: "", Repository: blueprintRepository, DependsOnFalse: VarField{Val: "bar", Tag: ""}},
+				{File: "test4.yaml", FullPath: "", Repository: blueprintRepository, DependsOnTrue: VarField{Val: "bar", Tag: ""}},
+				{File: "test5.yaml", FullPath: "", Repository: blueprintRepository, DependsOnFalse: VarField{Val: "foo", Tag: ""}},
 			},
 			nil,
 		},

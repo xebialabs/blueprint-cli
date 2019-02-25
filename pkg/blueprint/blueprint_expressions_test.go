@@ -39,7 +39,7 @@ func Test_processCustomExpression(t *testing.T) {
 			false,
 		},
 		{
-			"should return true when parameter is evaluated",
+			"should return false when parameter is evaluated",
 			args{
 				"Foo && Bar",
 				map[string]interface{}{

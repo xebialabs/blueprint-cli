@@ -7,6 +7,7 @@ spec:
   accessSecret: {{.AWSAccessSecret}}
 
 ---
+{{if .TestDepends}}
 apiVersion: xl-deploy/v1
 kind: Environments
 spec:
@@ -20,3 +21,4 @@ spec:
   - "~Infrastructure/aws"
   dictionaries:
   - "~Environments/AWS Dictionary"
+{{end}}
