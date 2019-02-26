@@ -46,6 +46,7 @@ dependencies {
         test name: 'github.com/stretchr/testify/',          tag: 'v1.2.2'
         test name: 'github.com/stretchr/testify/assert',    tag: 'v1.2.2'
         test name: 'golang.org/x/crypto/ssh/terminal'
+        test name: 'github.com/jarcoal/httpmock',           tag: 'v1'
     }
 }
 

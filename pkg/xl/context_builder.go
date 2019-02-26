@@ -150,7 +150,7 @@ func readBlueprintRepoConfig(v *viper.Viper, prefix string) (*blueprint.Blueprin
 	var repoUrl *url.URL
 	urlString := v.GetString(fmt.Sprintf("%s.url", prefix))
 	if urlString != "" {
-		repoUrl, err = url.Parse(urlString)
+		repoUrl, err = url.ParseRequestURI(urlString)
 		if err != nil {
 			return nil, fmt.Errorf("blueprint repository URL cannot be parsed: %s", err.Error())
 		}

@@ -67,7 +67,7 @@ func TestContextBuilder(t *testing.T) {
 		assert.Equal(t, "r3l34s3", c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Password)
 	})
 
-	t.Run("build simple context for Blueprint repository", func(t *testing.T) {
+	t.Run("build simple context for Blueprint repository with GitHub provider", func(t *testing.T) {
 		v := viper.New()
 		v.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderGitHub)
 		v.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
@@ -83,6 +83,36 @@ func TestContextBuilder(t *testing.T) {
 		assert.Equal(t, models.ProviderGitHub, c.BlueprintContext.Provider)
 		assert.Equal(t, "blueprints", c.BlueprintContext.Name)
 		assert.Equal(t, "xebialabs", c.BlueprintContext.Owner)
+	})
+
+	t.Run("build simple context for Blueprint repository with HTTP provider", func(t *testing.T) {
+		v := viper.New()
+		v.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderHttp)
+		v.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
+		v.Set(models.ViperKeyBlueprintRepositoryUrl, "https://dist.xebialabs.com/public/blueprints")
+
+		c, err := BuildContext(v, nil, []string{})
+
+		assert.Nil(t, err)
+		assert.NotNil(t, c)
+		assert.Nil(t, c.XLDeploy)
+		assert.Nil(t, c.XLRelease)
+		assert.NotNil(t, c.BlueprintContext)
+		assert.Equal(t, models.ProviderHttp, c.BlueprintContext.Provider)
+		assert.Equal(t, "blueprints", c.BlueprintContext.Name)
+		assert.Equal(t, "https://dist.xebialabs.com/public/blueprints", c.BlueprintContext.Url.String())
+	})
+
+	t.Run("raise error for context with invalid url for Blueprint repository with HTTP provider", func(t *testing.T) {
+		v := viper.New()
+		v.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderHttp)
+		v.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
+		v.Set(models.ViperKeyBlueprintRepositoryUrl, "non-url-string")
+
+		_, err := BuildContext(v, nil, []string{})
+
+		assert.NotNil(t, err)
+		assert.Equal(t, "blueprint repository URL cannot be parsed: parse non-url-string: invalid URI for request", err.Error())
 	})
 
 	t.Run("build full context for XL Deploy and XL Release and Blueprint repository", func(t *testing.T) {
