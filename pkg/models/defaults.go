@@ -31,12 +31,12 @@ const (
 	DefaultXlReleaseUsername            = "admin"
 	DefaultXlReleasePassword            = "admin"
 
-	DefaultBlueprintRepositoryName      = "blueprints"
-	DefaultBlueprintRepositoryUrl       = ""
-	DefaultBlueprintRepositoryOwner     = "xebialabs"
+	DefaultBlueprintRepositoryName      = "XL Blueprints"
+	DefaultBlueprintRepositoryUrl       = "https://dist.xebialabs.com/public/blueprints/"
+	DefaultBlueprintRepositoryOwner     = ""
 	DefaultBlueprintRepositoryToken     = ""
-	DefaultBlueprintRepositoryBranch    = "master"
-	DefaultBlueprintRepositoryProvider  = ProviderGitHub
+	DefaultBlueprintRepositoryBranch    = ""
+	DefaultBlueprintRepositoryProvider  = ProviderHttp
 )
 
 
