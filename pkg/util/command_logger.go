@@ -5,14 +5,23 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
-var isStart = false
-var prevIndx = -1
+var currentTask = ""
+var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+
+// TODO a better way or to use the APIs available
+var generatedPlan = "c.x.d.s.deployment.DeploymentService - Generated plan for currentTask"
+var phaseLogStart = "# [Plan phase] Deploy\n"
+var phaseLogEnd = "on K8S\n"
+var executingLog = "Publishing state change QUEUED -> EXECUTING"
+var executedLog = "Publishing state change EXECUTED -> DONE"
+
 
 func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 	var out []byte
@@ -22,6 +31,35 @@ func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 		if n > 0 {
 			d := buf[:n]
 			out = append(out, d...)
+
+			eventLog := string(d)
+			if strings.Index(eventLog, generatedPlan) != -1 {
+				length := len(phaseLogStart)
+				i:= strings.Index(eventLog, phaseLogStart)
+				j:= strings.Index(eventLog, phaseLogEnd) - 1
+				if i > 0 && j > 0 {
+					currentTask = eventLog[i +length :j]
+					currentTask = strings.Replace(currentTask, "* Deploy", "", -1)
+					currentTask = strings.Replace(currentTask, "1.0.0", "", -1)
+					currentTask = strings.TrimSpace(currentTask)
+					s.Stop()
+					w.Write([]byte("Starting deployment of "+ currentTask +"\n\n"))
+					s.Start()
+				}
+			}
+
+			if strings.Index(eventLog, executingLog) != -1 {
+				s.Stop()
+				w.Write([]byte("Deploying "+ currentTask +"\n\n"))
+				s.Start()
+			}
+
+			if strings.Index(eventLog, executedLog) != -1 {
+				s.Stop()
+				w.Write([]byte("Deployed "+ currentTask +"\n\n"))
+				s.Start()
+			}
+
 			if IsVerbose {
 				_, err := w.Write(d)
 				if err != nil {
@@ -43,9 +81,7 @@ func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
 
 	cmd := exec.Command(command.Name, command.Args...)
 	if !IsVerbose {
-		s := spinner.New(spinner.CharSets[4], 100*time.Millisecond)
 		s.Start()
-		defer s.Stop()
 	}
 
 	var stdout, stderr []byte
@@ -78,6 +114,8 @@ func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
 		Fatal("failed to capture stdout or stderr\n")
 	}
 	outStr, errStr := string(stdout), string(stderr)
+
+	s.Stop()
 
 	return outStr, errStr
 }
