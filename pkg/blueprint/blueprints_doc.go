@@ -142,7 +142,7 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 }
 
 // GetDefaultVal variable struct functions
-func (variable *Variable) GetDefaultVal(variables map[string]interface{}) string {
+func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interface{} {
 	defaultVal := variable.Default.Val
 	switch variable.Default.Tag {
 	case tagFn:
@@ -152,6 +152,14 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) string
 			defaultVal = ""
 		} else {
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", defaultVal, values[0])
+			if variable.Type.Val == TypeConfirm {
+				boolVal, err := strconv.ParseBool(values[0])
+				if err != nil {
+					util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
+					return false
+				}
+				return boolVal
+			}
 			return values[0]
 		}
 	case tagExpression:
@@ -160,20 +168,19 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) string
 			util.Info("Error while processing default value !expression [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
 			defaultVal = ""
 		} else {
-			processedVal := fmt.Sprint(value)
-			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", defaultVal, processedVal)
-			return processedVal
+			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", defaultVal, value)
+			return value
 		}
 	}
 
 	// return false if this is a skipped confirm question
 	if defaultVal == "" && variable.Type.Val == TypeConfirm {
-		return strconv.FormatBool(false)
+		return false
 	}
 	return defaultVal
 }
 
-func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) string {
+func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) interface{} {
 	switch variable.Value.Tag {
 	case tagFn:
 		values, err := processCustomFunction(variable.Value.Val)
@@ -182,6 +189,14 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) st
 			return ""
 		}
 		util.Verbose("[fn] Processed value of function [%s] is: %s\n", variable.Value.Val, values[0])
+		if variable.Type.Val == TypeConfirm {
+			boolVal, err := strconv.ParseBool(values[0])
+			if err != nil {
+				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
+				return false
+			}
+			return boolVal
+		}
 		return values[0]
 	case tagExpression:
 		value, err := ProcessCustomExpression(variable.Value.Val, parameters)
@@ -189,9 +204,8 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) st
 			util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
 			return ""
 		} else {
-			processedVal := fmt.Sprint(value)
-			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", variable.Value.Val, processedVal)
-			return processedVal
+			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", variable.Value.Val, value)
+			return value
 		}
 	}
 	return variable.Value.Val
@@ -230,7 +244,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 	return options
 }
 
-func (variable *Variable) GetUserInput(defaultVal string, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (interface{}, error) {
+func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (interface{}, error) {
 	var answer string
 	var err error
 	switch variable.Type.Val {
@@ -250,13 +264,13 @@ func (variable *Variable) GetUserInput(defaultVal string, parameters map[string]
 			// if user bypassed question, replace with default value
 			if answer == "" {
 				util.Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Val, defaultVal)
-				answer = defaultVal
+				answer = defaultVal.(string)
 			}
 		} else {
 			err = survey.AskOne(
 				&survey.Input{
 					Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
-					Default: defaultVal,
+					Default: defaultVal.(string),
 				},
 				&answer,
 				validatePrompt(variable.Pattern.Val, false),
@@ -267,7 +281,7 @@ func (variable *Variable) GetUserInput(defaultVal string, parameters map[string]
 		err = survey.AskOne(
 			&survey.Editor{
 				Message:       prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
-				Default:       defaultVal,
+				Default:       defaultVal.(string),
 				HideDefault:   true,
 				AppendDefault: true,
 			},
@@ -280,7 +294,7 @@ func (variable *Variable) GetUserInput(defaultVal string, parameters map[string]
 		err = survey.AskOne(
 			&survey.Input{
 				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the file path (relative/absolute) for %s?", variable.Name.Val)),
-				Default: defaultVal,
+				Default: defaultVal.(string),
 			},
 			&filePath,
 			validateFilePath(),
@@ -303,7 +317,7 @@ func (variable *Variable) GetUserInput(defaultVal string, parameters map[string]
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Description.Val, fmt.Sprintf("Select value for %s?", variable.Name.Val)),
 				Options:  options,
-				Default:  defaultVal,
+				Default:  defaultVal.(string),
 				PageSize: 10,
 			},
 			&answer,
@@ -720,7 +734,7 @@ func validateFilePath() func(val interface{}) error {
 	}
 }
 
-func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsOn bool, dataMap *PreparedData, defaultVal string, condition bool) bool {
+func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsOn bool, dataMap *PreparedData, defaultVal interface{}, condition bool) bool {
 	if dependsOn == condition {
 		saveItemToTemplateDataMap(currentVar, dataMap, defaultVal)
 		util.Verbose("[dataPrep] Skipping question for parameter [%s] because DependsOn [%s] value is %t\n", currentVar.Name.Val, dependsOnVal, condition)

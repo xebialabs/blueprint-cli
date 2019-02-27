@@ -96,7 +96,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type: VarField{Val: TypeConfirm},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
-		assert.Equal(t, "false", defaultVal)
+		assert.Equal(t, false, defaultVal)
 	})
 
 	t.Run("should return empty string when invalid function tag in default field", func(t *testing.T) {
@@ -147,7 +147,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		defaultVal = v.GetDefaultVal(map[string]interface{}{
 			"Foo": 100,
 		})
-		assert.Equal(t, "true", defaultVal)
+		assert.Equal(t, true, defaultVal)
 	})
 }
 
@@ -269,7 +269,7 @@ func TestGetValueFieldVal(t *testing.T) {
 		defaultVal = v.GetValueFieldVal(map[string]interface{}{
 			"Foo": 100,
 		})
-		assert.Equal(t, "true", defaultVal)
+		assert.Equal(t, true, defaultVal)
 	})
 }
 
