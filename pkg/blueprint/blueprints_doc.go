@@ -27,8 +27,9 @@ const (
 	FnAWS = "aws"
 	FnOs  = "os"
 
-	tagFn       = "!fn"
-	fmtTagValue = "!value %s"
+	tagFn         = "!fn"
+	tagExpression = "!expression"
+	fmtTagValue   = "!value %s"
 )
 
 // InputType constants
@@ -102,10 +103,11 @@ func setVariableField(field *reflect.Value, value *VarField) {
 	}
 }
 
-func ParseDependsOnValue(varField VarField, variables *[]Variable) (bool, error) {
+func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
 	tagVal := varField.Tag
 	fieldVal := varField.Val
-	if tagVal == tagFn {
+	switch tagVal {
+	case tagFn:
 		values, err := processCustomFunction(fieldVal)
 		if err != nil {
 			return false, err
@@ -120,6 +122,17 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable) (bool, error)
 			return false, err
 		}
 		return dependsOnVal, nil
+	case tagExpression:
+		value, err := ProcessCustomExpression(fieldVal, parameters)
+		if err != nil {
+			return false, err
+		}
+		dependsOnVal, ok := value.(bool)
+		if ok {
+			util.Verbose("[expression] Processed value of expression [%s] is: %v\n", fieldVal, dependsOnVal)
+			return dependsOnVal, nil
+		}
+		return false, fmt.Errorf("Expression [%s] result is invalid for a boolean field", fieldVal)
 	}
 	dependsOnVar, err := findVariableByName(variables, fieldVal)
 	if err != nil {
@@ -129,16 +142,27 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable) (bool, error)
 }
 
 // GetDefaultVal variable struct functions
-func (variable *Variable) GetDefaultVal() string {
+func (variable *Variable) GetDefaultVal(variables map[string]interface{}) string {
 	defaultVal := variable.Default.Val
-	if variable.Default.Tag == tagFn {
+	switch variable.Default.Tag {
+	case tagFn:
 		values, err := processCustomFunction(defaultVal)
 		if err != nil {
-			util.Info("Error while processing default value !fn %s for %s. %s", defaultVal, variable.Name.Val, err.Error())
+			util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
 			defaultVal = ""
 		} else {
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", defaultVal, values[0])
 			return values[0]
+		}
+	case tagExpression:
+		value, err := ProcessCustomExpression(defaultVal, variables)
+		if err != nil {
+			util.Info("Error while processing default value !expression [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
+			defaultVal = ""
+		} else {
+			processedVal := fmt.Sprint(value)
+			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", defaultVal, processedVal)
+			return processedVal
 		}
 	}
 
@@ -149,38 +173,64 @@ func (variable *Variable) GetDefaultVal() string {
 	return defaultVal
 }
 
-func (variable *Variable) GetValueFieldVal() string {
-	if variable.Value.Tag == tagFn {
+func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) string {
+	switch variable.Value.Tag {
+	case tagFn:
 		values, err := processCustomFunction(variable.Value.Val)
 		if err != nil {
-			util.Info("Error while processing !fn %s. Please update the value for %s manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
+			util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
 			return ""
 		}
 		util.Verbose("[fn] Processed value of function [%s] is: %s\n", variable.Value.Val, values[0])
 		return values[0]
+	case tagExpression:
+		value, err := ProcessCustomExpression(variable.Value.Val, parameters)
+		if err != nil {
+			util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
+			return ""
+		} else {
+			processedVal := fmt.Sprint(value)
+			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", variable.Value.Val, processedVal)
+			return processedVal
+		}
 	}
 	return variable.Value.Val
 }
 
-func (variable *Variable) GetOptions() []string {
+func (variable *Variable) GetOptions(parameters map[string]interface{}) []string {
 	var options []string
 	for _, option := range variable.Options {
-		if option.Tag == tagFn {
+		switch option.Tag {
+		case tagFn:
 			opts, err := processCustomFunction(option.Val)
 			if err != nil {
-				util.Info("Error while processing !fn %s. Please update the value for %s manually. %s", option.Val, variable.Name.Val, err.Error())
+				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
 				return nil
 			}
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Val, opts)
 			options = append(options, opts...)
-		} else {
+		case tagExpression:
+			opts, err := ProcessCustomExpression(option.Val, parameters)
+			if err != nil {
+				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
+				return nil
+			}
+			processedOptions, ok := opts.([]string)
+			if ok {
+				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Val, processedOptions)
+				options = append(options, processedOptions...)
+			} else {
+				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, "Return type should be a string array")
+				return nil
+			}
+		default:
 			options = append(options, option.Val)
 		}
 	}
 	return options
 }
 
-func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.AskOpt) (string, error) {
+func (variable *Variable) GetUserInput(defaultVal string, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (interface{}, error) {
 	var answer string
 	var err error
 	switch variable.Type.Val {
@@ -245,7 +295,7 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 		}
 		answer = string(data)
 	case TypeSelect:
-		options := variable.GetOptions()
+		options := variable.GetOptions(parameters)
 		if err != nil {
 			return "", err
 		}
@@ -274,9 +324,11 @@ func (variable *Variable) GetUserInput(defaultVal string, surveyOpts ...survey.A
 		if err != nil {
 			return "", err
 		}
-		answer = strconv.FormatBool(confirm)
 		variable.Value.Bool = confirm
+		// TypeConfirm returns a boolean type
+		return confirm, nil
 	}
+	// This always returns string
 	return answer, err
 }
 
@@ -409,11 +461,11 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 	data := NewPreparedData()
 	for i, variable := range blueprintDoc.Variables {
 		// process default field value
-		defaultVal := variable.GetDefaultVal()
+		defaultVal := variable.GetDefaultVal(data.TemplateData)
 
 		// skip question based on DependsOn fields
 		if !util.IsStringEmpty(variable.DependsOnTrue.Val) {
-			dependsOnTrueVal, err := ParseDependsOnValue(variable.DependsOnTrue, &blueprintDoc.Variables)
+			dependsOnTrueVal, err := ParseDependsOnValue(variable.DependsOnTrue, &blueprintDoc.Variables, data.TemplateData)
 			if err != nil {
 				return nil, err
 			}
@@ -422,7 +474,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 			}
 		}
 		if !util.IsStringEmpty(variable.DependsOnFalse.Val) {
-			dependsOnFalseVal, err := ParseDependsOnValue(variable.DependsOnFalse, &blueprintDoc.Variables)
+			dependsOnFalseVal, err := ParseDependsOnValue(variable.DependsOnFalse, &blueprintDoc.Variables, data.TemplateData)
 			if err != nil {
 				return nil, err
 			}
@@ -433,23 +485,15 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 
 		// skip user input if value field is present
 		if variable.Value.Val != "" {
-			parsedVal := variable.GetValueFieldVal()
-
-			// handle confirm type specially
-			if variable.Type.Val == TypeConfirm {
-				switch strings.ToLower(parsedVal) {
-				case "yes":
-					parsedVal = "true"
-					variable.Value.Bool = true
-				case "no":
-					parsedVal = "false"
-				}
-				blueprintDoc.Variables[i] = variable
-			}
+			parsedVal := variable.GetValueFieldVal(data.TemplateData)
 
 			// check if resulting value is non-empty
 			if parsedVal != "" {
-				saveItemToTemplateDataMap(&variable, data, parsedVal)
+				if variable.Type.Val == TypeConfirm {
+					saveItemToTemplateDataMap(&variable, data, variable.Value.Bool)
+				} else {
+					saveItemToTemplateDataMap(&variable, data, parsedVal)
+				}
 				util.Verbose("[dataPrep] Skipping question for parameter [%s] because value [%s] is present\n", variable.Name.Val, variable.Value.Val)
 				continue
 			} else {
@@ -459,7 +503,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 
 		// ask question based on type to get value - if value field is not present
 		util.Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Val, variable.Type.Val)
-		answer, err := variable.GetUserInput(defaultVal, surveyOpts...)
+		answer, err := variable.GetUserInput(defaultVal, data.TemplateData, surveyOpts...)
 		if err != nil {
 			return nil, err
 		}
@@ -549,7 +593,7 @@ func parseParameterMap(m *map[interface{}]interface{}) (Variable, error) {
 		case bool:
 			// Set boolean field
 			field := getVariableField(&parsedVar, strings.Title(k.(string)))
-			setVariableField(&field, &VarField{Bool: val})
+			setVariableField(&field, &VarField{Val: strconv.FormatBool(val), Bool: val})
 		case []interface{}:
 			// Set []VarField
 			field := getVariableField(&parsedVar, strings.Title(k.(string)))
@@ -580,7 +624,7 @@ func parseParameterMap(m *map[interface{}]interface{}) (Variable, error) {
 		case yaml.CustomTag:
 			// Set string field with YAML tag
 			switch val.Tag {
-			case tagFn:
+			case tagFn, tagExpression:
 				field := getVariableField(&parsedVar, strings.Title(k.(string)))
 				setVariableField(&field, &VarField{Val: val.Value, Tag: val.Tag})
 			default:
@@ -611,7 +655,7 @@ func parseFileMap(m *map[interface{}]interface{}) (TemplateConfig, error) {
 			case yaml.CustomTag:
 				// Set string field with YAML tag
 				switch val.Tag {
-				case tagFn:
+				case tagFn, tagExpression:
 					field := reflect.ValueOf(&config).Elem().FieldByName(strings.Title(keyName))
 					setVariableField(&field, &VarField{Val: val.Value, Tag: val.Tag})
 				default:
@@ -701,7 +745,7 @@ func findVariableByName(variables *[]Variable, name string) (*Variable, error) {
 	return nil, fmt.Errorf("no variable found in list by name [%s]", name)
 }
 
-func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data string) {
+func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
 	if variable.Secret.Bool == true {
 		preparedData.Secrets[variable.Name.Val] = data
 		preparedData.TemplateData[variable.Name.Val] = fmt.Sprintf(fmtTagValue, variable.Name.Val)

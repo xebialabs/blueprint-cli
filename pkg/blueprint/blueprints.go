@@ -39,16 +39,16 @@ func AdjustPathSeperatorIfNeeded(blueprintTemplate string) string {
 	return re.ReplaceAllString(blueprintTemplate, string(os.PathSeparator))
 }
 
-func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable) (bool, error) {
+func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
 	if !util.IsStringEmpty(templateConfig.DependsOnTrue.Val) {
-		dependsOnTrueVal, err := ParseDependsOnValue(templateConfig.DependsOnTrue, variables)
+		dependsOnTrueVal, err := ParseDependsOnValue(templateConfig.DependsOnTrue, variables, parameters)
 		if err != nil {
 			return false, err
 		}
 		return !dependsOnTrueVal, nil
 	}
 	if !util.IsStringEmpty(templateConfig.DependsOnFalse.Val) {
-		dependsOnFalseVal, err := ParseDependsOnValue(templateConfig.DependsOnFalse, variables)
+		dependsOnFalseVal, err := ParseDependsOnValue(templateConfig.DependsOnFalse, variables, parameters)
 		if err != nil {
 			return false, err
 		}
@@ -115,7 +115,7 @@ func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprin
 
 	// execute each template file found
 	for _, config := range blueprintDoc.TemplateConfigs {
-		skipFile, err := shouldSkipFile(config, &blueprintDoc.Variables)
+		skipFile, err := shouldSkipFile(config, &blueprintDoc.Variables, preparedData.TemplateData)
 		if err != nil {
 			return err
 		}
