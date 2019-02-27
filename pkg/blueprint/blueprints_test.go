@@ -129,6 +129,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		assert.FileExists(t, "xld-infrastructure.yml")
 		assert.False(t, util.PathExists("xlr-pipeline.yml", false))
 		assert.True(t, util.PathExists("xlr-pipeline-2.yml", false))
+		assert.True(t, util.PathExists("xlr-pipeline-3.yml", false))
 		assert.FileExists(t, path.Join(outFolder, valuesFile))
 		assert.FileExists(t, path.Join(outFolder, secretsFile))
 		assert.FileExists(t, path.Join(outFolder, gitignoreFile))

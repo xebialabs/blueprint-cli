@@ -158,6 +158,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 					util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
 					return false
 				}
+				variable.Default.Bool = boolVal
 				return boolVal
 			}
 			return values[0]
@@ -169,6 +170,12 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 			defaultVal = ""
 		} else {
 			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", defaultVal, value)
+			boolVal, ok := value.(bool)
+			if ok {
+				if variable.Type.Val == TypeConfirm {
+					variable.Default.Bool = boolVal
+				}
+			}
 			return value
 		}
 	}
@@ -180,7 +187,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 	return defaultVal
 }
 
-func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) interface{} {
+func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) string {
 	switch variable.Value.Tag {
 	case tagFn:
 		values, err := processCustomFunction(variable.Value.Val)
@@ -193,9 +200,10 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) in
 			boolVal, err := strconv.ParseBool(values[0])
 			if err != nil {
 				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
-				return false
+				return ""
 			}
-			return boolVal
+			variable.Value.Bool = boolVal
+			return values[0]
 		}
 		return values[0]
 	case tagExpression:
@@ -205,7 +213,14 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) in
 			return ""
 		} else {
 			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", variable.Value.Val, value)
-			return value
+			boolVal, ok := value.(bool)
+			if ok {
+				if variable.Type.Val == TypeConfirm {
+					variable.Value.Bool = boolVal
+				}
+				return fmt.Sprint(boolVal)
+			}
+			return value.(string)
 		}
 	}
 	return variable.Value.Val
