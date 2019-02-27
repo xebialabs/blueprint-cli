@@ -121,18 +121,20 @@ build {
     simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
     def date = simpleDateFormat.format(new Date())
 
-    def ldflags = "-ldflags='" +
+    def ldflags = " -ldflags='" +
             ldflag("CliVersion", { -> project.version}) +
             ldflag("BuildVersion", gitVersionShort) +
             ldflag("BuildGitCommit", gitCommit) +
             ldflag("BuildDate", date) +
             (project.hasProperty("optimise") ? "-s -w" : "") +
             "'"
+    
+    def debugFlags = project.hasProperty("debug") ? " -gcflags \"all=-N -l\"" : ""
 
     run Paths.get("\${GOPATH}/bin/packr").toString() + " -i cmd/xl"
     go "generate cmd/xl/cmd/wrapper.go"
     // The ${} placeholder will be rendered in cross-compile
-    go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
+    go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
     dumpVersion
 
     finalizedBy ':copyVendor' // so that editors can find the source of dependencies
