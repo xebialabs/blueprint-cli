@@ -32,38 +32,38 @@ func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 			d := buf[:n]
 			out = append(out, d...)
 
-			eventLog := string(d)
-			if strings.Index(eventLog, generatedPlan) != -1 {
-				length := len(phaseLogStart)
-				i:= strings.Index(eventLog, phaseLogStart)
-				j:= strings.Index(eventLog, phaseLogEnd) - 1
-				if i > 0 && j > 0 {
-					currentTask = eventLog[i +length :j]
-					currentTask = strings.Replace(currentTask, "* Deploy", "", -1)
-					currentTask = strings.Replace(currentTask, "1.0.0", "", -1)
-					currentTask = strings.TrimSpace(currentTask)
-					s.Stop()
-					w.Write([]byte("Starting deployment of "+ currentTask +"\n\n"))
-					s.Start()
-				}
-			}
-
-			if strings.Index(eventLog, executingLog) != -1 {
-				s.Stop()
-				w.Write([]byte("Deploying "+ currentTask +"\n\n"))
-				s.Start()
-			}
-
-			if strings.Index(eventLog, executedLog) != -1 {
-				s.Stop()
-				w.Write([]byte("Deployed "+ currentTask +"\n\n"))
-				s.Start()
-			}
-
 			if IsVerbose {
 				_, err := w.Write(d)
 				if err != nil {
 					return out, err
+				}
+			} else {
+				eventLog := string(d)
+				if strings.Index(eventLog, generatedPlan) != -1 {
+					length := len(phaseLogStart)
+					i:= strings.Index(eventLog, phaseLogStart)
+					j:= strings.Index(eventLog, phaseLogEnd) - 1
+					if i > 0 && j > 0 {
+						currentTask = eventLog[i +length :j]
+						currentTask = strings.Replace(currentTask, "* Deploy", "", -1)
+						currentTask = strings.Replace(currentTask, "1.0.0", "", -1)
+						currentTask = strings.TrimSpace(currentTask)
+						s.Stop()
+						w.Write([]byte("Starting deployment of "+ currentTask +"\n\n"))
+						s.Start()
+					}
+				}
+
+				if strings.Index(eventLog, executingLog) != -1 {
+					s.Stop()
+					w.Write([]byte("Deploying "+ currentTask +"\n\n"))
+					s.Start()
+				}
+
+				if strings.Index(eventLog, executedLog) != -1 {
+					s.Stop()
+					w.Write([]byte("Deployed "+ currentTask +"\n\n"))
+					s.Start()
 				}
 			}
 		}
@@ -115,7 +115,9 @@ func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
 	}
 	outStr, errStr := string(stdout), string(stderr)
 
-	s.Stop()
+	if !IsVerbose {
+		s.Stop()
+	}
 
 	return outStr, errStr
 }
