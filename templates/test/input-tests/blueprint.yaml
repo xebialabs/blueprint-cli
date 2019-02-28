@@ -41,7 +41,7 @@ spec:
     default: false
   - name: TestDepends3
     type: Confirm
-    default: true
+    default: !expression "!TestDepends2"
   - name: AppName
     type: Input
     pattern: "[a-zA-Z-]*"
