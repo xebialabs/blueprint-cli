@@ -1,15 +1,20 @@
-package aws
+package k8s
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
 	"strconv"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/xebialabs/yaml"
 
 	"reflect"
 	"strings"
 
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 const (
@@ -17,7 +22,7 @@ const (
 )
 
 type K8sConfig struct {
-	ApiVersion     string       `yaml:"apiVersion,omitempty"`
+	APIVersion     string       `yaml:"apiVersion,omitempty"`
 	Clusters       []K8sCluster `yaml:"clusters,omitempty"`
 	Contexts       []K8sContext `yaml:"contexts,omitempty"`
 	CurrentContext string       `yaml:"current-context,omitempty"`
@@ -25,35 +30,41 @@ type K8sConfig struct {
 }
 
 type K8sCluster struct {
-	Name    string `yaml:"name,omitempty"`
-	Cluster struct {
-		Server                   string `yaml:"server,omitempty"`
-		CertificateAuthorityData string `yaml:"certificate-authority-data,omitempty"`
-		InsecureSkipTlsVerify    bool   `yaml:"insecure-skip-tls-verify,omitempty"`
-	} `yaml:"cluster,omitempty"`
+	Name    string         `yaml:"name,omitempty"`
+	Cluster K8sClusterItem `yaml:"cluster,omitempty"`
+}
+
+type K8sClusterItem struct {
+	Server                   string `yaml:"server,omitempty"`
+	CertificateAuthorityData string `yaml:"certificate-authority-data,omitempty"`
+	InsecureSkipTLSVerify    bool   `yaml:"insecure-skip-tls-verify,omitempty"`
 }
 
 type K8sContext struct {
-	Name    string `yaml:"name,omitempty"`
-	Context struct {
-		Cluster    string `yaml:"cluster,omitempty"`
-		Namesapace string `yaml:"namesapace,omitempty"`
-		User       string `yaml:"user,omitempty"`
-	} `yaml:"context,omitempty"`
+	Name    string         `yaml:"name,omitempty"`
+	Context K8sContextItem `yaml:"context,omitempty"`
+}
+
+type K8sContextItem struct {
+	Cluster   string `yaml:"cluster,omitempty"`
+	Namespace string `yaml:"namespace,omitempty"`
+	User      string `yaml:"user,omitempty"`
 }
 
 type K8sUser struct {
-	Name string `yaml:"name,omitempty"`
-	User struct {
-		ClientCertificateData string `yaml:"client-certificate-data,omitempty"`
-		ClientKeyData         string `yaml:"client-key-data,omitempty"`
-	} `yaml:"user,omitempty"`
+	Name string      `yaml:"name,omitempty"`
+	User K8sUserItem `yaml:"user,omitempty"`
+}
+
+type K8sUserItem struct {
+	ClientCertificateData string `yaml:"client-certificate-data,omitempty"`
+	ClientKeyData         string `yaml:"client-key-data,omitempty"`
 }
 
 type K8SFnResult struct {
-	cluster K8sCluster
-	context K8sContext
-	user    K8sUser
+	cluster K8sClusterItem
+	context K8sContextItem
+	user    K8sUserItem
 }
 
 func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]string, error) {
@@ -65,7 +76,7 @@ func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]s
 
 		// if requested, do exists check
 		if attr == "IsAvailable" { // todo add another check when user has auth-provider
-			return []string{strconv.FormatBool(result.cluster.Cluster.Server != "" && result.user.User.ClientCertificateData != "")}, nil
+			return []string{strconv.FormatBool(result.cluster.Server != "" && result.user.ClientCertificateData != "")}, nil
 		}
 
 		// return attribute
@@ -91,6 +102,7 @@ func CallK8SFuncByName(module string, params ...string) (models.FnResult, error)
 		}
 		config, err := GetK8SConfigFromSystem(context)
 		if err != nil {
+			util.Verbose("[aws] Error while processing function [%s] is: %v\n", module, err)
 			// handle K8S configuration errors gracefully
 			return &K8SFnResult{}, nil
 		}
@@ -113,7 +125,10 @@ func GetK8SConfigFromSystem(context string) (K8SFnResult, error) {
 	if err != nil {
 		return K8SFnResult{}, err
 	}
-	// TODO get requested context
+	if len(result.Contexts) == 0 || len(result.Clusters) == 0 {
+		return K8SFnResult{}, fmt.Errorf("Kubernetes configuration file does not have any context/cluster defined")
+	}
+	// get requested context
 	contextRes, err := GetContext(result, context)
 	if err != nil {
 		return K8SFnResult{}, err
@@ -122,10 +137,18 @@ func GetK8SConfigFromSystem(context string) (K8SFnResult, error) {
 }
 
 func GetKubeConfigFile() ([]byte, error) {
-	// TODO check for KUBECONFIG in environment
-	// if not set find path based on OS
+	// check if KUBECONFIG is set in environment
+	configPath := os.Getenv("KUBECONFIG")
+	if configPath == "" {
+		// if KUBECONFIG is not set find path based on OS
+		home, err := homedir.Dir()
+		if err != nil {
+			return nil, err
+		}
+		configPath = path.Join(home, ".kube", "config")
+	}
 	// read file from path and return string
-	return nil, nil
+	return ioutil.ReadFile(configPath)
 }
 
 func ParseKubeConfig(kubeConfigYaml []byte) (K8sConfig, error) {
@@ -139,6 +162,40 @@ func ParseKubeConfig(kubeConfigYaml []byte) (K8sConfig, error) {
 }
 
 func GetContext(config K8sConfig, context string) (K8SFnResult, error) {
-	// TODO if context not given, get default
-	return K8SFnResult{}, nil
+	if context == "" {
+		context = config.CurrentContext
+	}
+	var contextItem K8sContextItem
+	for _, c := range config.Contexts {
+		if strings.ToLower(c.Name) == strings.ToLower(context) {
+			contextItem = c.Context
+		}
+	}
+	if contextItem == (K8sContextItem{}) {
+		return K8SFnResult{}, fmt.Errorf("Specified context was not found in the Kubernetes config file")
+	}
+	var clusterItem K8sClusterItem
+	for _, c := range config.Clusters {
+		if c.Name == contextItem.Cluster {
+			clusterItem = c.Cluster
+		}
+	}
+	if clusterItem == (K8sClusterItem{}) {
+		return K8SFnResult{}, fmt.Errorf("No cluster found for specified context in the Kubernetes config file")
+	}
+	var userItem K8sUserItem
+	for _, c := range config.Users {
+		if c.Name == contextItem.User {
+			userItem = c.User
+		}
+	}
+	if userItem == (K8sUserItem{}) {
+		return K8SFnResult{}, fmt.Errorf("No user found for specified context in the Kubernetes config file")
+	}
+	result := K8SFnResult{
+		cluster: clusterItem,
+		context: contextItem,
+		user:    userItem,
+	}
+	return result, nil
 }

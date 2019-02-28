@@ -14,6 +14,7 @@ import (
 
 	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
+	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/osHelper"
 	"github.com/xebialabs/xl-cli/pkg/repository"
@@ -25,6 +26,7 @@ import (
 // Constants
 const (
 	FnAWS = "aws"
+	FnK8S = "k8s"
 	FnOs  = "os"
 
 	tagFn         = "!fn"
@@ -828,6 +830,12 @@ func processCustomFunction(fnStr string) ([]string, error) {
 					return nil, err
 				}
 				return awsResult.GetResult(module, attr, index)
+			case FnK8S:
+				k8sResult, err := k8s.CallK8SFuncByName(module, params...)
+				if err != nil {
+					return nil, err
+				}
+				return k8sResult.GetResult(module, attr, index)
 			case FnOs:
 				osResult, err := osHelper.CallOSFuncByName(module, params...)
 				if err != nil {
