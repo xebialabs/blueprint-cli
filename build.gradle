@@ -43,12 +43,9 @@ dependencies {
         build name: 'github.com/thoas/go-funk',             tag: '0.4'
         build name: 'github.com/google/go-github',          tag: 'v21.0.0'
         build name: 'github.com/disiqueira/gotree',         tag: '2.0.3'
-<<<<<<< HEAD
         build name: 'github.com/briandowns/spinner',        tag: '1.4'
-=======
         build name: 'github.com/fatih/color',               tag: 'v1.7.0'
         build name: 'github.com/Knetic/govaluate',          tag: '3.0.0'
->>>>>>> master
         test name: 'github.com/stretchr/testify/',          tag: 'v1.2.2'
         test name: 'github.com/stretchr/testify/assert',    tag: 'v1.2.2'
         test name: 'golang.org/x/crypto/ssh/terminal'
