@@ -244,11 +244,16 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
 				return nil
 			}
-			processedOptions, ok := opts.([]string)
-			if ok {
-				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Val, processedOptions)
-				options = append(options, processedOptions...)
-			} else {
+			switch val := opts.(type) {
+			case []string:
+				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Val, val)
+				options = append(options, val...)
+			case []interface{}:
+				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Val, val)
+				for _, option := range val {
+					options = append(options, fmt.Sprint(option))
+				}
+			default:
 				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, "Return type should be a string array")
 				return nil
 			}

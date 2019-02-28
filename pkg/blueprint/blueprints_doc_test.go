@@ -319,11 +319,68 @@ func TestGetOptions(t *testing.T) {
 		assert.True(t, len(values) == 2)
 	})
 
-	t.Run("should return nil values for invalid return type in expression options tag", func(t *testing.T) {
+	t.Run("should return generated string array values for expression options tag", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeSelect},
+			Options: []VarField{{Val: "Provider == 'GCP' ? ('GKE', 'CloudSore') : ('test')", Tag: tagExpression}},
+		}
+		values := v.GetOptions(map[string]interface{}{
+			"Provider": "GCP",
+		})
+		assert.NotNil(t, values)
+		assert.True(t, len(values) == 2)
+	})
+
+	t.Run("should return string values for param reference in expression options tag", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeSelect},
+			Options: []VarField{{Val: "Foo ? Bar : (Foo1, Foo2)", Tag: tagExpression}},
+		}
+		values := v.GetOptions(map[string]interface{}{
+			"Foo":  false,
+			"Foo1": "test",
+			"Foo2": "foo",
+			"Bar":  []string{"test", "foo"},
+		})
+		assert.NotNil(t, values)
+		assert.True(t, len(values) == 2)
+	})
+
+	t.Run("should return string values for numeric type in expression options tag", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Val: "test"},
 			Type:    VarField{Val: TypeSelect},
 			Options: []VarField{{Val: "Foo ? Bar : (1, 2, 3)", Tag: tagExpression}},
+		}
+		values := v.GetOptions(map[string]interface{}{
+			"Foo": false,
+			"Bar": []string{"test", "foo"},
+		})
+		assert.NotNil(t, values)
+		assert.True(t, len(values) == 3)
+	})
+
+	t.Run("should return string values for boolean type in expression options tag", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeSelect},
+			Options: []VarField{{Val: "Foo ? Bar : (true, false)", Tag: tagExpression}},
+		}
+		values := v.GetOptions(map[string]interface{}{
+			"Foo": false,
+			"Bar": []string{"test", "foo"},
+		})
+		assert.NotNil(t, values)
+		assert.True(t, len(values) == 2)
+	})
+
+	t.Run("should return nil values for invalid return type in expression options tag", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeSelect},
+			Options: []VarField{{Val: "Foo ? Bar : (Fooo, Foo)", Tag: tagExpression}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
