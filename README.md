@@ -45,6 +45,18 @@ go test -coverprofile cover.out
 go tool cover -html=cover.out
 ```
 
+## Debugging
+
+It is possible to debug xl-cli with the help of, for example, Intellij Idea.
+
+To do that you need to perform few simple steps:
+1) Install **dlv** by following this instructions: https://github.com/go-delve/delve/tree/master/Documentation/installation
+2) Compile xl-cli binaries with debug information. For that use -Pdebug flag when building it.<br>Example: `gradle build -Pdebug
+3) Run xl-cli in debug mode via **dlv** (assuming that you are currently in the root of xl-cli project):<br>
+`dlv --listen=:2345 --headless=true --api-version=2 exec build/darwin-amd64/xl -- apply -v -f provision.yaml`
+4) Connect using Intellij Idea. In debug configurations click "+" button and choose "Go Remote". Default parameters must be enough to connect.<br>
+After saving it just click small "bug" button to start debug session.
+
 ## Optimising binaries
 
 There are two ways to optimise the output binaries sizes: 

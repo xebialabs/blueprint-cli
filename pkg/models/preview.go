@@ -1,8 +1,9 @@
 package models
 
 type TaskPreviewItem struct {
-	Name     string
-	Children []TaskPreviewItem
+	Name       string
+	Children   []TaskPreviewItem
+	IsParallel bool
 }
 
 type TaskInfo struct {

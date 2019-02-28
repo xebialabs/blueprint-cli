@@ -113,8 +113,6 @@ func (c *Context) preProcessAndGetServer(doc *Document, artifactsDir string) (XL
 		return nil, err
 	}
 
-	defer doc.Cleanup()
-
 	if doc.ApiVersion == "" {
 		return nil, fmt.Errorf("apiVersion missing")
 	}
@@ -127,6 +125,7 @@ func (c *Context) preProcessAndGetServer(doc *Document, artifactsDir string) (XL
 
 func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Changes, error) {
 	server, err := c.preProcessAndGetServer(doc, artifactsDir)
+	defer doc.Cleanup()
 	if err != nil {
 		return nil, err
 	}
@@ -152,6 +151,7 @@ func (c *Context) processSingleDocumentAndGetContents(doc *Document, artifactsDi
 
 func (c *Context) PreviewSingleDocument(doc *Document, artifactsDir string) (*models.PreviewResponse, error) {
 	server, err := c.preProcessAndGetServer(doc, artifactsDir)
+	defer doc.Cleanup()
 	if err != nil {
 		return nil, err
 	}

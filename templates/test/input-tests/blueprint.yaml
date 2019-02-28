@@ -2,7 +2,7 @@ apiVersion: xl/v1
 kind: Blueprint
 metadata:
   projectName: Test Project
-  description: Is just a test blueprint project
+  description: Is just a test blueprint project used for manual testing of inputs
   author: XebiaLabs
   version: 1.0
 spec:
@@ -30,17 +30,23 @@ spec:
       P4l6RiCx5nNF2wbSQ7uYrvDpYa6ToKysXVUTAPLxG3C4BirrQDaSnTThTzMC7GUAmxKAK3tnBHXEqOIsnYZ3rD92iUr2XI65oFIbIT
       XUrYNapiDWYsPEGTaQTX8L1ZkrFaQTL8wC1Zko8aZFfzqmYbNi5OvJydnWWoaRc0eyvnFmtNh0utLQZEME4DXCU3RxET3q6pwsid8DolT1FZtWBE0V3F0XM
       ffWx27IYj63dyTtT4UoJwtTgdtXeHAG4a0AGvbfM9p462qEbV3rMNynLWyzQDc3sN6nI-
+  - name: TestDepends0
+    type: Confirm
+    value: false
   - name: TestDepends
     type: Confirm
     value: true
   - name: TestDepends2
     type: Confirm
-    value: false
+    default: false
+  - name: TestDepends3
+    type: Confirm
+    default: true
   - name: AppName
     type: Input
     pattern: "[a-zA-Z-]*"
     description: Application name, will be used in various AWS resource names
-    value: testApp
+    default: testApp
   - name: AWSAccessKey
     type: Input
     secret: true
@@ -48,18 +54,10 @@ spec:
   - name: AWSAccessSecret
     type: Input
     secret: true
-    value: accesssecret
+    default: accesssecret
   - name: AWSRegion
     type: Select
     options:
       - !fn aws.regions(ecs)
     default: !fn aws.regions(ecs)[0]
     value: us-west
-
-  files:
-  - path: xld-environment.yml.tmpl
-  - path: xld-infrastructure.yml.tmpl
-  - path: xlr-pipeline-2.yml
-    dependsOnTrue: !expression "AWSRegion == 'us-west' && AppName != 'foo' && TestDepends && !TestDepends2"
-  - path: xlr-pipeline.yml
-    dependsOnFalse: TestDepends

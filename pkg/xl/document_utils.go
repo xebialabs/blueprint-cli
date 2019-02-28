@@ -1,6 +1,7 @@
 package xl
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -56,7 +57,10 @@ func ReportFatalDocumentError(applyFilename string, doc *Document, err error) {
 		err = errors.Wrap(err, "Possible missing triple dash (---) to separate multiple YAML documents")
 	}
 
-	util.Fatal("Error while processing YAML document at line %d of XL YAML file %s: %s\n", doc.Line, applyFilename, err)
+	util.Fatal(
+		"%sError while processing YAML document at line %d of XL YAML file %s:\n%s%s\n",
+		util.Indent1(), doc.Line, applyFilename, util.Indent1(), err,
+	)
 }
 
 func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
@@ -72,13 +76,12 @@ func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
 func readDocumentsFromFile(fileName string, parent *string, process ToProcess) FileWithDocuments {
 	reader, err := os.Open(fileName)
 	if err != nil {
-		util.Fatal("Error while opening XL YAML file %s: %s\n", fileName, err)
+		util.Fatal("Error while opening XL YAML file %s:\n%s\n", fileName, err)
 	}
 	imports := make([]string, 0)
 	documents := make([]*Document, 0)
 	docReader := NewDocumentReader(reader)
 	baseDir := util.AbsoluteFileDir(fileName)
-	util.Verbose("Reading file: %s, base dir: %s\n", fileName, baseDir)
 	for {
 		doc, err := docReader.ReadNextYamlDocumentWithProcess(process)
 		if err != nil {
@@ -119,14 +122,15 @@ func ForEachDocument(operationName string, fileNames []string, values map[string
 	}
 
 	docs := ParseDocuments(util.ToAbsolutePaths(fileNames), mapset.NewSet(), nil, ToProcess{true, true, true})
-	util.VerboseSeparator()
-	for _, fileWithDocs := range docs {
+	for fileIdx, fileWithDocs := range docs {
 		var currentFile = util.PrintableFileName(fileWithDocs.FileName)
+		progress := fmt.Sprintf("[%d/%d]", fileIdx+1, len(docs))
+
 		if fileWithDocs.Parent != nil {
 			var parentFile = util.PrintableFileName(*fileWithDocs.Parent)
-			util.Info("%s %s (imported by %s)\n", operationName, currentFile, parentFile)
+			util.Info("%s %s %s (imported by %s)\n", progress, operationName, currentFile, parentFile)
 		} else {
-			util.Info("%s %s\n", operationName, currentFile)
+			util.Info("%s %s %s\n", progress, operationName, currentFile)
 		}
 
 		projectValsFiles, err := ListRelativeXlValsFiles(filepath.Dir(fileWithDocs.FileName))
@@ -141,15 +145,19 @@ func ForEachDocument(operationName string, fileNames []string, values map[string
 			util.Fatal("Error while reading configuration: %s\n", err)
 		}
 
-		for _, doc := range fileWithDocs.Documents {
-			util.Verbose("---\n")
-			util.Verbose("%s document at line %d\n\n", operationName, doc.Line)
+		for docIdx, doc := range fileWithDocs.Documents {
+			util.Verbose("%s%s document at line %d\n", util.Indent1(), operationName, doc.Line)
 			if doc.Kind != models.ImportSpecKind {
 				fn(context, fileWithDocs, doc, shouldDetach)
 			} else {
 				util.Info("Done\n")
 			}
+			if docIdx < len(fileWithDocs.Documents)-1 {
+				util.Verbose("\n")
+			}
 		}
-		util.VerboseSeparator()
+		if fileIdx < len(docs)-1 {
+			util.Info("\n")
+		}
 	}
 }

@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
-	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
@@ -278,8 +278,13 @@ func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles 
 func printValues(values map[string]string) {
 	var keys = funk.Keys(values).([]string)
 	sort.Strings(keys)
-	util.Verbose("Values:\n")
-	funk.ForEach(keys, func(key string) {
-		util.Verbose("%s: %s\n", key, values[key])
-	})
+	util.Verbose("%sValues:\n", util.Indent1())
+	if funk.IsEmpty(keys) {
+		util.Verbose("%sEMPTY\n", util.Indent2())
+	} else {
+		funk.ForEach(keys, func(key string) {
+			util.Verbose("%s%s: %s\n", util.Indent2(), key, values[key])
+		})
+	}
+	util.Verbose("\n")
 }

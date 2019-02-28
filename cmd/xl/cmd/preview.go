@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/disiqueira/gotree"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
@@ -22,7 +24,11 @@ var previewCmd = &cobra.Command{
 }
 
 func printTaskItem(t *gotree.Tree, item models.TaskPreviewItem) {
-	current := (*t).Add(item.Name)
+	name := item.Name
+	if item.IsParallel {
+		name = fmt.Sprintf("%s %s", color.GreenString("[Parallel]"), item.Name)
+	}
+	current := (*t).Add(name)
 	for _, i := range item.Children {
 		printTaskItem(&current, i)
 	}

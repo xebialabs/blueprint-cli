@@ -276,7 +276,7 @@ func TestShouldSkipFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := shouldSkipFile(tt.args.templateConfig, tt.args.variables)
+			got, err := shouldSkipFile(tt.args.templateConfig, tt.args.variables, dummyData)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("shouldSkipFile() error = %v, wantErr %v", err, tt.wantErr)
 				return

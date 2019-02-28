@@ -30,6 +30,29 @@ func Fatal(format string, a ...interface{}) {
 	os.Exit(1)
 }
 
-func VerboseSeparator() {
-	Verbose("%s\n", strings.Repeat("=", 80))
+func Indent(step int) string {
+	return strings.Repeat(" ", step)
+}
+
+func IndentByChunks(step int) string {
+	return Indent(4 * step)
+}
+
+func Indent1() string {
+	return IndentByChunks(1)
+}
+
+func Indent2() string {
+	return IndentByChunks(2)
+}
+
+func Indent3() string {
+	return IndentByChunks(3)
+}
+
+func IndentFlexible() string {
+	if IsVerbose {
+		return Indent2()
+	}
+	return Indent1()
 }
