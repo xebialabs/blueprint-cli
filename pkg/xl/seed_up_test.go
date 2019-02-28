@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/yaml"
@@ -77,9 +78,9 @@ func CreateTestInfra(viper *viper.Viper) *TestInfra {
 	viper.Set(models.ViperKeyXLDPassword, "d3ploy1t")
 	viper.Set(models.ViperKeyXLRUsername, "releaser")
 	viper.Set(models.ViperKeyXLRPassword, "r3l34s3")
-	viper.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderGitHub)
-	viper.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
-	viper.Set(models.ViperKeyBlueprintRepositoryOwner, "xebialabs")
+	viper.Set(blueprint.ViperKeyBlueprintRepositoryProvider, models.ProviderGitHub)
+	viper.Set(blueprint.ViperKeyBlueprintRepositoryName, "blueprints")
+	viper.Set(blueprint.ViperKeyBlueprintRepositoryOwner, "xebialabs")
 
 	return infra
 }

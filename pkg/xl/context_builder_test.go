@@ -9,13 +9,14 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 var TestCmd = &cobra.Command{
@@ -25,8 +26,8 @@ var TestCmd = &cobra.Command{
 
 func getMinimalViperConf() *viper.Viper {
 	v := viper.New()
-	v.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderMock)
-	v.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
+	v.Set(blueprint.ViperKeyBlueprintRepositoryProvider, models.ProviderMock)
+	v.Set(blueprint.ViperKeyBlueprintRepositoryName, "blueprints")
 	return v
 }
 
@@ -67,24 +68,6 @@ func TestContextBuilder(t *testing.T) {
 		assert.Equal(t, "r3l34s3", c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Password)
 	})
 
-	t.Run("build simple context for Blueprint repository", func(t *testing.T) {
-		v := viper.New()
-		v.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderGitHub)
-		v.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
-		v.Set(models.ViperKeyBlueprintRepositoryOwner, "xebialabs")
-
-		c, err := BuildContext(v, nil, []string{})
-
-		assert.Nil(t, err)
-		assert.NotNil(t, c)
-		assert.Nil(t, c.XLDeploy)
-		assert.Nil(t, c.XLRelease)
-		assert.NotNil(t, c.BlueprintContext)
-		assert.Equal(t, models.ProviderGitHub, c.BlueprintContext.Provider)
-		assert.Equal(t, "blueprints", c.BlueprintContext.Name)
-		assert.Equal(t, "xebialabs", c.BlueprintContext.Owner)
-	})
-
 	t.Run("build full context for XL Deploy and XL Release and Blueprint repository", func(t *testing.T) {
 		v := viper.New()
 		v.Set(models.ViperKeyXLDUrl, "http://testxld:6154")
@@ -98,11 +81,11 @@ func TestContextBuilder(t *testing.T) {
 		v.Set(models.ViperKeyXLRUsername, "releaser")
 		v.Set(models.ViperKeyXLRPassword, "r3l34s3")
 		v.Set("xl-release.home", "XLR/home/folder")
-		v.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderGitHub)
-		v.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
-		v.Set(models.ViperKeyBlueprintRepositoryOwner, "xebialabs")
-		v.Set(models.ViperKeyBlueprintRepositoryBranch, "master")
-		v.Set(models.ViperKeyBlueprintRepositoryToken, "dummyToken")
+		v.Set(blueprint.ViperKeyBlueprintRepositoryProvider, models.ProviderGitHub)
+		v.Set(blueprint.ViperKeyBlueprintRepositoryName, "blueprints")
+		v.Set(blueprint.ViperKeyBlueprintRepositoryOwner, "xebialabs")
+		v.Set(blueprint.ViperKeyBlueprintRepositoryBranch, "master")
+		v.Set(blueprint.ViperKeyBlueprintRepositoryToken, "dummyToken")
 
 		c, err := BuildContext(v, nil, []string{})
 
