@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/xebialabs/xl-cli/pkg/models"
@@ -243,17 +244,17 @@ func TestGetContext(t *testing.T) {
 				context: "",
 			},
 			K8SFnResult{
-				cluster: K8sClusterItem{
+				Cluster: K8sClusterItem{
 					Server:                   "https://test.hcp.eastus.azmk8s.io:443",
 					CertificateAuthorityData: "123==",
 					InsecureSkipTLSVerify:    false,
 				},
-				context: K8sContextItem{
+				Context: K8sContextItem{
 					Cluster:   "testCluster",
 					Namespace: "test",
 					User:      "clusterUser_testCluster_testCluster",
 				},
-				user: K8sUserItem{
+				User: K8sUserItem{
 					ClientCertificateData: "123==",
 					ClientKeyData:         "123==",
 				},
@@ -267,16 +268,16 @@ func TestGetContext(t *testing.T) {
 				context: "default/ocpm-test-com:8443/test",
 			},
 			K8SFnResult{
-				cluster: K8sClusterItem{
+				Cluster: K8sClusterItem{
 					Server:                "https://ocpm.test.com:8443",
 					InsecureSkipTLSVerify: true,
 				},
-				context: K8sContextItem{
+				Context: K8sContextItem{
 					Cluster:   "ocpm-test-com:8443",
 					Namespace: "default",
 					User:      "test/ocpm-test-com:8443",
 				},
-				user: K8sUserItem{
+				User: K8sUserItem{
 					ClientCertificateData: "123==",
 				},
 			},
@@ -333,17 +334,17 @@ func TestGetK8SConfigFromSystem(t *testing.T) {
 			"should find default context when context is not specified",
 			"",
 			K8SFnResult{
-				cluster: K8sClusterItem{
+				Cluster: K8sClusterItem{
 					Server:                   "https://test.hcp.eastus.azmk8s.io:443",
 					CertificateAuthorityData: "123==",
 					InsecureSkipTLSVerify:    false,
 				},
-				context: K8sContextItem{
+				Context: K8sContextItem{
 					Cluster:   "testCluster",
 					Namespace: "test",
 					User:      "clusterUser_testCluster_testCluster",
 				},
-				user: K8sUserItem{
+				User: K8sUserItem{
 					ClientCertificateData: "123==",
 					ClientKeyData:         "123==",
 				},
@@ -354,16 +355,16 @@ func TestGetK8SConfigFromSystem(t *testing.T) {
 			"should find specified context when context is specified",
 			"default/ocpm-test-com:8443/test",
 			K8SFnResult{
-				cluster: K8sClusterItem{
+				Cluster: K8sClusterItem{
 					Server:                "https://ocpm.test.com:8443",
 					InsecureSkipTLSVerify: true,
 				},
-				context: K8sContextItem{
+				Context: K8sContextItem{
 					Cluster:   "ocpm-test-com:8443",
 					Namespace: "default",
 					User:      "test/ocpm-test-com:8443",
 				},
-				user: K8sUserItem{
+				User: K8sUserItem{
 					ClientCertificateData: "123==",
 				},
 			},
@@ -427,17 +428,17 @@ func TestCallK8SFuncByName(t *testing.T) {
 				[]string{""},
 			},
 			&K8SFnResult{
-				cluster: K8sClusterItem{
+				Cluster: K8sClusterItem{
 					Server:                   "https://test.hcp.eastus.azmk8s.io:443",
 					CertificateAuthorityData: "123==",
 					InsecureSkipTLSVerify:    false,
 				},
-				context: K8sContextItem{
+				Context: K8sContextItem{
 					Cluster:   "testCluster",
 					Namespace: "test",
 					User:      "clusterUser_testCluster_testCluster",
 				},
-				user: K8sUserItem{
+				User: K8sUserItem{
 					ClientCertificateData: "123==",
 					ClientKeyData:         "123==",
 				},
@@ -451,16 +452,16 @@ func TestCallK8SFuncByName(t *testing.T) {
 				[]string{"default/ocpm-test-com:8443/test"},
 			},
 			&K8SFnResult{
-				cluster: K8sClusterItem{
+				Cluster: K8sClusterItem{
 					Server:                "https://ocpm.test.com:8443",
 					InsecureSkipTLSVerify: true,
 				},
-				context: K8sContextItem{
+				Context: K8sContextItem{
 					Cluster:   "ocpm-test-com:8443",
 					Namespace: "default",
 					User:      "test/ocpm-test-com:8443",
 				},
-				user: K8sUserItem{
+				User: K8sUserItem{
 					ClientCertificateData: "123==",
 				},
 			},
@@ -494,20 +495,20 @@ func Test_getK8SConfigField(t *testing.T) {
 		want string
 	}{
 		{
-			"should return <invalid Value> when fetching non existing field",
+			"should return empty when fetching non existing field",
 			args{
 				&fnRes,
 				"dummy",
 			},
-			"<invalid Value>",
+			"",
 		},
 		{
 			"should return value when fetching existing field",
 			args{
 				&fnRes,
-				"cluster.Server",
+				"cluster.server",
 			},
-			"cluster",
+			"https://test.hcp.eastus.azmk8s.io:443",
 		},
 	}
 	for _, tt := range tests {
@@ -519,12 +520,44 @@ func Test_getK8SConfigField(t *testing.T) {
 	}
 }
 
-func TestK8SFnResult_GetResult(t *testing.T) {
-	type fields struct {
-		cluster K8sClusterItem
-		context K8sContextItem
-		user    K8sUserItem
+func TestFlattenFields(t *testing.T) {
+	config, _ := ParseKubeConfig([]byte(sampleKubeConfig))
+	fnRes, _ := GetContext(config, "testCluster")
+	tests := []struct {
+		name  string
+		iface interface{}
+		want  int
+		keys  []string
+	}{
+		{
+			"should flatten all the fields",
+			fnRes,
+			8,
+			[]string{"User.ClientCertificateData", "Cluster.Server", "Cluster.CertificateAuthorityData", "Cluster.InsecureSkipTLSVerify", "Context.Namespace", "Context.User", "Context.Cluster", "User.ClientKeyData"},
+		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := FlattenFields(tt.iface)
+			if len(got) != tt.want {
+				t.Errorf("FlattenFields() length = %v, want %v", got, tt.want)
+			}
+			keys := make([]string, 0, len(got))
+			for k := range got {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			sort.Strings(tt.keys)
+			if !reflect.DeepEqual(keys, tt.keys) {
+				t.Errorf("FlattenFields() keys = %v, want %v", keys, tt.keys)
+			}
+		})
+	}
+}
+
+func TestK8SFnResult_GetResult(t *testing.T) {
+	config, _ := ParseKubeConfig([]byte(sampleKubeConfig))
+	fnRes, _ := GetContext(config, "testCluster")
 	type args struct {
 		module string
 		attr   string
@@ -532,20 +565,70 @@ func TestK8SFnResult_GetResult(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		fields  fields
+		fields  K8SFnResult
 		args    args
 		want    []string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			"should error if attribute is not set",
+			fnRes,
+			args{
+				Config,
+				"",
+				-1,
+			},
+			nil,
+			true,
+		},
+		{
+			"should error if invalid module is not set",
+			fnRes,
+			args{
+				"dummy",
+				"",
+				-1,
+			},
+			nil,
+			true,
+		},
+		{
+			"should error if attribute pattern is invalid",
+			fnRes,
+			args{
+				Config,
+				"clusterName",
+				-1,
+			},
+			nil,
+			true,
+		},
+		{
+			"should check if valid config is available",
+			fnRes,
+			args{
+				Config,
+				"IsAvailable",
+				-1,
+			},
+			[]string{"true"},
+			false,
+		},
+		{
+			"should fetch valid config field value",
+			fnRes,
+			args{
+				Config,
+				"cluster.server",
+				-1,
+			},
+			[]string{"https://test.hcp.eastus.azmk8s.io:443"},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := &K8SFnResult{
-				cluster: tt.fields.cluster,
-				context: tt.fields.context,
-				user:    tt.fields.user,
-			}
+			result := tt.fields
 			got, err := result.GetResult(tt.args.module, tt.args.attr, tt.args.index)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("K8SFnResult.GetResult() error = %v, wantErr %v", err, tt.wantErr)

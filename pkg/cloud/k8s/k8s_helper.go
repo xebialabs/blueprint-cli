@@ -62,9 +62,9 @@ type K8sUserItem struct {
 }
 
 type K8SFnResult struct {
-	cluster K8sClusterItem
-	context K8sContextItem
-	user    K8sUserItem
+	Cluster K8sClusterItem
+	Context K8sContextItem
+	User    K8sUserItem
 }
 
 func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]string, error) {
@@ -75,8 +75,13 @@ func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]s
 		}
 
 		// if requested, do exists check
-		if attr == "IsAvailable" { // todo add another check when user has auth-provider
-			return []string{strconv.FormatBool(result.cluster.Server != "" && result.user.ClientCertificateData != "")}, nil
+		if attr == "IsAvailable" {
+			return []string{strconv.FormatBool(result.Cluster.Server != "" && result.User.ClientCertificateData != "")}, nil
+		}
+
+		paths := strings.Split(attr, ".")
+		if len(paths) < 2 {
+			return nil, fmt.Errorf("field name pattern is invalid. It must follow 'cluster.server' notation, for example")
 		}
 
 		// return attribute
@@ -86,10 +91,14 @@ func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]s
 	}
 }
 
-func getK8SConfigField(v *K8SFnResult, field string) string {
-	r := reflect.ValueOf(v)
-	f := reflect.Indirect(r).FieldByName(field)
-	return f.String()
+func getK8SConfigField(res *K8SFnResult, attr string) string {
+	flatFields := FlattenFields(*res)
+	for k, field := range flatFields {
+		if strings.ToLower(k) == strings.ToLower(attr) {
+			return field.String()
+		}
+	}
+	return ""
 }
 
 // CallK8SFuncByName calls related K8S module function with parameters provided
@@ -193,9 +202,30 @@ func GetContext(config K8sConfig, context string) (K8SFnResult, error) {
 		return K8SFnResult{}, fmt.Errorf("No user found for specified context in the Kubernetes config file")
 	}
 	result := K8SFnResult{
-		cluster: clusterItem,
-		context: contextItem,
-		user:    userItem,
+		Cluster: clusterItem,
+		Context: contextItem,
+		User:    userItem,
 	}
 	return result, nil
+}
+
+func FlattenFields(iface interface{}) map[string]reflect.Value {
+	fields := make(map[string]reflect.Value, 0)
+	ifv := reflect.ValueOf(iface)
+	ift := reflect.TypeOf(iface)
+
+	for i := 0; i < ift.NumField(); i++ {
+		v := ifv.Field(i)
+		t := ift.Field(i)
+
+		switch v.Kind() {
+		case reflect.Struct:
+			for k, v := range FlattenFields(v.Interface()) {
+				fields[t.Name+"."+k] = v
+			}
+		default:
+			fields[t.Name] = v
+		}
+	}
+	return fields
 }
