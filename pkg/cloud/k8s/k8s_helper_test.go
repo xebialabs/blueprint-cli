@@ -85,6 +85,14 @@ users:
   user:
     client-certificate-data: 123==`
 
+func Setupk8sConfig() {
+	tmpDir := path.Join("test", "blueprints")
+	os.MkdirAll(tmpDir, os.ModePerm)
+	d1 := []byte(sampleKubeConfig)
+	ioutil.WriteFile(path.Join(tmpDir, "config"), d1, os.ModePerm)
+	os.Setenv("KUBECONFIG", path.Join(tmpDir, "config"))
+}
+
 func TestGetKubeConfigFile(t *testing.T) {
 	defer os.RemoveAll("test")
 	tests := []struct {
@@ -105,13 +113,7 @@ func TestGetKubeConfigFile(t *testing.T) {
 			"should read file from path set as KUBECONFIG",
 			[]byte(sampleKubeConfig),
 			false,
-			func() {
-				tmpDir := path.Join("test", "blueprints")
-				os.MkdirAll(tmpDir, os.ModePerm)
-				d1 := []byte(sampleKubeConfig)
-				ioutil.WriteFile(path.Join(tmpDir, "config"), d1, os.ModePerm)
-				os.Setenv("KUBECONFIG", path.Join(tmpDir, "config"))
-			},
+			Setupk8sConfig,
 		},
 	}
 	for _, tt := range tests {
@@ -300,11 +302,7 @@ func TestGetContext(t *testing.T) {
 
 func TestGetK8SConfigFromSystem(t *testing.T) {
 	defer os.RemoveAll("test")
-	tmpDir := path.Join("test", "blueprints")
-	os.MkdirAll(tmpDir, os.ModePerm)
-	d1 := []byte(sampleKubeConfig)
-	ioutil.WriteFile(path.Join(tmpDir, "config"), d1, os.ModePerm)
-	os.Setenv("KUBECONFIG", path.Join(tmpDir, "config"))
+	Setupk8sConfig()
 
 	tests := []struct {
 		name    string
@@ -387,11 +385,7 @@ func TestGetK8SConfigFromSystem(t *testing.T) {
 
 func TestCallK8SFuncByName(t *testing.T) {
 	defer os.RemoveAll("test")
-	tmpDir := path.Join("test", "blueprints")
-	os.MkdirAll(tmpDir, os.ModePerm)
-	d1 := []byte(sampleKubeConfig)
-	ioutil.WriteFile(path.Join(tmpDir, "config"), d1, os.ModePerm)
-	os.Setenv("KUBECONFIG", path.Join(tmpDir, "config"))
+	Setupk8sConfig()
 
 	type args struct {
 		module string
@@ -506,9 +500,33 @@ func Test_getK8SConfigField(t *testing.T) {
 			"should return value when fetching existing field",
 			args{
 				&fnRes,
-				"cluster.server",
+				"cluster_server",
 			},
 			"https://test.hcp.eastus.azmk8s.io:443",
+		},
+		{
+			"should return value when fetching existing field with snakecase",
+			args{
+				&fnRes,
+				"cluster_certificate_authority_data",
+			},
+			"123==",
+		},
+		{
+			"should return value when fetching existing field with mix of camelcase and underscore",
+			args{
+				&fnRes,
+				"cluster_certificateAuthorityData",
+			},
+			"123==",
+		},
+		{
+			"should return value when fetching existing field with uneven case",
+			args{
+				&fnRes,
+				"clustercertificateAuthoritydata",
+			},
+			"123==",
 		},
 	}
 	for _, tt := range tests {
@@ -533,7 +551,7 @@ func TestFlattenFields(t *testing.T) {
 			"should flatten all the fields",
 			fnRes,
 			8,
-			[]string{"User.ClientCertificateData", "Cluster.Server", "Cluster.CertificateAuthorityData", "Cluster.InsecureSkipTLSVerify", "Context.Namespace", "Context.User", "Context.Cluster", "User.ClientKeyData"},
+			[]string{"User_ClientCertificateData", "Cluster_Server", "Cluster_CertificateAuthorityData", "Cluster_InsecureSkipTLSVerify", "Context_Namespace", "Context_User", "Context_Cluster", "User_ClientKeyData"},
 		},
 	}
 	for _, tt := range tests {
@@ -593,17 +611,6 @@ func TestK8SFnResult_GetResult(t *testing.T) {
 			true,
 		},
 		{
-			"should error if attribute pattern is invalid",
-			fnRes,
-			args{
-				Config,
-				"clusterName",
-				-1,
-			},
-			nil,
-			true,
-		},
-		{
 			"should check if valid config is available",
 			fnRes,
 			args{
@@ -619,7 +626,7 @@ func TestK8SFnResult_GetResult(t *testing.T) {
 			fnRes,
 			args{
 				Config,
-				"cluster.server",
+				"cluster_server",
 				-1,
 			},
 			[]string{"https://test.hcp.eastus.azmk8s.io:443"},

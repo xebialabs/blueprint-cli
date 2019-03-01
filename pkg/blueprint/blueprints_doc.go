@@ -92,7 +92,7 @@ func NewPreparedData() *PreparedData {
 }
 
 // regular Expressions
-var regExFn = regexp.MustCompile(`([\w\d]+).([\w\d]+)\(([,\s\w\d]*)\)(?:\.([\w\d]*)|\[([\d]+)\])*`)
+var regExFn = regexp.MustCompile(`([\w\d]+).([\w\d]+)\(([,/\-:\s\w\d]*)\)(?:\.([\w\d]*)|\[([\d]+)\])*`)
 
 // reflect utilities for VarField
 func getVariableField(variable *Variable, fieldName string) reflect.Value {
@@ -110,7 +110,7 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 	fieldVal := varField.Val
 	switch tagVal {
 	case tagFn:
-		values, err := processCustomFunction(fieldVal)
+		values, err := ProcessCustomFunction(fieldVal)
 		if err != nil {
 			return false, err
 		}
@@ -148,7 +148,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 	defaultVal := variable.Default.Val
 	switch variable.Default.Tag {
 	case tagFn:
-		values, err := processCustomFunction(defaultVal)
+		values, err := ProcessCustomFunction(defaultVal)
 		if err != nil {
 			util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
 			defaultVal = ""
@@ -192,7 +192,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) string {
 	switch variable.Value.Tag {
 	case tagFn:
-		values, err := processCustomFunction(variable.Value.Val)
+		values, err := ProcessCustomFunction(variable.Value.Val)
 		if err != nil {
 			util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
 			return ""
@@ -233,7 +233,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 	for _, option := range variable.Options {
 		switch option.Tag {
 		case tagFn:
-			opts, err := processCustomFunction(option.Val)
+			opts, err := ProcessCustomFunction(option.Val)
 			if err != nil {
 				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
 				return nil
@@ -794,7 +794,7 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 	}
 }
 
-func processCustomFunction(fnStr string) ([]string, error) {
+func ProcessCustomFunction(fnStr string) ([]string, error) {
 	// validate function call string (DOMAIN.MODULE(PARAMS...).ATTR|[INDEX])
 	util.Verbose("[fn] Calling fn [%s] for getting template variable value\n", fnStr)
 	if regExFn.MatchString(fnStr) {

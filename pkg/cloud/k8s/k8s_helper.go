@@ -76,14 +76,8 @@ func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]s
 
 		// if requested, do exists check
 		if attr == "IsAvailable" {
-			return []string{strconv.FormatBool(result.Cluster.Server != "" && result.User.ClientCertificateData != "")}, nil
+			return []string{strconv.FormatBool(result != nil && result.Cluster.Server != "" && result.User.ClientCertificateData != "")}, nil
 		}
-
-		paths := strings.Split(attr, ".")
-		if len(paths) < 2 {
-			return nil, fmt.Errorf("field name pattern is invalid. It must follow 'cluster.server' notation, for example")
-		}
-
 		// return attribute
 		return []string{getK8SConfigField(result, attr)}, nil
 	default:
@@ -94,7 +88,9 @@ func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]s
 func getK8SConfigField(res *K8SFnResult, attr string) string {
 	flatFields := FlattenFields(*res)
 	for k, field := range flatFields {
-		if strings.ToLower(k) == strings.ToLower(attr) {
+		knorm := strings.ToLower(strings.Replace(k, "_", "", -1))
+		attrnorm := strings.ToLower(strings.Replace(attr, "_", "", -1))
+		if knorm == attrnorm {
 			return field.String()
 		}
 	}
@@ -117,7 +113,7 @@ func CallK8SFuncByName(module string, params ...string) (models.FnResult, error)
 		}
 		return &config, nil
 	default:
-		return nil, fmt.Errorf("%s is not a valid K8S module", module)
+		return nil, fmt.Errorf("%s is not a valid Kubernetes module", module)
 	}
 }
 
@@ -221,7 +217,7 @@ func FlattenFields(iface interface{}) map[string]reflect.Value {
 		switch v.Kind() {
 		case reflect.Struct:
 			for k, v := range FlattenFields(v.Interface()) {
-				fields[t.Name+"."+k] = v
+				fields[t.Name+"_"+k] = v
 			}
 		default:
 			fields[t.Name] = v
