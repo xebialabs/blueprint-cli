@@ -14,7 +14,7 @@ import (
 
 var currentTask = ""
 var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
-
+var deploy = true
 // TODO a better way or to use the APIs available
 var generatedPlan = "c.x.d.s.deployment.DeploymentService - Generated plan"
 var phaseLogEnd = "on K8S"
@@ -23,7 +23,6 @@ var executedLog = "is completed with state [DONE]"
 
 func logCapture(w io.Writer, d []byte){
 	eventLog := string(d)
-	deploy := true
 	if strings.Index(eventLog, generatedPlan) != -1 {
 		currentTask = getCurrentTask(eventLog, strings.Index(eventLog, generatedPlan))
 		if currentTask != "" {
