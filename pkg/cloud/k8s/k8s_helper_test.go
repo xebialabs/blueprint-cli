@@ -14,7 +14,7 @@ import (
 var simpleSampleKubeConfig = `apiVersion: v1
 clusters:
 - cluster:
-    certificate-authority-data: 123==
+    certificate-authority-data: 123==123
     insecure-skip-tls-verify: true
     server: https://test.io:443
   name: testCluster
@@ -30,8 +30,8 @@ preferences: {}
 users:
 - name: testCluster_user
   user:
-    client-certificate-data: 123==
-    client-key-data: 123==
+    client-certificate-data: 123==123
+    client-key-data: 123==123
     token: 6555565666666666666`
 
 var sampleKubeConfig = `apiVersion: v1
@@ -75,15 +75,15 @@ preferences: {}
 users:
 - name: clusterUser_testCluster_testCluster
   user:
-    client-certificate-data: 123==
-    client-key-data: 123==
+    client-certificate-data: 123==123
+    client-key-data: 123==123
     token: 6555565666666666666
 - name: test/ocpm-test-com:8443
   user:
-    client-certificate-data: 123==
+    client-certificate-data: 123==123
 - name: testClusterNotFound
   user:
-    client-certificate-data: 123==`
+    client-certificate-data: 123==123`
 
 func Setupk8sConfig() {
 	tmpDir := path.Join("test", "blueprints")
@@ -158,7 +158,7 @@ func TestParseKubeConfig(t *testing.T) {
 						Name: "testCluster",
 						Cluster: K8sClusterItem{
 							Server:                   "https://test.io:443",
-							CertificateAuthorityData: "123==",
+							CertificateAuthorityData: "123==123",
 							InsecureSkipTLSVerify:    true,
 						},
 					},
@@ -177,8 +177,8 @@ func TestParseKubeConfig(t *testing.T) {
 					{
 						Name: "testCluster_user",
 						User: K8sUserItem{
-							ClientCertificateData: "123==",
-							ClientKeyData:         "123==",
+							ClientCertificateData: "123==123",
+							ClientKeyData:         "123==123",
 						},
 					},
 				},
@@ -257,8 +257,8 @@ func TestGetContext(t *testing.T) {
 					User:      "clusterUser_testCluster_testCluster",
 				},
 				User: K8sUserItem{
-					ClientCertificateData: "123==",
-					ClientKeyData:         "123==",
+					ClientCertificateData: "123==123",
+					ClientKeyData:         "123==123",
 				},
 			},
 			false,
@@ -280,7 +280,7 @@ func TestGetContext(t *testing.T) {
 					User:      "test/ocpm-test-com:8443",
 				},
 				User: K8sUserItem{
-					ClientCertificateData: "123==",
+					ClientCertificateData: "123==123",
 				},
 			},
 			false,
@@ -343,8 +343,8 @@ func TestGetK8SConfigFromSystem(t *testing.T) {
 					User:      "clusterUser_testCluster_testCluster",
 				},
 				User: K8sUserItem{
-					ClientCertificateData: "123==",
-					ClientKeyData:         "123==",
+					ClientCertificateData: "123==123",
+					ClientKeyData:         "123==123",
 				},
 			},
 			false,
@@ -363,7 +363,7 @@ func TestGetK8SConfigFromSystem(t *testing.T) {
 					User:      "test/ocpm-test-com:8443",
 				},
 				User: K8sUserItem{
-					ClientCertificateData: "123==",
+					ClientCertificateData: "123==123",
 				},
 			},
 			false,
@@ -433,8 +433,8 @@ func TestCallK8SFuncByName(t *testing.T) {
 					User:      "clusterUser_testCluster_testCluster",
 				},
 				User: K8sUserItem{
-					ClientCertificateData: "123==",
-					ClientKeyData:         "123==",
+					ClientCertificateData: "123==123",
+					ClientKeyData:         "123==123",
 				},
 			},
 			false,
@@ -456,7 +456,7 @@ func TestCallK8SFuncByName(t *testing.T) {
 					User:      "test/ocpm-test-com:8443",
 				},
 				User: K8sUserItem{
-					ClientCertificateData: "123==",
+					ClientCertificateData: "123==123",
 				},
 			},
 			false,
@@ -535,6 +535,14 @@ func Test_getK8SConfigField(t *testing.T) {
 				"Cluster_CertificateAuthorityData",
 			},
 			`test the shit out of this`,
+		},
+		{
+			"should return actual value when decoding fails",
+			args{
+				&fnRes,
+				"User_clientCertificateData",
+			},
+			`123==123`,
 		},
 	}
 	for _, tt := range tests {

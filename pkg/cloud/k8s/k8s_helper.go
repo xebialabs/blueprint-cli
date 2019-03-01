@@ -77,7 +77,7 @@ func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]s
 
 		// if requested, do exists check
 		if attr == "IsAvailable" {
-			return []string{strconv.FormatBool(result != nil && result.Cluster.Server != "" && result.User.ClientCertificateData != "")}, nil
+			return []string{strconv.FormatBool(result != nil && result.Cluster.Server != "")}, nil
 		}
 		// return attribute
 		attrVal := getK8SConfigField(result, attr)
