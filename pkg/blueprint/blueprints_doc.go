@@ -16,7 +16,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/osHelper"
-	"github.com/xebialabs/xl-cli/pkg/repository"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/yaml"
 	"gopkg.in/AlecAivazis/survey.v1"

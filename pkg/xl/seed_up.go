@@ -9,8 +9,8 @@ import (
 	"github.com/deckarep/golang-set"
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/repository"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"gopkg.in/AlecAivazis/survey.v1"
 )

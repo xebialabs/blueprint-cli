@@ -11,11 +11,11 @@ import (
 
 	"gopkg.in/AlecAivazis/survey.v1"
 
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/http"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/mock"
 	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/repository"
-	"github.com/xebialabs/xl-cli/pkg/repository/github"
-	"github.com/xebialabs/xl-cli/pkg/repository/http"
-	"github.com/xebialabs/xl-cli/pkg/repository/mock"
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
 

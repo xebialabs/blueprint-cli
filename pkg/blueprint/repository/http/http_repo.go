@@ -3,8 +3,8 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/repository"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"io/ioutil"
 	"net/http"
