@@ -16,12 +16,78 @@ var currentTask = ""
 var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 
 // TODO a better way or to use the APIs available
-var generatedPlan = "c.x.d.s.deployment.DeploymentService - Generated plan for currentTask"
-var phaseLogStart = "# [Plan phase] Deploy\n"
-var phaseLogEnd = "on K8S\n"
-var executingLog = "Publishing state change QUEUED -> EXECUTING"
-var executedLog = "Publishing state change EXECUTED -> DONE"
+var generatedPlan = "c.x.d.s.deployment.DeploymentService - Generated plan"
+var phaseLogEnd = "on K8S"
+var executedLog = "is completed with state [DONE]"
 
+
+func logCapture(w io.Writer, d []byte){
+	eventLog := string(d)
+	deploy := true
+	if strings.Index(eventLog, generatedPlan) != -1 {
+		currentTask = getCurrentTask(eventLog, strings.Index(eventLog, generatedPlan))
+		if currentTask != "" {
+			start := getIndexPlusLen(eventLog, "# [Serial] Deploy")
+			end := strings.Index(eventLog, phaseLogEnd)
+			if start < 0 {
+				start = getIndexPlusLen(eventLog, "* Deploy")
+			}
+			if start < 0 {
+				start = getIndexPlusLen(eventLog, "# [Serial] Undeploy")
+				if start < 0 {
+					start = getIndexPlusLen(eventLog, "* Undeploy")
+				}
+				deploy = false
+			}
+
+			if start >= 0 && end >= 0 {
+				s.Stop()
+				currentTask = eventLog[start:end]
+				if deploy {
+					w.Write([]byte("Deploying " + currentTask +"\n\n"))
+				} else {
+					w.Write([]byte("Undeploying " + currentTask + "\n\n"))
+				}
+				s.Start()
+			}
+		}
+	}
+
+	if strings.Index(eventLog, executedLog) != -1 {
+		s.Stop()
+		if deploy {
+			w.Write([]byte("Deployed "+ currentTask +"\n\n"))
+		} else {
+			w.Write([]byte("Undeployed "+ currentTask +"\n\n"))
+		}
+		s.Start()
+	}
+}
+func getIndexPlusLen(eventLog string, ident string) int {
+	index := strings.Index(eventLog, ident)
+	if index >= 0 {
+		return index + len(ident)
+	}
+	return index
+}
+
+func getCurrentTask(eventLog string, index int) string {
+	start := index + len(generatedPlan)
+	end := strings.Index(eventLog, "\n")
+
+	if end > 0 && start > 0 {
+		task := eventLog[start:end]
+		words := strings.Split(task, " ")
+
+		for  _, word := range words {
+			char := strings.Split(word, "-")
+			if len(char) > 1 {
+				return word
+			}
+ 		}
+	}
+	return ""
+}
 
 func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 	var out []byte
@@ -37,36 +103,10 @@ func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 				if err != nil {
 					return out, err
 				}
-			} else {
-				eventLog := string(d)
-				if strings.Index(eventLog, generatedPlan) != -1 {
-					length := len(phaseLogStart)
-					i:= strings.Index(eventLog, phaseLogStart)
-					j:= strings.Index(eventLog, phaseLogEnd) - 1
-					if i > 0 && j > 0 {
-						currentTask = eventLog[i +length :j]
-						currentTask = strings.Replace(currentTask, "* Deploy", "", -1)
-						currentTask = strings.Replace(currentTask, "1.0.0", "", -1)
-						currentTask = strings.TrimSpace(currentTask)
-						s.Stop()
-						w.Write([]byte("Starting deployment of "+ currentTask +"\n\n"))
-						s.Start()
-					}
-				}
-
-				if strings.Index(eventLog, executingLog) != -1 {
-					s.Stop()
-					w.Write([]byte("Deploying "+ currentTask +"\n\n"))
-					s.Start()
-				}
-
-				if strings.Index(eventLog, executedLog) != -1 {
-					s.Stop()
-					w.Write([]byte("Deployed "+ currentTask +"\n\n"))
-					s.Start()
-				}
 			}
-		}
+
+			logCapture(w, d)
+ 		}
 		if err != nil {
 			// Read returns io.EOF at the end of file, which is not an error for us
 			if err == io.EOF {
