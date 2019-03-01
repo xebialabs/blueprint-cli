@@ -25,30 +25,30 @@ var applyCmd = &cobra.Command{
 func printIds(op string, ids *[]string) {
 	if ids != nil && len(*ids) > 0 {
 		for _, id := range *ids {
-			util.Info(fmt.Sprintf("%s %s\n", op, id))
+			util.Info(fmt.Sprintf("%s%s %s\n", util.IndentFlexible(), op, id))
 		}
 	}
 }
 
 func printChangedIds(entityName string, ids *xl.ChangedIds) {
 	if ids != nil {
-		printIds(fmt.Sprintf("Created %s:", entityName), ids.Created)
-		printIds(fmt.Sprintf("Updated %s:", entityName), ids.Updated)
+		printIds(fmt.Sprintf("Created %s", entityName), ids.Created)
+		printIds(fmt.Sprintf("Updated %s", entityName), ids.Updated)
 	}
 }
 
 func printTaskInfo(task *xl.TaskInfo) {
 	if task != nil {
-		util.Info(fmt.Sprintf("Task [%s] started (%s)\n", task.Description, task.Id))
+		util.Info("%s%s started\n", util.IndentFlexible(), task.Description)
 	}
 }
 
 func printChanges(changes *xl.Changes) {
 	if changes != nil {
 		printTaskInfo(changes.Task)
-		printChangedIds("ci", changes.Cis)
+		printChangedIds("CI", changes.Cis)
 		printChangedIds("user", changes.Users)
-		printChangedIds("permission", changes.Permissions)
+		printChangedIds("permissions for role", changes.Permissions)
 		printChangedIds("role", changes.Roles)
 	}
 }
@@ -59,18 +59,18 @@ func requestTaskId(context *xl.Context, doc *xl.Document, taskId string) (*xl.Ta
 		return nil, err
 	}
 
-	util.Verbose("Checking task state... ")
+	util.Verbose("%sChecking task state... ", util.Indent2())
 	state, serr := server.GetTaskStatus(taskId)
 	if serr != nil {
 		return nil, serr
 	}
-	util.Verbose("[%s]\n", state.State)
+	util.Verbose("%s\n", state.State)
 
 	if util.IsVerbose {
 		if len(state.CurrentSteps) > 0 {
-			util.Verbose("### Currently active task steps:\n")
+			util.Verbose("%sCurrently active task steps:\n", util.Indent2())
 			for _, step := range state.CurrentSteps {
-				util.Verbose("### %s [%s]\n", step.Name, step.State)
+				util.Verbose("%s%s %s\n", util.Indent3(), step.Name, step.State)
 			}
 		}
 	} else {
@@ -80,43 +80,59 @@ func requestTaskId(context *xl.Context, doc *xl.Document, taskId string) (*xl.Ta
 }
 
 func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes, shouldDetach bool) {
-	if changes != nil && changes.Task != nil && !shouldDetach {
-		util.Info("Waiting for task (%s)\n", changes.Task.Id)
-		result, err := requestTaskId(context, doc, changes.Task.Id)
-		for err == nil {
-			switch result.State {
-			case "COMPLETED":
-				fallthrough
-			case "DONE":
-				util.Verbose("Done.")
-				util.Info("\n")
-				return
-
-			case "IN_PROGRESS":
-				for _, step := range result.CurrentSteps {
-					if !step.Automated {
-						util.Fatal("\nUnable to complete the task (%s) automatically as it's current active step is manual.\n", changes.Task.Id)
-					}
-				}
-
-			case "FAILING":
-				fallthrough
-			case "CANCELING":
-				fallthrough
-			case "CANCELLED":
-				fallthrough
-			case "FAILED":
-				fallthrough
-			case "STOPPED":
-				fallthrough
-			case "ABORTED":
-				util.Fatal("\nUnable to complete the task (%s) automatically as it's state became [%s]. The task will be rolled back.\n", changes.Task.Id, result.State)
+	if changes != nil && changes.Task != nil {
+		if shouldDetach {
+			util.Info("%sGo to the user interface to follow task %s\n", util.IndentFlexible(), changes.Task.Id)
+		} else {
+			util.Info("%sWaiting for task %s to finish\n", util.Indent1(), changes.Task.Id)
+			if !util.IsVerbose {
+				util.Info(util.Indent1())
 			}
-			time.Sleep(2 * time.Second)
-			result, err = requestTaskId(context, doc, changes.Task.Id)
-		}
-		if err != nil {
-			util.Fatal("\nError waiting for task %s, %s\n", changes.Task.Id, err)
+			result, err := requestTaskId(context, doc, changes.Task.Id)
+			for err == nil {
+				switch result.State {
+				case "COMPLETED":
+					fallthrough
+				case "DONE":
+					if !util.IsVerbose {
+						util.Info("\n")
+					}
+					util.Info("%sTask %s has completed and been archived\n", util.Indent1(), changes.Task.Id)
+					return
+
+				case "IN_PROGRESS":
+					for _, step := range result.CurrentSteps {
+						if !step.Automated {
+							util.Fatal(
+								"\n%sUnable to complete the task (%s) automatically as it's current active step is manual.\n",
+								util.Indent1(), changes.Task.Id,
+							)
+						}
+					}
+
+				case "FAILING":
+					fallthrough
+				case "CANCELING":
+					fallthrough
+				case "CANCELLED":
+					fallthrough
+				case "FAILED":
+					fallthrough
+				case "STOPPED":
+					fallthrough
+				case "ABORTED":
+					util.Fatal(
+						"\n%sUnable to complete the task %s automatically as it's state became %s.\n%sThe task will be rolled back.\n",
+						util.Indent1(), changes.Task.Id, result.State, util.Indent1(),
+					)
+				}
+				time.Sleep(2 * time.Second)
+				util.Verbose("\n")
+				result, err = requestTaskId(context, doc, changes.Task.Id)
+			}
+			if err != nil {
+				util.Fatal("\n%sError waiting for task %s, %s\n", util.Indent1(), changes.Task.Id, err)
+			}
 		}
 	}
 }

@@ -43,6 +43,8 @@ dependencies {
         build name: 'github.com/thoas/go-funk',             tag: '0.4'
         build name: 'github.com/google/go-github',          tag: 'v21.0.0'
         build name: 'github.com/disiqueira/gotree',         tag: '2.0.3'
+        build name: 'github.com/fatih/color',               tag: 'v1.7.0'
+        build name: 'github.com/Knetic/govaluate',          tag: '3.0.0'
         test name: 'github.com/stretchr/testify/',          tag: 'v1.2.2'
         test name: 'github.com/stretchr/testify/assert',    tag: 'v1.2.2'
         test name: 'golang.org/x/crypto/ssh/terminal'
@@ -122,18 +124,20 @@ build {
     simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
     def date = simpleDateFormat.format(new Date())
 
-    def ldflags = "-ldflags='" +
+    def ldflags = " -ldflags='" +
             ldflag("CliVersion", { -> project.version}) +
             ldflag("BuildVersion", gitVersionShort) +
             ldflag("BuildGitCommit", gitCommit) +
             ldflag("BuildDate", date) +
             (project.hasProperty("optimise") ? "-s -w" : "") +
             "'"
+    
+    def debugFlags = project.hasProperty("debug") ? " -gcflags \"all=-N -l\"" : ""
 
     run Paths.get("\${GOPATH}/bin/packr").toString() + " -i cmd/xl"
     go "generate cmd/xl/cmd/wrapper.go"
     // The ${} placeholder will be rendered in cross-compile
-    go "build ${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
+    go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
     dumpVersion
 
     finalizedBy ':copyVendor' // so that editors can find the source of dependencies

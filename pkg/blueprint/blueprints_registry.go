@@ -30,17 +30,7 @@ type TemplateConfig struct {
 }
 
 const templateExtension = ".tmpl"
-
 var blueprintRepository repository.BlueprintRepository
-
-type BlueprintContext struct {
-	Provider string
-	Name     string
-	Url      *url.URL
-	Owner    string
-	Token    string
-	Branch   string
-}
 
 /*
  * ---------------------------
