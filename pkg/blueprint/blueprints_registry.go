@@ -3,7 +3,6 @@ package blueprint
 import (
 	"fmt"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
