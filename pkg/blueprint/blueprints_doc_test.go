@@ -96,7 +96,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type: VarField{Val: TypeConfirm},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
-		assert.Equal(t, "false", defaultVal)
+		assert.Equal(t, false, defaultVal)
 	})
 
 	t.Run("should return empty string when invalid function tag in default field", func(t *testing.T) {
@@ -147,7 +147,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		defaultVal = v.GetDefaultVal(map[string]interface{}{
 			"Foo": 100,
 		})
-		assert.Equal(t, "true", defaultVal)
+		assert.True(t, defaultVal.(bool))
 	})
 }
 
@@ -175,7 +175,7 @@ func TestParseDependsOnValue(t *testing.T) {
 		v := Variable{
 			Name:          VarField{Val: "test"},
 			Type:          VarField{Val: TypeInput},
-			DependsOnTrue: VarField{Val: "aws.creds", Tag: "!expression"},
+			DependsOnTrue: VarField{Val: "aws.creds", Tag: tagExpression},
 		}
 		_, err := ParseDependsOnValue(v.DependsOnTrue, &[]Variable{}, dummyData)
 		require.NotNil(t, err)
@@ -184,13 +184,14 @@ func TestParseDependsOnValue(t *testing.T) {
 		v := Variable{
 			Name:          VarField{Val: "test"},
 			Type:          VarField{Val: TypeInput},
-			DependsOnTrue: VarField{Val: "Foo > 10", Tag: "!expression"},
+			DependsOnTrue: VarField{Val: "Foo > 10", Tag: tagExpression},
 		}
 
-		_, err := ParseDependsOnValue(v.DependsOnTrue, &[]Variable{}, map[string]interface{}{
+		val, err := ParseDependsOnValue(v.DependsOnTrue, &[]Variable{}, map[string]interface{}{
 			"Foo": 100,
 		})
 		require.Nil(t, err)
+		require.True(t, val)
 	})
 	t.Run("should return bool value from referenced var for dependsOn field", func(t *testing.T) {
 		vars := make([]Variable, 2)
@@ -309,7 +310,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Val: "test"},
 			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (1, 2, 3)", Tag: "!expression"}},
+			Options: []VarField{{Val: "Foo ? Bar : (1, 2, 3)", Tag: tagExpression}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": true,
@@ -318,11 +319,68 @@ func TestGetOptions(t *testing.T) {
 		assert.True(t, len(values) == 2)
 	})
 
+	t.Run("should return generated string array values for expression options tag", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeSelect},
+			Options: []VarField{{Val: "Provider == 'GCP' ? ('GKE', 'CloudSore') : ('test')", Tag: tagExpression}},
+		}
+		values := v.GetOptions(map[string]interface{}{
+			"Provider": "GCP",
+		})
+		assert.NotNil(t, values)
+		assert.True(t, len(values) == 2)
+	})
+
+	t.Run("should return string values for param reference in expression options tag", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeSelect},
+			Options: []VarField{{Val: "Foo ? Bar : (Foo1, Foo2)", Tag: tagExpression}},
+		}
+		values := v.GetOptions(map[string]interface{}{
+			"Foo":  false,
+			"Foo1": "test",
+			"Foo2": "foo",
+			"Bar":  []string{"test", "foo"},
+		})
+		assert.NotNil(t, values)
+		assert.True(t, len(values) == 2)
+	})
+
+	t.Run("should return string values for numeric type in expression options tag", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeSelect},
+			Options: []VarField{{Val: "Foo ? Bar : (1, 2, 3)", Tag: tagExpression}},
+		}
+		values := v.GetOptions(map[string]interface{}{
+			"Foo": false,
+			"Bar": []string{"test", "foo"},
+		})
+		assert.NotNil(t, values)
+		assert.True(t, len(values) == 3)
+	})
+
+	t.Run("should return string values for boolean type in expression options tag", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Val: "test"},
+			Type:    VarField{Val: TypeSelect},
+			Options: []VarField{{Val: "Foo ? Bar : (true, false)", Tag: tagExpression}},
+		}
+		values := v.GetOptions(map[string]interface{}{
+			"Foo": false,
+			"Bar": []string{"test", "foo"},
+		})
+		assert.NotNil(t, values)
+		assert.True(t, len(values) == 2)
+	})
+
 	t.Run("should return nil values for invalid return type in expression options tag", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Val: "test"},
 			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (1, 2, 3)", Tag: "!expression"}},
+			Options: []VarField{{Val: "Foo ? Bar : (Fooo, Foo)", Tag: tagExpression}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
@@ -335,7 +393,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Val: "test"},
 			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "aws.regs()", Tag: "!expression"}},
+			Options: []VarField{{Val: "aws.regs()", Tag: tagExpression}},
 		}
 		out := v.GetOptions(dummyData)
 		require.Nil(t, out)

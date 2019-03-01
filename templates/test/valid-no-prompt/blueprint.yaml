@@ -36,6 +36,9 @@ spec:
   - name: TestDepends2
     type: Confirm
     value: false
+  - name: TestDepends3
+    type: Confirm
+    value: !expression "!TestDepends"
   - name: AppName
     type: Input
     pattern: "[a-zA-Z-]*"
@@ -63,3 +66,5 @@ spec:
     dependsOnTrue: !expression "AWSRegion == 'us-west' && AppName != 'foo' && TestDepends && !TestDepends2"
   - path: xlr-pipeline.yml
     dependsOnFalse: TestDepends
+  - path: xlr-pipeline-3.yml
+    dependsOnFalse: TestDepends3
