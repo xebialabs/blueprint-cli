@@ -19,6 +19,10 @@ import (
 var sampleKubeConfig = `apiVersion: v1
 clusters:
 - cluster:
+    certificate-authority-data: REDACTED
+    server: https://1A256A873510C6531DBC9D05142A309B.sk1.eu-west-1.eks.amazonaws.com
+  name: elton-xl-platform-master
+- cluster:
     certificate-authority-data: 123==
     server: https://test.hcp.eastus.azmk8s.io:443
   name: testCluster
@@ -31,6 +35,11 @@ clusters:
     server: https://ocpm.test.com:8443
   name: testUserNotFound
 contexts:
+- context:
+    cluster: elton-xl-platform-master
+    namespace: xebialabs
+    user: aws
+  name: aws
 - context:
     cluster: ocpm-test-com:8443
     namespace: default
@@ -55,6 +64,16 @@ current-context: testCluster
 kind: Config
 preferences: {}
 users:
+- name: aws
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1alpha1
+      args:
+      - token
+      - -i
+      - elton-xl-platform-master
+      command: aws-iam-authenticator
+      env: null
 - name: clusterUser_testCluster_testCluster
   user:
     client-certificate-data: 123==
@@ -964,6 +983,13 @@ func TestProcessCustomFunction_K8S(t *testing.T) {
 		require.Nil(t, err)
 		assert.Equal(t, []string{"false"}, out)
 	})
+
+	t.Run("should check if kubernetes config is available when user doesn't exist", func(t *testing.T) {
+		out, err := ProcessCustomFunction("k8s.config(aws).IsAvailable")
+		require.Nil(t, err)
+		assert.Equal(t, []string{"true"}, out)
+	})
+
 	t.Run("should fetch a kubernetes config property from current context", func(t *testing.T) {
 		out, err := ProcessCustomFunction("k8s.config().cluster_server")
 		require.Nil(t, err)

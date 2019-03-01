@@ -231,15 +231,6 @@ func TestGetContext(t *testing.T) {
 			true,
 		},
 		{
-			"should error when user is not found",
-			args{
-				config:  config,
-				context: "testUserNotFound",
-			},
-			K8SFnResult{},
-			true,
-		},
-		{
 			"should find default context when context is not specified",
 			args{
 				config:  config,
@@ -319,12 +310,6 @@ func TestGetK8SConfigFromSystem(t *testing.T) {
 		{
 			"should error when cluster is not found",
 			"testClusterNotFound",
-			K8SFnResult{},
-			true,
-		},
-		{
-			"should error when user is not found",
-			"testUserNotFound",
 			K8SFnResult{},
 			true,
 		},

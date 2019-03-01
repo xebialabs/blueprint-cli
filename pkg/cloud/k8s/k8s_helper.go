@@ -217,9 +217,6 @@ func GetContext(config K8sConfig, context string) (K8SFnResult, error) {
 			userItem = c.User
 		}
 	}
-	if userItem == (K8sUserItem{}) {
-		return K8SFnResult{}, fmt.Errorf("No user found for specified context in the Kubernetes config file")
-	}
 	result := K8SFnResult{
 		Cluster: clusterItem,
 		Context: contextItem,
