@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -79,10 +80,18 @@ func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]s
 			return []string{strconv.FormatBool(result != nil && result.Cluster.Server != "" && result.User.ClientCertificateData != "")}, nil
 		}
 		// return attribute
-		return []string{getK8SConfigField(result, attr)}, nil
+		attrVal := getK8SConfigField(result, attr)
+		return []string{attrVal}, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid Kubernetes module", module)
 	}
+}
+
+var SpecialHandling = map[string]string{
+	"Cluster_InsecureSkipTLSVerify":    "bool",
+	"Cluster_CertificateAuthorityData": "encoded",
+	"User_ClientCertificateData":       "encoded",
+	"User_ClientKeyData":               "encoded",
 }
 
 func getK8SConfigField(res *K8SFnResult, attr string) string {
@@ -91,6 +100,20 @@ func getK8SConfigField(res *K8SFnResult, attr string) string {
 		knorm := strings.ToLower(strings.Replace(k, "_", "", -1))
 		attrnorm := strings.ToLower(strings.Replace(attr, "_", "", -1))
 		if knorm == attrnorm {
+			if val, ok := SpecialHandling[k]; ok {
+				//do something here
+				if val == "bool" {
+					return strconv.FormatBool(field.Bool())
+				}
+				if val == "encoded" {
+					data, err := base64.StdEncoding.DecodeString(field.String())
+					if err != nil {
+						util.Verbose("[k8s] Error while decoding value for [%s] is: %v\n", k, err)
+						return field.String()
+					}
+					return string(data)
+				}
+			}
 			return field.String()
 		}
 	}
@@ -107,7 +130,7 @@ func CallK8SFuncByName(module string, params ...string) (models.FnResult, error)
 		}
 		config, err := GetK8SConfigFromSystem(context)
 		if err != nil {
-			util.Verbose("[aws] Error while processing function [%s] is: %v\n", module, err)
+			util.Verbose("[k8s] Error while processing function [%s] is: %v\n", module, err)
 			// handle K8S configuration errors gracefully
 			return &K8SFnResult{}, nil
 		}

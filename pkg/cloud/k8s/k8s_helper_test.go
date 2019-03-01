@@ -37,7 +37,7 @@ users:
 var sampleKubeConfig = `apiVersion: v1
 clusters:
 - cluster:
-    certificate-authority-data: 123==
+    certificate-authority-data: dGVzdCB0aGUgc2hpdCBvdXQgb2YgdGhpcw==
     server: https://test.hcp.eastus.azmk8s.io:443
   name: testCluster
 - cluster:
@@ -248,7 +248,7 @@ func TestGetContext(t *testing.T) {
 			K8SFnResult{
 				Cluster: K8sClusterItem{
 					Server:                   "https://test.hcp.eastus.azmk8s.io:443",
-					CertificateAuthorityData: "123==",
+					CertificateAuthorityData: "dGVzdCB0aGUgc2hpdCBvdXQgb2YgdGhpcw==",
 					InsecureSkipTLSVerify:    false,
 				},
 				Context: K8sContextItem{
@@ -334,7 +334,7 @@ func TestGetK8SConfigFromSystem(t *testing.T) {
 			K8SFnResult{
 				Cluster: K8sClusterItem{
 					Server:                   "https://test.hcp.eastus.azmk8s.io:443",
-					CertificateAuthorityData: "123==",
+					CertificateAuthorityData: "dGVzdCB0aGUgc2hpdCBvdXQgb2YgdGhpcw==",
 					InsecureSkipTLSVerify:    false,
 				},
 				Context: K8sContextItem{
@@ -424,7 +424,7 @@ func TestCallK8SFuncByName(t *testing.T) {
 			&K8SFnResult{
 				Cluster: K8sClusterItem{
 					Server:                   "https://test.hcp.eastus.azmk8s.io:443",
-					CertificateAuthorityData: "123==",
+					CertificateAuthorityData: "dGVzdCB0aGUgc2hpdCBvdXQgb2YgdGhpcw==",
 					InsecureSkipTLSVerify:    false,
 				},
 				Context: K8sContextItem{
@@ -508,25 +508,33 @@ func Test_getK8SConfigField(t *testing.T) {
 			"should return value when fetching existing field with snakecase",
 			args{
 				&fnRes,
-				"cluster_certificate_authority_data",
+				"cluster_insecure_skip_tls_verify",
 			},
-			"123==",
+			"false",
 		},
 		{
 			"should return value when fetching existing field with mix of camelcase and underscore",
 			args{
 				&fnRes,
-				"cluster_certificateAuthorityData",
+				"cluster_insecureSkipTlsVerify",
 			},
-			"123==",
+			"false",
 		},
 		{
 			"should return value when fetching existing field with uneven case",
 			args{
 				&fnRes,
-				"clustercertificateAuthoritydata",
+				"clusterInsecureSkipTlsVerify",
 			},
-			"123==",
+			"false",
+		},
+		{
+			"should return decoded value when fetching existing encoded field",
+			args{
+				&fnRes,
+				"Cluster_CertificateAuthorityData",
+			},
+			`test the shit out of this`,
 		},
 	}
 	for _, tt := range tests {
