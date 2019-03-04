@@ -35,22 +35,11 @@ func logCapture(w io.Writer, d []byte){
 			if start < 0 {
 				start = getIndexPlusLen(eventLog, "* Deploy")
 			}
-			if start < 0 {
-				start = getIndexPlusLen(eventLog, "# [Serial] Undeploy")
-				if start < 0 {
-					start = getIndexPlusLen(eventLog, "* Undeploy")
-				}
-				deploy = false
-			}
 
 			if start >= 0 && end >= 0 {
 				s.Stop()
 				ctDesc = eventLog[start:end]
-				if deploy {
-					w.Write([]byte("Deploying " + ctDesc +"\n\n"))
-				} else {
-					w.Write([]byte("Undeploying " + ctDesc + "\n\n"))
-				}
+				w.Write([]byte("Deploying " + ctDesc +"\n\n"))
 				s.Start()
 			}
 		}
@@ -61,6 +50,7 @@ func logCapture(w io.Writer, d []byte){
 		if deploy {
 			w.Write([]byte("Failed deploying for "+ ctDesc +"\n\n"))
 			w.Write([]byte("Undeploying "+ ctDesc +"\n\n"))
+			deploy = false
 		} else {
 			w.Write([]byte("Failed undeploying for "+ ctDesc +"\n\n"))
 		}
@@ -167,10 +157,10 @@ func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
 
 	outStr, errStr := string(stdout), string(stderr)
 
-	if err != nil {
-		Info("Failed to run with %s\n", errStr)
-		Info("cmd.Run() failed with %s\n", err)
-	}
+	//if err != nil {
+	//	Info("Failed to run with %s\n", errStr)
+	//	Info("cmd.Run() failed with %s\n", err)
+	//}
 
 	if errStdout != nil || errStderr != nil {
 		Info("failed to capture stdout or stderr\n")
