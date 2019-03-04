@@ -108,6 +108,13 @@ dependencies:
     vendorPath: "vendor/github.com/bgentry/speakeasy"
     transitive: false
   - urls:
+    - "https://github.com/briandowns/spinner.git"
+    - "git@github.com:briandowns/spinner.git"
+    vcs: "git"
+    name: "github.com/briandowns/spinner"
+    commit: "dd69c579ff204842e8962816987f838e2c2c18d8"
+    transitive: false
+  - urls:
     - "https://github.com/chzyer/readline.git"
     - "git@github.com:chzyer/readline.git"
     vcs: "git"
@@ -288,6 +295,13 @@ dependencies:
     vcs: "git"
     name: "github.com/gobuffalo/buffalo-plugins"
     commit: "69f3d62dac4196808a821b63b783789d30aadffc"
+    transitive: false
+  - urls:
+    - "https://github.com/gobuffalo/depgen.git"
+    - "git@github.com:gobuffalo/depgen.git"
+    vcs: "git"
+    name: "github.com/gobuffalo/depgen"
+    commit: "d0846c321ca8c774c234e7d245287a6856da5a1f"
     transitive: false
   - urls:
     - "https://github.com/gobuffalo/depgen.git"
