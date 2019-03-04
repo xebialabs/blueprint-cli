@@ -13,16 +13,20 @@ import (
 )
 
 var currentTask = ""
+var ctDesc = ""
 var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 var deploy = true
 // TODO a better way or to use the APIs available
 var generatedPlan = "c.x.d.s.deployment.DeploymentService - Generated plan"
 var phaseLogEnd = "on K8S"
 var executedLog = "is completed with state [DONE]"
+var failExecutedLog = "is completed with state [FAILED]"
 
 
 func logCapture(w io.Writer, d []byte){
 	eventLog := string(d)
+
+
 	if strings.Index(eventLog, generatedPlan) != -1 {
 		currentTask = getCurrentTask(eventLog, strings.Index(eventLog, generatedPlan))
 		if currentTask != "" {
@@ -41,23 +45,35 @@ func logCapture(w io.Writer, d []byte){
 
 			if start >= 0 && end >= 0 {
 				s.Stop()
-				currentTask = eventLog[start:end]
+				ctDesc = eventLog[start:end]
 				if deploy {
-					w.Write([]byte("Deploying " + currentTask +"\n\n"))
+					w.Write([]byte("Deploying " + ctDesc +"\n\n"))
 				} else {
-					w.Write([]byte("Undeploying " + currentTask + "\n\n"))
+					w.Write([]byte("Undeploying " + ctDesc + "\n\n"))
 				}
 				s.Start()
 			}
 		}
 	}
 
+	if strings.Index(eventLog, failExecutedLog) != -1 {
+		s.Stop()
+		if deploy {
+			w.Write([]byte("Failed deploying for "+ ctDesc +"\n\n"))
+			w.Write([]byte("Undeploying "+ ctDesc +"\n\n"))
+		} else {
+			w.Write([]byte("Failed undeploying for "+ ctDesc +"\n\n"))
+		}
+		s.Start()
+	}
+
+
 	if strings.Index(eventLog, executedLog) != -1 {
 		s.Stop()
 		if deploy {
-			w.Write([]byte("Deployed "+ currentTask +"\n\n"))
+			w.Write([]byte("Deployed "+ ctDesc +"\n\n"))
 		} else {
-			w.Write([]byte("Undeployed "+ currentTask +"\n\n"))
+			w.Write([]byte("Undeployed "+ ctDesc +"\n\n"))
 		}
 		s.Start()
 	}
@@ -105,12 +121,14 @@ func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 			}
 
 			logCapture(w, d)
+
  		}
 		if err != nil {
 			// Read returns io.EOF at the end of file, which is not an error for us
 			if err == io.EOF {
 				err = nil
 			}
+
 			return out, err
 		}
 	}
@@ -149,13 +167,13 @@ func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
 
 	outStr, errStr := string(stdout), string(stderr)
 
-
 	if err != nil {
-		Fatal("Failed to run with %s\n", errStr)
-		Fatal("cmd.Run() failed with %s\n", err)
+		Info("Failed to run with %s\n", errStr)
+		Info("cmd.Run() failed with %s\n", err)
 	}
+
 	if errStdout != nil || errStderr != nil {
-		Fatal("failed to capture stdout or stderr\n")
+		Info("failed to capture stdout or stderr\n")
 	}
 
 	if !IsVerbose {

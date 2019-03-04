@@ -117,7 +117,7 @@ func runAndCaptureResponse(status string, cmd models.Command) {
 
 	if errorStr != "" {
 		createLogFile("xl-seed-error.txt", errorStr)
-		util.Fatal("Error while %s the xl seed image: %s\n", status, errorStr)
+		util.Fatal("Error while %s the xl seed image", status)
 	}
 }
 
