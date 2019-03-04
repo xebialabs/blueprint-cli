@@ -78,17 +78,17 @@ func runSeed() models.Command {
 }
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(context *Context) {
+func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, blueprintTemplate string) {
 	// Skip Generate blueprint file
 	blueprint.SkipFinalPrompt = true
 
 	// TODO: Check for Docker installation
-	util.Verbose("Fetching the blueprint template location")
-	isLocal, err := isLocal()
-	blueprintTemplate, err := getBlueprintLocation()
+	//util.Verbose("Fetching the blueprint template location")
+	//isLocal, err := isLocal()
+	//blueprintTemplate, err := getBlueprintLocation()
 
 	util.Verbose("Starting Blueprint questions to generate necessary files")
-	err = blueprint.InstantiateBlueprint(isLocal, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
+	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s\n", err)
 	}
@@ -117,7 +117,7 @@ func runAndCaptureResponse(status string, cmd models.Command) {
 
 	if errorStr != "" {
 		createLogFile("xl-seed-error.txt", errorStr)
-		util.Fatal("Error while %s the xl seed image", status)
+		util.Fatal("Error while %s the xl seed image: %s\n", status, errorStr)
 	}
 }
 
