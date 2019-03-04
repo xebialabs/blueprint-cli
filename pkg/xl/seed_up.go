@@ -13,7 +13,6 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/repository"
 	"github.com/xebialabs/xl-cli/pkg/util"
-	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 const (
@@ -27,42 +26,6 @@ var pullSeedImage = models.Command{
 }
 
 var applyValues map[string]string
-
-func getBlueprintLocation(surveyOpts ...survey.AskOpt) (string, error) {
-
-	blueprintTemplate := ""
-
-	_ = survey.AskOne(
-		&survey.Input{
-			Message: "Enter the blueprint repository or file:",
-			Help:    "http://github.com/xebialabs/repo-containing-blueprint or /path/to/blueprint",
-			Default: "/Users/sendilkumar/xl/xl-platform-k8s/blueprint/xl-up",
-		},
-		&blueprintTemplate,
-		survey.Required,
-		surveyOpts...,
-	)
-
-	return blueprintTemplate, nil
-}
-
-func isLocal(surveyOpts ...survey.AskOpt) (bool, error) {
-
-	isLocal := true
-
-	_ = survey.AskOne(
-		&survey.Confirm{
-			Message: "Is your blueprint available in local?",
-			Help:    "Y for local, N for remote",
-			Default: true,
-		},
-		&isLocal,
-		survey.Required,
-		surveyOpts...,
-	)
-
-	return isLocal, nil
-}
 
 func runSeed() models.Command {
 	dir, err := os.Getwd()
@@ -81,11 +44,6 @@ func runSeed() models.Command {
 func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, blueprintTemplate string) {
 	// Skip Generate blueprint file
 	blueprint.SkipFinalPrompt = true
-
-	// TODO: Check for Docker installation
-	//util.Verbose("Fetching the blueprint template location")
-	//isLocal, err := isLocal()
-	//blueprintTemplate, err := getBlueprintLocation()
 
 	util.Verbose("Starting Blueprint questions to generate necessary files")
 	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
