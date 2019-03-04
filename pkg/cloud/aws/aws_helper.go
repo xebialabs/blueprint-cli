@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 const (
@@ -84,6 +85,7 @@ func CallAWSFuncByName(module string, params ...string) (models.FnResult, error)
 		creds, err := GetAWSCredentialsFromSystem()
 		if err != nil {
 			// handle AWS configuration errors gracefully
+			util.Verbose("[aws] Error while processing function [%s] is: %v\n", module, err)
 			return &AWSFnResult{}, nil
 		}
 		return &AWSFnResult{creds: creds}, nil
