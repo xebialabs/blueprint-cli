@@ -146,13 +146,17 @@ func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
 	wg.Wait()
 
 	err = cmd.Wait()
+
+	outStr, errStr := string(stdout), string(stderr)
+
+
 	if err != nil {
+		Fatal("Failed to run with %s\n", errStr)
 		Fatal("cmd.Run() failed with %s\n", err)
 	}
 	if errStdout != nil || errStderr != nil {
 		Fatal("failed to capture stdout or stderr\n")
 	}
-	outStr, errStr := string(stdout), string(stderr)
 
 	if !IsVerbose {
 		s.Stop()
