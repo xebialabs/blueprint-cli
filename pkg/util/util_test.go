@@ -48,3 +48,7 @@ func TestPathExists(t *testing.T) {
 		assert.False(t, PathExists(path.Join(tmpDir, "nopermission", "test.yaml"), false))
 	})
 }
+
+func TestMapContainsKey(t *testing.T) {
+    // TODO
+}

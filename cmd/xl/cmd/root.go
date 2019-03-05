@@ -103,7 +103,15 @@ func writeDefaultConfigurationFile() error {
 
 	util.Verbose("Writing default configuration to %s\n", configFileUsed)
 
-	// using MapSlice to maintain order of keys
+	// using MapSlice to maintain order of keys, and custom ConfMap to have list of configuration items
+	type ConfMap map[string]string
+	var defaultBlueprintRepoList []ConfMap
+    defaultBlueprintRepo := ConfMap{
+        "name": models.DefaultBlueprintRepositoryName,
+        "type": models.DefaultBlueprintRepositoryProvider,
+        "url": models.DefaultBlueprintRepositoryUrl,
+    }
+    defaultBlueprintRepoList = append(defaultBlueprintRepoList, defaultBlueprintRepo)
 	slices := yaml.MapSlice{
 		{"xl-deploy", yaml.MapSlice{
 			{"username", models.DefaultXlDeployUsername},
@@ -116,11 +124,8 @@ func writeDefaultConfigurationFile() error {
 			{"url", models.DefaultXlReleaseUrl},
 		}},
 		{"blueprint-repository", yaml.MapSlice{
-			{"provider", models.DefaultBlueprintRepositoryProvider},
-			{"owner", models.DefaultBlueprintRepositoryOwner},
-			{"token", models.DefaultBlueprintRepositoryToken},
-			{"name", models.DefaultBlueprintRepositoryName},
-			{"branch", models.DefaultBlueprintRepositoryBranch},
+			{"current-repository", models.DefaultBlueprintRepositoryName},
+			{"repositories", defaultBlueprintRepoList},
 		}},
 	}
 

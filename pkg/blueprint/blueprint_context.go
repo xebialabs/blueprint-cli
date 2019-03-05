@@ -45,10 +45,8 @@ type BlueprintContext struct {
 }
 
 func SetRootFlags(rootFlags *pflag.FlagSet) {
-	// TODO: FIX FLAGS
-	rootFlags.String(FlagBlueprintCurrentRepository, models.DefaultBlueprintRepositoryProvider, "Provider for the blueprint repository")
-	rootFlags.String(FlagBlueprintCurrentRepository, models.DefaultBlueprintRepositoryName, "Name of the blueprint repository")
-	viper.BindPFlag(ViperKeyBlueprintCurrentRepository, rootFlags.Lookup(FlagBlueprintCurrentRepository))
+	rootFlags.String(FlagBlueprintCurrentRepository, "", "Current active blueprint repository name")
+
 	viper.BindPFlag(ViperKeyBlueprintCurrentRepository, rootFlags.Lookup(FlagBlueprintCurrentRepository))
 }
 

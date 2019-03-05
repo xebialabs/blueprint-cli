@@ -31,12 +31,9 @@ const (
 	DefaultXlReleaseUsername            = "admin"
 	DefaultXlReleasePassword            = "admin"
 
+	DefaultBlueprintRepositoryProvider  = ProviderHttp
 	DefaultBlueprintRepositoryName      = "XL Blueprints"
 	DefaultBlueprintRepositoryUrl       = "https://dist.xebialabs.com/public/blueprints/"
-	DefaultBlueprintRepositoryOwner     = ""
-	DefaultBlueprintRepositoryToken     = ""
-	DefaultBlueprintRepositoryBranch    = ""
-	DefaultBlueprintRepositoryProvider  = ProviderHttp
 )
 
 
