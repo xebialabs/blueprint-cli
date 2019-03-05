@@ -160,4 +160,34 @@ metadata:
 		assert.Equal(t, infra.doc(1).Kind, "Deployment")
 		assert.Nil(t, infra.metadata(1)["imports"])
 	})
+
+	t.Run("should auto-archive deployments if non-interactive mode has been set", func(t *testing.T) {
+		tempDir := createTempDir("deployment3")
+		deployFile := writeToTempFile(tempDir, "deploy.yaml", fmt.Sprintf(`
+apiVersion: %s
+kind: Deployment
+spec:
+  package: Applications/PetPortal/1.0
+  environment: Environments/AWS Environment
+`, xl.XldApiVersion))
+		defer os.RemoveAll(tempDir)
+
+		v := viper.GetViper()
+
+		infra := CreateTestInfra(v)
+		defer infra.shutdown()
+		nonInteractive = true
+
+		DoApply([]string{deployFile.Name()})
+
+		assert.Equal(t, 1, len(infra.documents))
+		deploymentDoc := infra.doc(0)
+		assert.Equal(t, "Deployment", deploymentDoc.Kind)
+		assert.Equal(t, models.XldApiVersion, deploymentDoc.ApiVersion)
+		spec := util.TransformToMap(deploymentDoc.Spec)[0]
+		assert.Equal(t, "Environments/AWS Environment", spec["environment"])
+		assert.Equal(t, "Applications/PetPortal/1.0", spec["package"])
+		assert.Equal(t, "ARCHIVE", spec["onSuccessPolicy"])
+		nonInteractive = false
+	})
 }

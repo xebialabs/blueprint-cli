@@ -50,7 +50,7 @@ func printPreview(response *models.PreviewResponse) {
 	}
 }
 
-func previewDocument(context *xl.Context, fileWithDocs xl.FileWithDocuments, doc *xl.Document, _ bool) {
+func previewDocument(context *xl.Context, fileWithDocs xl.FileWithDocuments, doc *xl.Document) {
 	previewDir := filepath.Dir(fileWithDocs.FileName)
 	preview, err := context.PreviewSingleDocument(doc, previewDir)
 	if err != nil {
@@ -61,7 +61,7 @@ func previewDocument(context *xl.Context, fileWithDocs xl.FileWithDocuments, doc
 }
 
 func DoPreview(previewFilenames []string) {
-	xl.ForEachDocument("Previewing", previewFilenames, previewValues, false, previewDocument)
+	xl.ForEachDocument("Previewing", previewFilenames, previewValues, previewDocument)
 }
 
 func init() {
