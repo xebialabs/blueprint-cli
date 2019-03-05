@@ -17,6 +17,7 @@ import (
 	"github.com/xebialabs/yaml"
 )
 
+var initCfgTry = 0
 var CliVersion = "undefined"
 var cfgFile string
 
@@ -86,11 +87,18 @@ func initConfig() {
 			if err != nil {
 				util.Info("Could not write default configuration: %s/n", err.Error())
 			}
+
+            initCfgTry += 1
+            if initCfgTry == 5 {
+                util.Fatal("Cannot read generated config (%s) after 5 attempts: %s\n", viper.ConfigFileUsed(), err)
+            }
+            initConfig()
 		default:
 			util.Fatal("Cannot read config file %s: %s\n", viper.ConfigFileUsed(), err)
 		}
 	}
 }
+
 func writeDefaultConfigurationFile() error {
 	configFileUsed, err := defaultConfigfilePath()
 	if err != nil {
@@ -103,15 +111,20 @@ func writeDefaultConfigurationFile() error {
 
 	util.Verbose("Writing default configuration to %s\n", configFileUsed)
 
-	// using MapSlice to maintain order of keys, and custom ConfMap to have list of configuration items
-	type ConfMap map[string]string
-	var defaultBlueprintRepoList []ConfMap
+	// using custom ConfMap to have list of configuration items
+    type ConfMap map[string]interface{}
+    type ConfData struct {
+        CurrentRepo   string     `yaml:"current-repository"`
+        Repositories  []ConfMap  `yaml:"repositories"`
+    }
     defaultBlueprintRepo := ConfMap{
         "name": models.DefaultBlueprintRepositoryName,
         "type": models.DefaultBlueprintRepositoryProvider,
         "url": models.DefaultBlueprintRepositoryUrl,
     }
-    defaultBlueprintRepoList = append(defaultBlueprintRepoList, defaultBlueprintRepo)
+    blueprintConfData := ConfData{models.DefaultBlueprintRepositoryName, []ConfMap{defaultBlueprintRepo}}
+
+	// using MapSlice to maintain order of keys
 	slices := yaml.MapSlice{
 		{"xl-deploy", yaml.MapSlice{
 			{"username", models.DefaultXlDeployUsername},
@@ -123,10 +136,7 @@ func writeDefaultConfigurationFile() error {
 			{"password", models.DefaultXlReleasePassword},
 			{"url", models.DefaultXlReleaseUrl},
 		}},
-		{"blueprint-repository", yaml.MapSlice{
-			{"current-repository", models.DefaultBlueprintRepositoryName},
-			{"repositories", defaultBlueprintRepoList},
-		}},
+		{"blueprint-repository", blueprintConfData},
 	}
 
 	d, err := yaml.Marshal(&slices)
