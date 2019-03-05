@@ -94,3 +94,12 @@ func TransformToMap(spec interface{}) []map[interface{}]interface{} {
 
 	return convertedMap
 }
+
+// Checks if the map contains value for the given key - empty values are not allowed
+func MapContainsKey(dict map[interface{}]interface{}, key string) bool {
+	val, ok := dict[key]
+	if !ok {
+		return false
+	}
+	return val != ""
+}

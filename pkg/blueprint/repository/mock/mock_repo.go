@@ -3,23 +3,51 @@ package mock
 import (
 	"fmt"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 // Mock Blueprint Repository Provider implementation
 // only suitable for test usage as mock provider
 type MockBlueprintRepository struct {
-	Name string
-	Owner string
-	Branch string
+	Name    string
+	Owner   string
+	Branch  string
 }
 
-func NewMockBlueprintRepository(name string, owner string, branch string) *MockBlueprintRepository {
+func NewMockBlueprintRepository(confMap map[interface{}]interface{}) (*MockBlueprintRepository, error) {
 	repo := new(MockBlueprintRepository)
-	repo.Name = name
-	repo.Owner = owner
-	repo.Branch = branch
+	repo.Name = confMap["name"].(string)
 
-	return repo
+	// parse branch name, or set it to default
+	if util.MapContainsKey(confMap, "branch") {
+		repo.Branch = confMap["branch"].(string)
+	} else {
+		repo.Branch = "master"
+	}
+
+	return repo, nil
+}
+
+func (repo *MockBlueprintRepository) Initialize() error {
+	return nil
+}
+
+func (repo *MockBlueprintRepository) GetName() string {
+	return repo.Name
+}
+
+func (repo *MockBlueprintRepository) GetProvider() string {
+	return models.ProviderMock
+}
+
+func (repo *MockBlueprintRepository) GetInfo() string {
+	return fmt.Sprintf(
+		"Provider: %s\n  Repository name: %s\n  Owner: %s\n  Branch: %s",
+		repo.GetProvider(),
+		repo.Name,
+		repo.Owner,
+		repo.Branch,
+	)
 }
 
 func (repo *MockBlueprintRepository) ListBlueprintsFromRepo() (map[string]*models.BlueprintRemote, []string, error) {

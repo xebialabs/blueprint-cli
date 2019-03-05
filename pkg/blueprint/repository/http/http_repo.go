@@ -18,22 +18,61 @@ const (
 
 // HTTP Blueprint Repository Provider implementation
 type HttpBlueprintRepository struct {
-	Client *http.Client
-	Name string
-	RepoUrl *url.URL
-	Username string
-	Password string
+	Client      *http.Client
+
+	Name        string
+	RepoUrl     *url.URL
+	Username    string
+	Password    string
 }
 
-func NewHttpBlueprintRepository(name string, repoUrl *url.URL, username string, password string) *HttpBlueprintRepository {
+func NewHttpBlueprintRepository(confMap map[interface{}]interface{}) (*HttpBlueprintRepository, error) {
+	// Parse context config
 	repo := new(HttpBlueprintRepository)
-	repo.Client = &http.Client{}
-	repo.Name = name
-	repo.RepoUrl = repoUrl
-	repo.Username = username
-	repo.Password = password
+	repo.Name = confMap["name"].(string)
 
-	return repo
+	// parse repository URL
+	if !util.MapContainsKey(confMap, "url") {
+		return nil, fmt.Errorf("'url' config field must be set for HTTP repository type")
+	}
+	parsedUrl, err := url.ParseRequestURI(confMap["url"].(string))
+	if err != nil {
+		return nil, fmt.Errorf("HTTP repository URL cannot be parsed: %s", err.Error())
+	}
+	repo.RepoUrl = parsedUrl
+
+	// parse basic auth credentials, if exists
+	if util.MapContainsKey(confMap, "username") {
+		repo.Username = confMap["username"].(string)
+	}
+	if util.MapContainsKey(confMap, "password") {
+		repo.Password = confMap["password"].(string)
+	}
+
+	return repo, nil
+}
+
+func (repo *HttpBlueprintRepository) Initialize() error {
+	repo.Client = &http.Client{}
+	return nil
+}
+
+func (repo *HttpBlueprintRepository) GetName() string {
+	return repo.Name
+}
+
+func (repo *HttpBlueprintRepository) GetProvider() string {
+	return models.ProviderHttp
+}
+
+func (repo *HttpBlueprintRepository) GetInfo() string {
+	return fmt.Sprintf(
+		"Provider: %s\n  Name: %s\n  Repository URL: %s\n  Username: %s",
+		repo.GetProvider(),
+		repo.Name,
+		repo.RepoUrl.String(),
+		repo.Username,
+	)
 }
 
 func (repo *HttpBlueprintRepository) ListBlueprintsFromRepo() (map[string]*models.BlueprintRemote, []string, error) {
