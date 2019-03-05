@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -40,7 +41,13 @@ func TestHttp(t *testing.T) {
 		defer testServer.Close()
 
 		res, _ := url.Parse(testServer.URL)
-		server := SimpleHTTPServer{Url: *res, Username: "admin", Password: "admin"}
+		server := SimpleHTTPServer{
+			Url:        *res,
+			Username:   "admin",
+			Password:   "admin",
+			Product:    models.XLR,
+			AuthMethod: models.AuthMethodBasic,
+		}
 
 		_, e := server.ApplyYamlDoc("devops-as-code/apply", []byte("document body"))
 		assert.Nil(t, e)
@@ -105,7 +112,13 @@ func TestHttp(t *testing.T) {
 		defer testServer.Close()
 
 		res, _ := url.Parse(testServer.URL)
-		server := SimpleHTTPServer{Url: *res, Username: "root", Password: "s3cr3t"}
+		server := SimpleHTTPServer{
+			Url:        *res,
+			Username:   "root",
+			Password:   "s3cr3t",
+			Product:    models.XLD,
+			AuthMethod: models.AuthMethodBasic,
+		}
 
 		_, e := server.ApplyYamlZip("apply", zipToUpload.Name())
 		assert.Nil(t, e)
@@ -140,7 +153,13 @@ func TestHttp(t *testing.T) {
 		defer testServer.Close()
 
 		res, _ := url.Parse(testServer.URL)
-		server := SimpleHTTPServer{Url: *res, Username: "root", Password: "s3cr3t"}
+		server := SimpleHTTPServer{
+			Url:        *res,
+			Username:   "root",
+			Password:   "s3cr3t",
+			Product:    models.XLD,
+			AuthMethod: models.AuthMethodBasic,
+		}
 
 		e := server.GenerateYamlDoc(file.Name(), "generate/Applications", true)
 		assert.Nil(t, e)
@@ -166,7 +185,12 @@ func TestHttp(t *testing.T) {
 		defer os.Remove(file.Name())
 
 		res, _ := url.Parse("http://test")
-		server := SimpleHTTPServer{Url: *res, Username: "", Password: ""}
+		server := SimpleHTTPServer{
+			Url:        *res,
+			Username:   "",
+			Password:   "",
+			AuthMethod: models.AuthMethodBasic,
+		}
 
 		e := server.GenerateYamlDoc(file.Name(), "generate/Applications", false)
 		assert.Contains(t, e.Error(), "already exists")
@@ -186,7 +210,13 @@ func TestHttp(t *testing.T) {
 		defer testServer.Close()
 
 		res, _ := url.Parse(testServer.URL)
-		server := SimpleHTTPServer{Url: *res, Username: "root", Password: "s3cr3t"}
+		server := SimpleHTTPServer{
+			Url:        *res,
+			Username:   "root",
+			Password:   "s3cr3t",
+			Product:    models.XLD,
+			AuthMethod: models.AuthMethodBasic,
+		}
 
 		bytes, e := server.DownloadSchema("deployit/devops-as-code/schema")
 		assert.Nil(t, e)
@@ -207,7 +237,13 @@ func TestHttp(t *testing.T) {
 		defer testServer.Close()
 
 		res, _ := url.Parse(testServer.URL)
-		server := SimpleHTTPServer{Url: *res, Username: "admin", Password: "admin"}
+		server := SimpleHTTPServer{
+			Url:        *res,
+			Username:   "admin",
+			Password:   "admin",
+			Product:    models.XLD,
+			AuthMethod: models.AuthMethodBasic,
+		}
 
 		response, err := server.TaskInfo("deployit/tasks/v2/12345")
 
@@ -230,7 +266,13 @@ func TestHttp(t *testing.T) {
 		defer testServer.Close()
 
 		res, _ := url.Parse(testServer.URL)
-		server := SimpleHTTPServer{Url: *res, Username: "admin", Password: "admin"}
+		server := SimpleHTTPServer{
+			Url:        *res,
+			Username:   "admin",
+			Password:   "admin",
+			Product:    models.XLD,
+			AuthMethod: models.AuthMethodBasic,
+		}
 
 		response, err := server.ApplyYamlDoc("", []byte(""))
 

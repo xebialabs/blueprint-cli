@@ -22,13 +22,15 @@ func GetRepoProvider(s string) (string, error) {
 }
 
 const (
-	DefaultXlDeployUrl                  = "http://localhost:4516/"
-	DefaultXlDeployUsername             = "admin"
-	DefaultXlDeployPassword             = "admin"
+	DefaultXlDeployUrl        = "http://localhost:4516/"
+	DefaultXlDeployUsername   = "admin"
+	DefaultXlDeployPassword   = "admin"
+	DefaultXlDeployAuthMethod = "http"
 
-	DefaultXlReleaseUrl                 = "http://localhost:5516/"
-	DefaultXlReleaseUsername            = "admin"
-	DefaultXlReleasePassword            = "admin"
+	DefaultXlReleaseUrl        = "http://localhost:5516/"
+	DefaultXlReleaseUsername   = "admin"
+	DefaultXlReleasePassword   = "admin"
+	DefaultXlReleaseAuthMethod = "http"
 
 	DefaultBlueprintRepositoryName      = "blueprints"
 	DefaultBlueprintRepositoryOwner     = "xebialabs"

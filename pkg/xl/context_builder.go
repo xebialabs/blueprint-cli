@@ -26,16 +26,21 @@ func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 	rootFlags.String(models.FlagXldUrl, models.DefaultXlDeployUrl, "URL to access the XL Deploy server")
 	rootFlags.String(models.FlagXldUser, models.DefaultXlDeployUsername, "Username to access the XL Deploy server")
 	rootFlags.String(models.FlagXldPass, models.DefaultXlDeployPassword, "Password to access the XL Deploy server")
+	rootFlags.String(models.FlagXldAuthMethod, models.DefaultXlDeployAuthMethod, "Authentication method to access the XL Deploy server")
 	viper.BindPFlag(models.ViperKeyXLDUrl, rootFlags.Lookup(models.FlagXldUrl))
 	viper.BindPFlag(models.ViperKeyXLDUsername, rootFlags.Lookup(models.FlagXldUser))
 	viper.BindPFlag(models.ViperKeyXLDPassword, rootFlags.Lookup(models.FlagXldPass))
+	viper.BindPFlag(models.ViperKeyXLDAuthMethod, rootFlags.Lookup(models.FlagXldAuthMethod))
 
 	rootFlags.String(models.FlagXlrUrl, models.DefaultXlReleaseUrl, "URL to access the XL Release server")
 	rootFlags.String(models.FlagXlrUser, models.DefaultXlReleaseUsername, "Username to access the XL Release server")
 	rootFlags.String(models.FlagXlrPass, models.DefaultXlReleasePassword, "Password to access the XL Release server")
+	rootFlags.String(models.FlagXlrAuthMethod, models.DefaultXlReleaseAuthMethod, "Authentication method to access the XL Release server")
 	viper.BindPFlag(models.ViperKeyXLRUrl, rootFlags.Lookup(models.FlagXlrUrl))
 	viper.BindPFlag(models.ViperKeyXLRUsername, rootFlags.Lookup(models.FlagXlrUser))
 	viper.BindPFlag(models.ViperKeyXLRPassword, rootFlags.Lookup(models.FlagXlrPass))
+	viper.BindPFlag(models.ViperKeyXLDPassword, rootFlags.Lookup(models.FlagXldPass))
+	viper.BindPFlag(models.ViperKeyXLRAuthMethod, rootFlags.Lookup(models.FlagXlrAuthMethod))
 
 	rootFlags.String(models.FlagBlueprintRepositoryProvider, models.DefaultBlueprintRepositoryProvider, "Provider for the blueprint repository")
 	rootFlags.String(models.FlagBlueprintRepositoryName, models.DefaultBlueprintRepositoryName, "Name of the blueprint repository")
@@ -54,7 +59,7 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles 
 	var xlRelease *XLReleaseServer
 	var blueprintContext *blueprint.BlueprintContext
 
-	xldServerConfig, err := readServerConfig(v, "xl-deploy", true)
+	xldServerConfig, err := readServerConfig(v, string(models.XLD), true, models.XLD)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +71,7 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles 
 		xlDeploy.InfrastructureHome = v.GetString("xl-deploy.infrastructure-home")
 	}
 
-	xlrServerConfig, err := readServerConfig(v, "xl-release", true)
+	xlrServerConfig, err := readServerConfig(v, string(models.XLR), true, models.XLR)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +159,7 @@ func readBlueprintRepoConfig(v *viper.Viper, prefix string) (*blueprint.Blueprin
 	}, nil
 }
 
-func readServerConfig(v *viper.Viper, prefix string, credentialsRequired bool) (*SimpleHTTPServer, error) {
+func readServerConfig(v *viper.Viper, prefix string, credentialsRequired bool, product models.Product) (*SimpleHTTPServer, error) {
 	urlString := v.GetString(fmt.Sprintf("%s.url", prefix))
 	if urlString == "" {
 		return nil, nil
@@ -175,10 +180,17 @@ func readServerConfig(v *viper.Viper, prefix string, credentialsRequired bool) (
 		return nil, fmt.Errorf("configuration property %s.password is required if %s.url is set", prefix, prefix)
 	}
 
+	authMethod := v.GetString(fmt.Sprintf("%s.authmethod", prefix))
+	if authMethod == "" {
+		authMethod = models.AuthMethodHttp
+	}
+
 	return &SimpleHTTPServer{
-		Url:      *u,
-		Username: username,
-		Password: password,
+		Url:        *u,
+		AuthMethod: authMethod,
+		Username:   username,
+		Password:   password,
+		Product:    product,
 	}, nil
 }
 
@@ -200,9 +212,11 @@ func getServerConfigDefaults(v *viper.Viper) *map[string]string {
 	m["XL_DEPLOY_URL"] = v.GetString(models.ViperKeyXLDUrl)
 	m["XL_DEPLOY_USERNAME"] = v.GetString(models.ViperKeyXLDUsername)
 	m["XL_DEPLOY_PASSWORD"] = v.GetString(models.ViperKeyXLDPassword)
+	m["XL_DEPLOY_AUTHMETHOD"] = v.GetString(models.ViperKeyXLDAuthMethod)
 	m["XL_RELEASE_URL"] = v.GetString(models.ViperKeyXLRUrl)
 	m["XL_RELEASE_USERNAME"] = v.GetString(models.ViperKeyXLRUsername)
 	m["XL_RELEASE_PASSWORD"] = v.GetString(models.ViperKeyXLRPassword)
+	m["XL_RELEASE_AUTHMETHOD"] = v.GetString(models.ViperKeyXLRAuthMethod)
 	return &m
 }
 

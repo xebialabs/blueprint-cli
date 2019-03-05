@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/xebialabs/xl-cli/pkg/auth"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"io"
 	"io/ioutil"
@@ -27,10 +28,14 @@ type HTTPServer interface {
 	GenerateYamlDoc(generateFilename string, path string, override bool) error
 }
 
+type AuthType int
+
 type SimpleHTTPServer struct {
-	Url      url.URL
-	Username string
-	Password string
+	Url        url.URL
+	AuthMethod string
+	Username   string
+	Password   string
+	Product    models.Product
 }
 
 var client = &http.Client{}
@@ -246,19 +251,27 @@ func (server *SimpleHTTPServer) doRequest(method string, path string, headers ma
 		return nil, err
 	}
 
+	err = auth.Authenticate(request, server.Product, server.AuthMethod, server.Url.String(), server.Username, server.Password)
+	if err != nil {
+		return nil, err
+	}
+
 	if headers != nil {
 		for header, value := range headers {
 			request.Header.Set(header, value)
 		}
 	}
 
-	request.SetBasicAuth(server.Username, server.Password)
 	response, err := client.Do(request)
 
 	if err != nil {
 		return nil, err
 	}
 
+	return handleServerResponse(response, server)
+}
+
+func handleServerResponse(response *http.Response, server *SimpleHTTPServer) (*http.Response, error) {
 	if response.StatusCode == 401 {
 		return nil, fmt.Errorf("401 Request unauthorized. Please check your credentials.")
 	} else if response.StatusCode == 402 {
@@ -273,18 +286,4 @@ func (server *SimpleHTTPServer) doRequest(method string, path string, headers ma
 	}
 
 	return response, nil
-}
-
-func translateHTTPStatusCodeErrors(statusCode int, urlVal string) error {
-	switch {
-	case statusCode == 401:
-		return fmt.Errorf("401 Request unauthorized. Please check your credentials for %s", urlVal)
-	case statusCode == 403:
-		return fmt.Errorf("403 Request forbidden. Please check your permissions for %s", urlVal)
-	case statusCode == 404:
-		return fmt.Errorf("404 Not found. Please specify the correct url. Provided was %s", urlVal)
-	case statusCode >= 400:
-		return fmt.Errorf("error: StatusCode %d for URL %s", statusCode, urlVal)
-	}
-	return nil
 }

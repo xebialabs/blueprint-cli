@@ -38,6 +38,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set(models.ViperKeyXLDUrl, "http://testxld:6154")
 		v.Set(models.ViperKeyXLDUsername, "deployer")
 		v.Set(models.ViperKeyXLDPassword, "d3ploy1t")
+		v.Set(models.ViperKeyXLDAuthMethod, "http")
 
 		c, err := BuildContext(v, nil, []string{})
 
@@ -55,6 +56,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set(models.ViperKeyXLRUrl, "http://masterxlr:6155")
 		v.Set(models.ViperKeyXLRUsername, "releaser")
 		v.Set(models.ViperKeyXLRPassword, "r3l34s3")
+		v.Set(models.ViperKeyXLRAuthMethod, "http")
 
 		c, err := BuildContext(v, nil, []string{})
 
@@ -90,6 +92,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set(models.ViperKeyXLDUrl, "http://testxld:6154")
 		v.Set(models.ViperKeyXLDUsername, "deployer")
 		v.Set(models.ViperKeyXLDPassword, "d3ploy1t")
+		v.Set(models.ViperKeyXLDAuthMethod, "http")
 		v.Set("xl-deploy.applications-home", "Applications/home/folder")
 		v.Set("xl-deploy.configuration-home", "Configuration/home/folder")
 		v.Set("xl-deploy.environments-home", "Environments/home/folder")
@@ -97,6 +100,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set(models.ViperKeyXLRUrl, "http://masterxlr:6155")
 		v.Set(models.ViperKeyXLRUsername, "releaser")
 		v.Set(models.ViperKeyXLRPassword, "r3l34s3")
+		v.Set(models.ViperKeyXLRAuthMethod, "http")
 		v.Set("xl-release.home", "XLR/home/folder")
 		v.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderGitHub)
 		v.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
@@ -144,6 +148,7 @@ func TestContextBuilder(t *testing.T) {
   url: http://xld.example.com:4516
   username: admin
   password: 3dm1n
+  authmethod: http
 blueprint-repository:
   provider: github
   name: blueprints
@@ -185,6 +190,7 @@ xl-deploy:
   url: http://testxld:6154
   username: testuser
   password: t3stus3r
+  authmethod: http
 `)
 		ioutil.WriteFile(configfile, originalConfigBytes, 0755)
 
@@ -221,6 +227,7 @@ xl-deploy:
   url: http://testxld:6154
   username: testuser
   password: t3st
+  authmethod: http
 `), 0755)
 
 		v := getMinimalViperConf()
@@ -404,7 +411,7 @@ test2=override2
 		context, err2 := BuildContext(v, nil, valsFiles)
 		assert.Nil(t, err2)
 
-		assert.Equal(t, 9, len(context.values))
+		assert.Equal(t, 11, len(context.values))
 		assert.Equal(t, "override", context.values["test"])
 		assert.Equal(t, "override2", context.values["test2"])
 		assert.Equal(t, "ok", context.values["verifythisfilegetsread"])
@@ -429,7 +436,7 @@ verifythisfilegetsread=ok
 		context, err2 := BuildContext(v, &values, valsFiles)
 		assert.Nil(t, err2)
 
-		assert.Equal(t, 9, len(context.values))
+		assert.Equal(t, 11, len(context.values))
 		assert.Equal(t, "override", context.values["test"])
 		assert.Equal(t, "override2", context.values["test2"])
 		assert.Equal(t, "ok", context.values["verifythisfilegetsread"])
@@ -453,7 +460,7 @@ verifythisfilegetsread=ok
 		context, err2 := BuildContext(v, nil, valsFiles)
 		assert.Nil(t, err2)
 
-		assert.Equal(t, 9, len(context.values))
+		assert.Equal(t, 11, len(context.values))
 		assert.Equal(t, "override", context.values["test"])
 		assert.Equal(t, "override2", context.values["test2"])
 		assert.Equal(t, "ok", context.values["verifythisfilegetsread"])
@@ -481,6 +488,7 @@ verifythisfilegetsread=ok
 		v.Set("xl-deploy.url", "http://testxld:6154")
 		v.Set("xl-deploy.username", "deployer")
 		v.Set("xl-deploy.password", "d3ploy1t")
+		v.Set(models.ViperKeyXLDAuthMethod, "basicAuth")
 
 		context, err2 := BuildContext(v, nil, []string{})
 		assert.Nil(t, err2)
@@ -488,6 +496,7 @@ verifythisfilegetsread=ok
 		assert.Equal(t, "http://testxld:6154", context.values["XL_DEPLOY_URL"])
 		assert.Equal(t, "deployer", context.values["XL_DEPLOY_USERNAME"])
 		assert.Equal(t, "d3ploy1t", context.values["XL_DEPLOY_PASSWORD"])
+		assert.Equal(t, "basicAuth", context.values["XL_DEPLOY_AUTHMETHOD"])
 	})
 
 }

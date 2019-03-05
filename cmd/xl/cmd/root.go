@@ -105,15 +105,17 @@ func writeDefaultConfigurationFile() error {
 
 	// using MapSlice to maintain order of keys
 	slices := yaml.MapSlice{
-		{"xl-deploy", yaml.MapSlice{
+		{models.XLD, yaml.MapSlice{
 			{"username", models.DefaultXlDeployUsername},
 			{"password", models.DefaultXlDeployPassword},
 			{"url", models.DefaultXlDeployUrl},
+			{"authmethod", models.DefaultXlDeployAuthMethod},
 		}},
-		{"xl-release", yaml.MapSlice{
+		{models.XLR, yaml.MapSlice{
 			{"username", models.DefaultXlReleaseUsername},
 			{"password", models.DefaultXlReleasePassword},
 			{"url", models.DefaultXlReleaseUrl},
+			{"authmethod", models.DefaultXlReleaseAuthMethod},
 		}},
 		{"blueprint-repository", yaml.MapSlice{
 			{"provider", models.DefaultBlueprintRepositoryProvider},

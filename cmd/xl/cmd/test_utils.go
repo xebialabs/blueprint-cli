@@ -63,6 +63,8 @@ func CreateTestInfra(viper *viper.Viper) *TestInfra {
 
 	viper.Set("xl-deploy.url", infra.xldServer.URL)
 	viper.Set("xl-release.url", infra.xlrServer.URL)
+	viper.Set("xl-deploy.authmethod", "basic")
+	viper.Set("xl-release.authmethod", "basic")
 	return infra
 }
 

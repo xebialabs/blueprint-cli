@@ -161,7 +161,7 @@ func (c *Context) PreviewSingleDocument(doc *Document, artifactsDir string) (*mo
 func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool, generatePermissions bool, users bool, roles bool) error {
 	finalPath := url.QueryEscape(generatePath)
 
-	if generateServer == "xl-deploy" {
+	if generateServer == string(models.XLD) {
 		if generatePath != "" {
 			util.Info("Generating definitions for path %s from XL Deploy to %s\n", generatePath, generateFilename)
 		} else {
@@ -170,7 +170,7 @@ func (c *Context) GenerateSingleDocument(generateServer string, generateFilename
 		return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles)
 	}
 
-	if generateServer == "xl-release" {
+	if generateServer == string(models.XLR) {
 		if generatePath != "" {
 			util.Info("Generating definitions for path %s from XL Release to %s\n", generatePath, generateFilename)
 		} else {
