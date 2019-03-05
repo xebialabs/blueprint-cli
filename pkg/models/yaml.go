@@ -1,8 +1,9 @@
 package models
 
 const (
-	YamlFormatVersion   = "xl/v1"
+	YamlFormatVersion = "xl/v1"
 
-	ImportSpecKind      = "Import"
-	BlueprintSpecKind   = "Blueprint"
+	ImportSpecKind     = "Import"
+	DeploymentSpecKind = "Deployment"
+	BlueprintSpecKind  = "Blueprint"
 )

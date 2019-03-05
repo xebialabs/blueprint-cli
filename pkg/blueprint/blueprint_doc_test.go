@@ -16,6 +16,84 @@ import (
 	"github.com/xebialabs/yaml"
 )
 
+var sampleKubeConfig = `apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: REDACTED
+    server: https://1A256A873510C6531DBC9D05142A309B.sk1.eu-west-1.eks.amazonaws.com
+  name: elton-xl-platform-master
+- cluster:
+    certificate-authority-data: 123==
+    server: https://test.hcp.eastus.azmk8s.io:443
+  name: testCluster
+- cluster:
+    insecure-skip-tls-verify: true
+    server: https://ocpm.test.com:8443
+  name: ocpm-test-com:8443
+- cluster:
+    insecure-skip-tls-verify: true
+    server: https://ocpm.test.com:8443
+  name: testUserNotFound
+contexts:
+- context:
+    cluster: elton-xl-platform-master
+    namespace: xebialabs
+    user: aws
+  name: aws
+- context:
+    cluster: ocpm-test-com:8443
+    namespace: default
+    user: test/ocpm-test-com:8443
+  name: default/ocpm-test-com:8443/test
+- context:
+    cluster: testCluster
+    namespace: test
+    user: clusterUser_testCluster_testCluster
+  name: testCluster
+- context:
+    cluster: testClusterNotFound
+    namespace: test
+    user: testClusterNotFound
+  name: testClusterNotFound
+- context:
+    cluster: testUserNotFound
+    namespace: test
+    user: testUserNotFound
+  name: testUserNotFound
+current-context: testCluster
+kind: Config
+preferences: {}
+users:
+- name: aws
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1alpha1
+      args:
+      - token
+      - -i
+      - elton-xl-platform-master
+      command: aws-iam-authenticator
+      env: null
+- name: clusterUser_testCluster_testCluster
+  user:
+    client-certificate-data: 123==
+    client-key-data: 123==
+    token: 6555565666666666666
+- name: test/ocpm-test-com:8443
+  user:
+    client-certificate-data: 123==
+- name: testClusterNotFound
+  user:
+    client-certificate-data: 123==`
+
+func Setupk8sConfig() {
+	tmpDir := path.Join("test", "blueprints")
+	os.MkdirAll(tmpDir, os.ModePerm)
+	d1 := []byte(sampleKubeConfig)
+	ioutil.WriteFile(path.Join(tmpDir, "config"), d1, os.ModePerm)
+	os.Setenv("KUBECONFIG", path.Join(tmpDir, "config"))
+}
+
 func getValidTestBlueprintMetadata(templatePath string, blueprintRepository BlueprintContext) (*BlueprintYaml, error) {
 	metadata := []byte(
 		fmt.Sprintf(`
@@ -31,7 +109,7 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
            - name: test
              type: Input
              default: lala
-             saveInXlVals: true 
+             saveInXlVals: true
              description: help text
            - name: fn
              type: Input
@@ -63,7 +141,7 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
            - path: bar.md
              dependsOnTrue: isitnot
            - path: foo.md
-             dependsOnFalse: !expression "!!isitnot" 
+             dependsOnFalse: !expression "!!isitnot"
 `, models.YamlFormatVersion))
 	return parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 }
@@ -604,9 +682,9 @@ func TestParseTemplateMetadata(t *testing.T) {
               - name: test
                 type: Input
                 default: lala
-                saveInXlVals: true 
+                saveInXlVals: true
                 description: help text
-              
+
               files:
               - path: xebialabs/foo.yaml
               - path: readme.md
@@ -810,65 +888,141 @@ func TestVerifyTemplateDirAndGenFullPaths(t *testing.T) {
 	})
 }
 
-func TestProcessCustomFunction(t *testing.T) {
+func TestProcessCustomFunction_AWS(t *testing.T) {
 	// Generic
 	t.Run("should error on empty function string", func(t *testing.T) {
-		_, err := processCustomFunction("")
+		_, err := ProcessCustomFunction("")
 		require.NotNil(t, err)
 		assert.Contains(t, err.Error(), "invalid syntax in function reference:")
 	})
 	t.Run("should error on invalid function string", func(t *testing.T) {
-		_, err := processCustomFunction("aws.regions.0")
+		_, err := ProcessCustomFunction("aws.regions.0")
 		require.NotNil(t, err)
 		assert.Equal(t, "invalid syntax in function reference: aws.regions.0", err.Error())
 	})
 	t.Run("should error on unknown function domain", func(t *testing.T) {
-		_, err := processCustomFunction("test.module()")
+		_, err := ProcessCustomFunction("test.module()")
 		require.NotNil(t, err)
 		assert.Equal(t, "unknown function type: test", err.Error())
 	})
 
 	//AWS
 	t.Run("should error on unknown AWS module", func(t *testing.T) {
-		_, err := processCustomFunction("aws.test()")
+		_, err := ProcessCustomFunction("aws.test()")
 		require.NotNil(t, err)
 		assert.Equal(t, "test is not a valid AWS module", err.Error())
 	})
 	t.Run("should error on missing service parameter for aws.regions function", func(t *testing.T) {
-		_, err := processCustomFunction("aws.regions()")
+		_, err := ProcessCustomFunction("aws.regions()")
 		require.NotNil(t, err)
 		assert.Equal(t, "service name parameter is required for AWS regions function", err.Error())
 	})
 	t.Run("should return list of AWS ECS regions", func(t *testing.T) {
-		regions, err := processCustomFunction("aws.regions(ecs)")
+		regions, err := ProcessCustomFunction("aws.regions(ecs)")
 		require.Nil(t, err)
 		require.NotNil(t, regions)
 		assert.NotEmpty(t, regions)
 	})
 	t.Run("should error on no attribute defined on AWS credentials", func(t *testing.T) {
-		_, err := processCustomFunction("aws.credentials()")
+		_, err := ProcessCustomFunction("aws.credentials()")
 		require.NotNil(t, err)
 		assert.Equal(t, "requested credentials attribute is not set", err.Error())
 	})
 	t.Run("should return AWS credentials", func(t *testing.T) {
-		vals, err := processCustomFunction("aws.credentials().AccessKeyID")
+		vals, err := ProcessCustomFunction("aws.credentials().AccessKeyID")
 		require.Nil(t, err)
 		require.NotNil(t, vals)
 		require.Len(t, vals, 1)
 		accessKey := vals[0]
 		require.NotNil(t, accessKey)
 	})
+}
 
-	//OS
+//OS
+func TestProcessCustomFunction_OS(t *testing.T) {
 	t.Run("should error on unknown OS module", func(t *testing.T) {
-		_, err := processCustomFunction("os.test()")
+		_, err := ProcessCustomFunction("os.test()")
 		require.NotNil(t, err)
 		assert.Equal(t, "test is not a valid OS module", err.Error())
 	})
 	t.Run("should return an URL for os._defaultapiserverurl function", func(t *testing.T) {
-		apiServerURL, err := processCustomFunction("os._defaultapiserverurl()")
+		apiServerURL, err := ProcessCustomFunction("os._defaultapiserverurl()")
 		require.Nil(t, err)
 		assert.Len(t, apiServerURL, 1)
+	})
+}
+
+// K8S
+func TestProcessCustomFunction_K8S(t *testing.T) {
+	defer os.RemoveAll("test")
+	Setupk8sConfig()
+
+	t.Run("should error on invalid function string", func(t *testing.T) {
+		_, err := ProcessCustomFunction("k8s.IsAvailable.0")
+		require.NotNil(t, err)
+		assert.Equal(t, "invalid syntax in function reference: k8s.IsAvailable.0", err.Error())
+	})
+
+	t.Run("should error on unknown K8S module", func(t *testing.T) {
+		_, err := ProcessCustomFunction("k8s.test()")
+		require.NotNil(t, err)
+		assert.Equal(t, "test is not a valid Kubernetes module", err.Error())
+	})
+	t.Run("should return empty on unknown parameter", func(t *testing.T) {
+		out, err := ProcessCustomFunction("k8s.config().clusterParam")
+		require.Nil(t, err)
+		assert.Equal(t, []string{""}, out)
+	})
+	t.Run("should check if kubernetes config is available", func(t *testing.T) {
+		out, err := ProcessCustomFunction("k8s.config().IsAvailable")
+		require.Nil(t, err)
+		assert.Equal(t, []string{"true"}, out)
+	})
+	t.Run("should check if kubernetes config is available when context doesn't exist", func(t *testing.T) {
+		out, err := ProcessCustomFunction("k8s.config(dummy).IsAvailable")
+		require.Nil(t, err)
+		assert.Equal(t, []string{"false"}, out)
+	})
+
+	t.Run("should check if kubernetes config is available when user doesn't exist", func(t *testing.T) {
+		out, err := ProcessCustomFunction("k8s.config(aws).IsAvailable")
+		require.Nil(t, err)
+		assert.Equal(t, []string{"true"}, out)
+	})
+
+	t.Run("should fetch a kubernetes config property from current context", func(t *testing.T) {
+		out, err := ProcessCustomFunction("k8s.config().cluster_server")
+		require.Nil(t, err)
+		assert.Equal(t, []string{"https://test.hcp.eastus.azmk8s.io:443"}, out)
+		out, err = ProcessCustomFunction("k8s.config().clusterServer")
+		require.Nil(t, err)
+		assert.Equal(t, []string{"https://test.hcp.eastus.azmk8s.io:443"}, out)
+	})
+	t.Run("should fetch a kubernetes config property from provided context", func(t *testing.T) {
+		out, err := ProcessCustomFunction("k8s.config(default/ocpm-test-com:8443/test).cluster_server")
+		require.Nil(t, err)
+		assert.Equal(t, []string{"https://ocpm.test.com:8443"}, out)
+		out, err = ProcessCustomFunction("k8s.config(default/ocpm-test-com:8443/test).clusterServer")
+		require.Nil(t, err)
+		assert.Equal(t, []string{"https://ocpm.test.com:8443"}, out)
+	})
+}
+func TestProcessCustomFunction_K8S_noconfig(t *testing.T) {
+	defer os.RemoveAll("test")
+	tmpDir := path.Join("test", "blueprints")
+	os.MkdirAll(tmpDir, os.ModePerm)
+	os.Setenv("KUBECONFIG", path.Join(tmpDir, "config"))
+
+	t.Run("should check if kubernetes config is available when file doesn't exist", func(t *testing.T) {
+		out, err := ProcessCustomFunction("k8s.config().IsAvailable")
+		require.Nil(t, err)
+		assert.Equal(t, []string{"false"}, out)
+	})
+
+	t.Run("should check if kubernetes config is available when file doesn't exist", func(t *testing.T) {
+		out, err := ProcessCustomFunction("k8s.config(test).IsAvailable")
+		require.Nil(t, err)
+		assert.Equal(t, []string{"false"}, out)
 	})
 }
 

@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
+	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -12,6 +15,7 @@ import (
 var applyFilenames []string
 var applyValues map[string]string
 var applyDetach bool
+var nonInteractive bool
 
 var applyCmd = &cobra.Command{
 	Use:   "apply",
@@ -93,6 +97,8 @@ func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes, sh
 				switch result.State {
 				case "COMPLETED":
 					fallthrough
+				case "EXECUTED":
+					fallthrough
 				case "DONE":
 					if !util.IsVerbose {
 						util.Info("\n")
@@ -137,18 +143,34 @@ func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes, sh
 	}
 }
 
-func applyDocument(context *xl.Context, fileWithDocs xl.FileWithDocuments, doc *xl.Document, shouldDetach bool) {
+func fillInOnSuccessPolicy(specMap map[interface{}]interface{}) {
+	isNotTty := !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd())
+	if isNotTty || nonInteractive {
+		specMap["onSuccessPolicy"] = "ARCHIVE"
+	}
+}
+
+func fillInTaskPolicies(doc *xl.Document) {
+	if doc.Kind == models.DeploymentSpecKind {
+		if specMap, ok := doc.Spec.(map[interface{}]interface{}); ok {
+			fillInOnSuccessPolicy(specMap)
+		}
+	}
+}
+
+func applyDocument(context *xl.Context, fileWithDocs xl.FileWithDocuments, doc *xl.Document) {
+	fillInTaskPolicies(doc)
 	applyDir := filepath.Dir(fileWithDocs.FileName)
 	changes, err := context.ProcessSingleDocument(doc, applyDir)
 	printChanges(changes)
-	waitForTasks(context, doc, changes, shouldDetach)
+	waitForTasks(context, doc, changes, applyDetach)
 	if err != nil {
 		xl.ReportFatalDocumentError(fileWithDocs.FileName, doc, err)
 	}
 }
 
 func DoApply(applyFilenames []string) {
-	xl.ForEachDocument("Applying", applyFilenames, applyValues, applyDetach, applyDocument)
+	xl.ForEachDocument("Applying", applyFilenames, applyValues, applyDocument)
 }
 
 func init() {
@@ -159,4 +181,5 @@ func init() {
 	_ = applyCmd.MarkFlagRequired("file")
 	applyFlags.StringToStringVar(&applyValues, "values", map[string]string{}, "Values")
 	applyFlags.BoolVarP(&applyDetach, "detach", "d", false, "Detach the client at the moment of starting a deploy or release")
+	applyFlags.BoolVar(&nonInteractive, "non-interactive", false, "Automatically archive finished deployment tasks")
 }

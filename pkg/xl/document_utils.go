@@ -112,9 +112,9 @@ func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, pr
 	return result
 }
 
-type DocumentCallback func(*Context, FileWithDocuments, *Document, bool)
+type DocumentCallback func(*Context, FileWithDocuments, *Document)
 
-func ForEachDocument(operationName string, fileNames []string, values map[string]string, shouldDetach bool, fn DocumentCallback) {
+func ForEachDocument(operationName string, fileNames []string, values map[string]string, fn DocumentCallback) {
 	homeValsFiles, e := ListHomeXlValsFiles()
 
 	if e != nil {
@@ -148,7 +148,7 @@ func ForEachDocument(operationName string, fileNames []string, values map[string
 		for docIdx, doc := range fileWithDocs.Documents {
 			util.Verbose("%s%s document at line %d\n", util.Indent1(), operationName, doc.Line)
 			if doc.Kind != models.ImportSpecKind {
-				fn(context, fileWithDocs, doc, shouldDetach)
+				fn(context, fileWithDocs, doc)
 			} else {
 				util.Info("Done\n")
 			}
