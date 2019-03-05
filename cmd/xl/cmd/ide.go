@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/xebialabs/xl-cli/pkg/models"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -55,7 +56,7 @@ func init() {
 	ideCmd.AddCommand(schemaCmd)
 	schemaFlags := schemaCmd.Flags()
 	schemaFlags.StringVarP(&schemaFilename, "file", "f", "schema.json", "Path of the file where the generated schema file will be stored")
-	schemaFlags.BoolVarP(&generateXld, "xl-deploy", "d", true, "Set to true to generate schema for XL Deploy")
-	schemaFlags.BoolVarP(&generateXlr, "xl-release", "r", false, "Set to true to generate schema for XL Release")
+	schemaFlags.BoolVarP(&generateXld, string(models.XLD), "d", true, "Set to true to generate schema for XL Deploy")
+	schemaFlags.BoolVarP(&generateXlr, string(models.XLR), "r", false, "Set to true to generate schema for XL Release")
 	schemaFlags.BoolVarP(&override, "override", "o", false, "Set to true to override the generated file")
 }

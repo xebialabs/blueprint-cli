@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	Docker = "docker"
+	Docker    = "docker"
 	SeedImage = "xl-docker.xebialabs.com/xl-seed:demo"
 )
 
@@ -71,7 +71,7 @@ func runSeed() models.Command {
 		util.Fatal("Error while getting current work directory")
 	}
 
-	return models.Command {
+	return models.Command{
 		Name: Docker,
 		Args: []string{"run", "-v", dir + ":/data", SeedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
 	}
@@ -177,7 +177,7 @@ func getYamlFiles() []string {
 	var ymlFiles []string
 
 	for _, pattern := range repository.BlueprintMetadataFileExtensions {
-		glob := fmt.Sprintf("**/*%s",pattern )
+		glob := fmt.Sprintf("**/*%s", pattern)
 		files, err := filepath.Glob(glob)
 
 		if err != nil {

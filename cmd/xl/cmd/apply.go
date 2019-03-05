@@ -98,7 +98,11 @@ func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes, sh
 				case "COMPLETED":
 					fallthrough
 				case "EXECUTED":
-					fallthrough
+					if !util.IsVerbose {
+						util.Info("\n")
+					}
+					util.Info("%sTask %s has completed\n", util.Indent1(), changes.Task.Id)
+					return
 				case "DONE":
 					if !util.IsVerbose {
 						util.Info("\n")
