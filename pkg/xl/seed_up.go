@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	Docker = "docker"
+	Docker    = "docker"
 	SeedImage = "xl-docker.xebialabs.com/xl-seed:demo"
 )
 
@@ -34,7 +34,7 @@ func runSeed() models.Command {
 		util.Fatal("Error while getting current work directory")
 	}
 
-	return models.Command {
+	return models.Command{
 		Name: Docker,
 		Args: []string{"run", "-v", dir + ":/data", SeedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
 	}
@@ -44,21 +44,20 @@ func runSeed() models.Command {
 func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, blueprintTemplate string) {
 	// Skip Generate blueprint file
 	blueprint.SkipFinalPrompt = true
-
-	util.Verbose("Starting Blueprint questions to generate necessary files")
+	util.IsQuiet = true
 	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
-		util.Fatal("Error while creating Blueprint: %s\n", err)
+		util.Fatal("Error while creating Blueprint: %s \n", err)
 	}
 
+	util.IsQuiet = false
 	applyFilesAndSave()
-
 	// TODO: Ask for the version to deploy
-	util.Info("Blueprint created successfully! Spinning up xl seed!! \n")
+	util.Info("Generated files for deployment successfully! \nSpinning up xl seed! \n")
 	runAndCaptureResponse("pulling", pullSeedImage)
 	runAndCaptureResponse("running", runSeed())
 	// TODO: fetch URLs of XLD and XLR
-	util.Info("Seed successfully started the services!\n")
+	util.Info("Seed successfully started the services! \n")
 }
 
 func runAndCaptureResponse(status string, cmd models.Command) {
@@ -75,19 +74,18 @@ func runAndCaptureResponse(status string, cmd models.Command) {
 
 	if errorStr != "" {
 		createLogFile("xl-seed-error.txt", errorStr)
-		util.Fatal("Error while %s the xl seed image: %s\n", status, errorStr)
+		util.Fatal("Error while %s the xl seed image: %s \n", status, errorStr)
 	}
 }
 
 func createLogFile(fileName string, contents string) {
-	f,err :=os.Create(fileName)
+	f, err := os.Create(fileName)
 	if err != nil {
-		util.Fatal(" Error creating a file %s",err)
+		util.Fatal(" Error creating a file %s \n", err)
 	}
 	f.WriteString(contents)
 	f.Close()
 }
-
 
 func applyFilesAndSave() {
 
@@ -100,16 +98,16 @@ func applyFilesAndSave() {
 
 		if fileWithDocs.Parent != nil {
 			var parentFile = util.PrintableFileName(*fileWithDocs.Parent)
-			util.Info("Applying %s (imported by %s)\n", applyFile, parentFile)
+			util.Verbose("Applying %s (imported by %s) \n", applyFile, parentFile)
 		} else {
-			util.Info("Applying %s\n", applyFile)
+			util.Verbose("Applying %s \n", applyFile)
 		}
 
 		allValsFiles := getValFiles(fileWithDocs.FileName)
 
 		context, err := BuildContext(viper.GetViper(), &applyValues, allValsFiles)
 		if err != nil {
-			util.Fatal("Error while reading configuration: %s\n", err)
+			util.Fatal("Error while reading configuration: %s \n", err)
 		}
 
 		applyDir := filepath.Dir(fileWithDocs.FileName)
@@ -135,11 +133,11 @@ func getYamlFiles() []string {
 	var ymlFiles []string
 
 	for _, pattern := range repository.BlueprintMetadataFileExtensions {
-		glob := fmt.Sprintf("**/*%s",pattern )
+		glob := fmt.Sprintf("**/*%s", pattern)
 		files, err := filepath.Glob(glob)
 
 		if err != nil {
-			util.Fatal("Error while finding YAML files: %s\n", err)
+			util.Fatal("Error while finding YAML files: %s \n", err)
 		}
 
 		ymlFiles = append(ymlFiles, files...)
@@ -152,13 +150,13 @@ func getValFiles(fileName string) []string {
 	homeValsFiles, e := ListHomeXlValsFiles()
 
 	if e != nil {
-		util.Fatal("Error while reading value files from home: %s\n", e)
+		util.Fatal("Error while reading value files from home: %s \n", e)
 	}
 
 	relativeValsFiles, e := ListRelativeXlValsFiles(filepath.Dir(fileName))
 
 	if e != nil {
-		util.Fatal("Error while reading value files from xl: %s\n", e)
+		util.Fatal("Error while reading value files from xl: %s \n", e)
 	}
 
 	return append(homeValsFiles, relativeValsFiles...)
