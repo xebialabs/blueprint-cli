@@ -56,8 +56,6 @@ func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, blueprintTemplat
 	util.Info("Generated files for deployment successfully! \nSpinning up xl seed! \n")
 	runAndCaptureResponse("pulling", pullSeedImage)
 	runAndCaptureResponse("running", runSeed())
-	// TODO: fetch URLs of XLD and XLR
-	// util.Info("Seed successfully started the services! \n")
 }
 
 func runAndCaptureResponse(status string, cmd models.Command) {
@@ -146,9 +144,6 @@ func getYamlFiles() []string {
 			ymlFiles = append(ymlFiles, files...)
 		}
 	}
-
-	ymlFiles = append(ymlFiles, "xebialabs.yaml")
-
 	return ymlFiles
 }
 
