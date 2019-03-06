@@ -43,7 +43,7 @@ func doLogin(request *http.Request, cookieName string) (*string, error) {
 	}
 
 	if resp.StatusCode >= 400 {
-		return nil, errors.Newf("auth returned %d http code on login. Using basic auth", resp.StatusCode)
+		return nil, errors.Newf("auth returned %d http code on login.", resp.StatusCode)
 	}
 
 	parsed, err := url.ParseQuery(resp.Header.Get("Set-Cookie"))
