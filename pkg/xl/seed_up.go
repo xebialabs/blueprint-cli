@@ -57,7 +57,7 @@ func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, blueprintTemplat
 	runAndCaptureResponse("pulling", pullSeedImage)
 	runAndCaptureResponse("running", runSeed())
 	// TODO: fetch URLs of XLD and XLR
-	util.Info("Seed successfully started the services! \n")
+	// util.Info("Seed successfully started the services! \n")
 }
 
 func runAndCaptureResponse(status string, cmd models.Command) {
@@ -130,28 +130,27 @@ func applyFilesAndSave() {
 
 // searches for YAML / YML files inside xebialabs and kubernetes folder
 func getYamlFiles() []string {
-    var ymlFiles []string
+	var ymlFiles []string
 
-    folders := []string {"xebialabs", "kubernetes"}
+	folders := []string{"xebialabs", "kubernetes"}
 
-    for _, pattern := range repository.BlueprintMetadataFileExtensions {
-        for _, folder := range folders {
-            glob := fmt.Sprintf("%s/*%s", folder, pattern)
-            files, err := filepath.Glob(glob)
+	for _, pattern := range repository.BlueprintMetadataFileExtensions {
+		for _, folder := range folders {
+			glob := fmt.Sprintf("%s/*%s", folder, pattern)
+			files, err := filepath.Glob(glob)
 
-            if err != nil {
-                util.Fatal("Error while finding YAML files: %s \n", err)
-            }
+			if err != nil {
+				util.Fatal("Error while finding YAML files: %s \n", err)
+			}
 
-            ymlFiles = append(ymlFiles, files...)
-        }
-    }
+			ymlFiles = append(ymlFiles, files...)
+		}
+	}
 
-    ymlFiles = append(ymlFiles, "xebialabs.yaml")
+	ymlFiles = append(ymlFiles, "xebialabs.yaml")
 
-    return ymlFiles
+	return ymlFiles
 }
-
 
 func getValFiles(fileName string) []string {
 	homeValsFiles, e := ListHomeXlValsFiles()
