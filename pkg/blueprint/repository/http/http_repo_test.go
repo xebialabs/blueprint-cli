@@ -1,18 +1,27 @@
 package http
 
 import (
-	"github.com/jarcoal/httpmock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"net/url"
-	"testing"
+    "github.com/jarcoal/httpmock"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "testing"
 )
 
 const mockEndpoint = "http://mock.repo.server.com/"
 
+func getDefaultConfMap() map[interface{}]interface{} {
+    return map[interface{}]interface{} {
+        "name": "test",
+        "url": "http://mock.repo.server.com/",
+    }
+}
+
 func TestHttpRepositoryClientFail(t *testing.T) {
-	mockUrl, _ := url.Parse("http://mock.repo.server.com/")
-	repo := NewHttpBlueprintRepository("blueprints", mockUrl, "", "")
+	repo, err := NewHttpBlueprintRepository(getDefaultConfMap())
+	require.Nil(t, err)
+	err = repo.Initialize()
+	require.Nil(t, err)
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder(
@@ -49,8 +58,11 @@ func TestHttpRepositoryClientFail(t *testing.T) {
 }
 
 func TestHttpRepositoryClientSuccess(t *testing.T) {
-	mockUrl, _ := url.Parse("http://mock.repo.server.com/")
-	repo := NewHttpBlueprintRepository("blueprints", mockUrl, "", "")
+    repo, err := NewHttpBlueprintRepository(getDefaultConfMap())
+    require.Nil(t, err)
+    err = repo.Initialize()
+    require.Nil(t, err)
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder(
@@ -86,8 +98,11 @@ with a new line`),
 }
 
 func TestCheckBlueprintDefinitionFile(t *testing.T) {
-	mockUrl, _ := url.Parse("http://mock.repo.server.com/")
-	repo := NewHttpBlueprintRepository("blueprints", mockUrl, "", "")
+    repo, err := NewHttpBlueprintRepository(getDefaultConfMap())
+    require.Nil(t, err)
+    err = repo.Initialize()
+    require.Nil(t, err)
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder(

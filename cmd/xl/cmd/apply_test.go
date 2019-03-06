@@ -7,10 +7,33 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
-	"os"
+    "io/ioutil"
+    "os"
 	"path/filepath"
 	"testing"
 )
+
+func GetMinimalViperConf(t *testing.T) *viper.Viper {
+    configdir, err := ioutil.TempDir("", "xebialabsconfig")
+    if err != nil {
+        t.Error(err)
+    }
+    defer os.RemoveAll(configdir)
+    configfile := filepath.Join(configdir, "config.yaml")
+    originalConfigBytes := []byte(`blueprint-repository:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/
+`)
+    ioutil.WriteFile(configfile, originalConfigBytes, 0755)
+
+    v := viper.New()
+    v.SetConfigFile(configfile)
+    v.ReadInConfig()
+    return v
+}
 
 func TestApply(t *testing.T) {
 
@@ -54,7 +77,7 @@ spec:
 `, xl.XlrApiVersion, xl.XldApiVersion))
 		defer os.RemoveAll(tempDir2)
 
-		v := viper.GetViper()
+		v := GetMinimalViperConf(t)
 		v.Set("xl-deploy.applications-home", "Applications/XL")
 		v.Set("xl-release.home", "XL")
 
@@ -104,7 +127,7 @@ spec:
 `, xl.XldApiVersion, filepath.Base(provisionFile.Name())))
 		defer os.RemoveAll(tempDir)
 
-		v := viper.GetViper()
+		v := GetMinimalViperConf(t)
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 
@@ -149,7 +172,7 @@ metadata:
 `, models.YamlFormatVersion, filepath.Base(deployFile.Name())))
 		defer os.RemoveAll(tempDir)
 
-		v := viper.GetViper()
+		v := GetMinimalViperConf(t)
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 
@@ -172,7 +195,7 @@ spec:
 `, xl.XldApiVersion))
 		defer os.RemoveAll(tempDir)
 
-		v := viper.GetViper()
+		v := GetMinimalViperConf(t)
 
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()

@@ -17,10 +17,23 @@ func getGitHubTokenFromEnvVar(t *testing.T) string {
 	return token
 }
 
-func TestGithubRepositoryClient(t *testing.T) {
-	repo := NewGitHubBlueprintRepository("blueprints", "xebialabs", "master", getGitHubTokenFromEnvVar(t))
+func getDefaultConfMap(t *testing.T) map[interface{}]interface{} {
+    return map[interface{}]interface{} {
+        "name": "test",
+        "repo-name": "blueprints",
+        "owner": "xebialabs",
+        "branch": "master",
+        "token": getGitHubTokenFromEnvVar(t),
+    }
+}
 
-	t.Run("should get list of blueprints from default xl repo", func(t *testing.T) {
+func TestGithubRepositoryClient(t *testing.T) {
+	repo, err := NewGitHubBlueprintRepository(getDefaultConfMap(t))
+	require.Nil(t, err)
+	err = repo.Initialize()
+    require.Nil(t, err)
+
+    t.Run("should get list of blueprints from default xl repo", func(t *testing.T) {
 		blueprints, dirs, err := repo.ListBlueprintsFromRepo()
 		require.Nil(t, err)
 		require.NotNil(t, dirs)
@@ -37,14 +50,14 @@ func TestGithubRepositoryClient(t *testing.T) {
 	})
 
 	t.Run("should error on non existing repository name", func(t *testing.T) {
-		repo.Name = "nonexistingname"
+		repo.RepoName = "nonexistingname"
 		_, _, err := repo.ListBlueprintsFromRepo()
 		require.NotNil(t, err)
 		assert.Contains(t, err.Error(), "404 Not Found")
 	})
 
 	t.Run("should get empty blueprints map from a non-blueprint containing repo", func(t *testing.T) {
-		repo.Name = "devops-as-code-vscode"
+		repo.RepoName = "devops-as-code-vscode"
 		blueprints, _, err := repo.ListBlueprintsFromRepo()
 		require.Nil(t, err)
 		require.NotNil(t, blueprints)
@@ -53,7 +66,11 @@ func TestGithubRepositoryClient(t *testing.T) {
 }
 
 func TestGitHubBlueprintRepository_GetFileContents(t *testing.T) {
-	repo := NewGitHubBlueprintRepository("blueprints", "xebialabs", "master", getGitHubTokenFromEnvVar(t))
+    repo, err := NewGitHubBlueprintRepository(getDefaultConfMap(t))
+    require.Nil(t, err)
+    err = repo.Initialize()
+    require.Nil(t, err)
+
 	tests := []struct {
 		name     string
 		filePath string
@@ -96,7 +113,11 @@ func TestGitHubBlueprintRepository_GetFileContents(t *testing.T) {
 }
 
 func TestGitHubBlueprintRepository_GetLargeFileContents(t *testing.T) {
-	repo := NewGitHubBlueprintRepository("blueprints", "xebialabs", "master", getGitHubTokenFromEnvVar(t))
+    repo, err := NewGitHubBlueprintRepository(getDefaultConfMap(t))
+    require.Nil(t, err)
+    err = repo.Initialize()
+    require.Nil(t, err)
+
 	tests := []struct {
 		name     string
 		filePath string

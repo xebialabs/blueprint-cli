@@ -707,13 +707,11 @@ func TestParseTemplateMetadata(t *testing.T) {
 		assert.Equal(t, TemplateConfig{
 			File:       "xebialabs/foo.yaml",
 			FullPath:   "",
-			Repository: blueprintRepository,
 		}, doc.TemplateConfigs[0])
 		assert.Equal(t, TemplateConfig{
 			File:          "readme.md",
 			FullPath:      "",
 			DependsOnTrue: VarField{Val: "isit"},
-			Repository:    blueprintRepository,
 		}, doc.TemplateConfigs[1])
 	})
 
@@ -776,25 +774,21 @@ func TestParseTemplateMetadata(t *testing.T) {
 		assert.Equal(t, TemplateConfig{
 			File:       "xebialabs/foo.yaml",
 			FullPath:   "",
-			Repository: blueprintRepository,
 		}, doc.TemplateConfigs[0])
 		assert.Equal(t, TemplateConfig{
 			File:          "readme.md",
 			FullPath:      "",
 			DependsOnTrue: VarField{Val: "isit"},
-			Repository:    blueprintRepository,
 		}, doc.TemplateConfigs[1])
 		assert.Equal(t, TemplateConfig{
 			File:          "bar.md",
 			FullPath:      "",
 			DependsOnTrue: VarField{Val: "isitnot"},
-			Repository:    blueprintRepository,
 		}, doc.TemplateConfigs[2])
 		assert.Equal(t, TemplateConfig{
 			File:           "foo.md",
 			FullPath:       "",
 			DependsOnFalse: VarField{Val: "!!isitnot", Tag: tagExpression},
-			Repository:     blueprintRepository,
 		}, doc.TemplateConfigs[3])
 	})
 }
@@ -818,8 +812,8 @@ func TestVerifyTemplateDirAndGenFullPaths(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, blueprintDoc.TemplateConfigs)
 		assert.Equal(t, []TemplateConfig{
-			{File: "test.yaml.tmpl", FullPath: filepath.Join(tmpDir, "test.yaml.tmpl"), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}, Repository: BlueprintContext{}},
-			{File: "test2.yaml.tmpl", FullPath: filepath.Join(tmpDir, "test2.yaml.tmpl"), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}, Repository: BlueprintContext{}},
+			{File: "test.yaml.tmpl", FullPath: filepath.Join(tmpDir, "test.yaml.tmpl"), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}},
+			{File: "test2.yaml.tmpl", FullPath: filepath.Join(tmpDir, "test2.yaml.tmpl"), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}},
 		}, blueprintDoc.TemplateConfigs)
 	})
 	t.Run("should get template config from relative nested paths", func(t *testing.T) {
@@ -840,8 +834,8 @@ func TestVerifyTemplateDirAndGenFullPaths(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, blueprintDoc.TemplateConfigs)
 		assert.Equal(t, []TemplateConfig{
-			{File: path.Join("nested", "test2.yaml.tmpl"), FullPath: path.Join(tmpDir, path.Join("nested", "test2.yaml.tmpl")), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}, Repository: BlueprintContext{}},
-			{File: "test.yaml.tmpl", FullPath: path.Join(tmpDir, "test.yaml.tmpl"), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}, Repository: BlueprintContext{}},
+			{File: path.Join("nested", "test2.yaml.tmpl"), FullPath: path.Join(tmpDir, path.Join("nested", "test2.yaml.tmpl")), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}},
+			{File: "test.yaml.tmpl", FullPath: path.Join(tmpDir, "test.yaml.tmpl"), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}},
 		}, blueprintDoc.TemplateConfigs)
 	})
 
@@ -864,8 +858,8 @@ func TestVerifyTemplateDirAndGenFullPaths(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, blueprintDoc.TemplateConfigs)
 		assert.Equal(t, []TemplateConfig{
-			{File: path.Join("nested", "test2.yaml.tmpl"), FullPath: path.Join(tmpDir, path.Join("nested", "test2.yaml.tmpl")), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}, Repository: BlueprintContext{}},
-			{File: "test.yaml.tmpl", FullPath: path.Join(tmpDir, "test.yaml.tmpl"), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}, Repository: BlueprintContext{}},
+			{File: path.Join("nested", "test2.yaml.tmpl"), FullPath: path.Join(tmpDir, path.Join("nested", "test2.yaml.tmpl")), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}},
+			{File: "test.yaml.tmpl", FullPath: path.Join(tmpDir, "test.yaml.tmpl"), DependsOnTrue: VarField{}, DependsOnFalse: VarField{}},
 		}, blueprintDoc.TemplateConfigs)
 	})
 	t.Run("should return error if directory is empty", func(t *testing.T) {
@@ -1134,8 +1128,8 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 			},
 			args{templatePath, blueprintRepository},
 			[]TemplateConfig{
-				{File: "test.yaml", FullPath: "", Repository: blueprintRepository},
-				{File: "test2.yaml", FullPath: "", Repository: blueprintRepository},
+				{File: "test.yaml", FullPath: ""},
+				{File: "test2.yaml", FullPath: ""},
 			},
 			nil,
 		},
@@ -1162,11 +1156,11 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 			},
 			args{templatePath, blueprintRepository},
 			[]TemplateConfig{
-				{File: "test.yaml", FullPath: "", Repository: blueprintRepository},
-				{File: "test2.yaml", FullPath: "", Repository: blueprintRepository, DependsOnTrue: VarField{Val: "foo", Tag: ""}},
-				{File: "test3.yaml", FullPath: "", Repository: blueprintRepository, DependsOnFalse: VarField{Val: "bar", Tag: ""}},
-				{File: "test4.yaml", FullPath: "", Repository: blueprintRepository, DependsOnTrue: VarField{Val: "bar", Tag: ""}},
-				{File: "test5.yaml", FullPath: "", Repository: blueprintRepository, DependsOnFalse: VarField{Val: "foo", Tag: ""}},
+				{File: "test.yaml", FullPath: ""},
+				{File: "test2.yaml", FullPath: "", DependsOnTrue: VarField{Val: "foo", Tag: ""}},
+				{File: "test3.yaml", FullPath: "", DependsOnFalse: VarField{Val: "bar", Tag: ""}},
+				{File: "test4.yaml", FullPath: "", DependsOnTrue: VarField{Val: "bar", Tag: ""}},
+				{File: "test5.yaml", FullPath: "", DependsOnFalse: VarField{Val: "foo", Tag: ""}},
 			},
 			nil,
 		},
