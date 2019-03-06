@@ -16,7 +16,7 @@ import (
 	"github.com/xebialabs/yaml"
 )
 
-const blueprintDir = "mock-blueprint"
+const blueprintDir = "xebialabs"
 
 type TestInfra struct {
 	documents []Document
