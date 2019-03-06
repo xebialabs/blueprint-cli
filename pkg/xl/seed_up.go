@@ -128,22 +128,30 @@ func applyFilesAndSave() {
 	}
 }
 
+// searches for YAML / YML files inside xebialabs and kubernetes folder
 func getYamlFiles() []string {
-	var ymlFiles []string
+    var ymlFiles []string
 
-	for _, pattern := range repository.BlueprintMetadataFileExtensions {
-		glob := fmt.Sprintf("**/*%s", pattern)
-		files, err := filepath.Glob(glob)
+    folders := []string {"xebialabs", "kubernetes"}
 
-		if err != nil {
-			util.Fatal("Error while finding YAML files: %s \n", err)
-		}
+    for _, pattern := range repository.BlueprintMetadataFileExtensions {
+        for _, folder := range folders {
+            glob := fmt.Sprintf("%s/*%s", folder, pattern)
+            files, err := filepath.Glob(glob)
 
-		ymlFiles = append(ymlFiles, files...)
-	}
+            if err != nil {
+                util.Fatal("Error while finding YAML files: %s \n", err)
+            }
 
-	return ymlFiles
+            ymlFiles = append(ymlFiles, files...)
+        }
+    }
+
+    ymlFiles = append(ymlFiles, "xebialabs.yaml")
+
+    return ymlFiles
 }
+
 
 func getValFiles(fileName string) []string {
 	homeValsFiles, e := ListHomeXlValsFiles()
