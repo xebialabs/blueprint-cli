@@ -43,7 +43,7 @@ func printChangedIds(entityName string, ids *xl.ChangedIds) {
 
 func printTaskInfo(task *xl.TaskInfo) {
 	if task != nil {
-		util.Info("%s%s started\n", util.IndentFlexible(), task.Description)
+		util.Info("%s%s started as %s\n", util.IndentFlexible(), task.Description, task.Id)
 	}
 }
 
@@ -83,12 +83,18 @@ func requestTaskId(context *xl.Context, doc *xl.Document, taskId string) (*xl.Ta
 	return state, nil
 }
 
+func newLineIfNotVerbose() {
+	if !util.IsVerbose {
+		util.Info("\n")
+	}
+}
+
 func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes, shouldDetach bool) {
 	if changes != nil && changes.Task != nil {
 		if shouldDetach {
 			util.Info("%sGo to the user interface to follow task %s\n", util.IndentFlexible(), changes.Task.Id)
 		} else {
-			util.Info("%sWaiting for task %s to finish\n", util.Indent1(), changes.Task.Id)
+			util.Info("%sWaiting for task %s to finish\n\n", util.IndentFlexible(), changes.Task.Id)
 			if !util.IsVerbose {
 				util.Info(util.Indent1())
 			}
@@ -96,18 +102,16 @@ func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes, sh
 			for err == nil {
 				switch result.State {
 				case "COMPLETED":
-					fallthrough
+					newLineIfNotVerbose()
+					util.Info("%sTask %s has completed\n", util.IndentFlexible(), changes.Task.Id)
+					return
 				case "EXECUTED":
-					if !util.IsVerbose {
-						util.Info("\n")
-					}
-					util.Info("%sTask %s has completed\n", util.Indent1(), changes.Task.Id)
+					newLineIfNotVerbose()
+					util.Info("%sTask %s has executed but NOT archived. Please go to user interface to complete it\n", util.IndentFlexible(), changes.Task.Id)
 					return
 				case "DONE":
-					if !util.IsVerbose {
-						util.Info("\n")
-					}
-					util.Info("%sTask %s has completed and been archived\n", util.Indent1(), changes.Task.Id)
+					newLineIfNotVerbose()
+					util.Info("%sTask %s has completed and been archived\n", util.IndentFlexible(), changes.Task.Id)
 					return
 
 				case "IN_PROGRESS":
@@ -132,8 +136,8 @@ func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes, sh
 					fallthrough
 				case "ABORTED":
 					util.Fatal(
-						"\n%sUnable to complete the task %s automatically as it's state became %s.\n%sThe task will be rolled back.\n",
-						util.Indent1(), changes.Task.Id, result.State, util.Indent1(),
+						"\n%sUnable to complete the task %s automatically as it's state became %s.\n",
+						util.Indent1(), changes.Task.Id, result.State,
 					)
 				}
 				time.Sleep(2 * time.Second)

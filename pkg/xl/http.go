@@ -196,11 +196,12 @@ func (server *SimpleHTTPServer) PreviewYamlDoc(resource string, yamlDocBytes []b
 }
 
 func printTable(initialString string, header []string, data [][]string) error {
-	var buf = bytes.NewBufferString(fmt.Sprintf("\n%s\n\n", initialString))
+	var buf = bytes.NewBufferString(fmt.Sprintf("\n%s%s\n\n%s", util.Indent1(), initialString, util.Indent1()))
 	var table = tablewriter.NewWriter(buf)
 	table.SetBorder(false)
 	table.SetHeader(header)
 	table.AppendBulk(data)
+	table.SetNewLine(fmt.Sprintf("\n%s", util.Indent1()))
 	table.Render()
 	return fmt.Errorf(buf.String())
 }

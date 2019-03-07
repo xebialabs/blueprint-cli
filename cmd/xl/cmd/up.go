@@ -24,11 +24,18 @@ var upCmd = &cobra.Command{
 	},
 }
 
+var upLocalMode bool
+var upBlueprintTemplate string
+
 func DoUp(context *xl.Context) {
 	util.Verbose("Running XL Seed")
-	xl.InvokeBlueprintAndSeed(context)
+	xl.InvokeBlueprintAndSeed(context, upLocalMode, upBlueprintTemplate)
 }
 
 func init() {
 	rootCmd.AddCommand(upCmd)
+
+	upFlags := upCmd.Flags()
+	upFlags.BoolVarP(&upLocalMode, "local", "l", false, "Enable local file mode, by default remote file mode is used")
+	upFlags.StringVarP(&upBlueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local folder path")
 }

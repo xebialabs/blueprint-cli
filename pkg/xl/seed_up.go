@@ -13,7 +13,6 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
-	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 const (
@@ -27,42 +26,6 @@ var pullSeedImage = models.Command{
 }
 
 var applyValues map[string]string
-
-func getBlueprintLocation(surveyOpts ...survey.AskOpt) (string, error) {
-
-	blueprintTemplate := ""
-
-	_ = survey.AskOne(
-		&survey.Input{
-			Message: "Enter the blueprint repository or file:",
-			Help:    "http://github.com/xebialabs/repo-containing-blueprint or /path/to/blueprint",
-			Default: "/Users/sendilkumar/xl/xl-platform-k8s/blueprint/xl-up",
-		},
-		&blueprintTemplate,
-		survey.Required,
-		surveyOpts...,
-	)
-
-	return blueprintTemplate, nil
-}
-
-func isLocal(surveyOpts ...survey.AskOpt) (bool, error) {
-
-	isLocal := true
-
-	_ = survey.AskOne(
-		&survey.Confirm{
-			Message: "Is your blueprint available in local?",
-			Help:    "Y for local, N for remote",
-			Default: true,
-		},
-		&isLocal,
-		survey.Required,
-		surveyOpts...,
-	)
-
-	return isLocal, nil
-}
 
 func runSeed() models.Command {
 	dir, err := os.Getwd()
@@ -78,29 +41,21 @@ func runSeed() models.Command {
 }
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(context *Context) {
+func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, blueprintTemplate string) {
 	// Skip Generate blueprint file
 	blueprint.SkipFinalPrompt = true
-
-	// TODO: Check for Docker installation
-	util.Verbose("Fetching the blueprint template location")
-	isLocal, err := isLocal()
-	blueprintTemplate, err := getBlueprintLocation()
-
-	util.Verbose("Starting Blueprint questions to generate necessary files")
-	err = blueprint.InstantiateBlueprint(isLocal, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
+	util.IsQuiet = true
+	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
-		util.Fatal("Error while creating Blueprint: %s\n", err)
+		util.Fatal("Error while creating Blueprint: %s \n", err)
 	}
 
+	util.IsQuiet = false
 	applyFilesAndSave()
-
 	// TODO: Ask for the version to deploy
-	util.Info("Blueprint created successfully! Spinning up xl seed!! \n")
+	util.Info("Generated files for deployment successfully! \nSpinning up xl seed! \n")
 	runAndCaptureResponse("pulling", pullSeedImage)
 	runAndCaptureResponse("running", runSeed())
-	// TODO: fetch URLs of XLD and XLR
-	util.Info("Seed successfully started the services!\n")
 }
 
 func runAndCaptureResponse(status string, cmd models.Command) {
@@ -117,19 +72,17 @@ func runAndCaptureResponse(status string, cmd models.Command) {
 
 	if errorStr != "" {
 		createLogFile("xl-seed-error.txt", errorStr)
-		util.Fatal("Error while %s the xl seed image", status)
 	}
 }
 
 func createLogFile(fileName string, contents string) {
-	f,err :=os.Create(fileName)
+	f, err := os.Create(fileName)
 	if err != nil {
-		util.Fatal(" Error creating a file %s",err)
+		util.Fatal(" Error creating a file %s \n", err)
 	}
 	f.WriteString(contents)
 	f.Close()
 }
-
 
 func applyFilesAndSave() {
 
@@ -142,16 +95,16 @@ func applyFilesAndSave() {
 
 		if fileWithDocs.Parent != nil {
 			var parentFile = util.PrintableFileName(*fileWithDocs.Parent)
-			util.Info("Applying %s (imported by %s)\n", applyFile, parentFile)
+			util.Verbose("Applying %s (imported by %s) \n", applyFile, parentFile)
 		} else {
-			util.Info("Applying %s\n", applyFile)
+			util.Verbose("Applying %s \n", applyFile)
 		}
 
 		allValsFiles := getValFiles(fileWithDocs.FileName)
 
 		context, err := BuildContext(viper.GetViper(), &applyValues, allValsFiles)
 		if err != nil {
-			util.Fatal("Error while reading configuration: %s\n", err)
+			util.Fatal("Error while reading configuration: %s \n", err)
 		}
 
 		applyDir := filepath.Dir(fileWithDocs.FileName)
@@ -173,20 +126,24 @@ func applyFilesAndSave() {
 	}
 }
 
+// searches for YAML / YML files inside xebialabs and kubernetes folder
 func getYamlFiles() []string {
 	var ymlFiles []string
 
+	folders := []string{"xebialabs", "kubernetes"}
+
 	for _, pattern := range repository.BlueprintMetadataFileExtensions {
-		glob := fmt.Sprintf("**/*%s", pattern)
-		files, err := filepath.Glob(glob)
+		for _, folder := range folders {
+			glob := fmt.Sprintf("%s/*%s", folder, pattern)
+			files, err := filepath.Glob(glob)
 
-		if err != nil {
-			util.Fatal("Error while finding YAML files: %s\n", err)
+			if err != nil {
+				util.Fatal("Error while finding YAML files: %s \n", err)
+			}
+
+			ymlFiles = append(ymlFiles, files...)
 		}
-
-		ymlFiles = append(ymlFiles, files...)
 	}
-
 	return ymlFiles
 }
 
@@ -194,13 +151,13 @@ func getValFiles(fileName string) []string {
 	homeValsFiles, e := ListHomeXlValsFiles()
 
 	if e != nil {
-		util.Fatal("Error while reading value files from home: %s\n", e)
+		util.Fatal("Error while reading value files from home: %s \n", e)
 	}
 
 	relativeValsFiles, e := ListRelativeXlValsFiles(filepath.Dir(fileName))
 
 	if e != nil {
-		util.Fatal("Error while reading value files from xl: %s\n", e)
+		util.Fatal("Error while reading value files from xl: %s \n", e)
 	}
 
 	return append(homeValsFiles, relativeValsFiles...)

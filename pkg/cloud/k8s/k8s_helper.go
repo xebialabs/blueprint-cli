@@ -101,7 +101,6 @@ func getK8SConfigField(res *K8SFnResult, attr string) string {
 		attrnorm := strings.ToLower(strings.Replace(attr, "_", "", -1))
 		if knorm == attrnorm {
 			if val, ok := SpecialHandling[k]; ok {
-				//do something here
 				if val == "bool" {
 					return strconv.FormatBool(field.Bool())
 				}
