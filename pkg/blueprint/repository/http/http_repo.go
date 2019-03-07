@@ -3,13 +3,14 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
+
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
+	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 const (
@@ -18,35 +19,35 @@ const (
 
 // HTTP Blueprint Repository Provider implementation
 type HttpBlueprintRepository struct {
-	Client      *http.Client
+	Client *http.Client
 
-	Name        string
-	RepoUrl     *url.URL
-	Username    string
-	Password    string
+	Name     string
+	RepoUrl  *url.URL
+	Username string
+	Password string
 }
 
-func NewHttpBlueprintRepository(confMap map[interface{}]interface{}) (*HttpBlueprintRepository, error) {
+func NewHttpBlueprintRepository(confMap map[string]string) (*HttpBlueprintRepository, error) {
 	// Parse context config
 	repo := new(HttpBlueprintRepository)
-	repo.Name = confMap["name"].(string)
+	repo.Name = confMap["name"]
 
 	// parse repository URL
-	if !util.MapContainsKey(confMap, "url") {
+	if !util.MapContainsKeyWithVal(confMap, "url") {
 		return nil, fmt.Errorf("'url' config field must be set for HTTP repository type")
 	}
-	parsedUrl, err := url.ParseRequestURI(confMap["url"].(string))
+	parsedURL, err := url.ParseRequestURI(confMap["url"])
 	if err != nil {
 		return nil, fmt.Errorf("HTTP repository URL cannot be parsed: %s", err.Error())
 	}
-	repo.RepoUrl = parsedUrl
+	repo.RepoUrl = parsedURL
 
 	// parse basic auth credentials, if exists
-	if util.MapContainsKey(confMap, "username") {
-		repo.Username = confMap["username"].(string)
+	if util.MapContainsKeyWithVal(confMap, "username") {
+		repo.Username = confMap["username"]
 	}
-	if util.MapContainsKey(confMap, "password") {
-		repo.Password = confMap["password"].(string)
+	if util.MapContainsKeyWithVal(confMap, "password") {
+		repo.Password = confMap["password"]
 	}
 
 	return repo, nil
@@ -100,7 +101,7 @@ func (repo *HttpBlueprintRepository) ListBlueprintsFromRepo() (map[string]*model
 			Path: blueprintDir,
 			DefinitionFile: models.RemoteFile{
 				Filename: blueprintDefFileName,
-				Path: path.Join(blueprintDir, blueprintDefFileName),
+				Path:     path.Join(blueprintDir, blueprintDefFileName),
 			},
 			Files: []models.RemoteFile{},
 		}
@@ -127,7 +128,6 @@ func (repo *HttpBlueprintRepository) GetFileContents(filePath string) (*[]byte, 
 
 // Utility functions
 func (repo *HttpBlueprintRepository) checkBlueprintDefinitionFile(blueprintDir string) (string, error) {
-	var err error
 	for _, validExtension := range repository.BlueprintMetadataFileExtensions {
 		blueprintDefFileName := repository.BlueprintMetadataFileName + validExtension
 		response, err := repo.getResponseFromUrl(path.Join(blueprintDir, blueprintDefFileName))
@@ -135,7 +135,7 @@ func (repo *HttpBlueprintRepository) checkBlueprintDefinitionFile(blueprintDir s
 			return blueprintDefFileName, nil
 		}
 	}
-	return "", err
+	return "", fmt.Errorf("no valid blueprint YAML file found for %s", blueprintDir)
 }
 
 func (repo *HttpBlueprintRepository) getResponseFromUrl(filePath string) (*http.Response, error) {

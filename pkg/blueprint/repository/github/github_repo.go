@@ -18,43 +18,43 @@ import (
 )
 
 type GitHubBlueprintRepository struct {
-	GithubContext   context.Context
-	Client          *github.Client
+	GithubContext context.Context
+	Client        *github.Client
 
-	Name            string
-	RepoName        string
-	Owner           string
-	Branch          string
-	Token           string
+	Name     string
+	RepoName string
+	Owner    string
+	Branch   string
+	Token    string
 }
 
-func NewGitHubBlueprintRepository(confMap map[interface{}]interface{}) (*GitHubBlueprintRepository, error) {
+func NewGitHubBlueprintRepository(confMap map[string]string) (*GitHubBlueprintRepository, error) {
 	// Parse context config
 	repo := new(GitHubBlueprintRepository)
-	repo.Name = confMap["name"].(string)
+	repo.Name = confMap["name"]
 
 	// parse repo name
-	if !util.MapContainsKey(confMap, "repo-name") {
+	if !util.MapContainsKeyWithVal(confMap, "repo-name") {
 		return nil, fmt.Errorf("'repo-name' config field must be set for GitHub repository type")
 	}
-	repo.RepoName = confMap["repo-name"].(string)
+	repo.RepoName = confMap["repo-name"]
 
 	// parse repo owner name
-	if !util.MapContainsKey(confMap, "owner") {
+	if !util.MapContainsKeyWithVal(confMap, "owner") {
 		return nil, fmt.Errorf("'owner' config field must be set for GitHub repository type")
 	}
-	repo.Owner = confMap["owner"].(string)
+	repo.Owner = confMap["owner"]
 
 	// parse branch name, or set it to default
-	if util.MapContainsKey(confMap, "branch") {
-		repo.Branch = confMap["branch"].(string)
+	if util.MapContainsKeyWithVal(confMap, "branch") {
+		repo.Branch = confMap["branch"]
 	} else {
 		repo.Branch = "master"
 	}
 
 	// parse token if exists
-	if util.MapContainsKey(confMap, "token") {
-		repo.Token = confMap["token"].(string)
+	if util.MapContainsKeyWithVal(confMap, "token") {
+		repo.Token = confMap["token"]
 	}
 
 	return repo, nil
@@ -63,12 +63,11 @@ func NewGitHubBlueprintRepository(confMap map[interface{}]interface{}) (*GitHubB
 func (repo *GitHubBlueprintRepository) Initialize() error {
 	repo.GithubContext = context.Background()
 	var tc *http.Client
+	var ts oauth2.TokenSource
 	if repo.Token != "" {
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: repo.Token})
-		tc = oauth2.NewClient(repo.GithubContext, ts)
-	} else {
-		tc = oauth2.NewClient(repo.GithubContext, nil)
+		ts = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: repo.Token})
 	}
+	tc = oauth2.NewClient(repo.GithubContext, ts)
 	repo.Client = github.NewClient(tc)
 	return nil
 }

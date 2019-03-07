@@ -2,37 +2,38 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
-    "io/ioutil"
-    "os"
-	"path/filepath"
-	"testing"
 )
 
 func GetMinimalViperConf(t *testing.T) *viper.Viper {
-    configdir, err := ioutil.TempDir("", "xebialabsconfig")
-    if err != nil {
-        t.Error(err)
-    }
-    defer os.RemoveAll(configdir)
-    configfile := filepath.Join(configdir, "config.yaml")
-    originalConfigBytes := []byte(`blueprint-repository:
-  current-repository: XL Blueprints
-  repositories:
-  - name: XL Blueprints
-    type: http
-    url: https://dist.xebialabs.com/public/blueprints/
-`)
-    ioutil.WriteFile(configfile, originalConfigBytes, 0755)
+	configdir, err := ioutil.TempDir("", "xebialabsconfig")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(configdir)
+	configfile := filepath.Join(configdir, "config.yaml")
+	originalConfigBytes := []byte(`
+    blueprint-repository:
+      current-repository: XL Blueprints
+      repositories:
+      - name: XL Blueprints
+        type: http
+        url: https://dist.xebialabs.com/public/blueprints/`)
+	ioutil.WriteFile(configfile, originalConfigBytes, 0755)
 
-    v := viper.New()
-    v.SetConfigFile(configfile)
-    v.ReadInConfig()
-    return v
+	v := viper.New()
+	v.SetConfigFile(configfile)
+	v.ReadInConfig()
+	return v
 }
 
 func TestApply(t *testing.T) {

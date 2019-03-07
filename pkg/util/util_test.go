@@ -49,6 +49,6 @@ func TestPathExists(t *testing.T) {
 	})
 }
 
-func TestMapContainsKey(t *testing.T) {
+func TestMapContainsKeyWithVal(t *testing.T) {
     // TODO: implement
 }

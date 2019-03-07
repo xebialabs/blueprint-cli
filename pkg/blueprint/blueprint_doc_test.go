@@ -705,8 +705,8 @@ func TestParseTemplateMetadata(t *testing.T) {
 			SaveInXlVals: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[1])
 		assert.Equal(t, TemplateConfig{
-			File:       "xebialabs/foo.yaml",
-			FullPath:   "",
+			File:     "xebialabs/foo.yaml",
+			FullPath: "",
 		}, doc.TemplateConfigs[0])
 		assert.Equal(t, TemplateConfig{
 			File:          "readme.md",
@@ -772,8 +772,8 @@ func TestParseTemplateMetadata(t *testing.T) {
 		require.Nil(t, err)
 		assert.Equal(t, 4, len(doc.TemplateConfigs))
 		assert.Equal(t, TemplateConfig{
-			File:       "xebialabs/foo.yaml",
-			FullPath:   "",
+			File:     "xebialabs/foo.yaml",
+			FullPath: "",
 		}, doc.TemplateConfigs[0])
 		assert.Equal(t, TemplateConfig{
 			File:          "readme.md",

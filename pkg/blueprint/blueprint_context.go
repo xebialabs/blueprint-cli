@@ -2,14 +2,15 @@ package blueprint
 
 import (
 	"fmt"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	"gopkg.in/AlecAivazis/survey.v1"
 
@@ -22,12 +23,12 @@ import (
 )
 
 const (
-	ContextPrefix = "blueprint-repository"
+	// ContextPrefix - this is the key used in config
+	ContextPrefix     = "blueprint-repository"
 	templateExtension = ".tmpl"
 
-	FlagBlueprintCurrentRepository      = ContextPrefix + "-current-repository"
-
-	ViperKeyBlueprintCurrentRepository  = ContextPrefix + ".current-repository"
+	FlagBlueprintCurrentRepository     = ContextPrefix + "-current-repository"
+	ViperKeyBlueprintCurrentRepository = ContextPrefix + ".current-repository"
 )
 
 // TemplateConfig holds the merged template file definitions with repository info
@@ -40,8 +41,8 @@ type TemplateConfig struct {
 
 // BlueprintContext holds necessary remote/local repository information for connection
 type BlueprintContext struct {
-	ActiveRepo       *repository.BlueprintRepository
-	DefinedRepos     []*repository.BlueprintRepository
+	ActiveRepo   *repository.BlueprintRepository
+	DefinedRepos []*repository.BlueprintRepository
 }
 
 func SetRootFlags(rootFlags *pflag.FlagSet) {
@@ -59,27 +60,21 @@ func ConstructBlueprintContext(v *viper.Viper) (*BlueprintContext, error) {
 	var currentRepo *repository.BlueprintRepository
 	var definedRepos []*repository.BlueprintRepository
 
-	// Parse repository config list
-	repoDefinitions, ok := v.Get(fmt.Sprintf("%s.repositories", ContextPrefix)).([]interface{})
-	if !ok {
+	repoDefinitions := make([]map[string]string, 1, 1)
+	err := v.UnmarshalKey(fmt.Sprintf("%s.repositories", ContextPrefix), &repoDefinitions)
+	if err != nil {
 		return nil, fmt.Errorf("bad format in blueprint context: blueprint repositories should be a non-empty YAML list")
 	}
 
 	for i, repoDefinition := range repoDefinitions {
-		configVals, ok := repoDefinition.(map[interface{}]interface{})
-		if !ok {
-			return nil, fmt.Errorf("bad format in blueprint context: blueprint repository with index %d", i)
-		}
-
 		// Validate mandatory fields for all repository types
-		if !util.MapContainsKey(configVals, "type") || !util.MapContainsKey(configVals, "name") {
+		if !util.MapContainsKeyWithVal(repoDefinition, "type") || !util.MapContainsKeyWithVal(repoDefinition, "name") {
 			return nil, fmt.Errorf("repository with index %d doesn't have all mandatory fields set [type, name]", i)
 		}
 
 		// Get repository type
-		var err error
 		var repo repository.BlueprintRepository
-		repoProvider, err := models.GetRepoProvider(configVals["type"].(string))
+		repoProvider, err := models.GetRepoProvider(repoDefinition["type"])
 		if err != nil {
 			return nil, err
 		}
@@ -87,11 +82,11 @@ func ConstructBlueprintContext(v *viper.Viper) (*BlueprintContext, error) {
 		// Parse according to type string
 		switch repoProvider {
 		case models.ProviderMock: // only used for testing purposes
-			repo, err = mock.NewMockBlueprintRepository(configVals)
+			repo, err = mock.NewMockBlueprintRepository(repoDefinition)
 		case models.ProviderGitHub:
-			repo, err = github.NewGitHubBlueprintRepository(configVals)
+			repo, err = github.NewGitHubBlueprintRepository(repoDefinition)
 		case models.ProviderHttp:
-			repo, err = http.NewHttpBlueprintRepository(configVals)
+			repo, err = http.NewHttpBlueprintRepository(repoDefinition)
 		default:
 			return nil, fmt.Errorf("no blueprint provider implementation found for %s", repoProvider)
 		}
@@ -101,7 +96,7 @@ func ConstructBlueprintContext(v *viper.Viper) (*BlueprintContext, error) {
 		definedRepos = append(definedRepos, &repo)
 
 		// Set current repo if name is matching
-		if strings.ToLower(repo.GetName()) == activeRepoName  {
+		if strings.ToLower(repo.GetName()) == activeRepoName {
 			currentRepo = &repo
 		}
 	}
@@ -112,15 +107,15 @@ func ConstructBlueprintContext(v *viper.Viper) (*BlueprintContext, error) {
 	}
 
 	return &BlueprintContext{
-		ActiveRepo:    currentRepo,
-		DefinedRepos:  definedRepos,
+		ActiveRepo:   currentRepo,
+		DefinedRepos: definedRepos,
 	}, nil
 }
 
 func (blueprintContext *BlueprintContext) initCurrentRepoClient() (map[string]*models.BlueprintRemote, error) {
 	err := (*blueprintContext.ActiveRepo).Initialize()
 	if err != nil {
-		return nil ,err
+		return nil, err
 	}
 	return blueprintContext.parseRepositoryTree()
 }
@@ -130,7 +125,7 @@ func (blueprintContext *BlueprintContext) parseRepositoryTree() (map[string]*mod
 	var blueprintDirs []string
 	var err error
 
-	// Parse GIT tree from provider
+	// Parse file tree from provider
 	blueprints, blueprintDirs, err = (*blueprintContext.ActiveRepo).ListBlueprintsFromRepo()
 	if err != nil {
 		return nil, err
@@ -210,9 +205,8 @@ func (blueprintContext *BlueprintContext) parseDefinitionFile(blueprintLocalMode
 	// local/remote
 	if blueprintLocalMode {
 		return blueprintContext.parseLocalDefinitionFile(templatePath)
-	} else {
-		return blueprintContext.parseRemoteDefinitionFile(blueprints, templatePath)
 	}
+	return blueprintContext.parseRemoteDefinitionFile(blueprints, templatePath)
 }
 
 func (blueprintContext *BlueprintContext) parseRemoteDefinitionFile(blueprints map[string]*models.BlueprintRemote, templatePath string) (*BlueprintYaml, error) {

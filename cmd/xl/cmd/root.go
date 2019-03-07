@@ -88,11 +88,11 @@ func initConfig() {
 				util.Info("Could not write default configuration: %s/n", err.Error())
 			}
 
-            initCfgTry += 1
-            if initCfgTry == 5 {
-                util.Fatal("Cannot read generated config (%s) after 5 attempts: %s\n", viper.ConfigFileUsed(), err)
-            }
-            initConfig()
+			initCfgTry += 1
+			if initCfgTry == 5 {
+				util.Fatal("Cannot read generated config (%s) after 5 attempts: %s\n", viper.ConfigFileUsed(), err)
+			}
+			initConfig()
 		default:
 			util.Fatal("Cannot read config file %s: %s\n", viper.ConfigFileUsed(), err)
 		}
@@ -112,17 +112,17 @@ func writeDefaultConfigurationFile() error {
 	util.Verbose("Writing default configuration to %s\n", configFileUsed)
 
 	// using custom ConfMap to have list of configuration items
-    type ConfMap map[string]interface{}
-    type ConfData struct {
-        CurrentRepo   string     `yaml:"current-repository"`
-        Repositories  []ConfMap  `yaml:"repositories"`
-    }
-    defaultBlueprintRepo := ConfMap{
-        "name": models.DefaultBlueprintRepositoryName,
-        "type": models.DefaultBlueprintRepositoryProvider,
-        "url": models.DefaultBlueprintRepositoryUrl,
-    }
-    blueprintConfData := ConfData{models.DefaultBlueprintRepositoryName, []ConfMap{defaultBlueprintRepo}}
+	type ConfMap map[string]string
+	type ConfData struct {
+		CurrentRepo  string    `yaml:"current-repository"`
+		Repositories []ConfMap `yaml:"repositories"`
+	}
+	defaultBlueprintRepo := ConfMap{
+		"name": models.DefaultBlueprintRepositoryName,
+		"type": models.DefaultBlueprintRepositoryProvider,
+		"url":  models.DefaultBlueprintRepositoryUrl,
+	}
+	blueprintConfData := ConfData{models.DefaultBlueprintRepositoryName, []ConfMap{defaultBlueprintRepo}}
 
 	// using MapSlice to maintain order of keys
 	slices := yaml.MapSlice{

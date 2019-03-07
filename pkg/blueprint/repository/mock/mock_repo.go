@@ -2,6 +2,7 @@ package mock
 
 import (
 	"fmt"
+
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
@@ -9,18 +10,18 @@ import (
 // Mock Blueprint Repository Provider implementation
 // only suitable for test usage as mock provider
 type MockBlueprintRepository struct {
-	Name    string
-	Owner   string
-	Branch  string
+	Name   string
+	Owner  string
+	Branch string
 }
 
-func NewMockBlueprintRepository(confMap map[interface{}]interface{}) (*MockBlueprintRepository, error) {
+func NewMockBlueprintRepository(confMap map[string]string) (*MockBlueprintRepository, error) {
 	repo := new(MockBlueprintRepository)
-	repo.Name = confMap["name"].(string)
+	repo.Name = confMap["name"]
 
 	// parse branch name, or set it to default
-	if util.MapContainsKey(confMap, "branch") {
-		repo.Branch = confMap["branch"].(string)
+	if util.MapContainsKeyWithVal(confMap, "branch") {
+		repo.Branch = confMap["branch"]
 	} else {
 		repo.Branch = "master"
 	}
@@ -60,7 +61,7 @@ func (repo *MockBlueprintRepository) ListBlueprintsFromRepo() (map[string]*model
 		Path: "xl/test",
 		DefinitionFile: models.RemoteFile{
 			Filename: "blueprint.yaml",
-			Path: "xl/test/blueprint.yaml",
+			Path:     "xl/test/blueprint.yaml",
 		},
 		Files: []models.RemoteFile{
 			{Filename: "test.yaml.tmpl", Path: "xl/test/test.yaml.tmpl"},

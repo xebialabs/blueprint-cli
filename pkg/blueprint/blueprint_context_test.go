@@ -5,87 +5,172 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
+	"reflect"
 	"testing"
 
+	"github.com/jarcoal/httpmock"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
-var DefaultBlueprintContext = &BlueprintContext{
-	/*Provider: models.ProviderMock,
-	Name:     "blueprints",
-	Owner:    "xebialabs",
-	Branch:   "test",*/
+var defaultContextYaml = `
+blueprint-repository:
+  current-repository: XL Http
+  repositories:
+  - name: XL Http
+    type: http
+    url: http://mock.repo.server.com/
+  - name: XL Github
+    type: github
+    owner: xebialabs
+    repo-name: blueprints
+    branch: master`
+
+func GetViperConf(t *testing.T, yaml string) *viper.Viper {
+	configdir, err := ioutil.TempDir("", "xebialabsconfig")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(configdir)
+	configfile := filepath.Join(configdir, "config.yaml")
+	originalConfigBytes := []byte(yaml)
+	ioutil.WriteFile(configfile, originalConfigBytes, 0755)
+
+	v := viper.New()
+	v.SetConfigFile(configfile)
+	v.ReadInConfig()
+	return v
 }
 
-// TODO
-/*func TestBlueprintContextBuilder(t *testing.T) {
-	t.Run("build simple context for Blueprint repository", func(t *testing.T) {
-		v := viper.New()
-		v.Set(ViperKeyBlueprintRepositoryProvider, models.ProviderGitHub)
-		v.Set(ViperKeyBlueprintRepositoryName, "blueprints")
+func getDefaultBlueprintContext(t *testing.T) *BlueprintContext {
+	v := GetViperConf(t, defaultContextYaml)
+	c, err := ConstructBlueprintContext(v)
+	if err != nil {
+		t.Error(err)
+	}
+	const mockEndpoint = "http://mock.repo.server.com/"
+	httpmock.Activate()
+	httpmock.RegisterResponder(
+		"GET",
+		mockEndpoint+"index.json",
+		httpmock.NewStringResponder(200, `["aws/monolith", "aws/datalake"]`),
+	)
 
+	yaml := `
+      apiVersion: xl/v1
+      kind: Blueprint
+      metadata:
+        projectName: Test Project
+
+      parameters:
+      - name: Test
+        type: Input
+        value: testing
+
+      files:
+      - path: xld-environment.yml.tmpl
+      - path: xld-infrastructure.yml.tmpl
+      - path: xlr-pipeline.yml`
+
+	httpmock.RegisterResponder(
+		"GET",
+		mockEndpoint+"aws/monolith/blueprint.yaml",
+		httpmock.NewStringResponder(200, yaml),
+	)
+	httpmock.RegisterResponder(
+		"GET",
+		mockEndpoint+"aws/datalake/blueprint.yaml",
+		httpmock.NewStringResponder(200, `sample test text
+with a new line`),
+	)
+	httpmock.RegisterResponder(
+		"GET",
+		mockEndpoint+"aws/monolith/test.yaml",
+		httpmock.NewStringResponder(200, `sample test text
+with a new line`),
+	)
+
+	return c
+}
+
+func TestConstructBlueprintContext(t *testing.T) {
+	defer httpmock.DeactivateAndReset()
+	t.Run("should error when current-repository is not set", func(t *testing.T) {
+		v := GetViperConf(t, defaultContextYaml)
+		v.Set(ViperKeyBlueprintCurrentRepository, "")
+		c, err := ConstructBlueprintContext(v)
+
+		assert.NotNil(t, err)
+		assert.Nil(t, c)
+	})
+	t.Run("should error when config is invalid", func(t *testing.T) {
+		v := GetViperConf(t, `
+        blueprint-repository:
+          current-repository: XL Http
+          repositories:
+          - name: true
+            type: 1`)
+		c, err := ConstructBlueprintContext(v)
+
+		assert.NotNil(t, err)
+		assert.Nil(t, c)
+	})
+	t.Run("should return error for invalid provider", func(t *testing.T) {
+		v := GetViperConf(t, `
+        blueprint-repository:
+          current-repository: XL Http
+          repositories:
+          - name: XL Http
+            type: https
+            url: https://dist.xebialabs.com/public/blueprints/`)
+		c, err := ConstructBlueprintContext(v)
+
+		assert.NotNil(t, err)
+		assert.Nil(t, c)
+	})
+	t.Run("should return error when there is no repo defined", func(t *testing.T) {
+		v := GetViperConf(t, `
+        blueprint-repository:
+          current-repository: XL Https
+          repositories:
+          - name: XL Http
+            type: https
+            url: https://dist.xebialabs.com/public/blueprints/`)
+		c, err := ConstructBlueprintContext(v)
+
+		assert.NotNil(t, err)
+		assert.Nil(t, c)
+	})
+	t.Run("build simple context for Blueprint repository with default current-repository", func(t *testing.T) {
+		v := GetViperConf(t, defaultContextYaml)
 		c, err := ConstructBlueprintContext(v)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
-		assert.Equal(t, models.ProviderGitHub, (*c.CurrentRepoContext).GetProvider())
-		assert.Equal(t, "blueprints", (*c.CurrentRepoContext).GetName())
+		repo := *c.ActiveRepo
+		assert.Equal(t, models.ProviderHttp, repo.GetProvider())
+		assert.Equal(t, "XL Http", repo.GetName())
 	})
-}*/
+	t.Run("build simple context for Blueprint repository with provided current-repository", func(t *testing.T) {
+		v := GetViperConf(t, defaultContextYaml)
+		v.Set(ViperKeyBlueprintCurrentRepository, "XL Github")
+		c, err := ConstructBlueprintContext(v)
 
-// remote provider tests
-/*func TestBlueprintContextFunctionsForRemote(t *testing.T) {
-	// error cases
-	t.Run("should return error when trying to init from an invalid blueprint context", func(t *testing.T) {
-		context := &BlueprintContext{
-			Provider: "false-provider",
-			Name:     "blueprints",
-			Owner:    "xebialabs",
-			Branch:   "master",
-			Token:    "",
-		}
-		err := (*context.ActiveRepo).Initialize()
-		require.NotNil(t, err)
-		assert.Equal(t, "no blueprint provider implementation found for false-provider", err.Error())
+		assert.Nil(t, err)
+		assert.NotNil(t, c)
+		repo := *c.ActiveRepo
+		assert.Equal(t, models.ProviderGitHub, repo.GetProvider())
+		assert.Equal(t, "XL Github", repo.GetName())
 	})
-
-	// mock success case
-	t.Run("should init repo client with mock remote blueprint provider", func(t *testing.T) {
-		blueprints, err := DefaultBlueprintContext.initRepoClient()
-		require.Nil(t, err)
-		require.NotNil(t, blueprints)
-		require.Len(t, blueprints, 1)
-
-		t.Run("should parse blueprint definition file", func(t *testing.T) {
-			blueprintDefinition, err := DefaultBlueprintContext.parseDefinitionFile(false, blueprints, "xl/test")
-			require.Nil(t, err)
-			require.NotNil(t, blueprintDefinition)
-			err = blueprintDefinition.validate()
-			require.Nil(t, err)
-			assert.Len(t, blueprintDefinition.Variables, 1)
-			assert.Len(t, blueprintDefinition.TemplateConfigs, 2)
-		})
-
-		t.Run("should get file contents", func(t *testing.T) {
-			contents, err := DefaultBlueprintContext.fetchFileContents(blueprints["xl/test"].Files[0].Path, false, false)
-			require.Nil(t, err)
-			require.NotNil(t, contents)
-			assert.NotEmptyf(t, string(*contents), "mock blueprint file content is empty")
-			assert.Equal(t, "template", string(*contents))
-		})
-
-		t.Run("should error on non-existing remote file path", func(t *testing.T) {
-			_, err := DefaultBlueprintContext.fetchFileContents("non-existing-path/file.yaml", false, true)
-			require.NotNil(t, err)
-			assert.Equal(t, "file non-existing-path/file.yaml.tmpl not found in mock repo", err.Error())
-		})
-	})
-}*/
+}
 
 // local provider tests
-func TestFetchTemplateFromPath(t *testing.T) {
+func TestBlueprintContext_fetchFileContents(t *testing.T) {
+	defer httpmock.DeactivateAndReset()
+
 	stream := fmt.Sprintf(`
 		apiVersion: %s
 		kind: Infrastructure
@@ -94,8 +179,8 @@ func TestFetchTemplateFromPath(t *testing.T) {
 		type: aws.Cloud
 		accesskey: {{.AccessKey}}
 		accessSecret: {{.AccessSecret}}
-		
-		---	
+
+		---
 		  `, models.XldApiVersion)
 
 	t.Run("should fetch a template from local path", func(t *testing.T) {
@@ -113,6 +198,28 @@ func TestFetchTemplateFromPath(t *testing.T) {
 		assert.Equal(t, stream, string(*out))
 	})
 
+	t.Run("should fetch a template from remote path", func(t *testing.T) {
+		repo := getDefaultBlueprintContext(t)
+		blueprints, err := repo.initCurrentRepoClient()
+		require.Nil(t, err)
+		require.NotNil(t, blueprints)
+		require.Len(t, blueprints, 2)
+
+		t.Run("should get file contents", func(t *testing.T) {
+			contents, err := repo.fetchFileContents("aws/monolith/test.yaml", false, false)
+			require.Nil(t, err)
+			require.NotNil(t, contents)
+			assert.NotEmptyf(t, string(*contents), "mock blueprint file content is empty")
+			assert.Equal(t, "sample test text\nwith a new line", string(*contents))
+		})
+
+		t.Run("should error on non-existing remote file path", func(t *testing.T) {
+			_, err := repo.fetchFileContents("non-existing-path/file.yaml", false, true)
+			require.NotNil(t, err)
+			assert.Equal(t, "Get http://mock.repo.server.com/non-existing-path/file.yaml.tmpl: no responder found", err.Error())
+		})
+	})
+
 	t.Run("should error on no file found", func(t *testing.T) {
 		blueprintContext := BlueprintContext{}
 		tmpPath := path.Join("aws", "monolith", "test.yaml.tmpl")
@@ -126,18 +233,18 @@ func TestFetchTemplateFromPath(t *testing.T) {
 	})
 }
 
-func TestGetBlueprintVariableConfig(t *testing.T) {
+func TestBlueprintContext_fetchLocalFile(t *testing.T) {
 	yaml := `
       apiVersion: xl/v1
       kind: Blueprint
       metadata:
         projectName: Test Project
-      
+
       parameters:
       - name: Test
         type: Input
         value: testing
-      
+
       files:
       - path: xld-environment.yml.tmpl
       - path: xld-infrastructure.yml.tmpl
@@ -189,7 +296,7 @@ func TestGetBlueprintVariableConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			blueprintContext := BlueprintContext{}
 			filePath := fmt.Sprintf("%s/%s", tt.args.templatePath, tt.args.blueprintFileName)
-			got, err := blueprintContext.fetchFileContents(filePath, true, false)
+			got, err := blueprintContext.fetchLocalFile(filePath)
 			if tt.wantErr == nil || err == nil {
 				assert.Equal(t, tt.wantErr, err)
 			} else {
@@ -245,4 +352,178 @@ func TestCreateTemplateConfigForSingleFile(t *testing.T) {
 		require.NotNil(t, err)
 		require.Nil(t, out)
 	})
+}
+
+func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
+	defer httpmock.DeactivateAndReset()
+	repo := getDefaultBlueprintContext(t)
+	blueprints, err := repo.initCurrentRepoClient()
+	require.Nil(t, err)
+	require.NotNil(t, blueprints)
+	require.Len(t, blueprints, 2)
+
+	yaml := `
+      apiVersion: xl/v1
+      kind: Blueprint
+      metadata:
+        projectName: Test Project
+
+      parameters:
+      - name: Test
+        type: Input
+        value: testing
+
+      files:
+      - path: xld-environment.yml.tmpl
+      - path: xld-infrastructure.yml.tmpl
+      - path: xlr-pipeline.yml`
+
+	tmpDir := path.Join("test", "blueprints")
+	os.MkdirAll(tmpDir, os.ModePerm)
+	defer os.RemoveAll("test")
+	d1 := []byte(yaml)
+	ioutil.WriteFile(path.Join(tmpDir, "blueprint.yaml"), d1, os.ModePerm)
+	ioutil.WriteFile(path.Join(tmpDir, "xld-environment.yml.tmpl"), d1, os.ModePerm)
+	ioutil.WriteFile(path.Join(tmpDir, "xld-infrastructure.yml.tmpl"), d1, os.ModePerm)
+	ioutil.WriteFile(path.Join(tmpDir, "xlr-pipeline.yml"), d1, os.ModePerm)
+
+	tests := []struct {
+		name             string
+		blueprintContext BlueprintContext
+		templatePath     string
+		want             []TemplateConfig
+		wantErr          bool
+	}{
+		{
+			"should error when non existing path is used",
+			*repo,
+			"aws/test",
+			nil,
+			true,
+		},
+		{
+			"should parse blueprint definition file",
+			*repo,
+			tmpDir,
+			[]TemplateConfig{
+				{File: "xld-environment.yml.tmpl", FullPath: "test/blueprints/xld-environment.yml.tmpl"},
+				{File: "xld-infrastructure.yml.tmpl", FullPath: "test/blueprints/xld-infrastructure.yml.tmpl"},
+				{File: "xlr-pipeline.yml", FullPath: "test/blueprints/xlr-pipeline.yml"},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			blueprintContext := tt.blueprintContext
+			got, err := blueprintContext.parseLocalDefinitionFile(tt.templatePath)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("BlueprintContext.parseLocalDefinitionFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != nil && !reflect.DeepEqual(got.TemplateConfigs, tt.want) {
+				t.Errorf("BlueprintContext.parseLocalDefinitionFile() = %v (length %d), want length %d", got, len(got.TemplateConfigs), tt.want)
+			}
+		})
+	}
+}
+
+func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
+	defer httpmock.DeactivateAndReset()
+	repo := getDefaultBlueprintContext(t)
+	blueprints, err := repo.initCurrentRepoClient()
+	require.Nil(t, err)
+	require.NotNil(t, blueprints)
+	require.Len(t, blueprints, 2)
+
+	type args struct {
+		blueprints   map[string]*models.BlueprintRemote
+		templatePath string
+	}
+	tests := []struct {
+		name             string
+		blueprintContext BlueprintContext
+		args             args
+		want             []TemplateConfig
+		wantErr          bool
+	}{
+		{
+			"should error if path doesnt exist",
+			*repo,
+			args{
+				blueprints,
+				"test",
+			},
+			nil,
+			true,
+		},
+		{
+			"should parse blueprint definition file",
+			*repo,
+			args{
+				blueprints,
+				"aws/monolith",
+			},
+			[]TemplateConfig{
+				{File: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
+				{File: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl"},
+				{File: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			blueprintContext := tt.blueprintContext
+			got, err := blueprintContext.parseRemoteDefinitionFile(tt.args.blueprints, tt.args.templatePath)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("BlueprintContext.parseRemoteDefinitionFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != nil && !reflect.DeepEqual(got.TemplateConfigs, tt.want) {
+				t.Errorf("BlueprintContext.parseLocalDefinitionFile() = %v (length %d), want length %d", got, len(got.TemplateConfigs), tt.want)
+			}
+		})
+	}
+}
+
+func TestBlueprintContext_initCurrentRepoClient(t *testing.T) {
+	defer httpmock.DeactivateAndReset()
+	t.Run("should init repo client with http blueprint provider", func(t *testing.T) {
+		repo := getDefaultBlueprintContext(t)
+		blueprints, err := repo.initCurrentRepoClient()
+		require.Nil(t, err)
+		require.NotNil(t, blueprints)
+		require.Len(t, blueprints, 2)
+	})
+}
+
+func TestBlueprintContext_parseRepositoryTree(t *testing.T) {
+	defer httpmock.DeactivateAndReset()
+	repo := getDefaultBlueprintContext(t)
+	(*repo.ActiveRepo).Initialize()
+	tests := []struct {
+		name    string
+		want    int
+		wantErr bool
+	}{
+		{
+			"should fetch 2 blueprints",
+			2,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			blueprintContext := repo
+			got, err := blueprintContext.parseRepositoryTree()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("BlueprintContext.parseRepositoryTree() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(len(got), tt.want) {
+				t.Errorf("BlueprintContext.parseRepositoryTree() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
