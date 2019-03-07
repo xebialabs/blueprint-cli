@@ -1,19 +1,19 @@
 package xl
 
 import (
-    "fmt"
-    "io/ioutil"
-    "net/http"
-    "net/http/httptest"
-    "os"
-    "path/filepath"
-    "testing"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"testing"
 
-    "github.com/spf13/viper"
-    "github.com/stretchr/testify/assert"
-    "github.com/xebialabs/xl-cli/pkg/models"
-    "github.com/xebialabs/xl-cli/pkg/util"
-    "github.com/xebialabs/yaml"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/yaml"
 )
 
 const blueprintDir = "xebialabs"
@@ -85,7 +85,7 @@ func TestFakeApplyFiles(t *testing.T) {
 	t.Run("should not change the file tag", func(t *testing.T) {
 
 		err := os.Mkdir(blueprintDir, os.ModePerm)
-        defer os.RemoveAll(blueprintDir)
+		defer os.RemoveAll(blueprintDir)
 		check(err)
 
 		xlvFile, err := os.Create(filepath.Join(blueprintDir, "prop1.xlvals"))

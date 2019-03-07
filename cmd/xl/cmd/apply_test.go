@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,24 +14,15 @@ import (
 )
 
 func GetMinimalViperConf(t *testing.T) *viper.Viper {
-	configdir, err := ioutil.TempDir("", "xebialabsconfig")
-	if err != nil {
-		t.Error(err)
-	}
-	defer os.RemoveAll(configdir)
-	configfile := filepath.Join(configdir, "config.yaml")
-	originalConfigBytes := []byte(`
-    blueprint-repository:
-      current-repository: XL Blueprints
-      repositories:
-      - name: XL Blueprints
-        type: http
-        url: https://dist.xebialabs.com/public/blueprints/`)
-	ioutil.WriteFile(configfile, originalConfigBytes, 0755)
-
-	v := viper.New()
-	v.SetConfigFile(configfile)
-	v.ReadInConfig()
+	v := viper.GetViper()
+	v.Set("blueprint-repository.current-repository", "XL Blueprints")
+	v.Set("blueprint-repository.repositories", []map[string]string{
+		{
+			"name": "XL Blueprints",
+			"type": "http",
+			"url":  "https://dist.xebialabs.com/public/blueprints/",
+		},
+	})
 	return v
 }
 
