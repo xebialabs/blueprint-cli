@@ -493,7 +493,7 @@ func (blueprintDoc *BlueprintYaml) validate() error {
 }
 
 // prepare template data by getting user input and calling named functions
-func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskOpt) (*PreparedData, error) {
+func (blueprintDoc *BlueprintYaml) prepareTemplateData(blueprintDefaultMode bool, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
 	data := NewPreparedData()
 	for i, variable := range blueprintDoc.Variables {
 		// process default field value
@@ -517,6 +517,11 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(surveyOpts ...survey.AskO
 			if skipQuestionOnCondition(&variable, variable.DependsOnFalse.Val, dependsOnFalseVal, data, defaultVal, true) {
 				continue
 			}
+		}
+
+		if blueprintDefaultMode {
+			variable.Value.Val = defaultVal.(string)
+			// variable.Value.Bool = defaultVal.(bool)
 		}
 
 		// skip user input if value field is present

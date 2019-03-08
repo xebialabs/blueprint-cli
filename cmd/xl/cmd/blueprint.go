@@ -31,7 +31,7 @@ var blueprintTemplate string
 
 // DoBlueprint creates blueprint templates
 func DoBlueprint(context *xl.Context) {
-	err := blueprint.InstantiateBlueprint(blueprintLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
+	err := blueprint.InstantiateBlueprint(blueprintLocalMode, false, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s\n", err)
 	}

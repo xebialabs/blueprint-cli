@@ -58,7 +58,7 @@ func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parame
 }
 
 // InstantiateBlueprint is entry point for the cli command
-func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprintContext *BlueprintContext, outputDir string, surveyOpts ...survey.AskOpt) error {
+func InstantiateBlueprint(blueprintLocalMode bool, blueprintDefaultMode bool, templatePath string, blueprintContext *BlueprintContext, outputDir string, surveyOpts ...survey.AskOpt) error {
 	var err error
 	var blueprints map[string]*models.BlueprintRemote
 
@@ -90,7 +90,7 @@ func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprin
 	util.Verbose("[dataPrep] Got blueprint metadata: %#v\n", blueprintDoc.Metadata)
 
 	// ask for user input
-	preparedData, err := blueprintDoc.prepareTemplateData(surveyOpts...)
+	preparedData, err := blueprintDoc.prepareTemplateData(blueprintDefaultMode, surveyOpts...)
 	if err != nil {
 		return err
 	}

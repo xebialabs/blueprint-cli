@@ -40,12 +40,12 @@ func runSeed() models.Command {
 	}
 }
 
-// InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, blueprintTemplate string) {
+// InvokeBlueprintAndSeed will invoke blueprint and sthen call XL Seed
+func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, upDefaultMode bool, blueprintTemplate string) {
 	// Skip Generate blueprint file
 	blueprint.SkipFinalPrompt = true
 	util.IsQuiet = true
-	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
+	err := blueprint.InstantiateBlueprint(upLocalMode, upDefaultMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s \n", err)
 	}
