@@ -23,23 +23,7 @@ var TestCmd = &cobra.Command{
 	Short: "Test command",
 }
 
-func GetMinimalViperConf(t *testing.T) *viper.Viper {
-	// 	configdir, err := ioutil.TempDir("", "xebialabsconfig")
-	// 	if err != nil {
-	// 		t.Error(err)
-	// 	}
-	// 	defer os.RemoveAll(configdir)
-	// 	configfile := filepath.Join(configdir, "config.yaml")
-	// 	originalConfigBytes := []byte(`blueprint-repository:
-	//   current-repository: XL Blueprints
-	//   repositories:
-	//   - name: XL Blueprints
-	//     type: http
-	//     url: https://dist.xebialabs.com/public/blueprints/
-	// `)
-	// 	ioutil.WriteFile(configfile, originalConfigBytes, 0755)
-
-	v := viper.GetViper()
+func GetMinimalViperConf(t *testing.T, v *viper.Viper) *viper.Viper {
 	v.Set("blueprint-repository.current-repository", "XL Blueprints")
 	v.Set("blueprint-repository.repositories", []map[string]string{
 		{
@@ -55,7 +39,7 @@ func TestContextBuilder(t *testing.T) {
 	util.IsVerbose = true
 
 	t.Run("build simple context for XL Deploy", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.New())
 		v.Set(models.ViperKeyXLDUrl, "http://testxld:6154")
 		v.Set(models.ViperKeyXLDUsername, "deployer")
 		v.Set(models.ViperKeyXLDPassword, "d3ploy1t")
@@ -73,7 +57,7 @@ func TestContextBuilder(t *testing.T) {
 	})
 
 	t.Run("build simple context for XL Release", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.New())
 		v.Set(models.ViperKeyXLRUrl, "http://masterxlr:6155")
 		v.Set(models.ViperKeyXLRUsername, "releaser")
 		v.Set(models.ViperKeyXLRPassword, "r3l34s3")
@@ -91,7 +75,7 @@ func TestContextBuilder(t *testing.T) {
 	})
 
 	t.Run("build full context for XL Deploy and XL Release and Blueprint repository", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.New())
 		v.Set(models.ViperKeyXLDUrl, "http://testxld:6154")
 		v.Set(models.ViperKeyXLDUsername, "deployer")
 		v.Set(models.ViperKeyXLDPassword, "d3ploy1t")
@@ -126,7 +110,7 @@ func TestContextBuilder(t *testing.T) {
 	})
 
 	t.Run("build context without values", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.New())
 
 		c, err := BuildContext(v, nil, []string{})
 
@@ -337,7 +321,7 @@ blueprint-repository:
 	})
 
 	t.Run("validate that names of values are correct", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.New())
 
 		values := make(map[string]string)
 		values["!incorrectKey"] = "test value"
@@ -349,7 +333,7 @@ blueprint-repository:
 	})
 
 	t.Run("Should read values into context", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.New())
 
 		propfile1 := writePropFile("file1", `
 test=test
@@ -367,7 +351,7 @@ test2=test2
 	})
 
 	t.Run("Should read case sensitive values", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.New())
 
 		propfile1 := writePropFile("file1", `
 test=test1
@@ -387,7 +371,7 @@ Test=test3
 	})
 
 	t.Run("Should override values from value files in right order (only value files)", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.New())
 
 		propfile1 := writePropFile("file1", `
 test=test
@@ -414,7 +398,7 @@ test2=override2
 	})
 
 	t.Run("Should command line parameter value should override value files", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.New())
 
 		propfile1 := writePropFile("file1", `
 test=test
@@ -439,7 +423,7 @@ verifythisfilegetsread=ok
 	})
 
 	t.Run("Environment variables should override value files", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.New())
 
 		propfile1 := writePropFile("file1", `
 test=test
@@ -462,25 +446,23 @@ verifythisfilegetsread=ok
 		assert.Equal(t, "ok", context.values["verifythisfilegetsread"])
 	})
 
-	// TODO
-	/*t.Run("Should get default flag value for server values when there's no override", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
-		cfgFile := v.ConfigFileUsed()
+	t.Run("Should get default flag value for server values when there's no override", func(t *testing.T) {
+		v := GetMinimalViperConf(t, viper.GetViper())
+		cfgFile := ""
 		PrepareRootCmdFlags(TestCmd, &cfgFile)
 		context, err2 := BuildContext(v, nil, []string{})
 		assert.Nil(t, err2)
 
-		t.Log(fmt.Sprintf("=====> %+v\n", context))
 		assert.Equal(t, "http://localhost:4516/", context.values["XL_DEPLOY_URL"])
 		assert.Equal(t, "admin", context.values["XL_DEPLOY_USERNAME"])
 		assert.Equal(t, "admin", context.values["XL_DEPLOY_PASSWORD"])
 		assert.Equal(t, "http://localhost:5516/", context.values["XL_RELEASE_URL"])
 		assert.Equal(t, "admin", context.values["XL_RELEASE_USERNAME"])
 		assert.Equal(t, "admin", context.values["XL_RELEASE_PASSWORD"])
-	})*/
+	})
 
 	t.Run("Should override defaults from viper", func(t *testing.T) {
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.New())
 
 		v.Set("xl-deploy.url", "http://testxld:6154")
 		v.Set("xl-deploy.username", "deployer")

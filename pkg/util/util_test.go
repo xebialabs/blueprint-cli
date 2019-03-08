@@ -50,5 +50,50 @@ func TestPathExists(t *testing.T) {
 }
 
 func TestMapContainsKeyWithVal(t *testing.T) {
-    // TODO: implement
+	type args struct {
+		dict map[string]string
+		key  string
+	}
+	testMap := map[string]string{
+		"foo": "foo",
+		"bat": "bar",
+		"bar": "",
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			"should return false when map doesn't have key",
+			args{
+				testMap,
+				"foooo",
+			},
+			false,
+		},
+		{
+			"should return false when map doesn't have value for key",
+			args{
+				testMap,
+				"bar",
+			},
+			false,
+		},
+		{
+			"should return true when map has value for key",
+			args{
+				testMap,
+				"foo",
+			},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := MapContainsKeyWithVal(tt.args.dict, tt.args.key); got != tt.want {
+				t.Errorf("MapContainsKeyWithVal() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

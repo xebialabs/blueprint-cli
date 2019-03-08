@@ -110,7 +110,7 @@ spec:
 - name: App1
 `, XlrApiVersion, XldApiVersion))
 
-		v := GetMinimalViperConf(t)
+		v := GetMinimalViperConf(t, viper.GetViper())
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 
