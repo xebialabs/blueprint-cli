@@ -176,6 +176,15 @@ func Test_processCustomExpression(t *testing.T) {
 			float64(3),
 			false,
 		},
+		{
+			"should return a random password when expression is evaluated",
+			args{
+				"strlen(randPassword())",
+				map[string]interface{}{},
+			},
+			float64(16),
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
