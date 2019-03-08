@@ -138,7 +138,7 @@ func writeDefaultConfigurationFile() error {
 			{"url", models.DefaultXlReleaseUrl},
 			{"authmethod", models.DefaultXlReleaseAuthMethod},
 		}},
-		{"blueprint-repository", blueprintConfData},
+		{"blueprint", blueprintConfData},
 	}
 
 	d, err := yaml.Marshal(&slices)

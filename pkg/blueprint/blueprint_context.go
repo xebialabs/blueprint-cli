@@ -24,7 +24,7 @@ import (
 
 const (
 	// ContextPrefix - this is the key used in config
-	ContextPrefix     = "blueprint-repository"
+	ContextPrefix     = "blueprint"
 	templateExtension = ".tmpl"
 
 	FlagBlueprintCurrentRepository     = ContextPrefix + "-current-repository"

@@ -15,8 +15,8 @@ import (
 
 func GetMinimalViperConf(t *testing.T) *viper.Viper {
 	v := viper.GetViper()
-	v.Set("blueprint-repository.current-repository", "XL Blueprints")
-	v.Set("blueprint-repository.repositories", []map[string]string{
+	v.Set("blueprint.current-repository", "XL Blueprints")
+	v.Set("blueprint.repositories", []map[string]string{
 		{
 			"name": "XL Blueprints",
 			"type": "http",

@@ -24,8 +24,8 @@ var TestCmd = &cobra.Command{
 }
 
 func GetMinimalViperConf(t *testing.T, v *viper.Viper) *viper.Viper {
-	v.Set("blueprint-repository.current-repository", "XL Blueprints")
-	v.Set("blueprint-repository.repositories", []map[string]string{
+	v.Set("blueprint.current-repository", "XL Blueprints")
+	v.Set("blueprint.repositories", []map[string]string{
 		{
 			"name": "XL Blueprints",
 			"type": "http",
@@ -125,7 +125,7 @@ func TestContextBuilder(t *testing.T) {
   username: admin
   password: 3dm1n
   authmethod: http
-blueprint-repository:
+blueprint:
   current-repository: XL Blueprints
   repositories:
   - name: XL Blueprints
@@ -159,7 +159,7 @@ blueprint-repository:
   username: testuser
   password: t3stus3r
   authmethod: http
-blueprint-repository:
+blueprint:
   current-repository: XL Blueprints
   repositories:
   - name: XL Blueprints
@@ -202,7 +202,7 @@ blueprint-repository:
   username: testuser
   password: t3st
   authmethod: http
-blueprint-repository:
+blueprint:
   current-repository: XL Blueprints
   repositories:
   - name: XL Blueprints

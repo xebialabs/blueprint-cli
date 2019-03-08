@@ -17,7 +17,7 @@ import (
 )
 
 var defaultContextYaml = `
-blueprint-repository:
+blueprint:
   current-repository: XL Http
   repositories:
   - name: XL Http
@@ -108,7 +108,7 @@ func TestConstructBlueprintContext(t *testing.T) {
 	})
 	t.Run("should error when config is invalid", func(t *testing.T) {
 		v := GetViperConf(t, `
-        blueprint-repository:
+        blueprint:
           current-repository: XL Http
           repositories:
           - name: true
@@ -120,7 +120,7 @@ func TestConstructBlueprintContext(t *testing.T) {
 	})
 	t.Run("should return error for invalid provider", func(t *testing.T) {
 		v := GetViperConf(t, `
-        blueprint-repository:
+        blueprint:
           current-repository: XL Http
           repositories:
           - name: XL Http
@@ -133,7 +133,7 @@ func TestConstructBlueprintContext(t *testing.T) {
 	})
 	t.Run("should return error when there is no repo defined", func(t *testing.T) {
 		v := GetViperConf(t, `
-        blueprint-repository:
+        blueprint:
           current-repository: XL Https
           repositories:
           - name: XL Http
