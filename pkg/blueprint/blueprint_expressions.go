@@ -32,6 +32,10 @@ var functions = map[string]govaluate.ExpressionFunction{
 		round := math.Round(args[0].(float64))
 		return round, nil
 	},
+	"randPassword": func(args ...interface{}) (interface{}, error) {
+		pass := util.GeneratePassword(16)
+		return pass, nil
+	},
 }
 
 // ProcessCustomExpression evaluates the expressions passed in the blueprint.yaml file using https://github.com/Knetic/govaluate

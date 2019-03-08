@@ -127,6 +127,7 @@ You can use the provided functions in an expression
 | **ceil** | Variable or number(float64) | - `!expression "ceil(5.8) > 5"`<br>- `!expression "ceil(FooVariable) > 5"` | Ceil the given number to nearest whole number |
 | **floor** | Variable or number(float64) | - `!expression "floor(5.8) > 5"`<br>- `!expression "floor(FooVariable) > 5"` | Floor the given number to nearest whole number |
 | **round** | Variable or number(float64) | - `!expression "round(5.8) > 5"`<br>- `!expression "round(FooVariable) > 5"` | Round the given number to nearest whole number |
+| **randPassword** | String | - `!expression "randPassword()"`| Generates a 16-character random password |
 
 
 
