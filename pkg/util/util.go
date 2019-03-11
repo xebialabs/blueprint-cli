@@ -44,7 +44,7 @@ func AbsoluteFileDir(fileName string) string {
 	return filepath.FromSlash(path.Dir(filepath.ToSlash(fileName)))
 }
 
-// PathExists checks if the given relative path exists and has persmission to access it
+// PathExists checks if the given relative path exists and has permission to access it
 func PathExists(filename string, mustBeDir bool) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) || os.IsPermission(err) {
