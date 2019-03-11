@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/yaml"
@@ -110,7 +111,7 @@ spec:
 - name: App1
 `, XlrApiVersion, XldApiVersion))
 
-		v := GetMinimalViperConf(t, viper.GetViper())
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.GetViper())
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 

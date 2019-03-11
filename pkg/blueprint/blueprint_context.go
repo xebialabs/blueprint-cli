@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/xebialabs/yaml"
+
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
@@ -24,8 +26,9 @@ import (
 
 const (
 	// ContextPrefix - this is the key used in config
-	ContextPrefix     = "blueprint"
-	templateExtension = ".tmpl"
+	ContextPrefix       = "blueprint"
+	RepositoryConfigKey = ContextPrefix + ".repositories"
+	templateExtension   = ".tmpl"
 
 	FlagBlueprintCurrentRepository     = ContextPrefix + "-current-repository"
 	ViperKeyBlueprintCurrentRepository = ContextPrefix + ".current-repository"
@@ -45,23 +48,77 @@ type BlueprintContext struct {
 	DefinedRepos []*repository.BlueprintRepository
 }
 
+// using custom ConfMap to have list of configuration items
+type ConfMap map[string]string
+type ConfData struct {
+	CurrentRepo  string    `yaml:"current-repository"`
+	Repositories []ConfMap `yaml:"repositories"`
+}
+
+var defaultBlueprintRepo = ConfMap{
+	"name": models.DefaultBlueprintRepositoryName,
+	"type": models.DefaultBlueprintRepositoryProvider,
+	"url":  models.DefaultBlueprintRepositoryUrl,
+}
+
+func GetDefaultBlueprintConfData() ConfData {
+	return ConfData{models.DefaultBlueprintRepositoryName, []ConfMap{defaultBlueprintRepo}}
+}
+
+func GetDefaultBlueprintViperConfig(v *viper.Viper) *viper.Viper {
+	v.Set(ViperKeyBlueprintCurrentRepository, models.DefaultBlueprintRepositoryName)
+
+	repositories := make([]ConfMap, 0)
+	err := v.UnmarshalKey(RepositoryConfigKey, &repositories)
+	if err != nil || repositories == nil || len(repositories) == 0 {
+		repositories = []ConfMap{defaultBlueprintRepo}
+	} else {
+		if !doesDefaultExist(repositories) {
+			repositories = append(repositories, defaultBlueprintRepo)
+		}
+	}
+	v.Set(RepositoryConfigKey, repositories)
+	return v
+}
+
+func CreateOrUpdateBlueprintConfig(v *viper.Viper, configPath string) (*viper.Viper, error) {
+	v = GetDefaultBlueprintViperConfig(v)
+
+	c := util.SortMapStringInterface(v.AllSettings())
+	yamlBytes, err := yaml.Marshal(c)
+	if err != nil {
+		return v, err
+	}
+	err = ioutil.WriteFile(configPath, yamlBytes, 0640)
+	if err != nil {
+		return v, err
+	}
+	return v, nil
+}
+
 func SetRootFlags(rootFlags *pflag.FlagSet) {
 	rootFlags.String(FlagBlueprintCurrentRepository, "", "Current active blueprint repository name")
 
 	viper.BindPFlag(ViperKeyBlueprintCurrentRepository, rootFlags.Lookup(FlagBlueprintCurrentRepository))
 }
 
-func ConstructBlueprintContext(v *viper.Viper) (*BlueprintContext, error) {
-	activeRepoName := strings.ToLower(v.GetString(fmt.Sprintf("%s.current-repository", ContextPrefix)))
+func ConstructBlueprintContext(v *viper.Viper, configPath string) (*BlueprintContext, error) {
+	activeRepoName := v.GetString(ViperKeyBlueprintCurrentRepository)
 	if activeRepoName == "" {
-		return nil, fmt.Errorf("current active repository name cannot be empty")
+		util.Verbose("Updating CLI config %s with blueprint configuration", configPath)
+		var err error
+		v, err = CreateOrUpdateBlueprintConfig(v, configPath)
+		if err != nil {
+			util.Info("Failed to update default configuration for blueprint. Please update ~/.xebialabs/config.yaml manually.")
+		}
+		activeRepoName = models.DefaultBlueprintRepositoryName
 	}
 
 	var currentRepo *repository.BlueprintRepository
 	var definedRepos []*repository.BlueprintRepository
 
-	repoDefinitions := make([]map[string]string, 1, 1)
-	err := v.UnmarshalKey(fmt.Sprintf("%s.repositories", ContextPrefix), &repoDefinitions)
+	repoDefinitions := make([]ConfMap, 1, 1)
+	err := v.UnmarshalKey(RepositoryConfigKey, &repoDefinitions)
 	if err != nil {
 		return nil, fmt.Errorf("bad format in blueprint context: blueprint repositories should be a non-empty YAML list")
 	}
@@ -96,7 +153,7 @@ func ConstructBlueprintContext(v *viper.Viper) (*BlueprintContext, error) {
 		definedRepos = append(definedRepos, &repo)
 
 		// Set current repo if name is matching
-		if strings.ToLower(repo.GetName()) == activeRepoName {
+		if strings.ToLower(repo.GetName()) == strings.ToLower(activeRepoName) {
 			currentRepo = &repo
 		}
 	}
@@ -290,4 +347,19 @@ func createTemplateConfigForSingleFile(blueprintTemplate string) ([]TemplateConf
 		return templateConfigs, nil
 	}
 	return nil, fmt.Errorf("unknown template specified for Blueprint : %s", blueprintTemplate)
+}
+
+func doesDefaultExist(repositories []ConfMap) bool {
+	for _, repo := range repositories {
+		if repo["name"] == models.DefaultBlueprintRepositoryName {
+			if repo["type"] == "" {
+				repo["type"] = models.DefaultBlueprintRepositoryProvider
+			}
+			if repo["url"] == "" {
+				repo["url"] = models.DefaultBlueprintRepositoryUrl
+			}
+			return true
+		}
+	}
+	return false
 }

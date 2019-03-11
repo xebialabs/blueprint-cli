@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -14,6 +15,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/yaml"
 )
 
 var defaultContextYaml = `
@@ -46,8 +49,10 @@ func GetViperConf(t *testing.T, yaml string) *viper.Viper {
 }
 
 func getDefaultBlueprintContext(t *testing.T) *BlueprintContext {
+	configdir, _ := ioutil.TempDir("", "xebialabsconfig")
+
 	v := GetViperConf(t, defaultContextYaml)
-	c, err := ConstructBlueprintContext(v)
+	c, err := ConstructBlueprintContext(v, configdir)
 	if err != nil {
 		t.Error(err)
 	}
@@ -97,15 +102,10 @@ with a new line`),
 }
 
 func TestConstructBlueprintContext(t *testing.T) {
+	configDir, _ := ioutil.TempDir("", "xebialabsconfig")
+	defer os.RemoveAll(configDir)
+	configFile := path.Join(configDir, "config.yaml")
 	defer httpmock.DeactivateAndReset()
-	t.Run("should error when current-repository is not set", func(t *testing.T) {
-		v := GetViperConf(t, defaultContextYaml)
-		v.Set(ViperKeyBlueprintCurrentRepository, "")
-		c, err := ConstructBlueprintContext(v)
-
-		assert.NotNil(t, err)
-		assert.Nil(t, c)
-	})
 	t.Run("should error when config is invalid", func(t *testing.T) {
 		v := GetViperConf(t, `
         blueprint:
@@ -113,10 +113,10 @@ func TestConstructBlueprintContext(t *testing.T) {
           repositories:
           - name: true
             type: 1`)
-		c, err := ConstructBlueprintContext(v)
+		c, err := ConstructBlueprintContext(v, configFile)
 
-		assert.NotNil(t, err)
-		assert.Nil(t, c)
+		require.NotNil(t, err)
+		require.Nil(t, c)
 	})
 	t.Run("should return error for invalid provider", func(t *testing.T) {
 		v := GetViperConf(t, `
@@ -126,10 +126,10 @@ func TestConstructBlueprintContext(t *testing.T) {
           - name: XL Http
             type: https
             url: https://dist.xebialabs.com/public/blueprints/`)
-		c, err := ConstructBlueprintContext(v)
+		c, err := ConstructBlueprintContext(v, configFile)
 
-		assert.NotNil(t, err)
-		assert.Nil(t, c)
+		require.NotNil(t, err)
+		require.Nil(t, c)
 	})
 	t.Run("should return error when there is no repo defined", func(t *testing.T) {
 		v := GetViperConf(t, `
@@ -139,17 +139,30 @@ func TestConstructBlueprintContext(t *testing.T) {
           - name: XL Http
             type: https
             url: https://dist.xebialabs.com/public/blueprints/`)
-		c, err := ConstructBlueprintContext(v)
+		c, err := ConstructBlueprintContext(v, configFile)
 
-		assert.NotNil(t, err)
-		assert.Nil(t, c)
+		require.NotNil(t, err)
+		require.Nil(t, c)
+	})
+	t.Run("should add default config when current-repository is not set", func(t *testing.T) {
+		v := GetViperConf(t, defaultContextYaml)
+		v.Set(ViperKeyBlueprintCurrentRepository, "")
+		c, err := ConstructBlueprintContext(v, configFile)
+
+		require.Nil(t, err)
+		require.NotNil(t, c)
+		repo := *c.ActiveRepo
+
+		assert.Equal(t, 3, len(c.DefinedRepos))
+		assert.Equal(t, models.DefaultBlueprintRepositoryProvider, repo.GetProvider())
+		assert.Equal(t, models.DefaultBlueprintRepositoryName, repo.GetName())
 	})
 	t.Run("build simple context for Blueprint repository with default current-repository", func(t *testing.T) {
 		v := GetViperConf(t, defaultContextYaml)
-		c, err := ConstructBlueprintContext(v)
+		c, err := ConstructBlueprintContext(v, configFile)
 
-		assert.Nil(t, err)
-		assert.NotNil(t, c)
+		require.Nil(t, err)
+		require.NotNil(t, c)
 		repo := *c.ActiveRepo
 		assert.Equal(t, models.ProviderHttp, repo.GetProvider())
 		assert.Equal(t, "XL Http", repo.GetName())
@@ -157,10 +170,10 @@ func TestConstructBlueprintContext(t *testing.T) {
 	t.Run("build simple context for Blueprint repository with provided current-repository", func(t *testing.T) {
 		v := GetViperConf(t, defaultContextYaml)
 		v.Set(ViperKeyBlueprintCurrentRepository, "XL Github")
-		c, err := ConstructBlueprintContext(v)
+		c, err := ConstructBlueprintContext(v, configFile)
 
-		assert.Nil(t, err)
-		assert.NotNil(t, c)
+		require.Nil(t, err)
+		require.NotNil(t, c)
 		repo := *c.ActiveRepo
 		assert.Equal(t, models.ProviderGitHub, repo.GetProvider())
 		assert.Equal(t, "XL Github", repo.GetName())
@@ -523,6 +536,406 @@ func TestBlueprintContext_parseRepositoryTree(t *testing.T) {
 			}
 			if !reflect.DeepEqual(len(got), tt.want) {
 				t.Errorf("BlueprintContext.parseRepositoryTree() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetDefaultBlueprintViperConfig(t *testing.T) {
+	tests := []struct {
+		name  string
+		vYaml string
+		want  string
+	}{
+		{
+			"should return unchanged config when default repo exists",
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: http://mock.repo.server.com/
+  - name: XL Github
+    type: github
+    owner: xebialabs
+    repo-name: blueprints
+    branch: master`,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: http://mock.repo.server.com/
+  - name: XL Github
+    type: github
+    owner: xebialabs
+    repo-name: blueprints
+    branch: master`,
+		},
+		{
+			"should return with default config created when no repo exists",
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http`,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/`,
+		},
+		{
+			"should return with default config created when no config exists",
+			``,
+			`
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/`,
+		},
+		{
+			"should return with default config added when default repo doesn't exist in repositories",
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  repositories:
+  - name: XL Blueprints 2
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/`,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints 2
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/`,
+		},
+		{
+			"should return with updated default config when default repo is incomplete",
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: `,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := viper.New()
+			v.SetConfigType("yaml")
+			err := v.ReadConfig(bytes.NewBuffer([]byte(tt.vYaml)))
+			require.Nil(t, err)
+
+			got := GetDefaultBlueprintViperConfig(v)
+			c := util.SortMapStringInterface(got.AllSettings())
+			bs, err := yaml.Marshal(c)
+			bss := string(bs)
+			require.Nil(t, err)
+
+			v2 := viper.New()
+			v2.SetConfigType("yaml")
+			err = v2.ReadConfig(bytes.NewBuffer([]byte(tt.want)))
+			require.Nil(t, err)
+			v2setsSorted := util.SortMapStringInterface(v2.AllSettings())
+			bs1, err := yaml.Marshal(v2setsSorted)
+			require.Nil(t, err)
+			bs1s := string(bs1)
+
+			assert.Equal(t, bs1s, bss)
+
+		})
+	}
+}
+
+func TestCreateOrUpdateBlueprintConfig(t *testing.T) {
+	confPath, err := ioutil.TempDir("", "xebialabsconfig")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(confPath)
+	configfile := filepath.Join(confPath, "config.yaml")
+	originalConfigBytes := []byte("")
+	ioutil.WriteFile(configfile, originalConfigBytes, 0755)
+	tests := []struct {
+		name    string
+		v       string
+		want    string
+		wantErr bool
+	}{
+		{
+			"should return unchanged config when default repo exists",
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: http://mock.repo.server.com/
+  - name: XL Github
+    type: github
+    owner: xebialabs
+    repo-name: blueprints
+    branch: master`,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: http://mock.repo.server.com/
+  - name: XL Github
+    type: github
+    owner: xebialabs
+    repo-name: blueprints
+    branch: master`,
+			false,
+		},
+		{
+			"should return with default config added when default repo doesn't exist in repositories",
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  repositories:
+  - name: XL Blueprints 2
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/`,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints 2
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/`,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := viper.New()
+			v.SetConfigType("yaml")
+			err := v.ReadConfig(bytes.NewBuffer([]byte(tt.v)))
+			require.Nil(t, err)
+
+			got, err := CreateOrUpdateBlueprintConfig(v, configfile)
+			require.Nil(t, err)
+
+			c := util.SortMapStringInterface(got.AllSettings())
+			bs, err := yaml.Marshal(c)
+			bss := string(bs)
+			require.Nil(t, err)
+
+			v2 := viper.New()
+			v2.SetConfigType("yaml")
+			err = v2.ReadConfig(bytes.NewBuffer([]byte(tt.want)))
+			require.Nil(t, err)
+			v2setsSorted := util.SortMapStringInterface(v2.AllSettings())
+			bs1, err := yaml.Marshal(v2setsSorted)
+			require.Nil(t, err)
+			bs1s := string(bs1)
+
+			assert.Equal(t, bs1s, bss)
+
+			file, err := ioutil.ReadFile(configfile)
+			require.Nil(t, err)
+
+			assert.Equal(t, bs1s, string(file))
+		})
+	}
+}
+
+func Test_doesDefaultExist(t *testing.T) {
+	tests := []struct {
+		name         string
+		repositories []ConfMap
+		want         bool
+		checkIndex   int
+	}{
+		{
+			"should return false when repo doesn't exist",
+			[]ConfMap{},
+			false,
+			-1,
+		},
+		{
+			"should return true when repo exist",
+			[]ConfMap{
+				{
+					"name": "Bar",
+					"type": models.DefaultBlueprintRepositoryProvider,
+					"url":  "",
+				},
+				defaultBlueprintRepo,
+			},
+			true,
+			1,
+		},
+		{
+			"should return true when repo exist with default url when its nil",
+			[]ConfMap{
+				{
+					"name": "Foo",
+					"type": models.DefaultBlueprintRepositoryProvider,
+					"url":  "",
+				},
+				{
+					"name": models.DefaultBlueprintRepositoryName,
+					"type": models.DefaultBlueprintRepositoryProvider,
+					"url":  "",
+				},
+				{
+					"name": "Bar",
+					"type": models.DefaultBlueprintRepositoryProvider,
+					"url":  "",
+				},
+			},
+			true,
+			1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := doesDefaultExist(tt.repositories)
+			if got != tt.want {
+				t.Errorf("doesDefaultExist() = %v, want %v", got, tt.want)
+			}
+			if tt.checkIndex > -1 {
+				assert.Equal(t, models.DefaultBlueprintRepositoryUrl, tt.repositories[tt.checkIndex]["url"])
+				assert.Equal(t, models.DefaultBlueprintRepositoryProvider, tt.repositories[tt.checkIndex]["type"])
 			}
 		})
 	}

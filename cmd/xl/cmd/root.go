@@ -5,12 +5,11 @@ import (
 	"strings"
 
 	"io/ioutil"
-	"path"
 	"path/filepath"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
@@ -60,7 +59,7 @@ func initConfig() {
 	} else if envCfgFile := os.Getenv("XL_CONFIG"); envCfgFile != "" {
 		viper.SetConfigFile(envCfgFile)
 	} else {
-		configfilePath, err := defaultConfigfilePath()
+		configfilePath, err := util.DefaultConfigfilePath()
 		if err != nil {
 			util.Fatal("Could not get config file location:\n%s", err)
 		} else {
@@ -100,7 +99,7 @@ func initConfig() {
 }
 
 func writeDefaultConfigurationFile() error {
-	configFileUsed, err := defaultConfigfilePath()
+	configFileUsed, err := util.DefaultConfigfilePath()
 	if err != nil {
 		return err
 	}
@@ -111,18 +110,7 @@ func writeDefaultConfigurationFile() error {
 
 	util.Verbose("Writing default configuration to %s\n", configFileUsed)
 
-	// using custom ConfMap to have list of configuration items
-	type ConfMap map[string]string
-	type ConfData struct {
-		CurrentRepo  string    `yaml:"current-repository"`
-		Repositories []ConfMap `yaml:"repositories"`
-	}
-	defaultBlueprintRepo := ConfMap{
-		"name": models.DefaultBlueprintRepositoryName,
-		"type": models.DefaultBlueprintRepositoryProvider,
-		"url":  models.DefaultBlueprintRepositoryUrl,
-	}
-	blueprintConfData := ConfData{models.DefaultBlueprintRepositoryName, []ConfMap{defaultBlueprintRepo}}
+	blueprintConfData := blueprint.GetDefaultBlueprintConfData()
 
 	// using MapSlice to maintain order of keys
 	slices := yaml.MapSlice{
@@ -151,13 +139,4 @@ func writeDefaultConfigurationFile() error {
 	} else {
 		return nil
 	}
-}
-
-func defaultConfigfilePath() (string, error) {
-	home, err := homedir.Dir()
-	if err != nil {
-		return "", err
-	}
-	xebialabsFolder := path.Join(home, ".xebialabs", "config.yaml")
-	return xebialabsFolder, nil
 }

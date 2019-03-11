@@ -97,3 +97,45 @@ func TestMapContainsKeyWithVal(t *testing.T) {
 		})
 	}
 }
+
+func TestSortMapStringInterface(t *testing.T) {
+	tests := []struct {
+		name string
+		m    map[string]interface{}
+		want map[string]interface{}
+	}{
+		{
+			"should sort the provided map",
+			map[string]interface{}{
+				"foo": "hello",
+				"bar": map[string]interface{}{
+					"foo": "hello",
+					"xoo": map[string]interface{}{
+						"foo": "hello",
+						"bar": "bar",
+					},
+					"bar": "bar",
+				},
+				"aa": 1,
+			},
+			map[string]interface{}{
+				"aa": 1,
+				"bar": map[string]interface{}{
+					"bar": "bar",
+					"foo": "hello",
+					"xoo": map[string]interface{}{
+						"bar": "bar",
+						"foo": "hello",
+					},
+				},
+				"foo": "hello",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := SortMapStringInterface(tt.m)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

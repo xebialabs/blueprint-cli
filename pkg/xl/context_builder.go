@@ -71,8 +71,12 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles 
 		xlRelease = &XLReleaseServer{Server: xlrServerConfig}
 		xlRelease.Home = v.GetString("xl-release.home")
 	}
+	configPath, err := util.DefaultConfigfilePath()
+	if err != nil {
+		return nil, err
+	}
 
-	blueprintContext, err = blueprint.ConstructBlueprintContext(v)
+	blueprintContext, err = blueprint.ConstructBlueprintContext(v, configPath)
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 
+	"github.com/mitchellh/go-homedir"
 	funk "github.com/thoas/go-funk"
 )
 
@@ -102,4 +104,31 @@ func MapContainsKeyWithVal(dict map[string]string, key string) bool {
 		return false
 	}
 	return val != ""
+}
+
+func DefaultConfigfilePath() (string, error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return "", err
+	}
+	xebialabsFolder := path.Join(home, ".xebialabs", "config.yaml")
+	return xebialabsFolder, nil
+}
+
+func SortMapStringInterface(m map[string]interface{}) map[string]interface{} {
+	var keys []string
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	sorted := make(map[string]interface{})
+	for _, k := range keys {
+		switch v := m[k].(type) {
+		case map[string]interface{}:
+			sorted[k] = SortMapStringInterface(v)
+		default:
+			sorted[k] = v
+		}
+	}
+	return sorted
 }
