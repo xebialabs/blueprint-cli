@@ -1,6 +1,6 @@
 # XL CLI
 
-Project for XL DevOps as Code command line interface.
+Project for XL DevOps as Code command line interface. 
 
 ## Environment
 
