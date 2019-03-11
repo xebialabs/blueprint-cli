@@ -45,6 +45,14 @@ func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, blueprintTemplat
 	// Skip Generate blueprint file
 	blueprint.SkipFinalPrompt = true
 	util.IsQuiet = true
+
+
+	if !upLocalMode {
+        blueprintTemplate = "xl-up"
+        context.BlueprintContext.Name = "xl-up-blueprint"
+        context.BlueprintContext.Owner = "xebialabs"
+	}
+
 	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s \n", err)
