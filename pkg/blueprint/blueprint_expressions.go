@@ -1,10 +1,9 @@
 package blueprint
 
 import (
-	"math"
-
-	"github.com/Knetic/govaluate"
-	"github.com/xebialabs/xl-cli/pkg/util"
+    "github.com/Knetic/govaluate"
+    "github.com/xebialabs/xl-cli/pkg/util"
+    "math"
 )
 
 var functions = map[string]govaluate.ExpressionFunction{
