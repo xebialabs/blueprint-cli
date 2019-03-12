@@ -104,13 +104,13 @@ func TestAdjustPathSeperatorIfNeeded(t *testing.T) {
 func TestInstantiateBlueprint(t *testing.T) {
 	SkipFinalPrompt = true
 	t.Run("should error on unknown template", func(t *testing.T) {
-		err := InstantiateBlueprint(true, "abc", DefaultBlueprintContext, "xebialabs")
+		err := InstantiateBlueprint(true, "abc", getDefaultBlueprintContext(t), "xebialabs")
 
 		require.NotNil(t, err)
 		assert.Equal(t, "template not found in path abc/blueprint.yml", err.Error())
 	})
 	t.Run("should error on invalid test template", func(t *testing.T) {
-		err := InstantiateBlueprint(true, GetTestTemplateDir("invalid"), DefaultBlueprintContext, "xebialabs")
+		err := InstantiateBlueprint(true, GetTestTemplateDir("invalid"), getDefaultBlueprintContext(t), "xebialabs")
 
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
@@ -121,7 +121,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		defer RemoveFiles("xlr-*.yml")
 		defer os.RemoveAll(outFolder)
 		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), DefaultBlueprintContext, outFolder)
+		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder)
 		require.Nil(t, err)
 
 		// assertions
@@ -159,7 +159,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		defer RemoveFiles("xlr-*.yml")
 		defer os.RemoveAll(outFolder)
 		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), DefaultBlueprintContext, outFolder)
+		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder)
 		require.Nil(t, err)
 
 		// assertions

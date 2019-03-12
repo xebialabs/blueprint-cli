@@ -6,7 +6,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 
+	"github.com/mitchellh/go-homedir"
 	funk "github.com/thoas/go-funk"
 )
 
@@ -42,7 +44,7 @@ func AbsoluteFileDir(fileName string) string {
 	return filepath.FromSlash(path.Dir(filepath.ToSlash(fileName)))
 }
 
-// PathExists checks if the given relative path exists and has persmission to access it
+// PathExists checks if the given relative path exists and has permission to access it
 func PathExists(filename string, mustBeDir bool) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) || os.IsPermission(err) {
@@ -93,4 +95,40 @@ func TransformToMap(spec interface{}) []map[interface{}]interface{} {
 	}
 
 	return convertedMap
+}
+
+// Checks if the map contains value for the given key - empty values are not allowed
+func MapContainsKeyWithVal(dict map[string]string, key string) bool {
+	val, ok := dict[key]
+	if !ok {
+		return false
+	}
+	return val != ""
+}
+
+func DefaultConfigfilePath() (string, error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return "", err
+	}
+	xebialabsFolder := path.Join(home, ".xebialabs", "config.yaml")
+	return xebialabsFolder, nil
+}
+
+func SortMapStringInterface(m map[string]interface{}) map[string]interface{} {
+	var keys []string
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	sorted := make(map[string]interface{})
+	for _, k := range keys {
+		switch v := m[k].(type) {
+		case map[string]interface{}:
+			sorted[k] = SortMapStringInterface(v)
+		default:
+			sorted[k] = v
+		}
+	}
+	return sorted
 }

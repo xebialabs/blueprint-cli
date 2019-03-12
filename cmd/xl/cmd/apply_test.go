@@ -2,15 +2,29 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
-	"os"
-	"path/filepath"
-	"testing"
 )
+
+func GetMinimalViperConf(t *testing.T) *viper.Viper {
+	v := viper.GetViper()
+	v.Set("blueprint.current-repository", "XL Blueprints")
+	v.Set("blueprint.repositories", []map[string]string{
+		{
+			"name": "XL Blueprints",
+			"type": "http",
+			"url":  "https://dist.xebialabs.com/public/blueprints/",
+		},
+	})
+	return v
+}
 
 func TestApply(t *testing.T) {
 
@@ -54,7 +68,7 @@ spec:
 `, xl.XlrApiVersion, xl.XldApiVersion))
 		defer os.RemoveAll(tempDir2)
 
-		v := viper.GetViper()
+		v := GetMinimalViperConf(t)
 		v.Set("xl-deploy.applications-home", "Applications/XL")
 		v.Set("xl-release.home", "XL")
 
@@ -104,7 +118,7 @@ spec:
 `, xl.XldApiVersion, filepath.Base(provisionFile.Name())))
 		defer os.RemoveAll(tempDir)
 
-		v := viper.GetViper()
+		v := GetMinimalViperConf(t)
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 
@@ -149,7 +163,7 @@ metadata:
 `, models.YamlFormatVersion, filepath.Base(deployFile.Name())))
 		defer os.RemoveAll(tempDir)
 
-		v := viper.GetViper()
+		v := GetMinimalViperConf(t)
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 
@@ -172,7 +186,7 @@ spec:
 `, xl.XldApiVersion))
 		defer os.RemoveAll(tempDir)
 
-		v := viper.GetViper()
+		v := GetMinimalViperConf(t)
 
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()

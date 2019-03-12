@@ -9,8 +9,9 @@ import (
 const (
 	ProviderMock       string = "mock"
 	ProviderGitHub     string = "github"
+	ProviderHttp       string = "http"
 )
-var RepoProviders = []string { ProviderMock, ProviderGitHub }
+var RepoProviders = []string { ProviderMock, ProviderGitHub, ProviderHttp }
 
 func GetRepoProvider(s string) (string, error) {
 	for _, repoProvider := range RepoProviders {
@@ -32,11 +33,9 @@ const (
 	DefaultXlReleasePassword   = "admin"
 	DefaultXlReleaseAuthMethod = "http"
 
-	DefaultBlueprintRepositoryName      = "blueprints"
-	DefaultBlueprintRepositoryOwner     = "xebialabs"
-	DefaultBlueprintRepositoryToken     = ""
-	DefaultBlueprintRepositoryBranch    = "master"
-	DefaultBlueprintRepositoryProvider  = ProviderGitHub
+	DefaultBlueprintRepositoryProvider  = ProviderHttp
+	DefaultBlueprintRepositoryName      = "XL Blueprints"
+	DefaultBlueprintRepositoryUrl       = "https://dist.xebialabs.com/public/blueprints/"
 )
 
 

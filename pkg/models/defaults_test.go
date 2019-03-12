@@ -27,6 +27,13 @@ func TestGetRepoProviderWithName(t *testing.T) {
 		assert.Equal(t, ProviderGitHub, provider)
 	})
 
+	t.Run("should get http repo provider with name", func(t *testing.T) {
+		provider, err := GetRepoProvider("http")
+		require.Nil(t, err)
+		require.NotNil(t, provider)
+		assert.Equal(t, ProviderHttp, provider)
+	})
+
 	t.Run("should get github repo provider with name mixed with uppercase and lowercase", func(t *testing.T) {
 		provider, err := GetRepoProvider("GitHub")
 		require.Nil(t, err)
