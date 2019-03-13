@@ -52,6 +52,10 @@ spec:
     type: Input
     secret: true
     value: accesssecret
+  - name: SuperSecret
+    type: Input
+    secret: false
+    value: invisible
   - name: AWSRegion
     type: Select
     options:
