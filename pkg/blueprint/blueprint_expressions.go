@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 
@@ -36,6 +37,9 @@ var functions = map[string]govaluate.ExpressionFunction{
 	"randPassword": func(args ...interface{}) (interface{}, error) {
 		pass := util.GeneratePassword(16)
 		return pass, nil
+	},
+	"string": func(args ...interface{}) (interface{}, error) {
+		return fmt.Sprintf("%v", args[0]), nil
 	},
 }
 

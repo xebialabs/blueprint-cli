@@ -193,6 +193,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		// Check if only saveInXlVals marked fields are in values.xlvals
 		valuesFileContent := GetFileContent(models.BlueprintOutputDir + string(os.PathSeparator) + valuesFile)
 		assert.Contains(t, valuesFileContent, "Test = testing")
+        assert.Contains(t, valuesFileContent, "DiskSizeWithBuffer = 125.1")
 
 	})
 }
