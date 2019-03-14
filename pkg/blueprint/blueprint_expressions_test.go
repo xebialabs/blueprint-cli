@@ -1,7 +1,6 @@
 package blueprint
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -170,6 +169,62 @@ func Test_processCustomExpression(t *testing.T) {
 			false,
 		},
 		{
+			"should return length of a number as if it's a string when expression is evaluated",
+			args{
+				"strlen(string(arg))",
+				map[string]interface{}{
+					"arg": "1234",
+				},
+			},
+			float64(4),
+			false,
+		},
+		{
+			"should return a number with two leading zeroes when expression is evaluated",
+			args{
+				"strlen(string(arg)) == 1 ? '00' + arg : (strlen(string(arg)) == 2 ? '0' + arg : arg)",
+				map[string]interface{}{
+					"arg": "9",
+				},
+			},
+			"009",
+			false,
+		},
+		{
+			"should return a number with one leading zero when expression is evaluated",
+			args{
+				"strlen(string(arg)) == 1 ? '00' + arg : (strlen(string(arg)) == 2 ? '0' + arg : arg)",
+				map[string]interface{}{
+					"arg": "90",
+				},
+			},
+			"090",
+			false,
+		},
+		{
+			"should return a number without a leading zero when expression is evaluated",
+			args{
+				"strlen(string(arg)) == 1 ? '00' + arg : (strlen(string(arg)) == 2 ? '0' + arg : arg)",
+				map[string]interface{}{
+					"arg": "100",
+				},
+			},
+			float64(100),
+			false,
+		},
+		{
+			"should return max of 2 variables when expression is evaluated",
+			args{
+				"max(arg1, arg2)",
+				map[string]interface{}{
+					"arg1": "2",
+					"arg2": "1",
+				},
+			},
+			float64(2),
+			false,
+		},
+		{
 			"should return rounded value of a number when expression is evaluated",
 			args{
 				"round(arg)",
@@ -223,9 +278,7 @@ func Test_processCustomExpression(t *testing.T) {
 				t.Errorf("processCustomExpression() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("processCustomExpression() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
