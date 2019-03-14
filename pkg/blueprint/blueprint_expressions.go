@@ -1,9 +1,11 @@
 package blueprint
 
 import (
-    "github.com/Knetic/govaluate"
-    "github.com/xebialabs/xl-cli/pkg/util"
-    "math"
+	"math"
+	"strconv"
+
+	"github.com/Knetic/govaluate"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 var functions = map[string]govaluate.ExpressionFunction{
@@ -47,5 +49,24 @@ func ProcessCustomExpression(exStr string, parameters map[string]interface{}) (i
 		return nil, err
 	}
 
-	return expression.Evaluate(parameters)
+	return expression.Evaluate(fixValueTypes(parameters))
+}
+
+func fixValueTypes(parameters map[string]interface{}) map[string]interface{} {
+	newParams := make(map[string]interface{})
+	for k, v := range parameters {
+		switch vStr := v.(type) {
+		case string:
+			if val, err := strconv.ParseFloat(vStr, 64); err == nil {
+				newParams[k] = val
+			} else if val, err := strconv.ParseBool(vStr); err == nil {
+				newParams[k] = val
+			} else {
+				newParams[k] = vStr
+			}
+		default:
+			newParams[k] = v
+		}
+	}
+	return newParams
 }

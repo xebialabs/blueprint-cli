@@ -3,6 +3,8 @@ package blueprint
 import (
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_processCustomExpression(t *testing.T) {
@@ -196,6 +198,70 @@ func Test_processCustomExpression(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("processCustomExpression() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func Test_fixValueTypes(t *testing.T) {
+	tests := []struct {
+		name       string
+		parameters map[string]interface{}
+		want       map[string]interface{}
+	}{
+		{
+			"should convert to float",
+			map[string]interface{}{
+				"int":    "2",
+				"float":  "2.5",
+				"float2": "2.5548454545844",
+				"float3": "098500",
+			},
+			map[string]interface{}{
+				"int":    float64(2),
+				"float":  float64(2.5),
+				"float2": float64(2.5548454545844),
+				"float3": float64(98500),
+			},
+		},
+		{
+			"should convert to bool",
+			map[string]interface{}{
+				"true":   "true",
+				"false":  "false",
+				"true1":  "True",
+				"false1": "False",
+			},
+			map[string]interface{}{
+				"true":   true,
+				"false":  false,
+				"true1":  true,
+				"false1": false,
+			},
+		},
+		{
+			"should convert mixed map",
+			map[string]interface{}{
+				"float":  "2.5548454545844",
+				"int":    "098500",
+				"bool":   "true",
+				"string": "hello",
+				"float2": float64(2.5548454545844),
+				"bool2":  true,
+			},
+			map[string]interface{}{
+				"float":  float64(2.5548454545844),
+				"int":    float64(98500),
+				"bool":   true,
+				"string": "hello",
+				"float2": float64(2.5548454545844),
+				"bool2":  true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := fixValueTypes(tt.parameters)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
