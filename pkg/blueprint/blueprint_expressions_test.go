@@ -30,11 +30,22 @@ func Test_processCustomExpression(t *testing.T) {
 			true,
 		},
 		{
+			"should return a float64 value of the number as a string",
+			args{
+				"Foo",
+				map[string]interface{}{
+					"Foo": "100",
+				},
+			},
+			float64(100),
+			false,
+		},
+		{
 			"should return true when parameter is evaluated",
 			args{
 				"Foo > 10",
 				map[string]interface{}{
-					"Foo": 100,
+					"Foo": "100",
 				},
 			},
 			true,
@@ -64,15 +75,27 @@ func Test_processCustomExpression(t *testing.T) {
 			false,
 		},
 		{
-			"should return Bar when ternary expression is evaluated",
+			"should return Bar as a float64 when ternary expression is evaluated",
 			args{
 				"Foo > 10 ? Foo : Bar",
 				map[string]interface{}{
-					"Foo": 10,
-					"Bar": 200,
+					"Foo": "10",
+					"Bar": "200",
 				},
 			},
 			float64(200),
+			false,
+		},
+		{
+			"should return Bar as a string when ternary expression is evaluated",
+			args{
+				"string(Foo > 10 ? Foo : Bar)",
+				map[string]interface{}{
+					"Foo": "10",
+					"Bar": "200",
+				},
+			},
+			"200",
 			false,
 		},
 		{
@@ -92,8 +115,8 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"Foo == 10 && Bar != 10",
 				map[string]interface{}{
-					"Foo": 10,
-					"Bar": 200,
+					"Foo": "10",
+					"Bar": "200",
 				},
 			},
 			true,
@@ -104,7 +127,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"Foo + Bar",
 				map[string]interface{}{
-					"Foo": 75,
+					"Foo": "75",
 					"Bar": 25,
 				},
 			},
@@ -135,10 +158,13 @@ func Test_processCustomExpression(t *testing.T) {
 			false,
 		},
 		{
-			"should return max of 2 numbers when expression is evaluated",
+			"should return max of 2 variables when expression is evaluated",
 			args{
-				"max(2, 1)",
-				map[string]interface{}{},
+				"max(arg1, arg2)",
+				map[string]interface{}{
+					"arg1": "2",
+					"arg2": 1,
+				},
 			},
 			float64(2),
 			false,
@@ -146,8 +172,10 @@ func Test_processCustomExpression(t *testing.T) {
 		{
 			"should return rounded value of a number when expression is evaluated",
 			args{
-				"round(2.12556)",
-				map[string]interface{}{},
+				"round(arg)",
+				map[string]interface{}{
+					"arg": "2.12556",
+				},
 			},
 			float64(2),
 			false,
@@ -157,7 +185,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"((Foo == 10 && Bar != 10) ? Bar: Foo) == 200 && (Fooz == 'test' || 'test' == Fooz) && (Fooz + Foo == 'test10') && Foo != 20",
 				map[string]interface{}{
-					"Foo":  10,
+					"Foo":  "10",
 					"Bar":  200,
 					"Fooz": "test",
 				},
@@ -170,9 +198,9 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"ceil(min(Foo / Bar * Fooz, Foo * 0.5 ) * round(2.8956))",
 				map[string]interface{}{
-					"Foo":  100,
+					"Foo":  "100",
 					"Bar":  200,
-					"Fooz": 1.88888,
+					"Fooz": "1.88888",
 				},
 			},
 			float64(3),
