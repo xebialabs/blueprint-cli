@@ -9,32 +9,25 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
-
 var TestCmd = &cobra.Command{
 	Use:   "xl",
 	Short: "Test command",
-}
-
-func getMinimalViperConf() *viper.Viper {
-	v := viper.New()
-	v.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderMock)
-	v.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
-	return v
 }
 
 func TestContextBuilder(t *testing.T) {
 	util.IsVerbose = true
 
 	t.Run("build simple context for XL Deploy", func(t *testing.T) {
-		v := getMinimalViperConf()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 		v.Set(models.ViperKeyXLDUrl, "http://testxld:6154")
 		v.Set(models.ViperKeyXLDUsername, "deployer")
 		v.Set(models.ViperKeyXLDPassword, "d3ploy1t")
@@ -52,7 +45,7 @@ func TestContextBuilder(t *testing.T) {
 	})
 
 	t.Run("build simple context for XL Release", func(t *testing.T) {
-		v := getMinimalViperConf()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 		v.Set(models.ViperKeyXLRUrl, "http://masterxlr:6155")
 		v.Set(models.ViperKeyXLRUsername, "releaser")
 		v.Set(models.ViperKeyXLRPassword, "r3l34s3")
@@ -69,26 +62,8 @@ func TestContextBuilder(t *testing.T) {
 		assert.Equal(t, "r3l34s3", c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Password)
 	})
 
-	t.Run("build simple context for Blueprint repository", func(t *testing.T) {
-		v := viper.New()
-		v.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderGitHub)
-		v.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
-		v.Set(models.ViperKeyBlueprintRepositoryOwner, "xebialabs")
-
-		c, err := BuildContext(v, nil, []string{})
-
-		assert.Nil(t, err)
-		assert.NotNil(t, c)
-		assert.Nil(t, c.XLDeploy)
-		assert.Nil(t, c.XLRelease)
-		assert.NotNil(t, c.BlueprintContext)
-		assert.Equal(t, models.ProviderGitHub, c.BlueprintContext.Provider)
-		assert.Equal(t, "blueprints", c.BlueprintContext.Name)
-		assert.Equal(t, "xebialabs", c.BlueprintContext.Owner)
-	})
-
 	t.Run("build full context for XL Deploy and XL Release and Blueprint repository", func(t *testing.T) {
-		v := viper.New()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 		v.Set(models.ViperKeyXLDUrl, "http://testxld:6154")
 		v.Set(models.ViperKeyXLDUsername, "deployer")
 		v.Set(models.ViperKeyXLDPassword, "d3ploy1t")
@@ -102,11 +77,6 @@ func TestContextBuilder(t *testing.T) {
 		v.Set(models.ViperKeyXLRPassword, "r3l34s3")
 		v.Set(models.ViperKeyXLRAuthMethod, "http")
 		v.Set("xl-release.home", "XLR/home/folder")
-		v.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderGitHub)
-		v.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
-		v.Set(models.ViperKeyBlueprintRepositoryOwner, "xebialabs")
-		v.Set(models.ViperKeyBlueprintRepositoryBranch, "master")
-		v.Set(models.ViperKeyBlueprintRepositoryToken, "dummyToken")
 
 		c, err := BuildContext(v, nil, []string{})
 
@@ -125,16 +95,10 @@ func TestContextBuilder(t *testing.T) {
 		assert.Equal(t, "releaser", c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Username)
 		assert.Equal(t, "r3l34s3", c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Password)
 		assert.Equal(t, "XLR/home/folder", c.XLRelease.(*XLReleaseServer).Home)
-		assert.NotNil(t, c.BlueprintContext)
-		assert.Equal(t, models.ProviderGitHub, c.BlueprintContext.Provider)
-		assert.Equal(t, "blueprints", c.BlueprintContext.Name)
-		assert.Equal(t, "xebialabs", c.BlueprintContext.Owner)
-		assert.Equal(t, "master", c.BlueprintContext.Branch)
-		assert.Equal(t, "dummyToken", c.BlueprintContext.Token)
 	})
 
 	t.Run("build context without values", func(t *testing.T) {
-		v := getMinimalViperConf()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 
 		c, err := BuildContext(v, nil, []string{})
 
@@ -149,12 +113,12 @@ func TestContextBuilder(t *testing.T) {
   username: admin
   password: 3dm1n
   authmethod: http
-blueprint-repository:
-  provider: github
-  name: blueprints
-  owner: xebialabs
-  branch: master
-  token: dummyToken
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/
 `
 		v := viper.New()
 		v.SetConfigType("yaml")
@@ -167,11 +131,6 @@ blueprint-repository:
 		require.NotNil(t, c)
 		require.NotNil(t, c.XLDeploy)
 		require.Equal(t, "http://xld.example.com:4516", c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Url.String())
-		require.Equal(t, models.ProviderGitHub, c.BlueprintContext.Provider)
-		require.Equal(t, "blueprints", c.BlueprintContext.Name)
-		require.Equal(t, "xebialabs", c.BlueprintContext.Owner)
-		require.Equal(t, "master", c.BlueprintContext.Branch)
-		require.Equal(t, "dummyToken", c.BlueprintContext.Token)
 	})
 
 	t.Run("do not write config file if xl-deploy.password was stored in the config file but was overridden", func(t *testing.T) {
@@ -183,14 +142,17 @@ blueprint-repository:
 
 		defer os.RemoveAll(configdir)
 		configfile := filepath.Join(configdir, "config.yaml")
-		originalConfigBytes := []byte(`blueprint-repository:
-  provider: mock
-  name: blueprints
-xl-deploy:
+		originalConfigBytes := []byte(`xl-deploy:
   url: http://testxld:6154
   username: testuser
   password: t3stus3r
   authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/
 `)
 		ioutil.WriteFile(configfile, originalConfigBytes, 0755)
 
@@ -228,9 +190,15 @@ xl-deploy:
   username: testuser
   password: t3st
   authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/
 `), 0755)
 
-		v := getMinimalViperConf()
+		v := viper.New()
 		v.SetConfigFile(configfile)
 		v.ReadInConfig()
 
@@ -341,7 +309,7 @@ xl-deploy:
 	})
 
 	t.Run("validate that names of values are correct", func(t *testing.T) {
-		v := getMinimalViperConf()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 
 		values := make(map[string]string)
 		values["!incorrectKey"] = "test value"
@@ -353,7 +321,7 @@ xl-deploy:
 	})
 
 	t.Run("Should read values into context", func(t *testing.T) {
-		v := getMinimalViperConf()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 
 		propfile1 := writePropFile("file1", `
 test=test
@@ -371,7 +339,7 @@ test2=test2
 	})
 
 	t.Run("Should read case sensitive values", func(t *testing.T) {
-		v := getMinimalViperConf()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 
 		propfile1 := writePropFile("file1", `
 test=test1
@@ -391,7 +359,7 @@ Test=test3
 	})
 
 	t.Run("Should override values from value files in right order (only value files)", func(t *testing.T) {
-		v := getMinimalViperConf()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 
 		propfile1 := writePropFile("file1", `
 test=test
@@ -418,7 +386,7 @@ test2=override2
 	})
 
 	t.Run("Should command line parameter value should override value files", func(t *testing.T) {
-		v := getMinimalViperConf()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 
 		propfile1 := writePropFile("file1", `
 test=test
@@ -443,7 +411,7 @@ verifythisfilegetsread=ok
 	})
 
 	t.Run("Environment variables should override value files", func(t *testing.T) {
-		v := getMinimalViperConf()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 
 		propfile1 := writePropFile("file1", `
 test=test
@@ -467,10 +435,9 @@ verifythisfilegetsread=ok
 	})
 
 	t.Run("Should get default flag value for server values when there's no override", func(t *testing.T) {
-		v := viper.GetViper()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.GetViper())
 		cfgFile := ""
 		PrepareRootCmdFlags(TestCmd, &cfgFile)
-
 		context, err2 := BuildContext(v, nil, []string{})
 		assert.Nil(t, err2)
 
@@ -483,7 +450,7 @@ verifythisfilegetsread=ok
 	})
 
 	t.Run("Should override defaults from viper", func(t *testing.T) {
-		v := getMinimalViperConf()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 
 		v.Set("xl-deploy.url", "http://testxld:6154")
 		v.Set("xl-deploy.username", "deployer")

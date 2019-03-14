@@ -48,3 +48,94 @@ func TestPathExists(t *testing.T) {
 		assert.False(t, PathExists(path.Join(tmpDir, "nopermission", "test.yaml"), false))
 	})
 }
+
+func TestMapContainsKeyWithVal(t *testing.T) {
+	type args struct {
+		dict map[string]string
+		key  string
+	}
+	testMap := map[string]string{
+		"foo": "foo",
+		"bat": "bar",
+		"bar": "",
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			"should return false when map doesn't have key",
+			args{
+				testMap,
+				"foooo",
+			},
+			false,
+		},
+		{
+			"should return false when map doesn't have value for key",
+			args{
+				testMap,
+				"bar",
+			},
+			false,
+		},
+		{
+			"should return true when map has value for key",
+			args{
+				testMap,
+				"foo",
+			},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := MapContainsKeyWithVal(tt.args.dict, tt.args.key); got != tt.want {
+				t.Errorf("MapContainsKeyWithVal() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSortMapStringInterface(t *testing.T) {
+	tests := []struct {
+		name string
+		m    map[string]interface{}
+		want map[string]interface{}
+	}{
+		{
+			"should sort the provided map",
+			map[string]interface{}{
+				"foo": "hello",
+				"bar": map[string]interface{}{
+					"foo": "hello",
+					"xoo": map[string]interface{}{
+						"foo": "hello",
+						"bar": "bar",
+					},
+					"bar": "bar",
+				},
+				"aa": 1,
+			},
+			map[string]interface{}{
+				"aa": 1,
+				"bar": map[string]interface{}{
+					"bar": "bar",
+					"foo": "hello",
+					"xoo": map[string]interface{}{
+						"bar": "bar",
+						"foo": "hello",
+					},
+				},
+				"foo": "hello",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := SortMapStringInterface(tt.m)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

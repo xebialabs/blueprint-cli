@@ -1,52 +1,62 @@
 # Blueprints
 
-## Root YAML Fields
+---------------
+
+## Blueprint YAML Definition File Structure
+
+### Root Fields
 
 | Field Name | Expected value | Examples | Required |
 |:----------: |:--------------: |:---------: |:--------: |
-| **apiVersion** | xl/v1 | - | y |
-| **kind** | Blueprint | - | y |
-| **metadata** | - | see below | n |
-| **spec** | - | see below | y |
+| **apiVersion** | `xl/v1` | — | ✔ |
+| **kind** | `Blueprint` | — | ✔ |
+| **metadata** | — | *see below* | **x** |
+| **spec** | — | *see below* | ✔ |
 
-### Metadata Fields
+#### Metadata Fields
 
 | Field Name | Expected value | Examples | Required |
 |:-----------: |:--------------: |--------------------------------------------------------- |:--------: |
-| **projectName** | - | Sample Project | n |
-| **description** | - | A long description for describing the blueprint project | n |
-| **author** | - | XebiaLabs | n |
-| **version** | - | 1.0 | n |
+| **projectName** | — | Sample Project | **x** |
+| **description** | — | A long description for describing the blueprint project | **x** |
+| **author** | — | XebiaLabs | **x** |
+| **version** | — | 1.0 | **x** |
 
-### Spec fields
+#### Spec fields
 
 The spec field holds parameters and files
 
-#### Parameters Fields
+##### Parameters Fields
+
+Parameters are defined by the blueprint creator in the `blueprint.yaml` file, it can be used in the blueprint template files. If no value is defined for a parameter in the `blueprint.yaml` file, the user will be prompted to enter its value during execution of the bluerpint. By default parameter values will be used to replace variables in template files during blueprint generation. You can find all possible parameter options below.
 
 | Field Name | Expected value(s) | Examples | Default Value | Required | Explanation |
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **name** | - | AppName | - | y | Variable name, to be used in templates |
-| **type** | `Input`/`Select`/`Confirm`/`Editor`/`File` | | - | y | Type of the prompt input |
-| **value** | - | - eu-west-1<br>-`!fn aws.regions(ecs)[0]`<br>-`!expression "Foo == 'foo' ? 'A' : 'B'"` | - | n | If present, user will not be asked a question to provide value. "yes" or "no" with quotes should be used in Confirm type variables. |
-| **default** | - | - eu-west-1<br>-`!fn aws.regions(ecs)[0]`<br>-`!expression "Foo == 'foo' ? 'A' : 'B'"` | - | n | Default value, will be present during the question prompt. Also will be the variable value if question is skipped. |
-| **description** | - | Application name, will be used in various AWS resource names | - | n | If present, will be used instead of default question text |
-| **secret** | `true`/`false` | - | `false` | n | Variables that are marked as secret are saved in `secrets.xlvals` files so that they won't be checked in GIT repo and will not be replaced by default in the template files |
-| **options** | - | - eu-west-1<br>- us-east-1<br>- us-west-1<br>-`!fn aws.regions(ecs)`<br>-`!expression "Foo == 'foo' ? ('A', 'B') : ('C', 'D')"` | - | n<br>(required for `Select` input type) | Set of options for the `Select` input type. Can consist of any number of text values or custom tags |
-| **pattern** | - | `[a-z-]* `| - | n | Validation regular expression, to be verified at the time of user input |
-| **dependsOnTrue** | - | - CreateNewCluster<br>- `!fn aws.credentials().IsAvailable`<br>- `!expression "CreateNewCluster == true"` | - | n | If this question is need to be asked to user depending on the value of another, dependsOn field can be defined.<br>A valid variable name should be given and the variable name used should have been defined before order-wise. Function tags also can be used, but expected result should always be boolean. |
-| **dependsOnFalse** | - | - CreateNewCluster<br>- `!fn aws.credentials().IsAvailable`<br>- `!expression "CreateNewCluster == true"` | - | n | Reverse logic for dependsOnTrue, see above
-| **saveInXlVals** | `true`/`false` | - | `true` for secret fields<br>`false` for other fields | n | If true, output variable will be included in the `values.xlvals` output file. By default every secret field will be written to `secrets.xlvals` file and this setting doesn't effect that functionality |
+| **name** | — | AppName | — | ✔ | Variable name, to be used in templates |
+| **type** | `Input`/`Select`/`Confirm`/`Editor`/`File` | | — | ✔ | Type of the prompt input |
+| **value** | — | - eu-west-1<br>-`!fn aws.regions(ecs)[0]`<br>-`!expression "Foo == 'foo' ? 'A' : 'B'"` | — | **x** | If present, user will not be asked a question to provide value. |
+| **default** | — | - eu-west-1<br>-`!fn aws.regions(ecs)[0]`<br>-`!expression "Foo == 'foo' ? 'A' : 'B'"` | — | **x** | Default value, will be present during the question prompt. Also will be the variable value if question is skipped. |
+| **description** | — | Application name, will be used in various AWS resource names | — | **x** | If present, will be used instead of default question text |
+| **secret** | `true`/`false` | — | `false` | **x** | Variables that are marked as secret are saved in `secrets.xlvals` files so that they won't be checked in GIT repo and will not be replaced by default in the template files |
+| **options** | — | - eu-west-1<br>- us-east-1<br>- us-west-1<br>-`!fn aws.regions(ecs)`<br>-`!expression "Foo == 'foo' ? ('A', 'B') : ('C', 'D')"` | — | required for `Select` input type | Set of options for the `Select` input type. Can consist of any number of text values or custom tags |
+| **pattern** | — | `[a-z-]* `| — | **x** | Validation regular expression, to be verified at the time of user input |
+| **dependsOnTrue** | — | - CreateNewCluster<br>- `!fn aws.credentials().IsAvailable`<br>- `!expression "CreateNewCluster == true"` | — | **x** | If this question is need to be asked to user depending on the value of another, dependsOn field can be defined.<br>A valid variable name should be given and the variable name used should have been defined before order-wise. Function tags also can be used, but expected result should always be boolean. |
+| **dependsOnFalse** | — | - CreateNewCluster<br>- `!fn aws.credentials().IsAvailable`<br>- `!expression "CreateNewCluster == true"` | — | **x** | Reverse logic for dependsOnTrue, see above
+| **saveInXlVals** | `true`/`false` | — | `true` for secret fields<br>`false` for other fields | **x** | If true, output variable will be included in the `values.xlvals` output file. By default every secret field will be written to `secrets.xlvals` file and this setting doesn't effect that functionality |
 
-> Note: `File` type doesn't support `value` parameter. `default` parameter for this field expects to have a file path instead of final value string.
+> Note #1: `File` type doesn't support `value` parameter. `default` parameter for this field expects to have a file path instead of final value string.
 
-#### Files Fields
+> Note #2: parameters marked as `secret` supports default values as well. When a `secret` parameter question is being asked to the user, the default value will be shown on the prompt as raw text, and if the user enters an empty response for the question this default value will be used instead.
+
+##### Files Fields
 
 | Field Name | Expected value(s) | Examples | Default Value | Required | Explanation |
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **path** | - | `xebialabs/xlr-pipeline.yaml` | - | y | File/template path to be copied/processed  |
-| **dependsOnTrue** | - | - CreateNewCluster<br>- `!fn aws.credentials().IsAvailable`<br>- `!expression "CreateNewCluster == true"` | - | n | This file will be generated only when value of a variable or function return true.<br>A valid variable name should be given and the variable name used should have been defined. Function tags also can be used, but expected result should always be boolean. |
-| **dependsOnFalse** | - | - CreateNewCluster<br>- `!fn aws.credentials().IsAvailable`<br>- `!expression "CreateNewCluster == true"` | - | n | This file will be generated only when value of a variable or function return false.<br>A valid variable name should be given and the variable name used should have been defined. Function tags also can be used, but expected result should always be boolean.|
+| **path** | — | `xebialabs/xlr-pipeline.yaml` | — | ✔ | File/template path to be copied/processed  |
+| **dependsOnTrue** | — | - CreateNewCluster<br>- `!fn aws.credentials().IsAvailable`<br>- `!expression "CreateNewCluster == true"` | — | **x** | This file will be generated only when value of a variable or function return true.<br>A valid variable name should be given and the variable name used should have been defined. Function tags also can be used, but expected result should always be boolean. |
+| **dependsOnFalse** | — | - CreateNewCluster<br>- `!fn aws.credentials().IsAvailable`<br>- `!expression "CreateNewCluster == true"` | — | **x** | This file will be generated only when value of a variable or function return false.<br>A valid variable name should be given and the variable name used should have been defined. Function tags also can be used, but expected result should always be boolean.|
+
+---------------
 
 ## Supported Custom YAML Tags
 
@@ -60,9 +70,9 @@ Custom function syntax: `!fn DOMAIN.MODULE (PARAMETERS...).ATTRIBUTE|[INDEX]`
 
 | Domain | Module | Examples | Parameters | Attributes/Index | Description |
 |:------: |:-----------: |:----------------------------------------: |:----------------: |------------------------------------------------------- |:------------------------------------------------------------: |
-| **aws** | **credentials** | `aws.credentials().AccessKeyID` | [optional] Profile name | - AccessKeyID<br>- SecretAccessKey<br>- SessionToken<br>- ProviderName<br>- IsAvailable | Read AWS credentials package from system aws-cli config file |
+| **aws** | **credentials** | `aws.credentials().AccessKeyID` | **[optional]** Profile name | - AccessKeyID<br>- SecretAccessKey<br>- SessionToken<br>- ProviderName<br>- IsAvailable | Read AWS credentials package from system aws-cli config file |
 | **aws** | **regions** | `aws.regions(ecs)`<br>`aws.regions(ecs)[0]` | AWS service ID | Any index of the resulting array | Get list of available regions for the specified AWS service |
-| **k8s** | **config** | `k8s.config().IsAvailable`<br>`k8s.config(myContext).ClusterServer` | [optional] Context name | - ClusterServer<br>- ClusterCertificateAuthorityData<br>- ClusterInsecureSkipTLSVerify<br>- ContextCluster<br>- ContextNamespace<br>- ContextUser<br>- UserClientCertificateData<br>- UserClientKeyData<br>- IsAvailable | Get the Kubernetes context specified. If no context is specified the current context in use will be fetched. the base64 encoded values are decoded automatically|
+| **k8s** | **config** | `k8s.config().IsAvailable`<br>`k8s.config(myContext).ClusterServer` | **[optional]** Context name | - ClusterServer<br>- ClusterCertificateAuthorityData<br>- ClusterInsecureSkipTLSVerify<br>- ContextCluster<br>- ContextNamespace<br>- ContextUser<br>- UserClientCertificateData<br>- UserClientKeyData<br>- IsAvailable | Get the Kubernetes context specified. If no context is specified the current context in use will be fetched. the base64 encoded values are decoded automatically|
 
 ### Expression tag (`!expression`)
 
@@ -91,7 +101,7 @@ See [MANUAL.md](https://github.com/Knetic/govaluate/blob/master/MANUAL.md) from 
 
 #### Types
 
-Only supported types are; `float64`, `bool`, `string`, and `arrays`.
+Only supported types are; `float64`, `bool`, `string`, and `arrays`. When using expressions to return values for `options`, please ensure the expression returns an array. When using expressions on `dependsOnTrue` and `dependsOnFalse` fields, ensure that it returns boolean
 
 #### Escaping characters
 
@@ -129,7 +139,47 @@ You can use the provided functions in an expression
 | **round** | Variable or number(float64) | - `!expression "round(5.8) > 5"`<br>- `!expression "round(FooVariable) > 5"` | Round the given number to nearest whole number |
 | **randPassword** | String | - `!expression "randPassword()"`| Generates a 16-character random password |
 
+An example `blueprint.yaml` using expressions for complex behaviors
 
+```
+apiVersion: xl/v1
+kind: Blueprint
+metadata:
+  projectName: Blueprint Project
+  description: A Blueprint project
+  author: XebiaLabs
+  version: 1.0
+spec:
+  parameters:
+  - name: Provider
+    description: what is your Kubernetes provider?
+    type: Select
+    options:
+      - AWS
+      - GCP
+      - Azure
+    default: AWS
+
+  - name: Service
+    description: What service do you want to deploy?
+    type: Select
+    options:
+      - !expression "Provider == 'GCP' ? ('GKE', 'CloudStorage') : (Provider == 'AWS' ? ('EKS', 'S3') : ('AKS', 'AzureStorage'))"
+    default: !expression "Provider == 'GCP' ? 'GKE' : (Provider == 'AWS' ? 'EKS' : 'AKS')"
+
+  - name: K8sClusterName
+    description: What is your Kubernetes cluster name
+    type: Input
+    dependsOnTrue: !expression "Service == 'GKE' || Service == 'EKS' || Service == 'AKS'"
+
+  files:
+  - path: xld-k8s-infrastructure.yml
+    dependsOnTrue: !expression "Service == 'GKE' || Service == 'EKS' || Service == 'AKS'"
+  - path: xld-storage-infrastructure.yml
+    dependsOnTrue: !expression "Service == 'CloudStorage' || Service == 'S3' || Service == 'AzureStorage'"
+```
+
+---------------
 
 ## Go Templates
 
@@ -143,10 +193,96 @@ Please refer to below table for additional functions available.
 | kebabcase | `.AppName | kebabcase` | Convert string to use kebab case (separated by -) |
 
 
+Note: Parameters marked as `secret` cannot be used with Go template functions & Sprig Functions since their values will not be directly replaced in the templates.
+
+---------------
+
 ## Blueprint Repository
 
-[TODO]
+Remote blueprint repositories are supported for fetching blueprint files. By default, running `xl` command for the first time will generate default configuration file in your home directory (ex. `~/.xebialabs/config.yaml`), and default [XebiaLabs blueprint repository URL](https://dist.xebialabs.com/public/blueprints/) will be present in that configuration file. XL-CLI configuration file can be updated manually or appropriate command line flags can be also passed when running the command in order to specify a different remote blueprint repository. Please refer to XL-CLI documentation for detailed configuration and command line flag usage.
 
-## Blueprint CLI Flags
+Example `config.yaml` blueprint configuration:
 
-[TODO]
+```yaml
+blueprint:
+  current-repository: xebialabs-github
+  repositories:
+    - name: xebialabs-github
+      type: github
+      repo-name: blueprints
+      owner: xebialabs
+      token: my-github-token
+      branch: master
+    - name: xebialabs-dist
+      type: http
+      url: http://dist.xebialabs.com/public/blueprints
+```
+
+It is possible to define multiple blueprint repositories with same or different types at the same time, but only one of them will be active at a given time. Active blueprint repository should be stated using `current-repository` field in the configuration file. When there's no defined blueprint repository, or `current-repository` field is not stated, `xl` command will auto update the config with the default XebiaLabs blueprint repository.
+
+### Using Existing Blueprint Repositories
+
+#### GitHub Repository Type - `type: github`
+
+| Config Field | Expected Value | Default Value | Required | Explanation |
+|:------------:|:--------------:|:-------------:| :------: | :---------: |
+| name | — | — | ✔ | Repository configuration name |
+| type | `github` | — | ✔ | Repository type |
+| repo-name | — | — | ✔ | GitHub remote repository name |
+| owner | — | — | ✔ | GitHub remote repository owner<br/>Can be different than the user accessing it |
+| branch | — | `master` | **x** | GitHub remote repository branch to use |
+| token | — | | **x** | GitHub user token, please refer to [GitHub documentation](https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line) for generating one<br/>Repo read permission is required when generating token for XL-CLI |
+
+> Note: When `token` field is not specified, GitHub API will be accessed in *unauthenticated* mode and rate limit will be much less than the *authenticated* mode. According to the [GitHub API documentation](https://developer.github.com/v3/#rate-limiting), *unauthenticated* rate limit per hour and per IP address is **60**, whereas *authenticated* rate limit per hour and per user is **5000**. `token` field is advised to be set in configuration for not getting any GitHub API related rate limit errors.
+
+#### HTTP Repository Type - `type: http`
+
+| Config Field | Expected Value | Default Value | Required | Explanation |
+|:------------:|:--------------:|:-------------:| :------: | :---------: |
+| name | — | — | ✔ | Repository configuration name |
+| type | `http` | — | ✔ | Repository type |
+| url | — | — | ✔ | HTTP repository URL, including protocol |
+| username | — | | **x** | Basic authentication username |
+| password | — | | **x** | Basic authentication password |
+
+> Note: Only *basic authentication* is supported at the moment for remote HTTP repositories.
+
+### Creating a New Blueprint Repository
+
+#### New GitHub Repository
+
+Any public or private GitHub repository can be used as a remote blueprint repository. No additional setup is required on the repository. When XL-CLI configuration is directed to the repository, it will scan all folders within the repo and list available blueprints.
+
+#### New HTTP Repository
+
+When setting up a new HTTP blueprint repository, the most important part not to forget is to keep an up-to-date `index.json` file on the root of the repository. Since HTTP doesn't natively support directory listing, `index.json` file is used to get available blueprint information from the repository. For automatically generating a `index.json` file on your release pipeline, you can refer to the sample `generate_index.py` python script in the official [XebiaLabs blueprint GitHub repository](https://github.com/xebialabs/blueprints/blob/development/generate_index.py).
+
+Sample `index.json` file from official XebiaLabs HTTP blueprint repository:
+
+```json
+[
+"aws/monolith",
+"aws/microservice-ecommerce",
+"aws/datalake",
+"docker/simple-demo-app"
+]
+```
+
+> Note: Only *basic authentication* is supported at the moment for remote HTTP repositories.
+
+---------------
+
+## Blueprint Command Flags & Options
+
+Flags and options that can be set to `xl blueprint` command are the following:
+
+### Global Flags
+
+- `--blueprint-current-repository` : Can be used for overriding `current-repository` field of blueprint configuration.
+
+### Command Options
+
+| Option (short) | Option (long) | Default Value | Examples | Explanation |
+|:--------------:|:-------------:|:-------------:| :------: | :---------: |
+| `-h` | `--help` | — | `xl blueprint -h` | Prints out help text for blueprint command |
+| `-b` | `--blueprint` | | `xl blueprint -b aws/monolith`<br>`xl blueprint -b /path/to/local/blueprint/dir`<br/>`xl blueprint -b ../relative/path/to/local/blueprint/dir`  | Looks for the specified absolute or relative folder path in local file system, if not found looks for the path relative to the current remote repository and instead of asking user which blueprint to use, it will directly fetch the specified blueprint from remote repository, or give an error if blueprint not found in both local filesystem and remote repository |
