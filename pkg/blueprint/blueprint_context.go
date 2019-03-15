@@ -105,7 +105,7 @@ func SetRootFlags(rootFlags *pflag.FlagSet) {
 func ConstructBlueprintContext(v *viper.Viper, configPath string) (*BlueprintContext, error) {
 	activeRepoName := v.GetString(ViperKeyBlueprintCurrentRepository)
 	if activeRepoName == "" {
-		util.Verbose("Updating CLI config %s with blueprint configuration", configPath)
+		util.Verbose("Updating CLI config %s with blueprint configuration\n", configPath)
 		var err error
 		v, err = CreateOrUpdateBlueprintConfig(v, configPath)
 		if err != nil {
