@@ -13,6 +13,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/repository"
 	"github.com/xebialabs/xl-cli/pkg/util"
+	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 const (
@@ -40,19 +41,44 @@ func runSeed() models.Command {
 	}
 }
 
+func askSetupMode(surveyOpts ...survey.AskOpt) string {
+	answer := ""
+	survey.AskOne(
+		&survey.Select{
+			Message: "Select the setup mode?",
+			Options: []string{"advanced", "quick"},
+			Default: "advanced",
+		},
+		&answer,
+		survey.Required,
+		surveyOpts...,
+	)
+	return answer
+}
+
 // InvokeBlueprintAndSeed will invoke blueprint and sthen call XL Seed
-func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, upDefaultMode bool, blueprintTemplate string) {
+func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool, advancedSetup bool, blueprintTemplate string) {
+	if !(quickSetup || advancedSetup) {
+		// ask for setup mode.
+		mode := askSetupMode()
+
+		if mode == "quick" {
+			quickSetup = true
+		} else {
+			advancedSetup = true
+		}
+	}
+
 	// Skip Generate blueprint file
 	blueprint.SkipFinalPrompt = true
 	util.IsQuiet = true
-	err := blueprint.InstantiateBlueprint(upLocalMode, upDefaultMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
+	err := blueprint.InstantiateBlueprint(upLocalMode, quickSetup, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s \n", err)
 	}
 
 	util.IsQuiet = false
 	applyFilesAndSave()
-	// TODO: Ask for the version to deploy
 	util.Info("Generated files for deployment successfully! \nSpinning up xl seed! \n")
 	runAndCaptureResponse("pulling", pullSeedImage)
 	runAndCaptureResponse("running", runSeed())

@@ -325,7 +325,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 
 		// read file contents & save as answer
 		util.Verbose("[input] Reading file contents from path: %s\n", filePath)
-		data, err := ioutil.ReadFile(filePath)
+		data, err := getFileContents(filePath)
 		if err != nil {
 			return "", err
 		}
@@ -519,11 +519,6 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(blueprintDefaultMode bool
 			}
 		}
 
-		if blueprintDefaultMode {
-			variable.Value.Val = defaultVal.(string)
-			// variable.Value.Bool = defaultVal.(bool)
-		}
-
 		// skip user input if value field is present
 		if variable.Value.Val != "" {
 			parsedVal := variable.GetValueFieldVal(data.TemplateData)
@@ -540,6 +535,28 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(blueprintDefaultMode bool
 			} else {
 				util.Verbose("[dataPrep] Parsed value for parameter [%s] is empty, therefore not being skipped\n", variable.Name.Val)
 			}
+		}
+
+		// skip user input if it is in default mode and default value is present
+		if blueprintDefaultMode && defaultVal != nil && defaultVal != "" {
+			finalVal := defaultVal
+			if variable.Type.Val == TypeFile {
+				fileContent, err := getFileContents(defaultVal.(string))
+				if err != nil {
+					return nil, err
+				}
+				finalVal = fileContent
+			} else if variable.Type.Val == TypeConfirm {
+				// TODO handle this properly in getDefaultVal
+				boolVal, err := strconv.ParseBool(defaultVal.(string))
+				if err != nil {
+					return nil, err
+				}
+				finalVal = boolVal
+			}
+			util.Verbose("[dataPrep] Skipping question for parameter [%s] because default value [%s] is present\n", variable.Name.Val, finalVal)
+			saveItemToTemplateDataMap(&variable, data, finalVal)
+			continue
 		}
 
 		// ask question based on type to get value - if value field is not present
@@ -567,6 +584,14 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(blueprintDefaultMode bool
 	}
 
 	return data, nil
+}
+
+func getFileContents(filepath string) (string, error) {
+	data, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
 func validateVariables(variables *[]Variable) error {

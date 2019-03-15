@@ -96,6 +96,13 @@ func InstantiateBlueprint(blueprintLocalMode bool, blueprintDefaultMode bool, te
 	}
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
+	// TODO handle it more gracefully and Good UI
+	if blueprintDefaultMode {
+		util.IsQuiet = false
+		util.Info("%s", preparedData)
+		util.IsQuiet = true
+	}
+
 	// save prepared data to values & secrets files
 	err = writeConfigToFile(valuesFileHeader, preparedData.Values, path.Join(outputDir, valuesFile))
 	if err != nil {
