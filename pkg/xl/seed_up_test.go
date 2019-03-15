@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/yaml"
@@ -77,9 +78,6 @@ func CreateTestInfra(viper *viper.Viper) *TestInfra {
 	viper.Set(models.ViperKeyXLDPassword, "d3ploy1t")
 	viper.Set(models.ViperKeyXLRUsername, "releaser")
 	viper.Set(models.ViperKeyXLRPassword, "r3l34s3")
-	viper.Set(models.ViperKeyBlueprintRepositoryProvider, models.ProviderGitHub)
-	viper.Set(models.ViperKeyBlueprintRepositoryName, "blueprints")
-	viper.Set(models.ViperKeyBlueprintRepositoryOwner, "xebialabs")
 
 	return infra
 }
@@ -88,6 +86,7 @@ func TestFakeApplyFiles(t *testing.T) {
 	t.Run("should not change the file tag", func(t *testing.T) {
 
 		err := os.Mkdir(blueprintDir, os.ModePerm)
+		defer os.RemoveAll(blueprintDir)
 		check(err)
 
 		xlvFile, err := os.Create(filepath.Join(blueprintDir, "prop1.xlvals"))
@@ -111,9 +110,8 @@ kind: Applications
 spec:
 - name: App1
 `, XlrApiVersion, XldApiVersion))
-		defer os.RemoveAll(blueprintDir)
 
-		v := viper.GetViper()
+		v := blueprint.GetDefaultBlueprintViperConfig(viper.GetViper())
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 

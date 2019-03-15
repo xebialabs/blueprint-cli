@@ -35,7 +35,7 @@ func DoUp(context *xl.Context) {
 }
 
 func init() {
-	rootCmd.AddCommand(upCmd)
+	//rootCmd.AddCommand(upCmd)
 
 	upFlags := upCmd.Flags()
 	upFlags.BoolVarP(&upLocalMode, "local", "l", false, "Enable local file mode, by default remote file mode is used")

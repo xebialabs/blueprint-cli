@@ -12,38 +12,83 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/google/go-github/github"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/repository"
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 type GitHubBlueprintRepository struct {
-	Context context.Context
-	Client  *github.Client
-	Name    string
-	Owner   string
-	Branch  string
-	Token   string
+	GithubContext context.Context
+	Client        *github.Client
+
+	Name     string
+	RepoName string
+	Owner    string
+	Branch   string
+	Token    string
 }
 
-func NewGitHubBlueprintRepository(name string, owner string, branch string, token string) *GitHubBlueprintRepository {
+func NewGitHubBlueprintRepository(confMap map[string]string) (*GitHubBlueprintRepository, error) {
+	// Parse context config
 	repo := new(GitHubBlueprintRepository)
-	repo.Name = name
-	repo.Owner = owner
-	repo.Branch = branch
-	repo.Token = token
+	repo.Name = confMap["name"]
 
-	// init client & context
-	repo.Context = context.Background()
-	var tc *http.Client
-	if token != "" {
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: repo.Token})
-		tc = oauth2.NewClient(repo.Context, ts)
-	} else {
-		tc = oauth2.NewClient(repo.Context, nil)
+	// parse repo name
+	if !util.MapContainsKeyWithVal(confMap, "repo-name") {
+		return nil, fmt.Errorf("'repo-name' config field must be set for GitHub repository type")
 	}
+	repo.RepoName = confMap["repo-name"]
+
+	// parse repo owner name
+	if !util.MapContainsKeyWithVal(confMap, "owner") {
+		return nil, fmt.Errorf("'owner' config field must be set for GitHub repository type")
+	}
+	repo.Owner = confMap["owner"]
+
+	// parse branch name, or set it to default
+	if util.MapContainsKeyWithVal(confMap, "branch") {
+		repo.Branch = confMap["branch"]
+	} else {
+		repo.Branch = "master"
+	}
+
+	// parse token if exists
+	if util.MapContainsKeyWithVal(confMap, "token") {
+		repo.Token = confMap["token"]
+	}
+
+	return repo, nil
+}
+
+func (repo *GitHubBlueprintRepository) Initialize() error {
+	repo.GithubContext = context.Background()
+	var tc *http.Client
+	var ts oauth2.TokenSource
+	if repo.Token != "" {
+		ts = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: repo.Token})
+	}
+	tc = oauth2.NewClient(repo.GithubContext, ts)
 	repo.Client = github.NewClient(tc)
-	return repo
+	return nil
+}
+
+func (repo *GitHubBlueprintRepository) GetName() string {
+	return repo.Name
+}
+
+func (repo *GitHubBlueprintRepository) GetProvider() string {
+	return models.ProviderGitHub
+}
+
+func (repo *GitHubBlueprintRepository) GetInfo() string {
+	return fmt.Sprintf(
+		"Provider: %s\n  Name: %s\n  Repository name: %s\n  Owner: %s\n  Branch: %s",
+		repo.GetProvider(),
+		repo.Name,
+		repo.RepoName,
+		repo.Owner,
+		repo.Branch,
+	)
 }
 
 func (repo *GitHubBlueprintRepository) ListBlueprintsFromRepo() (map[string]*models.BlueprintRemote, []string, error) {
@@ -51,14 +96,14 @@ func (repo *GitHubBlueprintRepository) ListBlueprintsFromRepo() (map[string]*mod
 	var blueprintDirs []string
 
 	// Get latest SHA of the requested branch
-	branch, _, err := repo.Client.Repositories.GetBranch(repo.Context, repo.Owner, repo.Name, repo.Branch)
+	branch, _, err := repo.Client.Repositories.GetBranch(repo.GithubContext, repo.Owner, repo.RepoName, repo.Branch)
 	if err != nil {
 		return nil, nil, err
 	}
 	sha := branch.GetCommit().GetSHA()
 
 	// Get GIT tree
-	tree, _, err := repo.Client.Git.GetTree(repo.Context, repo.Owner, repo.Name, sha, true)
+	tree, _, err := repo.Client.Git.GetTree(repo.GithubContext, repo.Owner, repo.RepoName, sha, true)
 	if err != nil {
 		if _, ok := err.(*github.RateLimitError); ok {
 			return nil, nil, fmt.Errorf("GitHub rate limit error: %s", err.Error())
@@ -100,9 +145,9 @@ func (repo *GitHubBlueprintRepository) ListBlueprintsFromRepo() (map[string]*mod
 
 func (repo *GitHubBlueprintRepository) GetFileContents(filePath string) (*[]byte, error) {
 	fileContent, _, _, err := repo.Client.Repositories.GetContents(
-		repo.Context,
+		repo.GithubContext,
 		repo.Owner,
-		repo.Name,
+		repo.RepoName,
 		filePath,
 		&github.RepositoryContentGetOptions{Ref: repo.Branch},
 	)
@@ -128,9 +173,9 @@ func (repo *GitHubBlueprintRepository) GetFileContents(filePath string) (*[]byte
 
 func (repo *GitHubBlueprintRepository) GetLargeFileContents(filePath string) ([]byte, int64, error) {
 	reader, err := repo.Client.Repositories.DownloadContents(
-		repo.Context,
+		repo.GithubContext,
 		repo.Owner,
-		repo.Name,
+		repo.RepoName,
 		filePath,
 		&github.RepositoryContentGetOptions{Ref: repo.Branch},
 	)

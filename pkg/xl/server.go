@@ -96,8 +96,7 @@ func (server *XLDeployServer) GetSchema() ([]byte, error) {
 }
 
 func (server *XLReleaseServer) GetSchema() ([]byte, error) {
-	// @todo not yet implemented on server
-	return nil, nil
+    return server.Server.DownloadSchema("devops-as-code/schema")
 }
 
 func findCurrentSteps(activeBlocks []interface{}, root []interface{}) []CurrentStep {

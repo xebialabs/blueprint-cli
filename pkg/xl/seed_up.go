@@ -7,11 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
 	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/repository"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 )
@@ -72,6 +73,21 @@ func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool,
 	// Skip Generate blueprint file
 	blueprint.SkipFinalPrompt = true
 	util.IsQuiet = true
+
+	if !upLocalMode {
+		blueprintTemplate = "xl-up"
+		var repo repository.BlueprintRepository
+		repo, err := github.NewGitHubBlueprintRepository(map[string]string{
+			"name":      "xl-up-blueprint",
+			"repo-name": "xl-up-blueprint",
+			"owner":     "xebialabs",
+		})
+		if err != nil {
+			util.Fatal("Error while creating Blueprint: %s \n", err)
+		}
+		context.BlueprintContext.ActiveRepo = &repo
+	}
+
 	err := blueprint.InstantiateBlueprint(upLocalMode, quickSetup, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s \n", err)

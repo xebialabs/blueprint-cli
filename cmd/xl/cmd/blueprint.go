@@ -31,6 +31,7 @@ var blueprintTemplate string
 
 // DoBlueprint creates blueprint templates
 func DoBlueprint(context *xl.Context) {
+	blueprintLocalMode = util.PathExists(blueprintTemplate, true)
 	err := blueprint.InstantiateBlueprint(blueprintLocalMode, false, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s\n", err)
@@ -41,6 +42,5 @@ func init() {
 	rootCmd.AddCommand(blueprintCmd)
 
 	blueprintFlags := blueprintCmd.Flags()
-	blueprintFlags.BoolVarP(&blueprintLocalMode, "local", "l", false, "Enable local file mode, by default remote file mode is used")
-	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local folder path")
+	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local absolute/relative folder path")
 }
