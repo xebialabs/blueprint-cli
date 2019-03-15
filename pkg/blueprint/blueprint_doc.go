@@ -189,7 +189,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 	return defaultVal
 }
 
-func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) string {
+func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) interface{} {
 	switch variable.Value.Tag {
 	case tagFn:
 		values, err := ProcessCustomFunction(variable.Value.Val)
@@ -222,7 +222,7 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) st
 				}
 				return fmt.Sprint(boolVal)
 			}
-			return value.(string)
+			return value
 		}
 	}
 	return variable.Value.Val
@@ -269,6 +269,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (interface{}, error) {
 	var answer string
 	var err error
+	defaultValStr := fmt.Sprintf("%v", defaultVal)
 	switch variable.Type.Val {
 	case TypeInput:
 		if variable.Secret.Bool == true {
@@ -286,13 +287,13 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			// if user bypassed question, replace with default value
 			if answer == "" {
 				util.Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Val, defaultVal)
-				answer = defaultVal.(string)
+				answer = defaultValStr
 			}
 		} else {
 			err = survey.AskOne(
 				&survey.Input{
 					Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
-					Default: defaultVal.(string),
+					Default: defaultValStr,
 				},
 				&answer,
 				validatePrompt(variable.Pattern.Val, false),
@@ -303,7 +304,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		err = survey.AskOne(
 			&survey.Editor{
 				Message:       prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
-				Default:       defaultVal.(string),
+				Default:       defaultValStr,
 				HideDefault:   true,
 				AppendDefault: true,
 			},
@@ -316,7 +317,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		err = survey.AskOne(
 			&survey.Input{
 				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the file path (relative/absolute) for %s?", variable.Name.Val)),
-				Default: defaultVal.(string),
+				Default: defaultValStr,
 			},
 			&filePath,
 			validateFilePath(),
@@ -339,7 +340,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Description.Val, fmt.Sprintf("Select value for %s?", variable.Name.Val)),
 				Options:  options,
-				Default:  defaultVal.(string),
+				Default:  defaultValStr,
 				PageSize: 10,
 			},
 			&answer,
@@ -524,7 +525,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(blueprintDefaultMode bool
 			parsedVal := variable.GetValueFieldVal(data.TemplateData)
 
 			// check if resulting value is non-empty
-			if parsedVal != "" {
+			if parsedVal != nil && parsedVal != "" {
 				if variable.Type.Val == TypeConfirm {
 					saveItemToTemplateDataMap(&variable, data, variable.Value.Bool)
 				} else {

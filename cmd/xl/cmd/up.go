@@ -28,10 +28,11 @@ var upLocalMode bool
 var upQuickSetup bool
 var upAdvancedSetup bool
 var upBlueprintTemplate string
+var cfgOverridden bool
 
 func DoUp(context *xl.Context) {
-	util.Verbose("Running XL Seed")
-	xl.InvokeBlueprintAndSeed(context, upLocalMode, upQuickSetup, upAdvancedSetup, upBlueprintTemplate)
+	util.Verbose("Running XL Seed\n")
+	xl.InvokeBlueprintAndSeed(context, upLocalMode, upBlueprintTemplate, cfgOverridden)
 }
 
 func init() {
@@ -42,4 +43,9 @@ func init() {
 	upFlags.StringVarP(&upBlueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local folder path")
 	upFlags.BoolVarP(&upQuickSetup, "quick-setup", "", false, "Quickly run setup with all default values")
 	upFlags.BoolVarP(&upAdvancedSetup, "advanced-setup", "", false, "Advanced setup")
+	upFlags.BoolVarP(&cfgOverridden, "dev", "d", false, "Enable dev mode, uses repository config from your local config instead")
+	err := upFlags.MarkHidden("dev")
+	if err != nil {
+		util.Error("error setting up cmd flags: %s\n", err.Error())
+	}
 }

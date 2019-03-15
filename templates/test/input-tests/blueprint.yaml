@@ -61,3 +61,4 @@ spec:
       - !fn aws.regions(ecs)
     default: !fn aws.regions(ecs)[0]
     value: us-west
+

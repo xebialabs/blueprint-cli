@@ -74,7 +74,7 @@ func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool,
 	blueprint.SkipFinalPrompt = true
 	util.IsQuiet = true
 
-	if !upLocalMode {
+	if !upLocalMode && !cfgOverridden {
 		blueprintTemplate = "xl-up"
 		var repo repository.BlueprintRepository
 		repo, err := github.NewGitHubBlueprintRepository(map[string]string{
