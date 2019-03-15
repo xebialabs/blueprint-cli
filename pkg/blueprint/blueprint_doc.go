@@ -587,6 +587,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(blueprintDefaultMode bool
 	return data, nil
 }
 
+// --utility functions
 func getFileContents(filepath string) (string, error) {
 	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
@@ -738,7 +739,6 @@ func parseFileMap(m *map[interface{}]interface{}) (TemplateConfig, error) {
 	return config, nil
 }
 
-// --utility functions
 func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error {
 	return func(val interface{}) error {
 		// if empty value is not allowed, check for any value

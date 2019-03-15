@@ -57,8 +57,8 @@ func askSetupMode(surveyOpts ...survey.AskOpt) string {
 	return answer
 }
 
-// InvokeBlueprintAndSeed will invoke blueprint and sthen call XL Seed
-func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool, advancedSetup bool, blueprintTemplate string) {
+// InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
+func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool, advancedSetup bool, blueprintTemplate string, cfgOverridden bool) {
 	if !(quickSetup || advancedSetup) {
 		// ask for setup mode.
 		mode := askSetupMode()

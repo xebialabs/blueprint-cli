@@ -30,9 +30,10 @@ var upAdvancedSetup bool
 var upBlueprintTemplate string
 var cfgOverridden bool
 
+// DoUp executes the up command
 func DoUp(context *xl.Context) {
 	util.Verbose("Running XL Seed\n")
-	xl.InvokeBlueprintAndSeed(context, upLocalMode, upBlueprintTemplate, cfgOverridden)
+	xl.InvokeBlueprintAndSeed(context, upLocalMode, upQuickSetup, upAdvancedSetup, upBlueprintTemplate, cfgOverridden)
 }
 
 func init() {
