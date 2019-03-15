@@ -26,10 +26,11 @@ var upCmd = &cobra.Command{
 
 var upLocalMode bool
 var upBlueprintTemplate string
+var cfgOverridden bool
 
 func DoUp(context *xl.Context) {
-	util.Verbose("Running XL Seed")
-	xl.InvokeBlueprintAndSeed(context, upLocalMode, upBlueprintTemplate)
+	util.Verbose("Running XL Seed\n")
+	xl.InvokeBlueprintAndSeed(context, upLocalMode, upBlueprintTemplate, cfgOverridden)
 }
 
 func init() {
@@ -38,4 +39,9 @@ func init() {
 	upFlags := upCmd.Flags()
 	upFlags.BoolVarP(&upLocalMode, "local", "l", false, "Enable local file mode, by default remote file mode is used")
 	upFlags.StringVarP(&upBlueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local folder path")
+    upFlags.BoolVarP(&cfgOverridden, "dev", "d", false, "Enable dev mode, uses repository config from your local config instead")
+    err := upFlags.MarkHidden("dev")
+    if err != nil {
+        util.Error("error setting up cmd flags: %s\n", err.Error())
+    }
 }
