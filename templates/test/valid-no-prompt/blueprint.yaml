@@ -52,12 +52,23 @@ spec:
     type: Input
     secret: true
     value: accesssecret
+  - name: SuperSecret
+    type: Input
+    secret: false
+    value: invisible
   - name: AWSRegion
     type: Select
     options:
       - !fn aws.regions(ecs)
     default: !fn aws.regions(ecs)[0]
     value: us-west
+  - name: DiskSize
+    type: Input
+    value: 100.0
+  - name: DiskSizeWithBuffer
+    type: Input
+    saveInXlVals: true
+    value: !expression "DiskSize * 1.251"
 
   files:
   - path: xld-environment.yml.tmpl

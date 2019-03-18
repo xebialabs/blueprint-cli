@@ -17,7 +17,7 @@ To install dependencies, run:
 ```
 ./gradlew vendor
 ```
-If you add a new dependency to the gradle build run:
+If you add a new dependency to the gradle build run: 
 ```
 ./gradlew vendor lock -Dgogradle.mode=DEV 
 ```

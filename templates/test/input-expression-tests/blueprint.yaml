@@ -1,0 +1,18 @@
+apiVersion: xl/v1
+kind: Blueprint
+metadata:
+  projectName: Test Project
+  description: Is just a test blueprint project used for manual testing of inputs
+  author: XebiaLabs
+  version: 1.0
+spec:
+  parameters:
+  - name: ExpTest1
+    type: Input
+    value: us-west
+  - name: ExpTest2
+    type: Input
+    default: 10
+  - name: ExpTest3
+    type: Input
+    default: !expression "max(ExpTest2, 20) - 1"

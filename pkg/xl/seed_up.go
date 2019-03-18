@@ -42,24 +42,24 @@ func runSeed() models.Command {
 }
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, blueprintTemplate string) {
+func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, blueprintTemplate string, cfgOverridden bool) {
 	// Skip Generate blueprint file
 	blueprint.SkipFinalPrompt = true
 	util.IsQuiet = true
 
-	if !upLocalMode {
-		blueprintTemplate = "xl-up"
-		var repo repository.BlueprintRepository
-		repo, err := github.NewGitHubBlueprintRepository(map[string]string{
-			"name":      "xl-up-blueprint",
-			"repo-name": "xl-up-blueprint",
-			"owner":     "xebialabs",
-		})
-		if err != nil {
-			util.Fatal("Error while creating Blueprint: %s \n", err)
-		}
-		context.BlueprintContext.ActiveRepo = &repo
-	}
+	if !upLocalMode && !cfgOverridden {
+        blueprintTemplate = "xl-up"
+        var repo repository.BlueprintRepository
+        repo, err := github.NewGitHubBlueprintRepository(map[string]string{
+            "name":      "xl-up-blueprint",
+            "repo-name": "xl-up-blueprint",
+            "owner":     "xebialabs",
+        })
+        if err != nil {
+            util.Fatal("Error while creating Blueprint: %s \n", err)
+        }
+        context.BlueprintContext.ActiveRepo = &repo
+    }
 
 	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir)
 	if err != nil {
