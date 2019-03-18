@@ -4,13 +4,6 @@ import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import jp.classmethod.aws.gradle.s3.AmazonS3FileUploadTask
 
-plugins {
-    id 'com.github.blindpirate.gogradle' version '0.10.2'
-    id 'pl.allegro.tech.build.axion-release' version '1.9.2'
-    id "jp.classmethod.aws" version "0.38"
-    id 'org.sonarqube' version '2.6.2'
-}
-
 buildscript {
     repositories {
         mavenLocal()
@@ -28,6 +21,13 @@ buildscript {
     dependencies {
         classpath "com.xebialabs.gradle.plugins:gradle-xl-plugins-plugin:${xlPluginsPluginVersion}"
     }
+}
+
+plugins {
+    id 'com.github.blindpirate.gogradle' version '0.10.2'
+    id 'pl.allegro.tech.build.axion-release' version '1.9.2'
+    id "jp.classmethod.aws" version "0.38"
+    id 'org.sonarqube' version '2.6.2'
 }
 
 apply plugin: 'xebialabs.opinions'
