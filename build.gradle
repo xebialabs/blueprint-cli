@@ -94,10 +94,6 @@ dependencies {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
 task installTemplify(type: Go) {
     go "get github.com/wlbr/templify"
 }
