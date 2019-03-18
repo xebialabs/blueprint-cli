@@ -184,6 +184,27 @@ def runCmd(Object... args) {
     return stdout.toString().trim()
 }
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'com.xebialabs.xlclient'
+            artifactId 'xl-client'
+            artifact("./build/darwin-amd64/xl") {
+                classifier = 'darwin-amd64'
+                extension = 'bin'
+            }
+            artifact("./build/linux-amd64/xl") {
+                classifier = 'linux-amd64'
+                extension = 'bin'
+            }
+            artifact("./build/windows-amd64/xl.exe") {
+                classifier = 'windows-amd64'
+                extension = 'exe'
+            }
+        }
+    }
+}
+
 def ldflag(c, v) {
     "-X \"github.com/xebialabs/xl-cli/cmd/xl/cmd.${c}=${v}\" "
 }
