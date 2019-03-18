@@ -11,6 +11,8 @@ plugins {
     id 'org.sonarqube' version '2.6.2'
 }
 
+apply plugin: 'xebialabs.root.opinions'
+apply plugin: 'xebialabs.opinions'
 apply plugin: 'maven-publish'
 apply plugin: 'jp.classmethod.aws.s3'
 apply plugin: 'org.sonarqube'
