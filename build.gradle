@@ -30,8 +30,8 @@ plugins {
     id 'org.sonarqube' version '2.6.2'
 }
 
+apply plugin: 'xebialabs.root.opinions'
 apply plugin: 'xebialabs.opinions'
-apply plugin: 'maven-publish'
 apply plugin: 'jp.classmethod.aws.s3'
 apply plugin: 'org.sonarqube'
 
@@ -42,7 +42,6 @@ golang {
 
 dependencies {
     golang {
-
         // *** WARNING *** since we now have license information embedded in the application
         // You need to do some additional steps when adding a library. See README for more details
         // *** NOTICE **** always verify the information from the tool since its based on heuristics
@@ -77,42 +76,6 @@ dependencies {
 repositories {
     mavenCentral()
 }
-
-
-scmVersion {
-    tag {
-        prefix = 'xl-client'
-    }
-
-    versionIncrementer {
-        context ->
-            def cv = context.currentVersion
-            def releaseScope = System.getProperty('release.releaseScope')
-            def releaseStage = System.getProperty('release.releaseStage')
-            def releaseExplicit = System.getProperty('release.releaseExplicit')
-
-            switch (releaseScope) {
-                case 'major':
-                    cv = cv.preReleaseVersion ? cv.incrementMajorVersion(cv.preReleaseVersion) : cv.incrementMajorVersion()
-                    break
-                case 'minor':
-                    cv = cv.preReleaseVersion ? cv.incrementMinorVersion(cv.preReleaseVersion) : cv.incrementMinorVersion()
-                    break
-                case 'patch':
-                    cv = cv.preReleaseVersion ? cv.incrementPatchVersion(cv.preReleaseVersion) : cv.incrementPatchVersion()
-            }
-
-            if (releaseStage && cv.preReleaseVersion?.contains(releaseStage)) {
-                cv.incrementPreReleaseVersion()
-            } else if (releaseStage) {
-                releaseStage == 'final' ? cv.valueOf(cv.normalVersion) : cv.setPreReleaseVersion(releaseStage + '.1')
-            } else {
-                releaseExplicit ? cv.valueOf(releaseExplicit) : cv
-            }
-    }
-}
-
-project.version = scmVersion.version
 
 task installTemplify(type: Go) {
     go "get github.com/wlbr/templify"
