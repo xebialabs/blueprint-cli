@@ -23,6 +23,27 @@ buildscript {
     }
 }
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'com.xebialabs.xlclient'
+            artifactId 'xl-client'
+            artifact("./build/darwin-amd64/xl") {
+                classifier = 'darwin-amd64'
+                extension = 'bin'
+            }
+            artifact("./build/linux-amd64/xl") {
+                classifier = 'linux-amd64'
+                extension = 'bin'
+            }
+            artifact("./build/windows-amd64/xl.exe") {
+                classifier = 'windows-amd64'
+                extension = 'exe'
+            }
+        }
+    }
+}
+
 plugins {
     id 'com.github.blindpirate.gogradle' version '0.11.3'
     id "jp.classmethod.aws" version "0.38"
@@ -182,27 +203,6 @@ def runCmd(Object... args) {
         standardOutput = stdout
     }
     return stdout.toString().trim()
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId 'com.xebialabs.xlclient'
-            artifactId 'xl-client'
-            artifact("./build/darwin-amd64/xl") {
-                classifier = 'darwin-amd64'
-                extension = 'bin'
-            }
-            artifact("./build/linux-amd64/xl") {
-                classifier = 'linux-amd64'
-                extension = 'bin'
-            }
-            artifact("./build/windows-amd64/xl.exe") {
-                classifier = 'windows-amd64'
-                extension = 'exe'
-            }
-        }
-    }
 }
 
 def ldflag(c, v) {
