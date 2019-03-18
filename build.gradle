@@ -11,6 +11,25 @@ plugins {
     id 'org.sonarqube' version '2.6.2'
 }
 
+buildscript {
+    repositories {
+        mavenLocal()
+        ["public", "thirdparty", "releases"].each { r ->
+            maven {
+                credentials {
+                    username nexusUserName
+                    password nexusPassword
+                }
+                url "${nexusBaseUrl}/repositories/${r}"
+            }
+        }
+    }
+
+    dependencies {
+        classpath "com.xebialabs.gradle.plugins:gradle-xl-plugins-plugin:${xlPluginsPluginVersion}"
+    }
+}
+
 apply plugin: 'xebialabs.opinions'
 apply plugin: 'maven-publish'
 apply plugin: 'jp.classmethod.aws.s3'
