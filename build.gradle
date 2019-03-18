@@ -157,39 +157,6 @@ task upx {
     }
 }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId 'com.xebialabs.xlclient'
-            artifactId 'xl-client'
-            artifact("./build/darwin-amd64/xl") {
-                classifier = 'darwin-amd64'
-                extension = 'bin'
-            }
-            artifact("./build/linux-amd64/xl") {
-                classifier = 'linux-amd64'
-                extension = 'bin'
-            }
-            artifact("./build/windows-amd64/xl.exe") {
-                classifier = 'windows-amd64'
-                extension = 'exe'
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            def alphasRepoUrl = "${nexusBaseUrl}/repositories/alphas/"
-            def releasesRepoUrl = "${nexusBaseUrl}/repositories/releases/"
-            url version.contains('alpha') ? alphasRepoUrl : releasesRepoUrl
-            credentials {
-                username nexusUserName
-                password nexusPassword
-            }
-        }
-    }
-}
-
 task uploadToS3 {
     mustRunAfter 'publish'
     dependsOn 'uploadDarwinToS3', 'uploadWindowsToS3', 'uploadLinuxToS3'
