@@ -32,7 +32,7 @@ plugins {
 apply plugin: 'xebialabs.opinions'
 apply plugin: 'jp.classmethod.aws.s3'
 apply plugin: 'org.sonarqube'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 golang {
     goVersion = '1.11'
@@ -153,6 +153,39 @@ task upx {
         }
         exec {
             commandLine 'upx', "${project.buildDir}/windows-amd64/xl.exe"
+        }
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'com.xebialabs.xlclient'
+            artifactId 'xl-client'
+            artifact("./build/darwin-amd64/xl") {
+                classifier = 'darwin-amd64'
+                extension = 'bin'
+            }
+            artifact("./build/linux-amd64/xl") {
+                classifier = 'linux-amd64'
+                extension = 'bin'
+            }
+            artifact("./build/windows-amd64/xl.exe") {
+                classifier = 'windows-amd64'
+                extension = 'exe'
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            def alphasRepoUrl = "${nexusBaseUrl}/repositories/alphas/"
+            def releasesRepoUrl = "${nexusBaseUrl}/repositories/releases/"
+            url version.contains('alpha') ? alphasRepoUrl : releasesRepoUrl
+            credentials {
+                username nexusUserName
+                password nexusPassword
+            }
         }
     }
 }
