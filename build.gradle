@@ -54,6 +54,18 @@ publishing {
             }
         }
     }
+
+    repositories {
+        maven {
+            def alphasRepoUrl = "${nexusBaseUrl}/repositories/alphas/"
+            def releasesRepoUrl = "${nexusBaseUrl}/repositories/releases/"
+            url project.version.toString().contains('alpha') ? alphasRepoUrl : releasesRepoUrl
+            credentials {
+                username nexusUserName
+                password nexusPassword
+            }
+        }
+    }
 }
 
 golang {
