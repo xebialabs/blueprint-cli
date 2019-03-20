@@ -63,7 +63,7 @@ There are two ways to optimise the output binaries sizes:
 
 * You can strip debugging information by passing `-Poptimise`.
   * This will shrink the binary by ~20%, but debugging the binary will be harder.
-* You can compress binaries by running upx task `gradle clean build upx`
+* You can compress binaries by running upx task `gradle goClean goBuild upx`
   * This will shrink the binary by ~50%
 
 In order to run UPX you need to have it installed on your system. The tool is available on brew, yum and apt.
