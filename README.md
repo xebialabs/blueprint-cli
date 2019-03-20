@@ -24,7 +24,7 @@ If you add a new dependency to the gradle build run:
 
 To build the project, run:
 ```
-./gradlew clean build
+./gradlew goClean goBuild
 ```
 The xl binary is then created in the folder `xl-cli/build/${GOOS}-${GOARCH}/xl`
 
