@@ -24,7 +24,7 @@ pipeline {
 
             steps {
                 checkout scm
-                sh "./gradlew clean build sonarqube -Dsonar.branch.name=${getBranch()} --info"
+                sh "./gradlew goClean goBuild sonarqube -Dsonar.branch.name=${getBranch()} --info"
                 script {
                   if (fileExists('build/version.dump') == true) {
                     currentVersion = readFile 'build/version.dump'
