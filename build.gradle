@@ -204,6 +204,47 @@ task uploadLinuxToS3(type: AmazonS3FileUploadTask) {
     key "bin/${project.version}/linux-amd64/xl"
 }
 
+task removeLicenseFolder {
+    doLast {
+        runCmd("rm", "-f", "licenses/*")
+    }
+}
+
+task downloadLicenses {
+    def authToken = project.property('githubOauthToken')
+    doLast {
+        runCmd("glice", "-r", "-f", "-gh", authToken)
+    }
+}
+
+task moveLicensesToFolder {
+    def licenseFiles = "*-license.MD"
+    doLast{
+        copy {
+            from(".") {
+                include licenseFiles
+            }
+            into "licenses"
+            delete fileTree(".").matching {
+                include licenseFiles
+            }
+        }
+    }
+}
+
+task updateLicenses {
+    inputs.files "build.gradle"
+
+    dependsOn 'removeLicenseFolder'
+    dependsOn 'downloadLicenses'
+    dependsOn 'moveLicensesToFolder'
+
+    tasks.findByName('downloadLicenses').mustRunAfter 'removeLicenseFolder'
+    tasks.findByName('moveLicensesToFolder').mustRunAfter 'downloadLicenses'
+}
+
+goBuild.finalizedBy(updateLicenses)
+
 def runCmd(Object... args) {
     def stdout = new ByteArrayOutputStream()
     exec {
