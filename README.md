@@ -141,7 +141,18 @@ When changing/updating dependencies:
 go get github.com/ribice/glice
 go install github.com/ribice/glice
 ```
-* Run `glice -r -f -gh <Your GitHub access token>` in the root of the project to update license files. Commit changes to version control.
+
+You will need to have your GitHub access token in your `gradle.properties` file, the name of the property is `githubOauthToken`. To get your GitHub access token do the following:
+
+1. Go to [github](https://github.com) and login into your account.
+2. Open the settings of your account.
+3. Go to `Developers settings` option on the left menu
+4. Click on `Personal access tokens`
+5. Click on `Generate new token`
+6. Add a token description and click `Generate token` (you don't need to add any permissions)
+7. Copy your token and put in your `gradle.properties` file. E.g: `githubOauthToken = 78d3d2eff2c9499e33f53870ddda4e9e40420981`
+
+Run `./gradlew updateLicenses` in the root of the project to update license files. Commit changes to version control.  
 
 **NOTE 1**
 Please make sure that you use the correct GitHub access token. Without it or with wrong one the `glice` command may *SILENTLY* produce incomplete or empty results.
