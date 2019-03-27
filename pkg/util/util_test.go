@@ -98,6 +98,73 @@ func TestMapContainsKeyWithVal(t *testing.T) {
 	}
 }
 
+func TestMapContainsKeyWithValInterface(t *testing.T) {
+    type args struct {
+        dict map[string]interface{}
+        key  string
+    }
+    testMap := map[string]interface{}{
+        "foo": "foo",
+        "bat": true,
+        "bar": 5.6,
+        "baz": "",
+        "baz2": nil,
+    }
+    tests := []struct {
+        name string
+        args args
+        want bool
+    }{
+        {
+            "should return false when map doesn't have key",
+            args{
+                testMap,
+                "foooo",
+            },
+            false,
+        },
+        {
+            "should return false when map have empty value for key",
+            args{
+                testMap,
+                "baz",
+            },
+            false,
+        },
+        {
+            "should return false when map have nil value for key",
+            args{
+                testMap,
+                "baz2",
+            },
+            false,
+        },
+        {
+            "should return true when map has float value for key",
+            args{
+                testMap,
+                "bar",
+            },
+            true,
+        },
+        {
+            "should return true when map has string value for key",
+            args{
+                testMap,
+                "foo",
+            },
+            true,
+        },
+    }
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            if got := MapContainsKeyWithValInterface(tt.args.dict, tt.args.key); got != tt.want {
+                t.Errorf("MapContainsKeyWithVal() = %v, want %v", got, tt.want)
+            }
+        })
+    }
+}
+
 func TestSortMapStringInterface(t *testing.T) {
 	tests := []struct {
 		name string
@@ -138,4 +205,80 @@ func TestSortMapStringInterface(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestDiffBetweenStringSlices(t *testing.T) {
+    tests := []struct {
+        name string
+        s1   []string
+        s2   []string
+        want []string
+    }{
+        {
+            "should get empty difference between two empty slices",
+            []string{},
+            []string{},
+            []string{},
+        },
+        {
+            "should get difference between slice1 and slice2",
+            []string{"a", "b", "c", "d", "f"},
+            []string{"b", "c", "d", "e"},
+            []string{"a", "f"},
+        },
+        {
+            "should get difference between slice1 and slice2 when second one is empty",
+            []string{"a", "b", "c", "d", "f"},
+            []string{},
+            []string{"a", "b", "c", "d", "f"},
+        },
+        {
+            "should get difference between slice1 and slice2 when first one is empty",
+            []string{},
+            []string{"a", "b", "c", "d", "f"},
+            []string{},
+        },
+    }
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := DiffBetweenStringSlices(tt.s1, tt.s2)
+            assert.Equal(t, tt.want, got)
+        })
+    }
+}
+
+func TestExtractStringKeysFromMap(t *testing.T) {
+    tests := []struct {
+        name string
+        m    map[string]interface{}
+        want []string
+    }{
+        {
+            "should extract empty slice from the empty map",
+            map[string]interface{}{},
+            []string{},
+        },
+        {
+            "should extract string keys from the provided map",
+            map[string]interface{}{
+                "foo": "hello",
+                "bar": map[string]interface{}{
+                    "foo": "hello",
+                    "xoo": map[string]interface{}{
+                        "foo": "hello",
+                        "bar": "bar",
+                    },
+                    "bar": "bar",
+                },
+                "aa": 1,
+            },
+            []string{"foo", "bar", "aa"},
+        },
+    }
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := ExtractStringKeysFromMap(tt.m)
+            assert.Empty(t, DiffBetweenStringSlices(tt.want, got))
+        })
+    }
 }

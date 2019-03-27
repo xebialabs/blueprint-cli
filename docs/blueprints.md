@@ -285,4 +285,32 @@ Flags and options that can be set to `xl blueprint` command are the following:
 | Option (short) | Option (long) | Default Value | Examples | Explanation |
 |:--------------:|:-------------:|:-------------:| :------: | :---------: |
 | `-h` | `--help` | — | `xl blueprint -h` | Prints out help text for blueprint command |
+| `-a` | `--answers` | — | `xl blueprint -a /path/to/answers.yaml` | When provided, values within answers file will be used as variable input. By default strict mode is off so any value that is not provided in the file will be asked to user. |
+| `-s` | `--strict-answers` | `false` | `xl blueprint -sa /path/to/answers.yaml` | If flag is set, all variables will be requested from the answers file, and error will be thrown if one of them is not there.<br/>If not set, existing answer values will be used from answers file, and remaining ones will be asked to user from command line. |
 | `-b` | `--blueprint` | | `xl blueprint -b aws/monolith`<br>`xl blueprint -b /path/to/local/blueprint/dir`<br/>`xl blueprint -b ../relative/path/to/local/blueprint/dir`  | Looks for the specified absolute or relative folder path in local file system, if not found looks for the path relative to the current remote repository and instead of asking user which blueprint to use, it will directly fetch the specified blueprint from remote repository, or give an error if blueprint not found in both local filesystem and remote repository |
+
+---------------
+
+## Blueprint Answers File
+
+This feature can be useful when testing blueprints or when there are too many blueprint questions to answer through command line. Command line flags `-a` and `-s`, as described above, can be given to use this feature. Input answers file format is expected to be YAML. Here's an example `answers.yaml` file:
+
+```yaml
+AppName: TestApp
+ClientCert: |
+    FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5
+    QJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ
+ProvisionCluster: true
+AWSAccessKey: accesskey
+AWSAccessSecret: accesssecret
+DiskSize: 100.0
+```
+
+Using answers file with `--strict-answers` flag, any command line input can be bypassed and blueprint tests can be fully automated. For more information on how to automate tests for blueprints with answers file and test case files, please refer to **Blueprint Testing** section of `blueprints` [XebiaLabs Blueprints](https://github.com/xebialabs/blueprints/blob/qpi-travis/README.md).
+
+When answers file is provided, it will be used in the same order as the command line input. As usual, while preparing a value for the variable following steps will be followed:
+
+- If one or both `dependsOnTrue`, `dependsOnFalse` fields exist, they are evaluated and based on the boolean result whether to continue or not is decided
+- If `value` field is present in variable definiton, regardless of answers file value, `value` field value is going to be used
+- If answers file is present and variable value is found within, it will be used
+- If none of the above is present and the variable is not skipped on condition, user will be asked for input through command line when `--strict-answers` is not enabled.

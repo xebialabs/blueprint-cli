@@ -1,0 +1,15 @@
+Test: testing
+ClientCert: |
+    FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5
+    QJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ
+TestDepends: true
+TestDepends2: false
+TestDepends3: false
+AppName: TestApp
+AWSAccessKey: accesskey
+AWSAccessSecret: accesssecret
+ShouldNotBeThere: nope
+SuperSecret: invisible
+AWSRegion: eu-central-1
+DiskSize: 100.0
+DiskSizeWithBuffer: 125.1

@@ -105,6 +105,13 @@ func MapContainsKeyWithVal(dict map[string]string, key string) bool {
 	}
 	return val != ""
 }
+func MapContainsKeyWithValInterface(dict map[string]interface{}, key string) bool {
+    val, ok := dict[key]
+    if !ok {
+        return false
+    }
+    return val != nil && val != ""
+}
 
 func DefaultConfigfilePath() (string, error) {
 	home, err := homedir.Dir()
@@ -131,4 +138,25 @@ func SortMapStringInterface(m map[string]interface{}) map[string]interface{} {
 		}
 	}
 	return sorted
+}
+
+// Returns difference between two slices: slice #1 - slice #2 as a set operation
+func DiffBetweenStringSlices(slice1, slice2 []string) (diff []string) {
+    diff = []string{}
+    for _, item := range slice1 {
+        if !funk.Contains(slice2, item) {
+            diff = append(diff, item)
+        }
+    }
+    return
+}
+
+func ExtractStringKeysFromMap(m map[string]interface{}) (keys []string) {
+    keys = make([]string, len(m))
+    i := 0
+    for key := range m {
+        keys[i] = key
+        i += 1
+    }
+    return
 }

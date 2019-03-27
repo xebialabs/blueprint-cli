@@ -104,24 +104,72 @@ func TestAdjustPathSeperatorIfNeeded(t *testing.T) {
 func TestInstantiateBlueprint(t *testing.T) {
 	SkipFinalPrompt = true
 	t.Run("should error on unknown template", func(t *testing.T) {
-		err := InstantiateBlueprint(true, "abc", getDefaultBlueprintContext(t), "xebialabs")
+		err := InstantiateBlueprint(true, "abc", getDefaultBlueprintContext(t), "xebialabs", "", false)
 
 		require.NotNil(t, err)
 		assert.Equal(t, "template not found in path abc/blueprint.yml", err.Error())
 	})
 	t.Run("should error on invalid test template", func(t *testing.T) {
-		err := InstantiateBlueprint(true, GetTestTemplateDir("invalid"), getDefaultBlueprintContext(t), "xebialabs")
+		err := InstantiateBlueprint(true, GetTestTemplateDir("invalid"), getDefaultBlueprintContext(t), "xebialabs", "", false)
 
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
 	})
+    t.Run("should create output files for valid test template with answers file", func(t *testing.T) {
+        outFolder := "xebialabs"
+        defer RemoveFiles("xld-*.yml")
+        defer RemoveFiles("xlr-*.yml")
+        defer os.RemoveAll(outFolder)
+
+        // create blueprint
+        err := InstantiateBlueprint(true, GetTestTemplateDir("answer-input"), getDefaultBlueprintContext(t), outFolder, GetTestTemplateDir("answer-input.yaml"), true)
+        require.Nil(t, err)
+
+        // assertions
+        assert.FileExists(t, "xld-environment.yml")
+        assert.FileExists(t, "xld-infrastructure.yml")
+        assert.FileExists(t, "xlr-pipeline.yml")
+        assert.FileExists(t, path.Join(outFolder, valuesFile))
+        assert.FileExists(t, path.Join(outFolder, secretsFile))
+        assert.FileExists(t, path.Join(outFolder, gitignoreFile))
+
+        // check __test__ directory is not there
+        _, err = os.Stat("__test__")
+        assert.True(t, os.IsNotExist(err))
+
+        // check values file
+        valsFile := GetFileContent(path.Join(outFolder, valuesFile))
+        valueMap := map[string]string{
+            "Test": "testing",
+            "ClientCert": "FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5\\nQJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ\\n",
+            "AppName": "TestApp",
+            "SuperSecret": "invisible",
+            "AWSRegion": "eu-central-1",
+            "DiskSize": "100",
+            "DiskSizeWithBuffer": "125.1",
+            "ShouldNotBeThere": "",
+        }
+        for k, v := range valueMap {
+            assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+        }
+
+        // check secrets file
+        secretsFile := GetFileContent(path.Join(outFolder, secretsFile))
+        secretsMap := map[string]string{
+            "AWSAccessKey": "accesskey",
+            "AWSAccessSecret": "accesssecret",
+        }
+        for k, v := range secretsMap {
+            assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+        }
+    })
 	t.Run("should create output files for valid test template without prompts when no registry is defined", func(t *testing.T) {
 		outFolder := "xebialabs"
 		defer RemoveFiles("xld-*.yml")
 		defer RemoveFiles("xlr-*.yml")
 		defer os.RemoveAll(outFolder)
 		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder)
+		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder, "", false)
 		require.Nil(t, err)
 
 		// assertions
@@ -159,7 +207,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		defer RemoveFiles("xlr-*.yml")
 		defer os.RemoveAll(outFolder)
 		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder)
+		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder, "", false)
 		require.Nil(t, err)
 
 		// assertions

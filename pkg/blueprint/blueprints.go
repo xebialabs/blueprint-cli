@@ -7,6 +7,9 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/thoas/go-funk"
+
 	"text/template"
 
 	"github.com/magiconair/properties"
@@ -27,6 +30,8 @@ const (
 	secretsFileHeader = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
 	gitignoreFile     = ".gitignore"
 )
+
+var ignoredPaths = []string{"__test__"}
 
 func getFuncMaps() template.FuncMap {
 	funcMaps := sprig.TxtFuncMap()
@@ -58,7 +63,15 @@ func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parame
 }
 
 // InstantiateBlueprint is entry point for the cli command
-func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprintContext *BlueprintContext, outputDir string, surveyOpts ...survey.AskOpt) error {
+func InstantiateBlueprint(
+	blueprintLocalMode bool,
+	templatePath string,
+	blueprintContext *BlueprintContext,
+	outputDir string,
+	answersFile string,
+	strictAnswers bool,
+	surveyOpts ...survey.AskOpt,
+) error {
 	var err error
 	var blueprints map[string]*models.BlueprintRemote
 
@@ -90,7 +103,7 @@ func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprin
 	util.Verbose("[dataPrep] Got blueprint metadata: %#v\n", blueprintDoc.Metadata)
 
 	// ask for user input
-	preparedData, err := blueprintDoc.prepareTemplateData(surveyOpts...)
+	preparedData, err := blueprintDoc.prepareTemplateData(answersFile, strictAnswers, surveyOpts...)
 	if err != nil {
 		return err
 	}
@@ -151,11 +164,16 @@ func InstantiateBlueprint(blueprintLocalMode bool, templatePath string, blueprin
 				return err
 			}
 		} else {
-			// handle non-template files - copy as-it-is
-			util.Verbose("[file] Copying file %s\n", config.FullPath)
-			err = writeDataToFile(config.File, &templateString)
-			if err != nil {
-				return err
+			if funk.ContainsString(ignoredPaths, filepath.Base(filepath.Dir(config.FullPath))) {
+				// skip files under ignored directories
+				util.Verbose("[file] Skipping file %s because path is under ignored list\n", config.FullPath)
+			} else {
+				// handle non-template files - copy as-it-is
+				util.Verbose("[file] Copying file %s\n", config.FullPath)
+				err = writeDataToFile(config.File, &templateString)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
