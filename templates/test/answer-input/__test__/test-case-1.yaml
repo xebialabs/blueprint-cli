@@ -1,0 +1,18 @@
+answers-file: answers-01.yaml
+expected-files:
+    - xebialabs.yaml
+    - cloudformation/data-lake-api.yaml
+    - cloudformation/data-lake-artifacts.zip
+    - cloudformation/data-lake-deploy-federated.master.yaml
+    - cloudformation/data-lake-deploy.master.yaml
+    - cloudformation/data-lake-services.yaml
+    - cloudformation/data-lake-storage.yaml
+    - xebialabs/USAGE.md
+    - xebialabs/xld-environment.yaml
+    - xebialabs/xld-infrastructure.yaml
+    - xebialabs/xlr-pipeline.yaml
+expected-xl-values:
+    AWSRegion: us-east-2
+expected-xl-secrets:
+    AWSAccessKey: ANDGDJDHJHD4235
+    AWSAccessSecret: ANDGDJDHJHD4235

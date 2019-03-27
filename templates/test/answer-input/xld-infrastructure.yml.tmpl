@@ -1,0 +1,132 @@
+apiVersion: xl-deploy/v1
+kind: Applications
+spec:
+- name: {{.AppName}}
+  type: core.Directory
+  children:
+    - name: {{.AppName}}-ecs-fargate-cluster
+      type: udm.Application
+      children:
+      - name: '1.0'
+        type: udm.DeploymentPackage
+        deployables:
+# ECS cluster (no instances, FARGATE only)
+        - name: {{.AppName}}-ecs-cluster
+          type: aws.ecs.ClusterSpec
+          clusterName: '{{.AppName}}-ecs-cluster'
+          region: '{{"{{region}}"}}'
+
+# Networking
+        - name: {{.AppName}}-ecs-vpc
+          type: aws.vpc.VPCSpec
+          vpcName: '{{.AppName}}-ecs-vpc'
+          region: '{{"{{region}}"}}'
+          cidrBlock: 10.0.0.0/16
+          createInternetGateway: true
+          internetGatewayName: '{{.AppName}}-ecs-igw'
+        - name: {{.AppName}}-ecs-subnet-ipv4-az-1a
+          type: aws.vpc.SubnetSpec
+          subnetName: '{{.AppName}}-ecs-subnet-ipv4-az-1a'
+          region: '{{"{{region}}"}}'
+          availabilityZone: '{{"{{region}}"}}a'
+          vpc: 'Name:{{.AppName}}-ecs-vpc'
+          cidrBlock: 10.0.0.0/24
+        - name: {{.AppName}}-ecs-subnet-ipv4-az-1b
+          type: aws.vpc.SubnetSpec
+          subnetName: '{{.AppName}}-ecs-subnet-ipv4-az-1b'
+          region: '{{"{{region}}"}}'
+          availabilityZone: '{{"{{region}}"}}b'
+          vpc: 'Name:{{.AppName}}-ecs-vpc'
+          cidrBlock: 10.0.1.0/24
+        - name: {{.AppName}}-ecs-route-table
+          type: aws.vpc.RouteTableSpec
+          routeTableName: '{{.AppName}}-ecs-route-table'
+          region: '{{"{{region}}"}}'
+          vpc: 'Name:{{.AppName}}-ecs-vpc'
+          is_main: true
+          subnets:
+          - 'Name:{{.AppName}}-ecs-subnet-ipv4-az-1a'
+          - 'Name:{{.AppName}}-ecs-subnet-ipv4-az-1b'
+          routes:
+          - name: route1
+            type: aws.vpc.RouteSpec
+            ipv4Address: 0.0.0.0/0
+            gatewayId: 'Name:{{.AppName}}-ecs-igw'
+# Security
+        - name: {{.AppName}}-ecs-security-group
+          type: aws.vpc.SecurityGroupSpec
+          securityGroupName: '{{.AppName}}-ecs-security-group'
+          description: Created by XL Deploy
+          region: '{{"{{region}}"}}'
+          vpc: 'Name:{{.AppName}}-ecs-vpc'
+          inboundRules:
+          - name: inbound
+            type: aws.vpc.SecurityGroupInboundRuleSpec
+            protocol: -1
+            portRange: 22
+            source: 0.0.0.0/0
+
+# Load balancer
+        - name: {{.AppName}}-targetgroup
+          type: aws.elb.TargetGroupSpec
+          targetName: {{.AppName}}-targetgroup
+          targetType: ip
+          region: '{{"{{region}}"}}'
+          vpc: 'Name:{{.AppName}}-ecs-vpc'
+          protocol: http
+          port: {{.PublicPort}}
+          healthCheckInterval: 30
+        - name: {{.AppName}}-ecs-alb
+          type: aws.elb.ApplicationELBSpec
+          loadBalancerName: {{.AppName}}-ecs-alb
+          region: '{{"{{region}}"}}'
+          scheme: internet-facing
+          listeners:
+          - name: {{.AppName}}-ecs-alb-listener
+            type: aws.elb.ApplicationListenerSpec
+            protocol: http
+            port: {{.PublicPort}}
+            targetGroup: {{.AppName}}-targetgroup
+          subnets:
+          - 'Name:{{.AppName}}-ecs-subnet-ipv4-az-1a'
+          - 'Name:{{.AppName}}-ecs-subnet-ipv4-az-1b'
+          securityGroups:
+          - 'Name:{{.AppName}}-ecs-security-group'
+          boundTemplates:
+          - "../{{.AppName}}-ecs-alb-dictionary"
+# RDS Database
+        - name: {{.AppName}}-ecs-db-subnet-group
+          description: DB subnet group
+          type: aws.rds.DBSubnetGroupSpec
+          subnetGroupName: '{{.AppName}}-ecs-db-subnet-group'
+          region: '{{"{{region}}"}}'
+          subnets:
+          - 'Name:{{.AppName}}-ecs-subnet-ipv4-az-1a'
+          - 'Name:{{.AppName}}-ecs-subnet-ipv4-az-1b'
+        - name: {{.AppName}}-mysql-db
+          type: aws.rds.DBInstanceSpec
+          region: '{{"{{region}}"}}'
+          engine: mysql
+          multiAZ: true
+          licenseModel: general-public-license
+          allocatedStorage: 20
+          dbInstanceClass: db.t2.small
+          dbInstanceIdentifier: store-mysql-db
+          dbSubnetGroupName: '{{.AppName}}-ecs-db-subnet-group'
+          vpcSecurityGroupIds:
+          - 'Name:{{.AppName}}-ecs-security-group'
+          dbName: store
+          masterUsername: store
+          masterUserPassword: {{.MySQLMasterPassword}}
+          boundTemplates:
+          - "../{{.AppName}}-ecs-dictionary"
+        templates:
+        - name: {{.AppName}}-ecs-dictionary
+          type: template.udm.Dictionary
+          entries:
+            MYSQL_DB_ADDRESS: '{{"{{%address%}}"}}'
+            MYSQL_DB_PORT: '{{"{{%finalPort%}}"}}'
+        - name: {{.AppName}}-ecs-alb-dictionary
+          type: template.udm.Dictionary
+          entries:
+            ALB_DNS_NAME: '{{"{{%dnsName%}}"}}'

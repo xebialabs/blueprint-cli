@@ -1,0 +1,57 @@
+apiVersion: xl/v1
+kind: Blueprint
+metadata:
+  projectName: Test Project
+  description: Is just a test blueprint project
+  author: XebiaLabs
+  version: 1.0
+spec:
+  parameters:
+  - name: Test
+    type: Input
+    saveInXlVals: true
+  - name: ClientCert
+    type: Editor
+    saveInXlVals: true
+  - name: TestDepends
+    type: Confirm
+  - name: TestDepends2
+    type: Confirm
+  - name: TestDepends3
+    type: Confirm
+  - name: AppName
+    type: Input
+    pattern: "[a-zA-Z-]*"
+    saveInXlVals: true
+    description: Application name, will be used in various AWS resource names
+  - name: ShouldNotBeThere
+    type: Input
+    saveInXlVals: true
+    dependsOnTrue: TestDepends2
+  - name: AWSAccessKey
+    type: Input
+    secret: true
+  - name: AWSAccessSecret
+    type: Input
+    secret: true
+  - name: SuperSecret
+    type: Input
+    secret: false
+    saveInXlVals: true
+  - name: AWSRegion
+    type: Select
+    options:
+      - !fn aws.regions(ecs)
+    default: !fn aws.regions(ecs)[0]
+    saveInXlVals: true
+  - name: DiskSize
+    type: Input
+    saveInXlVals: true
+  - name: DiskSizeWithBuffer
+    type: Input
+    saveInXlVals: true
+
+  files:
+  - path: xld-environment.yml.tmpl
+  - path: xld-infrastructure.yml.tmpl
+  - path: xlr-pipeline.yml
