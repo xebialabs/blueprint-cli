@@ -561,7 +561,7 @@ func (blueprintDoc *BlueprintYaml) getValuesFromAnswersFile(answersFilePath stri
 }
 
 // prepare template data by getting user input and calling named functions
-func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, strictAnswers bool, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
+func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, strictAnswers bool, useDefaultsAsValue bool, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
 	data := NewPreparedData()
 
 	// if exists, get map of answers from file
@@ -627,7 +627,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 		}
 
 		// skip user input if it is in default mode and default value is present
-		if blueprintDefaultMode && defaultVal != nil && defaultVal != "" {
+		if useDefaultsAsValue && defaultVal != nil && defaultVal != "" {
 			finalVal := defaultVal
 			if variable.Type.Val == TypeFile {
 				fileContent, err := getFileContents(defaultVal.(string))

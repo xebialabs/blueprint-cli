@@ -104,13 +104,13 @@ func TestAdjustPathSeperatorIfNeeded(t *testing.T) {
 func TestInstantiateBlueprint(t *testing.T) {
 	SkipFinalPrompt = true
 	t.Run("should error on unknown template", func(t *testing.T) {
-		err := InstantiateBlueprint(true, "abc", getDefaultBlueprintContext(t), "xebialabs", "", false)
+		err := InstantiateBlueprint(true, "abc", getDefaultBlueprintContext(t), "xebialabs", "", false, false)
 
 		require.NotNil(t, err)
 		assert.Equal(t, "template not found in path abc/blueprint.yml", err.Error())
 	})
 	t.Run("should error on invalid test template", func(t *testing.T) {
-		err := InstantiateBlueprint(true, GetTestTemplateDir("invalid"), getDefaultBlueprintContext(t), "xebialabs", "", false)
+		err := InstantiateBlueprint(true, GetTestTemplateDir("invalid"), getDefaultBlueprintContext(t), "xebialabs", "", false, false)
 
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
@@ -122,7 +122,7 @@ func TestInstantiateBlueprint(t *testing.T) {
         defer os.RemoveAll(outFolder)
 
         // create blueprint
-        err := InstantiateBlueprint(true, GetTestTemplateDir("answer-input"), getDefaultBlueprintContext(t), outFolder, GetTestTemplateDir("answer-input.yaml"), true)
+        err := InstantiateBlueprint(true, GetTestTemplateDir("answer-input"), getDefaultBlueprintContext(t), outFolder, GetTestTemplateDir("answer-input.yaml"), true, false)
         require.Nil(t, err)
 
         // assertions
@@ -169,7 +169,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		defer RemoveFiles("xlr-*.yml")
 		defer os.RemoveAll(outFolder)
 		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder, "", false)
+		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder, "", false, false)
 		require.Nil(t, err)
 
 		// assertions
@@ -207,7 +207,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		defer RemoveFiles("xlr-*.yml")
 		defer os.RemoveAll(outFolder)
 		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder, "", false)
+		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder, "", false, false)
 		require.Nil(t, err)
 
 		// assertions

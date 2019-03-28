@@ -70,6 +70,7 @@ func InstantiateBlueprint(
 	outputDir string,
 	answersFile string,
 	strictAnswers bool,
+    useDefaultsAsValue bool,
 	surveyOpts ...survey.AskOpt,
 ) error {
 	var err error
@@ -103,14 +104,14 @@ func InstantiateBlueprint(
 	util.Verbose("[dataPrep] Got blueprint metadata: %#v\n", blueprintDoc.Metadata)
 
 	// ask for user input
-	preparedData, err := blueprintDoc.prepareTemplateData(answersFile, strictAnswers, surveyOpts...)
+	preparedData, err := blueprintDoc.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
 	if err != nil {
 		return err
 	}
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
-	// TODO handle it more gracefully and Good UI
-	if blueprintDefaultMode {
+	// TODO: if this is use-defaults mode, show used default values as table
+	if useDefaultsAsValue {
 		util.IsQuiet = false
 		util.Info("%s", preparedData)
 		util.IsQuiet = true
