@@ -34,6 +34,7 @@ spec:
   - name: AWSAccessSecret
     type: Input
     secret: true
+    UseRawValue: true
   - name: SuperSecret
     type: Input
     secret: false
