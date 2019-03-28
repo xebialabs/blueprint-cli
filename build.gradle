@@ -4,16 +4,69 @@ import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import jp.classmethod.aws.gradle.s3.AmazonS3FileUploadTask
 
+buildscript {
+    repositories {
+        mavenLocal()
+        ["public", "thirdparty", "releases"].each { r ->
+            maven {
+                credentials {
+                    username nexusUserName
+                    password nexusPassword
+                }
+                url "${nexusBaseUrl}/repositories/${r}"
+            }
+        }
+    }
+
+    dependencies {
+        classpath "com.xebialabs.gradle.plugins:gradle-xl-plugins-plugin:${xlPluginsPluginVersion}"
+    }
+}
+
 plugins {
-    id 'com.github.blindpirate.gogradle' version '0.10.2'
-    id 'pl.allegro.tech.build.axion-release' version '1.9.2'
+    id 'com.github.blindpirate.gogradle' version '0.11.3'
     id "jp.classmethod.aws" version "0.38"
     id 'org.sonarqube' version '2.6.2'
 }
 
+apply plugin: 'xebialabs.root.opinions'
+apply plugin: 'xebialabs.opinions'
 apply plugin: 'maven-publish'
 apply plugin: 'jp.classmethod.aws.s3'
 apply plugin: 'org.sonarqube'
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'com.xebialabs.xlclient'
+            artifactId 'xl-client'
+            artifact("./build/darwin-amd64/xl") {
+                classifier = 'darwin-amd64'
+                extension = 'bin'
+            }
+            artifact("./build/linux-amd64/xl") {
+                classifier = 'linux-amd64'
+                extension = 'bin'
+            }
+            artifact("./build/windows-amd64/xl.exe") {
+                classifier = 'windows-amd64'
+                extension = 'exe'
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            def alphasRepoUrl = "${nexusBaseUrl}/repositories/alphas/"
+            def releasesRepoUrl = "${nexusBaseUrl}/repositories/releases/"
+            url project.version.toString().contains('alpha') ? alphasRepoUrl : releasesRepoUrl
+            credentials {
+                username nexusUserName
+                password nexusPassword
+            }
+        }
+    }
+}
 
 golang {
     goVersion = '1.11'
@@ -22,7 +75,6 @@ golang {
 
 dependencies {
     golang {
-
         // *** WARNING *** since we now have license information embedded in the application
         // You need to do some additional steps when adding a library. See README for more details
         // *** NOTICE **** always verify the information from the tool since its based on heuristics
@@ -54,46 +106,6 @@ dependencies {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
-
-scmVersion {
-    tag {
-        prefix = 'xl-client'
-    }
-
-    versionIncrementer {
-        context ->
-            def cv = context.currentVersion
-            def releaseScope = System.getProperty('release.releaseScope')
-            def releaseStage = System.getProperty('release.releaseStage')
-            def releaseExplicit = System.getProperty('release.releaseExplicit')
-
-            switch (releaseScope) {
-                case 'major':
-                    cv = cv.preReleaseVersion ? cv.incrementMajorVersion(cv.preReleaseVersion) : cv.incrementMajorVersion()
-                    break
-                case 'minor':
-                    cv = cv.preReleaseVersion ? cv.incrementMinorVersion(cv.preReleaseVersion) : cv.incrementMinorVersion()
-                    break
-                case 'patch':
-                    cv = cv.preReleaseVersion ? cv.incrementPatchVersion(cv.preReleaseVersion) : cv.incrementPatchVersion()
-            }
-
-            if (releaseStage && cv.preReleaseVersion?.contains(releaseStage)) {
-                cv.incrementPreReleaseVersion()
-            } else if (releaseStage) {
-                releaseStage == 'final' ? cv.valueOf(cv.normalVersion) : cv.setPreReleaseVersion(releaseStage + '.1')
-            } else {
-                releaseExplicit ? cv.valueOf(releaseExplicit) : cv
-            }
-    }
-}
-
-project.version = scmVersion.version
-
 task installTemplify(type: Go) {
     go "get github.com/wlbr/templify"
 }
@@ -104,16 +116,10 @@ task installPackr(type: Go) {
 
 installDependencies.dependsOn installTemplify, installPackr
 
-task dumpVersion {
-    file(buildDir).mkdirs()
-    def out = file("$buildDir/version.dump")
-    out.write("version=$project.version")
-}
-
-build {
+goBuild {
     // Cross-compile platforms, update as necessary.
     targetPlatform = [
-            'darwin-amd64', 'linux-amd64', 'windows-amd64'
+        'darwin-amd64', 'linux-amd64', 'windows-amd64'
     ]
 
     environment "CGO_ENABLED", "0" // To make sure a fully statically linked binary is produced even when building on linux
@@ -127,13 +133,13 @@ build {
     def date = simpleDateFormat.format(new Date())
 
     def ldflags = " -ldflags='" +
-            ldflag("CliVersion", { -> project.version}) +
-            ldflag("BuildVersion", gitVersionShort) +
-            ldflag("BuildGitCommit", gitCommit) +
-            ldflag("BuildDate", date) +
-            (project.hasProperty("optimise") ? "-s -w" : "") +
-            "'"
-    
+        ldflag("CliVersion", { -> project.version}) +
+        ldflag("BuildVersion", gitVersionShort) +
+        ldflag("BuildGitCommit", gitCommit) +
+        ldflag("BuildDate", date) +
+        (project.hasProperty("optimise") ? "-s -w" : "") +
+        "'"
+
     def debugFlags = project.hasProperty("debug") ? " -gcflags \"all=-N -l\"" : ""
 
     run Paths.get("\${GOPATH}/bin/packr").toString() + " -i cmd/xl"
@@ -149,9 +155,9 @@ aws {
     profileName = "default"
 }
 
-build.dependsOn test
+goBuild.dependsOn goTest
 
-clean.doFirst {
+goClean.doFirst {
     delete 'build'
 }
 
@@ -161,7 +167,7 @@ task copyVendor(type: Copy) {
 }
 
 task upx {
-    dependsOn build
+    dependsOn goBuild
     doLast {
         exec {
             commandLine 'upx', "${project.buildDir}/darwin-amd64/xl"
@@ -171,39 +177,6 @@ task upx {
         }
         exec {
             commandLine 'upx', "${project.buildDir}/windows-amd64/xl.exe"
-        }
-    }
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId 'com.xebialabs.xlclient'
-            artifactId 'xl-client'
-            artifact("./build/darwin-amd64/xl") {
-                classifier = 'darwin-amd64'
-                extension = 'bin'
-            }
-            artifact("./build/linux-amd64/xl") {
-                classifier = 'linux-amd64'
-                extension = 'bin'
-            }
-            artifact("./build/windows-amd64/xl.exe") {
-                classifier = 'windows-amd64'
-                extension = 'exe'
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            def alphasRepoUrl = "${nexusBaseUrl}/repositories/alphas/"
-            def releasesRepoUrl = "${nexusBaseUrl}/repositories/releases/"
-            url version.contains('alpha') ? alphasRepoUrl : releasesRepoUrl
-            credentials {
-                username nexusUserName
-                password nexusPassword
-            }
         }
     }
 }
@@ -230,6 +203,47 @@ task uploadLinuxToS3(type: AmazonS3FileUploadTask) {
     bucketName 'xl-cli'
     key "bin/${project.version}/linux-amd64/xl"
 }
+
+task removeLicenseFolder {
+    doLast {
+        runCmd("rm", "-f", "licenses/*")
+    }
+}
+
+task downloadLicenses {
+    def authToken = project.property('githubOauthToken')
+    doLast {
+        runCmd("glice", "-r", "-f", "-gh", authToken)
+    }
+}
+
+task moveLicensesToFolder {
+    def licenseFiles = "*-license.MD"
+    doLast{
+        copy {
+            from(".") {
+                include licenseFiles
+            }
+            into "licenses"
+            delete fileTree(".").matching {
+                include licenseFiles
+            }
+        }
+    }
+}
+
+task updateLicenses {
+    inputs.files "build.gradle"
+
+    dependsOn 'removeLicenseFolder'
+    dependsOn 'downloadLicenses'
+    dependsOn 'moveLicensesToFolder'
+
+    tasks.findByName('downloadLicenses').mustRunAfter 'removeLicenseFolder'
+    tasks.findByName('moveLicensesToFolder').mustRunAfter 'downloadLicenses'
+}
+
+goBuild.finalizedBy(updateLicenses)
 
 def runCmd(Object... args) {
     def stdout = new ByteArrayOutputStream()

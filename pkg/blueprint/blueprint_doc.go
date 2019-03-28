@@ -266,6 +266,53 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 	return options
 }
 
+func (variable *Variable) GetAnswerFromMap(answerMap map[string]interface{}, parameters map[string]interface{}) (interface{}, error) {
+    if util.MapContainsKeyWithValInterface(answerMap, variable.Name.Val) {
+        answer := answerMap[variable.Name.Val]
+
+        // specific conversions by type if needed
+        switch variable.Type.Val {
+        case TypeConfirm:
+            answerBool := answer.(bool)
+            variable.Value.Bool = answerBool
+            return answerBool, nil
+        case TypeSelect:
+            // check if answer is one of the options, error if not
+            options := variable.GetOptions(parameters)
+            answerStr := fmt.Sprintf("%v", answer)
+            if !funk.Contains(options, answerStr) {
+                return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Val)
+            }
+            return answerStr, nil
+        case TypeFile:
+            // read file contents
+            filePath := answer.(string)
+            util.Verbose("[input] Reading file contents from path: %s\n", filePath)
+            data, err := ioutil.ReadFile(filePath)
+            if err != nil {
+                return "", fmt.Errorf("error reading input file [%s]: %s", filePath, err.Error())
+            }
+            return string(data), nil
+        default:
+            // do pattern validation if needed
+            if variable.Pattern.Val != "" {
+                allowEmpty := false
+                if variable.Type.Val == TypeInput && variable.Secret.Bool == true {
+                    allowEmpty = true
+                }
+                validationErr := validatePrompt(variable.Pattern.Val, allowEmpty)(answer)
+                if validationErr != nil {
+                    return nil, fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", answer, variable.Name.Val, validationErr.Error())
+                }
+            }
+            return answer, nil
+        }
+    }
+
+    // return nil if we do not have answer
+    return nil, nil
+}
+
 func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (interface{}, error) {
 	var answer string
 	var err error
@@ -493,9 +540,50 @@ func (blueprintDoc *BlueprintYaml) validate() error {
 	return validateFiles(&blueprintDoc.TemplateConfigs)
 }
 
+// get values from answers file
+func (blueprintDoc *BlueprintYaml) getValuesFromAnswersFile(answersFilePath string) (map[string]interface{}, error) {
+    if util.PathExists(answersFilePath, false) {
+        // read file contents
+        content, err := ioutil.ReadFile(answersFilePath)
+        if err != nil {
+            return nil, err
+        }
+
+        // parse answers file
+        answers := make(map[string]interface{})
+        err = yaml.Unmarshal(content, answers)
+        if err != nil {
+            return nil, err
+        }
+        return answers, nil
+    }
+    return nil, fmt.Errorf("blueprint answers file not found in path %s", answersFilePath)
+}
+
 // prepare template data by getting user input and calling named functions
-func (blueprintDoc *BlueprintYaml) prepareTemplateData(blueprintDefaultMode bool, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
+func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, strictAnswers bool, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
 	data := NewPreparedData()
+
+	// if exists, get map of answers from file
+	var answerMap map[string]interface{}
+	var err error
+	usingAnswersFile := false
+    if answersFilePath != "" {
+        // parse answers file
+        util.Verbose("[dataPrep] Using answers file [%s] (strict: %t) instead of asking questions from console\n", answersFilePath, strictAnswers)
+        answerMap, err = blueprintDoc.getValuesFromAnswersFile(answersFilePath)
+        if err != nil {
+            return nil, err
+        }
+
+        // skip final prompt if in strict answers mode
+        if strictAnswers {
+            SkipFinalPrompt = true
+        }
+        usingAnswersFile = true
+    }
+
+	// for every variable defined in blueprint.yaml file
 	for i, variable := range blueprintDoc.Variables {
 		// process default field value
 		defaultVal := variable.GetDefaultVal(data.TemplateData)
@@ -560,7 +648,32 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(blueprintDefaultMode bool
 			continue
 		}
 
-		// ask question based on type to get value - if value field is not present
+        // check answers file for variable value, if exists
+        if usingAnswersFile {
+            answer, err := variable.GetAnswerFromMap(answerMap, data.TemplateData)
+            if err != nil {
+                return nil, err
+            }
+
+            // if we have a valid answer, skip user input
+            if answer != nil {
+                if variable.Type.Val == TypeConfirm {
+                    blueprintDoc.Variables[i] = variable
+                }
+                saveItemToTemplateDataMap(&variable, data, answer)
+                util.Info("[dataPrep] Using answer file value [%v] for variable [%s]\n", answer, variable.Name.Val)
+                continue
+            } else {
+                if strictAnswers {
+                    return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Val)
+                } // do not return error when in non-strict answers mode, instead ask user input for the variable value
+            }
+        }
+
+		// ask question based on type to get value - on the following conditions in order
+		// * if dependsOn fields exists, they have boolean result TRUE
+		// * if value field is not present
+		// * if answers file is not present or isPartial is set to TRUE and answer not found on file for the variable
 		util.Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Val, variable.Type.Val)
 		answer, err := variable.GetUserInput(defaultVal, data.TemplateData, surveyOpts...)
 		if err != nil {
@@ -739,6 +852,7 @@ func parseFileMap(m *map[interface{}]interface{}) (TemplateConfig, error) {
 	return config, nil
 }
 
+// --utility functions
 func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error {
 	return func(val interface{}) error {
 		// if empty value is not allowed, check for any value

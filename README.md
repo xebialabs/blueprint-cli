@@ -24,7 +24,7 @@ If you add a new dependency to the gradle build run:
 
 To build the project, run:
 ```
-./gradlew clean build
+./gradlew goClean goBuild
 ```
 The xl binary is then created in the folder `xl-cli/build/${GOOS}-${GOARCH}/xl`
 
@@ -63,7 +63,7 @@ There are two ways to optimise the output binaries sizes:
 
 * You can strip debugging information by passing `-Poptimise`.
   * This will shrink the binary by ~20%, but debugging the binary will be harder.
-* You can compress binaries by running upx task `gradle clean build upx`
+* You can compress binaries by running upx task `gradle goClean goBuild upx`
   * This will shrink the binary by ~50%
 
 In order to run UPX you need to have it installed on your system. The tool is available on brew, yum and apt.
@@ -141,7 +141,18 @@ When changing/updating dependencies:
 go get github.com/ribice/glice
 go install github.com/ribice/glice
 ```
-* Run `glice -r -f -gh <Your GitHub access token>` in the root of the project to update license files. Commit changes to version control.
+
+You will need to have your GitHub access token in your `gradle.properties` file, the name of the property is `githubOauthToken`. To get your GitHub access token do the following:
+
+1. Go to [github](https://github.com) and login into your account.
+2. Open the settings of your account.
+3. Go to `Developers settings` option on the left menu
+4. Click on `Personal access tokens`
+5. Click on `Generate new token`
+6. Add a token description and click `Generate token` (you don't need to add any permissions)
+7. Copy your token and put in your `gradle.properties` file. E.g: `githubOauthToken = 78d3d2eff2c9499e33f53870ddda4e9e40420981`
+
+Run `./gradlew updateLicenses` in the root of the project to update license files. Commit changes to version control.  
 
 **NOTE 1**
 Please make sure that you use the correct GitHub access token. Without it or with wrong one the `glice` command may *SILENTLY* produce incomplete or empty results.
