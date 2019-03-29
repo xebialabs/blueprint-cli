@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -70,7 +71,7 @@ func InstantiateBlueprint(
 	outputDir string,
 	answersFile string,
 	strictAnswers bool,
-    useDefaultsAsValue bool,
+	useDefaultsAsValue bool,
 	surveyOpts ...survey.AskOpt,
 ) error {
 	var err error
@@ -113,7 +114,7 @@ func InstantiateBlueprint(
 	// TODO: if this is use-defaults mode, show used default values as table
 	if useDefaultsAsValue {
 		util.IsQuiet = false
-		util.Info("%s", preparedData)
+		util.Info("%s", printData(preparedData))
 		util.IsQuiet = true
 	}
 
@@ -263,4 +264,29 @@ func writeConfigToFile(header string, config map[string]interface{}, filename st
 	util.Verbose("\tWrote %d bytes \n", bytesWrittenHeader+bytesWrittenConfig)
 	util.Info("[file] Blueprint output file '%s' generated successfully\n", filename)
 	return nil
+}
+
+func printData(preparedData *PreparedData) {
+	for key, value := range preparedData.TemplateData {
+		util.Info(key + " : " + formatToString(value) + "\n")
+	}
+
+	for key, value := range preparedData.Values {
+		util.Info(key + " : " + formatToString(value) + "\n")
+	}
+
+	for key := range preparedData.Secrets {
+		util.Info(key + " : ************* \n")
+	}
+}
+
+func formatToString(i interface{}) string {
+	switch v := i.(type) {
+	case int:
+		return fmt.Sprintf("%v", v)
+	case bool:
+		return fmt.Sprintf("%t", v)
+	default:
+		return v.(string)
+	}
 }
