@@ -114,7 +114,7 @@ func InstantiateBlueprint(
 	// TODO: if this is use-defaults mode, show used default values as table
 	if useDefaultsAsValue {
 		util.IsQuiet = false
-		util.Info("%s", printData(preparedData))
+		printData(preparedData)
 		util.IsQuiet = true
 	}
 
