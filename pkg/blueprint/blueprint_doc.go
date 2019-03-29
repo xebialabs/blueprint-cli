@@ -639,7 +639,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 				finalVal = fileContent
 			} else if variable.Type.Val == TypeConfirm {
 				var boolVal bool
-				// TODO handle this properly in getDefaultVal
+				// TODO: handle this properly in getDefaultVal
 				switch defaultVal.(type) {
 				case string:
 					boolVal, err = strconv.ParseBool(defaultVal.(string))
@@ -649,11 +649,14 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 				case bool:
 					boolVal = defaultVal.(bool)
 				}
-				// boolVal, err := strconv.ParseBool(defaultVal.(string))
-
 				finalVal = boolVal
 			}
-			util.Verbose("[dataPrep] Skipping question for parameter [%s] because default value [%s] is present\n", variable.Name.Val, finalVal)
+			util.Verbose(
+			    "[dataPrep] Use Defaults as Value mode: Skipping question for parameter [%s] because default value [%s] is present\n",
+			    variable.Name.Val,
+			    finalVal,
+			)
+
 			saveItemToTemplateDataMap(&variable, data, finalVal)
 			if variable.Secret.Bool == true {
                 data.DefaultData[variable.Name.Val] = "*****"
