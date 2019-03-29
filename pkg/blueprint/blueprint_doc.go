@@ -80,15 +80,17 @@ type Variable struct {
 }
 type PreparedData struct {
 	TemplateData map[string]interface{}
+	DefaultData  map[string]interface{}
 	Values       map[string]interface{}
 	Secrets      map[string]interface{}
 }
 
 func NewPreparedData() *PreparedData {
 	templateData := make(map[string]interface{})
+    defaultData := make(map[string]interface{})
 	values := make(map[string]interface{})
 	secrets := make(map[string]interface{})
-	return &PreparedData{TemplateData: templateData, Values: values, Secrets: secrets}
+	return &PreparedData{TemplateData: templateData, DefaultData: defaultData, Values: values, Secrets: secrets}
 }
 
 // regular Expressions
@@ -653,6 +655,11 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 			}
 			util.Verbose("[dataPrep] Skipping question for parameter [%s] because default value [%s] is present\n", variable.Name.Val, finalVal)
 			saveItemToTemplateDataMap(&variable, data, finalVal)
+			if variable.Secret.Bool == true {
+                data.DefaultData[variable.Name.Val] = "*****"
+            } else {
+                data.DefaultData[variable.Name.Val] = finalVal
+            }
 			continue
 		}
 

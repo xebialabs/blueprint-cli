@@ -1,24 +1,23 @@
 package blueprint
 
 import (
-	"fmt"
-	"os"
-	"path"
-	"path/filepath"
-	"regexp"
-	"sort"
-	"strings"
+    "os"
+    "path"
+    "path/filepath"
+    "regexp"
+    "sort"
+    "strings"
 
-	"github.com/thoas/go-funk"
+    "github.com/thoas/go-funk"
 
-	"text/template"
+    "text/template"
 
-	"github.com/magiconair/properties"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+    "github.com/magiconair/properties"
+    "github.com/xebialabs/xl-cli/pkg/models"
+    "github.com/xebialabs/xl-cli/pkg/util"
 
-	"github.com/Masterminds/sprig"
-	"gopkg.in/AlecAivazis/survey.v1"
+    "github.com/Masterminds/sprig"
+    "gopkg.in/AlecAivazis/survey.v1"
 )
 
 // SkipFinalPrompt is used in tests to skip the confirmation prompt
@@ -111,11 +110,10 @@ func InstantiateBlueprint(
 	}
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
-	// TODO: if this is use-defaults mode, show used default values as table
+	// if this is use-defaults mode, show used default values as table
 	if useDefaultsAsValue {
-		util.IsQuiet = false
-		printData(preparedData)
-		util.IsQuiet = true
+        util.Info("Using default values:\n")
+        util.PrintDataMapTable(&preparedData.DefaultData, util.TableAlignLeft, 30, 50, "\t")
 	}
 
 	// save prepared data to values & secrets files
@@ -264,29 +262,4 @@ func writeConfigToFile(header string, config map[string]interface{}, filename st
 	util.Verbose("\tWrote %d bytes \n", bytesWrittenHeader+bytesWrittenConfig)
 	util.Info("[file] Blueprint output file '%s' generated successfully\n", filename)
 	return nil
-}
-
-func printData(preparedData *PreparedData) {
-	for key, value := range preparedData.TemplateData {
-		util.Info(key + " : " + formatToString(value) + "\n")
-	}
-
-	for key, value := range preparedData.Values {
-		util.Info(key + " : " + formatToString(value) + "\n")
-	}
-
-	for key := range preparedData.Secrets {
-		util.Info(key + " : ************* \n")
-	}
-}
-
-func formatToString(i interface{}) string {
-	switch v := i.(type) {
-	case int:
-		return fmt.Sprintf("%v", v)
-	case bool:
-		return fmt.Sprintf("%t", v)
-	default:
-		return v.(string)
-	}
 }
