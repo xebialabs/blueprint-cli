@@ -1327,7 +1327,7 @@ func TestGetAnswerFromMap(t *testing.T) {
     tests := []struct {
         name         string
         variable     Variable
-        answerMap    map[string]interface{}
+        answer       interface{}
         parameters   map[string]interface{}
         wantOut      interface{}
         errOut       error
@@ -1335,7 +1335,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: save string answer value to variable value with type Input",
             Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeInput}},
-            map[string]interface{}{"Test": "sample answer"},
+            "sample answer",
             map[string]interface{}{},
             "sample answer",
             nil,
@@ -1343,7 +1343,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: save float answer value to variable value with type Input",
             Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeInput}},
-            map[string]interface{}{"Test": 5.45},
+            5.45,
             map[string]interface{}{},
             5.45,
             nil,
@@ -1351,7 +1351,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: save boolean answer value to variable value with type Confirm",
             Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeConfirm}},
-            map[string]interface{}{"Test": true},
+            true,
             map[string]interface{}{},
             true,
             nil,
@@ -1359,7 +1359,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: save long text answer value to variable value with type Editor",
             Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeEditor}},
-            map[string]interface{}{"Test": "long text for testing..\nand the rest of it\n"},
+            "long text for testing..\nand the rest of it\n",
             map[string]interface{}{},
             "long text for testing..\nand the rest of it\n",
             nil,
@@ -1367,7 +1367,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: save long text answer value to variable value with type File",
             Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeFile}},
-            map[string]interface{}{"Test": filepath.Join("test", "sample.txt")},
+            filepath.Join("test", "sample.txt"),
             map[string]interface{}{},
             "hello\ngo\n",
             nil,
@@ -1375,7 +1375,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: give error on file not found (input type: File)",
             Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeFile}},
-            map[string]interface{}{"Test": filepath.Join("test", "error.txt")},
+            filepath.Join("test", "error.txt"),
             map[string]interface{}{},
             "",
             fmt.Errorf(
@@ -1387,7 +1387,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: save string answer value to variable value with type Select",
             Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
-            map[string]interface{}{"Test": "b"},
+            "b",
             map[string]interface{}{},
             "b",
             nil,
@@ -1395,7 +1395,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: give error on unknown select option value",
             Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
-            map[string]interface{}{"Test": "c"},
+            "c",
             map[string]interface{}{},
             "",
             fmt.Errorf("answer [c] is not one of the available options [a b] for variable [Test]"),
@@ -1403,7 +1403,7 @@ func TestGetAnswerFromMap(t *testing.T) {
     }
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            got, err := tt.variable.GetAnswerFromMap(tt.answerMap, tt.parameters)
+            got, err := tt.variable.VerifyVariableValue(tt.answer, tt.parameters)
             assert.Equal(t, tt.errOut, err)
             assert.Equal(t, tt.wantOut, got)
         })
