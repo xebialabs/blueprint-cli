@@ -9,6 +9,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/xl"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -16,6 +17,11 @@ var applyFilenames []string
 var applyValues map[string]string
 var applyDetach bool
 var nonInteractive bool
+
+var kindToLabel = map[string]string{
+	"CI":         "CI",
+	"PERMISSION": "permissions for role",
+}
 
 var applyCmd = &cobra.Command{
 	Use:   "apply",
@@ -34,10 +40,16 @@ func printIds(op string, ids *[]string) {
 	}
 }
 
-func printChangedIds(entityName string, ids *xl.ChangedIds) {
-	if ids != nil {
-		printIds(fmt.Sprintf("Created %s", entityName), ids.Created)
-		printIds(fmt.Sprintf("Updated %s", entityName), ids.Updated)
+func printChangedIds(idsArray *[]xl.ChangedIds) {
+	if idsArray != nil {
+		for _, ids := range *idsArray {
+			entityName, hasLabel := kindToLabel[ids.Kind]
+			if !hasLabel {
+				entityName = strings.ToLower(ids.Kind)
+			}
+			printIds(fmt.Sprintf("Created %s", entityName), ids.Created)
+			printIds(fmt.Sprintf("Updated %s", entityName), ids.Updated)
+		}
 	}
 }
 
@@ -50,10 +62,7 @@ func printTaskInfo(task *xl.TaskInfo) {
 func printChanges(changes *xl.Changes) {
 	if changes != nil {
 		printTaskInfo(changes.Task)
-		printChangedIds("CI", changes.Cis)
-		printChangedIds("user", changes.Users)
-		printChangedIds("permissions for role", changes.Permissions)
-		printChangedIds("role", changes.Roles)
+		printChangedIds(changes.Ids)
 	}
 }
 
