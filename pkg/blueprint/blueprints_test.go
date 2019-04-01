@@ -163,6 +163,54 @@ func TestInstantiateBlueprint(t *testing.T) {
             assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
         }
     })
+    t.Run("should create output files for valid test template in use defaults as values mode", func(t *testing.T) {
+        outFolder := "xebialabs"
+        defer RemoveFiles("xld-*.yml")
+        defer RemoveFiles("xlr-*.yml")
+        defer os.RemoveAll(outFolder)
+
+        // create blueprint
+        err := InstantiateBlueprint(true, GetTestTemplateDir("defaults-as-values"), getDefaultBlueprintContext(t), outFolder, "", false, true, false)
+        require.Nil(t, err)
+
+        // assertions
+        assert.FileExists(t, "xld-environment.yml")
+        assert.FileExists(t, "xld-infrastructure.yml")
+        assert.FileExists(t, "xlr-pipeline.yml")
+        assert.FileExists(t, path.Join(outFolder, valuesFile))
+        assert.FileExists(t, path.Join(outFolder, secretsFile))
+        assert.FileExists(t, path.Join(outFolder, gitignoreFile))
+
+        // check __test__ directory is not there
+        _, err = os.Stat("__test__")
+        assert.True(t, os.IsNotExist(err))
+
+        // check values file
+        valsFile := GetFileContent(path.Join(outFolder, valuesFile))
+        valueMap := map[string]string{
+            "Test": "testing",
+            "ClientCert": "qwertyuiop",
+            "AppName": "TestApp",
+            "SuperSecret": "supersecret",
+            "AWSRegion": "eu-central-1",
+            "DiskSize": "10",
+            "DiskSizeWithBuffer": "125.6",
+            "ShouldNotBeThere": "",
+        }
+        for k, v := range valueMap {
+            assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+        }
+
+        // check secrets file
+        secretsFile := GetFileContent(path.Join(outFolder, secretsFile))
+        secretsMap := map[string]string{
+            "AWSAccessKey": "accesskey",
+            "AWSAccessSecret": "accesssecret",
+        }
+        for k, v := range secretsMap {
+            assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+        }
+    })
 	t.Run("should create output files for valid test template without prompts when no registry is defined", func(t *testing.T) {
 		outFolder := "xebialabs"
 		defer RemoveFiles("xld-*.yml")
