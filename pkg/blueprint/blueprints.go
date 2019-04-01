@@ -112,23 +112,18 @@ func InstantiateBlueprint(
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
 	// if this is use-defaults mode, show used default values as table
-	if useDefaultsAsValue {
-        util.Info("Using default values:\n")
-        util.PrintDataMapTable(&preparedData.DefaultData, util.TableAlignLeft, 30, 50, "\t")
+	if useDefaultsAsValue && fromUpCommand {
+        // Final prompt from user to start generation process
+        toContinue := false
+        question :=  models.UpFinalPrompt
 
-        if fromUpCommand {
-            // Final prompt from user to start generation process
-            toContinue := false
-            question :=  models.UpFinalPrompt
-
-            err := survey.AskOne(&survey.Confirm{Message: question, Default: true}, &toContinue, nil, surveyOpts...)
-            if err != nil {
-                return err
-            }
-            if !toContinue {
-                util.Fatal("xl-up command cancelled \n")
-                return nil
-            }
+        err := survey.AskOne(&survey.Confirm{Message: question, Default: true}, &toContinue, nil, surveyOpts...)
+        if err != nil {
+            return err
+        }
+        if !toContinue {
+            util.Fatal("xl-up command cancelled \n")
+            return nil
         }
 	}
 

@@ -1317,7 +1317,7 @@ confirm=true
     }
 }
 
-func TestGetAnswerFromMap(t *testing.T) {
+func TestVerifyVariableValue(t *testing.T) {
     // Create needed temporary directory for tests
     os.MkdirAll("test", os.ModePerm)
     defer os.RemoveAll("test")

@@ -698,6 +698,12 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 		saveItemToTemplateDataMap(&variable, data, answer)
 	}
 
+	if useDefaultsAsValue {
+	    // Print summary default values table if in useDefaultsAsValues mode
+        util.Info("Using default values:\n")
+        util.PrintDataMapTable(&data.DefaultData, util.TableAlignLeft, 30, 50, "\t")
+    }
+
 	if !SkipFinalPrompt {
 		// Final prompt from user to start generation process
 		toContinue := false
