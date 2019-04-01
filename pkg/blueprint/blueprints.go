@@ -71,6 +71,7 @@ func InstantiateBlueprint(
 	answersFile string,
 	strictAnswers bool,
 	useDefaultsAsValue bool,
+	fromUpCommand bool,
 	surveyOpts ...survey.AskOpt,
 ) error {
 	var err error
@@ -114,6 +115,21 @@ func InstantiateBlueprint(
 	if useDefaultsAsValue {
         util.Info("Using default values:\n")
         util.PrintDataMapTable(&preparedData.DefaultData, util.TableAlignLeft, 30, 50, "\t")
+
+        if fromUpCommand {
+            // Final prompt from user to start generation process
+            toContinue := false
+            question :=  models.UpFinalPrompt
+
+            err := survey.AskOne(&survey.Confirm{Message: question, Default: true}, &toContinue, nil, surveyOpts...)
+            if err != nil {
+                return err
+            }
+            if !toContinue {
+                util.Fatal("xl-up command cancelled \n")
+                return nil
+            }
+        }
 	}
 
 	// save prepared data to values & secrets files

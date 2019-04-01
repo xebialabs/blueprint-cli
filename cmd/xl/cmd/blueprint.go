@@ -35,7 +35,7 @@ var useDefaultsAsValue bool
 // DoBlueprint creates blueprint templates
 func DoBlueprint(context *xl.Context) {
 	blueprintLocalMode = util.PathExists(blueprintTemplate, true)
-	err := blueprint.InstantiateBlueprint(blueprintLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir, answersFile, strictAnswers, useDefaultsAsValue)
+	err := blueprint.InstantiateBlueprint(blueprintLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir, answersFile, strictAnswers, useDefaultsAsValue, false)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s\n", err)
 	}

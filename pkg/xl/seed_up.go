@@ -88,7 +88,7 @@ func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool,
 		context.BlueprintContext.ActiveRepo = &repo
 	}
 
-	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir, "", false, quickSetup)
+	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir, "", false, quickSetup, true)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s \n", err)
 	}
