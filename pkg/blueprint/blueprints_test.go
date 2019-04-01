@@ -1,18 +1,19 @@
 package blueprint
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
-	"testing"
+    b64 "encoding/base64"
+    "fmt"
+    "io/ioutil"
+    "os"
+    "path"
+    "path/filepath"
+    "strings"
+    "testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/xebialabs/xl-cli/pkg/models"
+    "github.com/xebialabs/xl-cli/pkg/util"
 )
 
 // auxiliary functions
@@ -136,6 +137,10 @@ func TestInstantiateBlueprint(t *testing.T) {
         // check __test__ directory is not there
         _, err = os.Stat("__test__")
         assert.True(t, os.IsNotExist(err))
+
+        // check encoded string value in env template
+        envTemplateFile := GetFileContent("xld-environment.yml")
+        assert.Contains(t, envTemplateFile, fmt.Sprintf("accessSecret: %s", b64.StdEncoding.EncodeToString([]byte("accesssecret"))))
 
         // check values file
         valsFile := GetFileContent(path.Join(outFolder, valuesFile))

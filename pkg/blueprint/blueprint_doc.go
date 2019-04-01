@@ -77,6 +77,7 @@ type Variable struct {
 	Options        []VarField
 	Pattern        VarField
 	SaveInXlVals   VarField
+	UseRawValue    VarField
 }
 type PreparedData struct {
 	TemplateData map[string]interface{}
@@ -949,7 +950,12 @@ func findVariableByName(variables *[]Variable, name string) (*Variable, error) {
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
 	if variable.Secret.Bool == true {
 		preparedData.Secrets[variable.Name.Val] = data
-		preparedData.TemplateData[variable.Name.Val] = fmt.Sprintf(fmtTagValue, variable.Name.Val)
+		// Use raw value of secret field if flag is set
+		if variable.UseRawValue.Bool == true {
+            preparedData.TemplateData[variable.Name.Val] = data
+        } else {
+            preparedData.TemplateData[variable.Name.Val] = fmt.Sprintf(fmtTagValue, variable.Name.Val)
+        }
 	} else {
 		// Save to values file if switch is ON
 		if variable.SaveInXlVals.Bool == true {

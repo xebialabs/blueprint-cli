@@ -670,6 +670,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                 type: Input
                 description: password?
                 secret: true
+                UseRawValue: true
               - name: test
                 type: Input
                 default: lala
@@ -687,6 +688,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Type:        VarField{Val: TypeInput},
 			Description: VarField{Val: "password?"},
 			Secret:      VarField{Bool: true, Val: "true"},
+            UseRawValue: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
 			Name:         VarField{Val: "test"},
