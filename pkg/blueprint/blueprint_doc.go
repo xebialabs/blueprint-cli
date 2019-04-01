@@ -184,10 +184,6 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 		}
 	}
 
-	// return false if this is a skipped confirm question
-	if defaultVal == "" && variable.Type.Val == TypeConfirm {
-		return false
-	}
 	return defaultVal
 }
 
@@ -644,7 +640,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
             }
 
 			util.Verbose(
-			    "[dataPrep] Use Defaults as Value mode: Skipping question for parameter [%s] because default value [%s] is present\n",
+			    "[dataPrep] Use Defaults as Value mode: Skipping question for parameter [%s] because default value [%v] is present\n",
 			    variable.Name.Val,
 			    finalVal,
 			)
@@ -922,6 +918,11 @@ func validateFilePath() func(val interface{}) error {
 
 func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsOn bool, dataMap *PreparedData, defaultVal interface{}, condition bool) bool {
 	if dependsOn == condition {
+        // return false if this is a skipped confirm question
+        if defaultVal == "" && currentVar.Type.Val == TypeConfirm {
+            defaultVal = false
+        }
+
 		saveItemToTemplateDataMap(currentVar, dataMap, defaultVal)
 		util.Verbose("[dataPrep] Skipping question for parameter [%s] because DependsOn [%s] value is %t\n", currentVar.Name.Val, dependsOnVal, condition)
 		return true

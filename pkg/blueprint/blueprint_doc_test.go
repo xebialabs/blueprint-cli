@@ -168,15 +168,6 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		assert.Equal(t, "default_val", defaultVal)
 	})
 
-	t.Run("should return false string when confirm field is not set", func(t *testing.T) {
-		v := Variable{
-			Name: VarField{Val: "test"},
-			Type: VarField{Val: TypeConfirm},
-		}
-		defaultVal := v.GetDefaultVal(dummyData)
-		assert.Equal(t, false, defaultVal)
-	})
-
 	t.Run("should return empty string when invalid function tag in default field", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Val: "test"},
