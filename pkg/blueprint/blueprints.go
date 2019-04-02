@@ -159,7 +159,7 @@ func InstantiateBlueprint(
 
 		// read template contents
 		util.Verbose("[file] Fetching template file %s from %s\n", config.File, config.FullPath)
-		templateContent, err := blueprintContext.fetchFileContents(config.FullPath, blueprintLocalMode, strings.HasSuffix(config.File, templateExtension), config.File)
+		templateContent, err := blueprintContext.fetchFileContents(config.FullPath, blueprintLocalMode, strings.HasSuffix(config.File, templateExtension))
 		if err != nil {
 			return err
 		}

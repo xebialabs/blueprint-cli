@@ -227,7 +227,7 @@ func (blueprintContext *BlueprintContext) askUserToChooseBlueprint(blueprints ma
 	return blueprintTemplate, nil
 }
 
-func (blueprintContext *BlueprintContext) fetchFileContents(filePath string, blueprintLocalMode bool, addSuffix bool, relativePath string) (*[]byte, error) {
+func (blueprintContext *BlueprintContext) fetchFileContents(filePath string, blueprintLocalMode bool, addSuffix bool) (*[]byte, error) {
 	if addSuffix {
 		filePath = util.AddSuffixIfNeeded(filePath, templateExtension)
 	}
@@ -243,7 +243,7 @@ func (blueprintContext *BlueprintContext) fetchFileContents(filePath string, blu
 		}
 		return &content, nil
 	}
-	return nil, fmt.Errorf("template not found in path %s", relativePath)
+	return nil, fmt.Errorf("template not found in path %s", filePath)
 }
 
 func (blueprintContext *BlueprintContext) fetchRemoteFile(filePath string) (*[]byte, error) {
@@ -255,7 +255,7 @@ func (blueprintContext *BlueprintContext) fetchLocalFile(filePath string) (*[]by
 	if err != nil {
 		return nil, err
 	}
-	return blueprintContext.fetchFileContents(variableConfigs[0].FullPath, true, false, variableConfigs[0].File)
+	return blueprintContext.fetchFileContents(variableConfigs[0].FullPath, true, false)
 }
 
 func (blueprintContext *BlueprintContext) parseDefinitionFile(blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote, templatePath string) (*BlueprintYaml, error) {
