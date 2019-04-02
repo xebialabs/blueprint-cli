@@ -18,7 +18,7 @@ type XLServer interface {
 	PreviewDoc(doc *Document) (*models.PreviewResponse, error)
 	GetTaskStatus(taskId string) (*TaskState, error)
 	GetSchema() ([]byte, error)
-	GenerateDoc(filename string, path string, override bool, generatePermissions bool, users bool, roles bool) error
+	GenerateDoc(filename string, path string, override bool, generatePermissions bool, users bool, roles bool, environments bool) error
 }
 
 type XLDeployServer struct {
@@ -59,13 +59,13 @@ func addHomeIfMissing(doc *Document, home string, key string) {
 	}
 }
 
-func (server *XLDeployServer) GenerateDoc(filename string, path string, override bool, globalPermissions bool, users bool, roles bool) error {
+func (server *XLDeployServer) GenerateDoc(filename string, path string, override bool, globalPermissions bool, users bool, roles bool, environments bool) error {
 	fullPath := fmt.Sprintf("deployit/devops-as-code/generate?path=%s&globalPermissions=%t&users=%t&roles=%t", path, globalPermissions, users, roles)
 	return server.Server.GenerateYamlDoc(filename, fullPath, override)
 }
 
-func (server *XLReleaseServer) GenerateDoc(filename string, path string, override bool, globalPermissions bool, users bool, roles bool) error {
-	fullPath := fmt.Sprintf("devops-as-code/generate?path=%s&globalPermissions=%t&users=%t&roles=%t", path, globalPermissions, users, roles)
+func (server *XLReleaseServer) GenerateDoc(filename string, path string, override bool, globalPermissions bool, users bool, roles bool, environments bool) error {
+	fullPath := fmt.Sprintf("devops-as-code/generate?path=%s&globalPermissions=%t&users=%t&roles=%t&environments=%t", path, globalPermissions, users, roles, environments)
 	return server.Server.GenerateYamlDoc(filename, fullPath, override)
 }
 

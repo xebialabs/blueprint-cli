@@ -152,7 +152,7 @@ func (c *Context) PreviewSingleDocument(doc *Document, artifactsDir string) (*mo
 	return server.PreviewDoc(doc)
 }
 
-func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool, generatePermissions bool, users bool, roles bool) error {
+func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool, generatePermissions bool, users bool, roles bool, environments bool) error {
 	finalPath := url.QueryEscape(generatePath)
 
 	if generateServer == string(models.XLD) {
@@ -161,7 +161,7 @@ func (c *Context) GenerateSingleDocument(generateServer string, generateFilename
 		} else {
 			util.Info("Generating definitions from XL Deploy to %s\n", generateFilename)
 		}
-		return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles)
+		return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, false)
 	}
 
 	if generateServer == string(models.XLR) {
@@ -170,7 +170,7 @@ func (c *Context) GenerateSingleDocument(generateServer string, generateFilename
 		} else {
 			util.Info("Generating definitions from XL Release to %s\n", generateFilename)
 		}
-		return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles)
+		return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, environments)
 	}
 
 	return fmt.Errorf("unknown server type: %s", generateServer)
