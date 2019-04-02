@@ -698,7 +698,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 	if useDefaultsAsValue {
 	    // Print summary default values table if in useDefaultsAsValues mode
         util.Info("Using default values:\n")
-        util.PrintDataMapTable(&data.DefaultData, util.TableAlignLeft, 30, 50, "\t")
+        util.Info(util.DataMapTable(&data.DefaultData, util.TableAlignLeft, 30, 50, "\t"))
     }
 
 	if !SkipFinalPrompt {

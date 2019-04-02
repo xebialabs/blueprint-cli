@@ -498,6 +498,22 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 		}
 		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnTrue.Val, variables[0].Value.Bool, NewPreparedData(), "", false))
 	})
+    t.Run("should skip question and default value should be false (dependsOnTrue)", func(t *testing.T) {
+        data := NewPreparedData()
+        variables := make([]Variable, 2)
+        variables[0] = Variable{
+            Name:  VarField{Val: "confirm"},
+            Type:  VarField{Val: TypeConfirm},
+            Value: VarField{Bool: false, Val: "false"},
+        }
+        variables[1] = Variable{
+            Name:          VarField{Val: "test"},
+            Type:          VarField{Val: TypeConfirm},
+            DependsOnTrue: VarField{Val: "confirm"},
+        }
+        assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnTrue.Val, variables[0].Value.Bool, data, "", false))
+        assert.False(t, data.TemplateData[variables[1].Name.Val].(bool))
+    })
 
 	t.Run("should not skip question (dependsOnFalse)", func(t *testing.T) {
 		variables := make([]Variable, 2)
@@ -1345,6 +1361,14 @@ func TestVerifyVariableValue(t *testing.T) {
             "answers from map: save boolean answer value to variable value with type Confirm",
             Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeConfirm}},
             true,
+            map[string]interface{}{},
+            true,
+            nil,
+        },
+        {
+            "answers from map: save boolean answer value (convert from string) to variable value with type Confirm",
+            Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeConfirm}},
+            "true",
             map[string]interface{}{},
             true,
             nil,

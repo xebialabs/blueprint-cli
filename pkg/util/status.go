@@ -14,10 +14,11 @@ const (
     TableAlignRight      string = "right"
 )
 
-func PrintDataMapTable(dataMap *map[string]interface{}, align string, keyWidth int, valWidth int, leftSpacer string) {
-    fmt.Printf("%s %s %s\n", leftSpacer, strings.Repeat("_", keyWidth), strings.Repeat("_", valWidth))
-    fmt.Printf("%s|%-*s|%-*s|\n", leftSpacer, keyWidth, "KEY", valWidth, "VALUE")
-    fmt.Printf("%s %s %s\n", leftSpacer, strings.Repeat("-", keyWidth), strings.Repeat("-", valWidth))
+func DataMapTable(dataMap *map[string]interface{}, align string, keyWidth int, valWidth int, leftSpacer string) string {
+    var sb strings.Builder
+    sb.WriteString(fmt.Sprintf("%s %s %s\n", leftSpacer, strings.Repeat("_", keyWidth), strings.Repeat("_", valWidth)))
+    sb.WriteString(fmt.Sprintf("%s|%-*s|%-*s|\n", leftSpacer, keyWidth, "KEY", valWidth, "VALUE"))
+    sb.WriteString(fmt.Sprintf("%s %s %s\n", leftSpacer, strings.Repeat("-", keyWidth), strings.Repeat("-", valWidth)))
     for k, v := range *dataMap {
         // truncate strings if needed
         key := k
@@ -31,12 +32,13 @@ func PrintDataMapTable(dataMap *map[string]interface{}, align string, keyWidth i
 
         // do alignment
         if align == TableAlignLeft {
-            fmt.Printf("%s|%-*s|%-*s|\n", leftSpacer, keyWidth, key, valWidth, val)
+            sb.WriteString(fmt.Sprintf("%s|%-*s|%-*s|\n", leftSpacer, keyWidth, key, valWidth, val))
         } else if align == TableAlignRight {
-            fmt.Printf("%s|%*s|%*s|\n", leftSpacer, keyWidth, key, valWidth, val)
+            sb.WriteString(fmt.Sprintf("%s|%*s|%*s|\n", leftSpacer, keyWidth, key, valWidth, val))
         }
     }
-    fmt.Printf("%s %s %s\n", leftSpacer, strings.Repeat("-", keyWidth), strings.Repeat("-", valWidth))
+    sb.WriteString(fmt.Sprintf("%s %s %s\n", leftSpacer, strings.Repeat("-", keyWidth), strings.Repeat("-", valWidth)))
+    return sb.String()
 }
 
 func Verbose(format string, a ...interface{}) {
