@@ -1,9 +1,10 @@
 package util
 
 import (
-	"fmt"
-	"os"
-	"strings"
+    "fmt"
+    "os"
+    "sort"
+    "strings"
 )
 
 var IsQuiet = false
@@ -17,15 +18,21 @@ const (
 func DataMapTable(dataMap *map[string]interface{}, align string, keyWidth int, valWidth int, leftSpacer string) string {
     var sb strings.Builder
     sb.WriteString(fmt.Sprintf("%s %s %s\n", leftSpacer, strings.Repeat("_", keyWidth), strings.Repeat("_", valWidth)))
-    sb.WriteString(fmt.Sprintf("%s|%-*s|%-*s|\n", leftSpacer, keyWidth, "KEY", valWidth, "VALUE"))
+    if align == TableAlignLeft {
+        sb.WriteString(fmt.Sprintf("%s|%-*s|%-*s|\n", leftSpacer, keyWidth, "KEY", valWidth, "VALUE"))
+    } else if align == TableAlignRight {
+        sb.WriteString(fmt.Sprintf("%s|%*s|%*s|\n", leftSpacer, keyWidth, "KEY", valWidth, "VALUE"))
+    }
     sb.WriteString(fmt.Sprintf("%s %s %s\n", leftSpacer, strings.Repeat("-", keyWidth), strings.Repeat("-", valWidth)))
-    for k, v := range *dataMap {
+    keys := ExtractStringKeysFromMap(*dataMap)
+    sort.Strings(keys)
+    for _, k := range keys {
         // truncate strings if needed
         key := k
-        if len(k) > keyWidth {
+        if len(key) > keyWidth {
             key = string(k[:keyWidth-2]) + ".."
         }
-        val := fmt.Sprintf("%v", v)
+        val := fmt.Sprintf("%v", (*dataMap)[k])
         if len(val) > valWidth {
             val = string(val[:valWidth-2]) + ".."
         }
