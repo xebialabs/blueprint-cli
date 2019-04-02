@@ -114,6 +114,10 @@ task installPackr(type: Go) {
     go "get github.com/gobuffalo/packr/packr"
 }
 
+task installGlice(type: Go) {
+    go "get github.com/ribice/glice"
+}
+
 installDependencies.dependsOn installTemplify, installPackr
 
 goBuild {
@@ -211,15 +215,16 @@ task removeLicenseFolder {
 }
 
 task downloadLicenses {
-    def authToken = project.property('githubOauthToken')
     doLast {
-        runCmd("glice", "-r", "-f", "-gh", authToken)
+        def authToken = project.property('githubOauthToken')
+        def goPath = Paths.get(".gogradle/project_gopath/bin/glice").toString()
+        runCmd (goPath, "-r", "-f", "-gh", authToken)
     }
 }
 
 task moveLicensesToFolder {
     def licenseFiles = "*-license.MD"
-    doLast{
+    doLast {
         copy {
             from(".") {
                 include licenseFiles
@@ -235,10 +240,12 @@ task moveLicensesToFolder {
 task updateLicenses {
     inputs.files "build.gradle"
 
+    dependsOn 'installGlice'
     dependsOn 'removeLicenseFolder'
     dependsOn 'downloadLicenses'
     dependsOn 'moveLicensesToFolder'
 
+    tasks.findByName('removeLicenseFolder').mustRunAfter 'installGlice'
     tasks.findByName('downloadLicenses').mustRunAfter 'removeLicenseFolder'
     tasks.findByName('moveLicensesToFolder').mustRunAfter 'downloadLicenses'
 }
