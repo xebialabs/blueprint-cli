@@ -250,7 +250,9 @@ task updateLicenses {
     tasks.findByName('moveLicensesToFolder').mustRunAfter 'downloadLicenses'
 }
 
-goBuild.finalizedBy(updateLicenses)
+goBuild.finalizedBy updateLicenses
+build.dependsOn goBuild
+clean.dependsOn goClean
 
 def runCmd(Object... args) {
     def stdout = new ByteArrayOutputStream()
