@@ -206,7 +206,7 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 		defer os.RemoveAll("test")
 		d1 := []byte(stream)
 		ioutil.WriteFile(path.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
-		out, err := blueprintContext.fetchFileContents(templateConfig.FullPath, true, true)
+		out, err := blueprintContext.fetchFileContents(templateConfig.FullPath, true, true, templateConfig.File)
 		require.Nil(t, err)
 		assert.Equal(t, stream, string(*out))
 	})
@@ -219,7 +219,7 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 		require.Len(t, blueprints, 2)
 
 		t.Run("should get file contents", func(t *testing.T) {
-			contents, err := repo.fetchFileContents("aws/monolith/test.yaml", false, false)
+			contents, err := repo.fetchFileContents("aws/monolith/test.yaml", false, false, "test.yaml")
 			require.Nil(t, err)
 			require.NotNil(t, contents)
 			assert.NotEmptyf(t, string(*contents), "mock blueprint file content is empty")
@@ -227,7 +227,7 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 		})
 
 		t.Run("should error on non-existing remote file path", func(t *testing.T) {
-			_, err := repo.fetchFileContents("non-existing-path/file.yaml", false, true)
+			_, err := repo.fetchFileContents("non-existing-path/file.yaml", false, true, "non-existing-path/file.yaml")
 			require.NotNil(t, err)
 			assert.Equal(t, "Get http://mock.repo.server.com/non-existing-path/file.yaml.tmpl: no responder found", err.Error())
 		})
@@ -235,14 +235,15 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 
 	t.Run("should error on no file found", func(t *testing.T) {
 		blueprintContext := BlueprintContext{}
-		tmpPath := path.Join("aws", "monolith", "test.yaml.tmpl")
+        filePath := "test.yaml.tmpl"
+        tmpPath := path.Join("aws", "monolith", filePath)
 		templateConfig := TemplateConfig{
-			File: "test.yaml", FullPath: tmpPath,
+			File: filePath, FullPath: tmpPath,
 		}
-		out, err := blueprintContext.fetchFileContents(templateConfig.FullPath, true, true)
+		out, err := blueprintContext.fetchFileContents(templateConfig.FullPath, true, true, templateConfig.File)
 		require.Nil(t, out)
 		require.NotNil(t, err)
-		assert.Equal(t, "template not found in path "+tmpPath, err.Error())
+		assert.Equal(t, "template not found in path " + filePath, err.Error())
 	})
 }
 
@@ -296,13 +297,13 @@ func TestBlueprintContext_fetchLocalFile(t *testing.T) {
 			"error on when local file doesn't exist",
 			args{"test/blueprints", "blueprints.yml"},
 			"",
-			fmt.Errorf("template not found in path test/blueprints/blueprints.yml"),
+			fmt.Errorf("template not found in path blueprints.yml"),
 		},
 		{
 			"error on local path doesn't exist",
 			args{"test/blueprints2", "blueprint.yaml"},
 			"",
-			fmt.Errorf("template not found in path test/blueprints2/blueprint.yaml"),
+			fmt.Errorf("template not found in path blueprint.yaml"),
 		},
 	}
 	for _, tt := range tests {

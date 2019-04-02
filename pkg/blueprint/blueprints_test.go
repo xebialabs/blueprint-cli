@@ -114,7 +114,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		err := InstantiateBlueprint(true, "abc", getDefaultBlueprintContext(t), gb, "", false, false, false)
 
 		require.NotNil(t, err)
-		assert.Equal(t, "template not found in path abc/blueprint.yml", err.Error())
+		assert.Equal(t, "template not found in path blueprint.yml", err.Error())
 	})
 	t.Run("should error on invalid test template", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
