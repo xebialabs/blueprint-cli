@@ -1,23 +1,23 @@
 package blueprint
 
 import (
-    "os"
-    "path"
-    "path/filepath"
-    "regexp"
-    "sort"
-    "strings"
+	"os"
+	"path"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
 
-    "github.com/thoas/go-funk"
+	"github.com/thoas/go-funk"
 
-    "text/template"
+	"text/template"
 
-    "github.com/magiconair/properties"
-    "github.com/xebialabs/xl-cli/pkg/models"
-    "github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/magiconair/properties"
+	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 
-    "github.com/Masterminds/sprig"
-    "gopkg.in/AlecAivazis/survey.v1"
+	"github.com/Masterminds/sprig"
+	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 // SkipFinalPrompt is used in tests to skip the confirmation prompt
@@ -113,18 +113,18 @@ func InstantiateBlueprint(
 
 	// if this is use-defaults mode, show used default values as table
 	if useDefaultsAsValue && fromUpCommand {
-        // Final prompt from user to start generation process
-        toContinue := false
-        question :=  models.UpFinalPrompt
+		// Final prompt from user to start generation process
+		toContinue := false
+		question := models.UpFinalPrompt
 
-        err := survey.AskOne(&survey.Confirm{Message: question, Default: true}, &toContinue, nil, surveyOpts...)
-        if err != nil {
-            return err
-        }
-        if !toContinue {
-            util.Fatal("xl-up command cancelled \n")
-            return nil
-        }
+		err := survey.AskOne(&survey.Confirm{Message: question, Default: true}, &toContinue, nil, surveyOpts...)
+		if err != nil {
+			return err
+		}
+		if !toContinue {
+			util.Fatal("xl-up command cancelled \n")
+			return nil
+		}
 	}
 
 	// save prepared data to values & secrets files
@@ -150,6 +150,7 @@ func InstantiateBlueprint(
 		if err != nil {
 			return err
 		}
+
 		if skipFile {
 			util.Verbose("[file] skipping file [%s] since it has dependsOn value set\n", config.File)
 			continue

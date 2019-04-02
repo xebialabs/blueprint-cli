@@ -88,7 +88,7 @@ type PreparedData struct {
 
 func NewPreparedData() *PreparedData {
 	templateData := make(map[string]interface{})
-    defaultData := make(map[string]interface{})
+	defaultData := make(map[string]interface{})
 	values := make(map[string]interface{})
 	secrets := make(map[string]interface{})
 	return &PreparedData{TemplateData: templateData, DefaultData: defaultData, Values: values, Secrets: secrets}
@@ -266,58 +266,58 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 }
 
 func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[string]interface{}) (interface{}, error) {
-    // specific conversions by type if needed
-    switch variable.Type.Val {
-    case TypeConfirm:
-        var answerBool bool
-        var err error
-        switch value.(type) {
-        case string:
-            answerBool, err = strconv.ParseBool(value.(string))
-            if err != nil {
-                return nil, err
-            }
-            break
-        case bool:
-            answerBool = value.(bool)
-            break
-        default:
-            return nil, fmt.Errorf("type of value [%v] is not supported", value)
-        }
+	// specific conversions by type if needed
+	switch variable.Type.Val {
+	case TypeConfirm:
+		var answerBool bool
+		var err error
+		switch value.(type) {
+		case string:
+			answerBool, err = strconv.ParseBool(value.(string))
+			if err != nil {
+				return nil, err
+			}
+			break
+		case bool:
+			answerBool = value.(bool)
+			break
+		default:
+			return nil, fmt.Errorf("type of value [%v] is not supported", value)
+		}
 
-        variable.Value.Bool = answerBool
-        return answerBool, nil
-    case TypeSelect:
-        // check if answer is one of the options, error if not
-        options := variable.GetOptions(parameters)
-        answerStr := fmt.Sprintf("%v", value)
-        if !funk.Contains(options, answerStr) {
-            return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Val)
-        }
-        return answerStr, nil
-    case TypeFile:
-        // read file contents
-        filePath := value.(string)
-        util.Verbose("[input] Reading file contents from path: %s\n", filePath)
-        data, err := ioutil.ReadFile(filePath)
-        if err != nil {
-            return "", fmt.Errorf("error reading input file [%s]: %s", filePath, err.Error())
-        }
-        return string(data), nil
-    default:
-        // do pattern validation if needed
-        if variable.Pattern.Val != "" {
-            allowEmpty := false
-            if variable.Type.Val == TypeInput && variable.Secret.Bool == true {
-                allowEmpty = true
-            }
-            validationErr := validatePrompt(variable.Pattern.Val, allowEmpty)(value)
-            if validationErr != nil {
-                return nil, fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", value, variable.Name.Val, validationErr.Error())
-            }
-        }
-        return value, nil
-    }
+		variable.Value.Bool = answerBool
+		return answerBool, nil
+	case TypeSelect:
+		// check if answer is one of the options, error if not
+		options := variable.GetOptions(parameters)
+		answerStr := fmt.Sprintf("%v", value)
+		if !funk.Contains(options, answerStr) {
+			return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Val)
+		}
+		return answerStr, nil
+	case TypeFile:
+		// read file contents
+		filePath := value.(string)
+		util.Verbose("[input] Reading file contents from path: %s\n", filePath)
+		data, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			return "", fmt.Errorf("error reading input file [%s]: %s", filePath, err.Error())
+		}
+		return string(data), nil
+	default:
+		// do pattern validation if needed
+		if variable.Pattern.Val != "" {
+			allowEmpty := false
+			if variable.Type.Val == TypeInput && variable.Secret.Bool == true {
+				allowEmpty = true
+			}
+			validationErr := validatePrompt(variable.Pattern.Val, allowEmpty)(value)
+			if validationErr != nil {
+				return nil, fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", value, variable.Name.Val, validationErr.Error())
+			}
+		}
+		return value, nil
+	}
 }
 
 func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (interface{}, error) {
@@ -635,48 +635,48 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 
 		// skip user input if it is in default mode and default value is present
 		if useDefaultsAsValue && defaultVal != nil && defaultVal != "" {
-		    finalVal, err := variable.VerifyVariableValue(defaultVal, data.TemplateData)
-            if err != nil {
-                return nil, err
-            }
+			finalVal, err := variable.VerifyVariableValue(defaultVal, data.TemplateData)
+			if err != nil {
+				return nil, err
+			}
 
 			util.Verbose(
-			    "[dataPrep] Use Defaults as Value mode: Skipping question for parameter [%s] because default value [%v] is present\n",
-			    variable.Name.Val,
-			    finalVal,
+				"[dataPrep] Use Defaults as Value mode: Skipping question for parameter [%s] because default value [%v] is present\n",
+				variable.Name.Val,
+				finalVal,
 			)
-            if variable.Type.Val == TypeConfirm {
-                blueprintDoc.Variables[i] = variable
-            }
+			if variable.Type.Val == TypeConfirm {
+				blueprintDoc.Variables[i] = variable
+			}
 			saveItemToTemplateDataMap(&variable, data, finalVal)
 			if variable.Secret.Bool == true {
-                data.DefaultData[variable.Name.Val] = "*****"
-            } else {
-                data.DefaultData[variable.Name.Val] = finalVal
-            }
+				data.DefaultData[variable.Name.Val] = "*****"
+			} else {
+				data.DefaultData[variable.Name.Val] = finalVal
+			}
 			continue
 		}
 
 		// check answers file for variable value, if exists
 		if usingAnswersFile {
-            if util.MapContainsKeyWithValInterface(answerMap, variable.Name.Val) {
-                answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Val], data.TemplateData)
-                if err != nil {
-                    return nil, err
-                }
+			if util.MapContainsKeyWithValInterface(answerMap, variable.Name.Val) {
+				answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Val], data.TemplateData)
+				if err != nil {
+					return nil, err
+				}
 
-                // if we have a valid answer, skip user input
-                if variable.Type.Val == TypeConfirm {
-                    blueprintDoc.Variables[i] = variable
-                }
-                saveItemToTemplateDataMap(&variable, data, answer)
-                util.Info("[dataPrep] Using answer file value [%v] for variable [%s]\n", answer, variable.Name.Val)
-                continue
-            } else {
-                if strictAnswers {
-                    return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Val)
-                } // do not return error when in non-strict answers mode, instead ask user input for the variable value
-            }
+				// if we have a valid answer, skip user input
+				if variable.Type.Val == TypeConfirm {
+					blueprintDoc.Variables[i] = variable
+				}
+				saveItemToTemplateDataMap(&variable, data, answer)
+				util.Info("[dataPrep] Using answer file value [%v] for variable [%s]\n", answer, variable.Name.Val)
+				continue
+			} else {
+				if strictAnswers {
+					return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Val)
+				} // do not return error when in non-strict answers mode, instead ask user input for the variable value
+			}
 		}
 
 		// ask question based on type to get value - on the following conditions in order
@@ -696,10 +696,10 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 	}
 
 	if useDefaultsAsValue {
-	    // Print summary default values table if in useDefaultsAsValues mode
-        util.Info("Using default values:\n")
-        util.Info(util.DataMapTable(&data.DefaultData, util.TableAlignLeft, 30, 50, "\t"))
-    }
+		// Print summary default values table if in useDefaultsAsValues mode
+		util.Info("Using default values:\n")
+		util.Info(util.DataMapTable(&data.DefaultData, util.TableAlignLeft, 30, 50, "\t"))
+	}
 
 	if !SkipFinalPrompt {
 		// Final prompt from user to start generation process
@@ -919,10 +919,10 @@ func validateFilePath() func(val interface{}) error {
 
 func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsOn bool, dataMap *PreparedData, defaultVal interface{}, condition bool) bool {
 	if dependsOn == condition {
-        // return false if this is a skipped confirm question
-        if defaultVal == "" && currentVar.Type.Val == TypeConfirm {
-            defaultVal = false
-        }
+		// return false if this is a skipped confirm question
+		if defaultVal == "" && currentVar.Type.Val == TypeConfirm {
+			defaultVal = false
+		}
 
 		saveItemToTemplateDataMap(currentVar, dataMap, defaultVal)
 		util.Verbose("[dataPrep] Skipping question for parameter [%s] because DependsOn [%s] value is %t\n", currentVar.Name.Val, dependsOnVal, condition)
@@ -952,10 +952,10 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 		preparedData.Secrets[variable.Name.Val] = data
 		// Use raw value of secret field if flag is set
 		if variable.UseRawValue.Bool == true {
-            preparedData.TemplateData[variable.Name.Val] = data
-        } else {
-            preparedData.TemplateData[variable.Name.Val] = fmt.Sprintf(fmtTagValue, variable.Name.Val)
-        }
+			preparedData.TemplateData[variable.Name.Val] = data
+		} else {
+			preparedData.TemplateData[variable.Name.Val] = fmt.Sprintf(fmtTagValue, variable.Name.Val)
+		}
 	} else {
 		// Save to values file if switch is ON
 		if variable.SaveInXlVals.Bool == true {
