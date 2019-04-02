@@ -217,7 +217,7 @@ task removeLicenseFolder {
 task downloadLicenses {
     doLast {
         def authToken = project.property('githubOauthToken')
-        def goPath = Paths.get(".gogradle/project_gopath/bin/glice").toString()
+        def goPath = Paths.get("${System.getenv("GOPATH")}/bin/glice").toString()
         runCmd (goPath, "-r", "-f", "-gh", authToken)
     }
 }
