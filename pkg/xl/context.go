@@ -10,6 +10,7 @@ import (
 )
 
 type ChangedIds struct {
+	Kind    string
 	Created *[]string
 	Updated *[]string
 }
@@ -43,11 +44,8 @@ type TaskInfo struct {
 }
 
 type Changes struct {
-	Cis         *ChangedIds
-	Task        *TaskInfo
-	Users       *ChangedIds
-	Permissions *ChangedIds
-	Roles       *ChangedIds
+	Ids  *[]ChangedIds
+	Task *TaskInfo
 }
 
 type AsCodeResponse struct {
