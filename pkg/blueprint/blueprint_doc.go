@@ -49,12 +49,19 @@ var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfi
 type BlueprintYaml struct {
 	ApiVersion      string      `yaml:"apiVersion,omitempty"`
 	Kind            string      `yaml:"kind,omitempty"`
-	Metadata        interface{} `yaml:"metadata,omitempty"`
+	Metadata        Metadata
 	Parameters      interface{} `yaml:"parameters,omitempty"`
 	Files           interface{} `yaml:"files,omitempty"`
 	Spec            Spec
 	TemplateConfigs []TemplateConfig
 	Variables       []Variable
+}
+type Metadata struct {
+	ProjectName  string      `yaml:"projectName,omitempty"`
+  	Description  string      `yaml:"description,omitempty"`
+  	Author 		 string      `yaml:"author,omitempty"`
+  	Version 	 string      `yaml:"version,omitempty"`
+  	Instructions string      `yaml:"instructions,omitempty"`
 }
 type Spec struct {
 	Parameters interface{} `yaml:"parameters,omitempty"`
