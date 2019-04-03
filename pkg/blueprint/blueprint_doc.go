@@ -47,8 +47,8 @@ var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfi
 
 // Blueprint YAML doc definition
 type BlueprintYaml struct {
-	ApiVersion      string `yaml:"apiVersion,omitempty"`
-	Kind            string `yaml:"kind,omitempty"`
+	ApiVersion      string      `yaml:"apiVersion,omitempty"`
+	Kind            string      `yaml:"kind,omitempty"`
 	Metadata        Metadata
 	Parameters      interface{} `yaml:"parameters,omitempty"`
 	Files           interface{} `yaml:"files,omitempty"`
@@ -57,11 +57,11 @@ type BlueprintYaml struct {
 	Variables       []Variable
 }
 type Metadata struct {
-	ProjectName  string `yaml:"projectName,omitempty"`
-	Description  string `yaml:"description,omitempty"`
-	Author       string `yaml:"author,omitempty"`
-	Version      string `yaml:"version,omitempty"`
-	Instructions string `yaml:"instructions,omitempty"`
+	ProjectName  string      `yaml:"projectName,omitempty"`
+  	Description  string      `yaml:"description,omitempty"`
+  	Author 		 string      `yaml:"author,omitempty"`
+  	Version 	 string      `yaml:"version,omitempty"`
+  	Instructions string      `yaml:"instructions,omitempty"`
 }
 type Spec struct {
 	Parameters interface{} `yaml:"parameters,omitempty"`
@@ -575,7 +575,7 @@ func (blueprintDoc *BlueprintYaml) getValuesFromAnswersFile(answersFilePath stri
 }
 
 // prepare template data by getting user input and calling named functions
-func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, strictAnswers bool, useDefaultsAsValue bool, fromUpCommand bool, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
+func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, strictAnswers bool, useDefaultsAsValue bool, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
 	data := NewPreparedData()
 
 	// if exists, get map of answers from file
@@ -656,7 +656,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 				blueprintDoc.Variables[i] = variable
 			}
 			saveItemToTemplateDataMap(&variable, data, finalVal)
-			if variable.Secret.Bool == true && !fromUpCommand {
+			if variable.Secret.Bool == true {
 				data.DefaultData[variable.Name.Val] = "*****"
 			} else {
 				data.DefaultData[variable.Name.Val] = finalVal
@@ -703,16 +703,9 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 	}
 
 	if useDefaultsAsValue {
-		if fromUpCommand {
-			util.IsQuiet = false
-		}
 		// Print summary default values table if in useDefaultsAsValues mode
 		util.Info("Using default values:\n")
 		util.Info(util.DataMapTable(&data.DefaultData, util.TableAlignLeft, 30, 50, "\t"))
-
-		if fromUpCommand {
-			util.IsQuiet = true
-		}
 	}
 
 	if !SkipFinalPrompt {
