@@ -5,6 +5,7 @@ metadata:
   description: Is just a test blueprint project used for manual testing of inputs
   author: XebiaLabs
   version: 1.0
+  instructions: These are the instructions for executing this blueprint
 spec:
   parameters:
   - name: ExpTest1
