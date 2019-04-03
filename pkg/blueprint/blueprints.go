@@ -106,7 +106,7 @@ func InstantiateBlueprint(
 	util.Verbose("[dataPrep] Got blueprint metadata: %#v\n", blueprintDoc.Metadata)
 
 	// ask for user input
-	preparedData, err := blueprintDoc.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
+	preparedData, err := blueprintDoc.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, fromUpCommand, surveyOpts...)
 	if err != nil {
 		return err
 	}
