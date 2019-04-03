@@ -32,7 +32,7 @@ func DataMapTable(dataMap *map[string]interface{}, align string, keyWidth int, v
         if len(key) > keyWidth {
             key = string(k[:keyWidth-2]) + ".."
         }
-        val := fmt.Sprintf("%v", (*dataMap)[k])
+        val := strings.Replace(fmt.Sprintf("%v", (*dataMap)[k]), "\n", "\\n", -1)
         if len(val) > valWidth {
             val = string(val[:valWidth-2]) + ".."
         }

@@ -20,6 +20,19 @@ func TestDataMapTable(t *testing.T) {
         assert.Equal(t, expected, DataMapTable(&data, TableAlignLeft, 30, 50, ""))
     })
 
+    t.Run("should print valid data table with new lines (left aligned)", func(t *testing.T) {
+        data := map[string]interface{} {"test": "*****", "userName": "testing\n123", "confirm": true}
+        expected := ` ______________________________ __________________________________________________
+|KEY                           |VALUE                                             |
+ ------------------------------ --------------------------------------------------
+|confirm                       |true                                              |
+|test                          |*****                                             |
+|userName                      |testing\n123                                      |
+ ------------------------------ --------------------------------------------------
+`
+        assert.Equal(t, expected, DataMapTable(&data, TableAlignLeft, 30, 50, ""))
+    })
+
     t.Run("should print valid data table (right aligned)", func(t *testing.T) {
         data := map[string]interface{} {"test": "*****", "userName": "testing", "confirm": true}
         expected := ` ______________________________ __________________________________________________
