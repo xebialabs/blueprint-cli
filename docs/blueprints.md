@@ -292,6 +292,7 @@ Flags and options that can be set to `xl blueprint` command are the following:
 | `-a` | `--answers` | — | `xl blueprint -a /path/to/answers.yaml` | When provided, values within answers file will be used as variable input. By default strict mode is off so any value that is not provided in the file will be asked to user. |
 | `-s` | `--strict-answers` | `false` | `xl blueprint -sa /path/to/answers.yaml` | If flag is set, all variables will be requested from the answers file, and error will be thrown if one of them is not there.<br/>If not set, existing answer values will be used from answers file, and remaining ones will be asked to user from command line. |
 | `-b` | `--blueprint` | | `xl blueprint -b aws/monolith`<br>`xl blueprint -b /path/to/local/blueprint/dir`<br/>`xl blueprint -b ../relative/path/to/local/blueprint/dir`  | Looks for the specified absolute or relative folder path in local file system, if not found looks for the path relative to the current remote repository and instead of asking user which blueprint to use, it will directly fetch the specified blueprint from remote repository, or give an error if blueprint not found in both local filesystem and remote repository |
+| `-d` | `--use-defaults` | | `xl blueprint -d`  | If flag is set, default fields in variable definitions will be used as value fields, thus user will not be asked question for a variable if a default value is present |
 
 ---------------
 

@@ -15,11 +15,11 @@ If you cannot see hidden files on MAC, just press `CMD + SHIFT + .`
 
 To install dependencies, run:
 ```
-./gradlew vendor
+./gradlew goVendor
 ```
 If you add a new dependency to the gradle build run: 
 ```
-./gradlew vendor lock -Dgogradle.mode=DEV 
+./gradlew goVendor goLock -Dgogradle.mode=DEV 
 ```
 
 To build the project, run:
@@ -32,16 +32,16 @@ The xl binary is then created in the folder `xl-cli/build/${GOOS}-${GOARCH}/xl`
 
 The Gradle build task is set up to automatically executes the test task. The command to manually run Go tests with Gradle is:
 ```
-./gradlew test
+./gradlew goTest
 ```
 
 To run Go tests using the Go binary, change to the directory containing the test file(s) and run:
 ```
-go test -v
+go goTest -v
 ```
 From this same directory, you can also see test coverage by running:
 ```
-go test -coverprofile cover.out
+go goTest -coverprofile cover.out
 go tool cover -html=cover.out
 ```
 
