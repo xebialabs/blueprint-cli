@@ -690,6 +690,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                 default: lala
                 saveInXlVals: true
                 description: help text
+                showOnPreview: true
 
               files:
               - path: xebialabs/foo.yaml
@@ -710,6 +711,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Default:      VarField{Val: "lala"},
 			Description:  VarField{Val: "help text"},
 			SaveInXlVals: VarField{Bool: true, Val: "true"},
+            ShowOnPreview: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[1])
 		assert.Equal(t, TemplateConfig{
 			File:     "xebialabs/foo.yaml",

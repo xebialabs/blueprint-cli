@@ -178,6 +178,7 @@ func InstantiateBlueprint(
 			}
 		}
 	}
+    util.Info("Please refer to file 'xebialabs/secrets.xlvals' for the default secrets\n")
 	if blueprintDoc.Metadata.Instructions != "" {
 		util.Info("\n\n%s\n\n", color.GreenString(blueprintDoc.Metadata.Instructions))
 	}

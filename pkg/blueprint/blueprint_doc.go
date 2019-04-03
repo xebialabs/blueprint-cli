@@ -85,6 +85,7 @@ type Variable struct {
 	Pattern        VarField
 	SaveInXlVals   VarField
 	UseRawValue    VarField
+    ShowOnPreview  VarField
 }
 type PreparedData struct {
 	TemplateData map[string]interface{}
@@ -329,7 +330,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	case TypeInput:
 		if variable.Secret.Bool == true {
 			questionMsg := prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))
-			if defaultVal != "" {
+			if defaultVal != "" && variable.ShowOnPreview.Bool == true {
 				questionMsg += fmt.Sprintf(" (%s)", defaultVal)
 			}
 			err = survey.AskOne(
