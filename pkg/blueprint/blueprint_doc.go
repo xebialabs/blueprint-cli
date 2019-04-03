@@ -47,8 +47,8 @@ var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfi
 
 // Blueprint YAML doc definition
 type BlueprintYaml struct {
-	ApiVersion      string      `yaml:"apiVersion,omitempty"`
-	Kind            string      `yaml:"kind,omitempty"`
+	ApiVersion      string `yaml:"apiVersion,omitempty"`
+	Kind            string `yaml:"kind,omitempty"`
 	Metadata        Metadata
 	Parameters      interface{} `yaml:"parameters,omitempty"`
 	Files           interface{} `yaml:"files,omitempty"`
@@ -57,11 +57,11 @@ type BlueprintYaml struct {
 	Variables       []Variable
 }
 type Metadata struct {
-	ProjectName  string      `yaml:"projectName,omitempty"`
-  	Description  string      `yaml:"description,omitempty"`
-  	Author 		 string      `yaml:"author,omitempty"`
-  	Version 	 string      `yaml:"version,omitempty"`
-  	Instructions string      `yaml:"instructions,omitempty"`
+	ProjectName  string `yaml:"projectName,omitempty"`
+	Description  string `yaml:"description,omitempty"`
+	Author       string `yaml:"author,omitempty"`
+	Version      string `yaml:"version,omitempty"`
+	Instructions string `yaml:"instructions,omitempty"`
 }
 type Spec struct {
 	Parameters interface{} `yaml:"parameters,omitempty"`
@@ -704,8 +704,9 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 
 	if useDefaultsAsValue {
 		// Print summary default values table if in useDefaultsAsValues mode
-		util.Info("Using default values:\n")
-		util.Info(util.DataMapTable(&data.DefaultData, util.TableAlignLeft, 30, 50, "\t"))
+		// use util.Print so that this is not skipped in quiet mode
+		util.Print("Using default values:\n")
+		util.Print(util.DataMapTable(&data.DefaultData, util.TableAlignLeft, 30, 50, "\t"))
 	}
 
 	if !SkipFinalPrompt {

@@ -90,10 +90,10 @@ func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool,
 
 	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir, "", false, quickSetup, true)
 	if err != nil {
-		util.Fatal("Error while creating Blueprint: %s \n", err)
+        util.Fatal("Error while creating Blueprint: %s \n", err)
 	}
+    util.IsQuiet = false
 
-	util.IsQuiet = false
 	applyFilesAndSave()
 	// TODO: Ask for the version to deploy
 	util.Info("Generated files for deployment successfully! \nSpinning up xl seed! \n")
