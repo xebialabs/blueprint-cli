@@ -115,6 +115,7 @@ func runAndCaptureResponse(status string, cmd models.Command) {
 
 	if errorStr != "" {
 		createLogFile("xl-seed-error.txt", errorStr)
+		util.Fatal("Error while running xl up: \n %s", errorStr)
 	}
 }
 
