@@ -14,7 +14,11 @@ spec:
   - name: ClientCert
     type: Editor
     saveInXlVals: true
-    default: qwertyuiop
+    default: |
+        qwertyuiosfdg
+        fsjkdnfkjhfk sghkshghjgoegg hnonhjoinhjoihjn uibhh iuhoiho hniu hiouh iou hio uhi uhn iouhn ioh nio hni hni hn iohn ihn i n no ih h iohuhv uygbui
+        ujhbhujbiubhiu iubiu hi uhbiubhi; biu jh biu hiub ih biugh ijb iuhg u bij bi ughi b;ik jbik \n uyg uig jb iugi u\n hu ygi ugi ughoi hnpoi \nihjoiho
+        \shgoishgoihnjgoih wiu hspighiugh9q8ryi3utiwuyg1qrgjnvduhdq8r`ubf9qyfhcb6iujrbjhyuff09uf3jjbn n 98hgijhwf61 nhv  w1irbkdv d 9weughh
   - name: TestDepends
     type: Confirm
     default: true
