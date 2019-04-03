@@ -21,6 +21,9 @@
 | **description** | — | A long description for describing the blueprint project | **x** |
 | **author** | — | XebiaLabs | **x** |
 | **version** | — | 1.0 | **x** |
+| **instructions** | — | You need to start your docker containers before applying the blueprint | **x** |
+
+The `instructions` field will be displayed after the blueprint is generated.
 
 #### Spec fields
 

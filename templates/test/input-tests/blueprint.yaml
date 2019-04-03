@@ -5,6 +5,9 @@ metadata:
   description: Is just a test blueprint project used for manual testing of inputs
   author: XebiaLabs
   version: 1.0
+  instructions: |
+    test the instructions
+    feature
 spec:
   parameters:
   - name: Test

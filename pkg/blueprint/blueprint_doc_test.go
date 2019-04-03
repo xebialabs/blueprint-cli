@@ -100,6 +100,11 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
          apiVersion: %s
          kind: Blueprint
          metadata:
+           projectName: Test Project
+           description: Is just a test blueprint project used for manual testing of inputs
+           author: XebiaLabs
+           version: 1.0
+           instructions: These are the instructions for executing this blueprint
          spec:
            parameters:
            - name: pass
@@ -793,6 +798,43 @@ func TestParseTemplateMetadata(t *testing.T) {
 			DependsOnFalse: VarField{Val: "!!isitnot", Tag: tagExpression},
 		}, doc.TemplateConfigs[3])
 	})
+	t.Run("should parse metadata fields", func(t *testing.T) {
+		doc, err := getValidTestBlueprintMetadata("templatePath/test", blueprintRepository)
+		require.Nil(t, err)
+		assert.Equal(t, "Test Project", doc.Metadata.ProjectName)
+		assert.Equal(t,
+			"Is just a test blueprint project used for manual testing of inputs",
+			doc.Metadata.Description)
+		assert.Equal(t,
+			"XebiaLabs",
+			doc.Metadata.Author)
+		assert.Equal(t,
+			"1.0",
+			doc.Metadata.Version)
+		assert.Equal(t,
+			"These are the instructions for executing this blueprint",
+			doc.Metadata.Instructions)
+	})
+	t.Run("should parse multiline instructions", func(t *testing.T) {
+		metadata := []byte(
+			fmt.Sprintf(`
+              apiVersion: %s
+              kind: Blueprint
+              metadata:
+                projectName: allala
+                instructions: |
+                  This is a multiline instruction:
+
+                  The instructions continue here:
+                    1. First step
+                    2. Second step
+              spec:`, models.YamlFormatVersion))
+		doc, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
+		require.Nil(t, err)
+		assert.Equal(t,
+			"This is a multiline instruction:\n\nThe instructions continue here:\n  1. First step\n  2. Second step\n",
+			doc.Metadata.Instructions)
+	})
 }
 
 func TestVerifyTemplateDirAndGenFullPaths(t *testing.T) {
@@ -1282,10 +1324,10 @@ confirm=true
     blueprintDoc := BlueprintYaml{}
 
     tests := []struct {
-        name             string
-        answersFilePath  string
-        wantOut          map[string]interface{}
-        errOut           bool
+        name            string
+        answersFilePath string
+        wantOut         map[string]interface{}
+        errOut          bool
     }{
         {
             "answers file: error when file not found",
@@ -1327,16 +1369,16 @@ func TestGetAnswerFromMap(t *testing.T) {
     ioutil.WriteFile(filepath.Join("test", "sample.txt"), contents, os.ModePerm)
 
     tests := []struct {
-        name         string
-        variable     Variable
-        answerMap    map[string]interface{}
-        parameters   map[string]interface{}
-        wantOut      interface{}
-        errOut       error
+        name       string
+        variable   Variable
+        answerMap  map[string]interface{}
+        parameters map[string]interface{}
+        wantOut    interface{}
+        errOut     error
     }{
         {
             "answers from map: save string answer value to variable value with type Input",
-            Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeInput}},
+            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
             map[string]interface{}{"Test": "sample answer"},
             map[string]interface{}{},
             "sample answer",
@@ -1344,7 +1386,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         },
         {
             "answers from map: save float answer value to variable value with type Input",
-            Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeInput}},
+            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
             map[string]interface{}{"Test": 5.45},
             map[string]interface{}{},
             5.45,
@@ -1352,7 +1394,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         },
         {
             "answers from map: save boolean answer value to variable value with type Confirm",
-            Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeConfirm}},
+            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeConfirm}},
             map[string]interface{}{"Test": true},
             map[string]interface{}{},
             true,
@@ -1360,7 +1402,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         },
         {
             "answers from map: save long text answer value to variable value with type Editor",
-            Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeEditor}},
+            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeEditor}},
             map[string]interface{}{"Test": "long text for testing..\nand the rest of it\n"},
             map[string]interface{}{},
             "long text for testing..\nand the rest of it\n",
@@ -1368,7 +1410,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         },
         {
             "answers from map: save long text answer value to variable value with type File",
-            Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeFile}},
+            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
             map[string]interface{}{"Test": filepath.Join("test", "sample.txt")},
             map[string]interface{}{},
             "hello\ngo\n",
@@ -1376,7 +1418,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         },
         {
             "answers from map: give error on file not found (input type: File)",
-            Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeFile}},
+            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
             map[string]interface{}{"Test": filepath.Join("test", "error.txt")},
             map[string]interface{}{},
             "",
@@ -1384,11 +1426,11 @@ func TestGetAnswerFromMap(t *testing.T) {
                 "error reading input file [%s]: open %s: no such file or directory",
                 filepath.Join("test", "error.txt"),
                 filepath.Join("test", "error.txt"),
-             ),
+            ),
         },
         {
             "answers from map: save string answer value to variable value with type Select",
-            Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
+            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
             map[string]interface{}{"Test": "b"},
             map[string]interface{}{},
             "b",
@@ -1396,7 +1438,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         },
         {
             "answers from map: give error on unknown select option value",
-            Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
+            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
             map[string]interface{}{"Test": "c"},
             map[string]interface{}{},
             "",

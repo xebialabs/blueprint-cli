@@ -8,9 +8,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/thoas/go-funk"
-
 	"text/template"
+
+	"github.com/fatih/color"
+	"github.com/thoas/go-funk"
 
 	"github.com/magiconair/properties"
 	"github.com/xebialabs/xl-cli/pkg/models"
@@ -176,6 +177,9 @@ func InstantiateBlueprint(
 				}
 			}
 		}
+	}
+	if blueprintDoc.Metadata.Instructions != "" {
+		util.Info("\n\n%s\n\n", color.GreenString(blueprintDoc.Metadata.Instructions))
 	}
 	return nil
 }
