@@ -16,6 +16,7 @@ var globalPermissions bool
 var users bool
 var roles bool
 var environments bool
+var applications bool
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
@@ -35,7 +36,7 @@ var generateCmd = &cobra.Command{
 }
 
 func DoGenerate(context *xl.Context) {
-	err := context.GenerateSingleDocument(generateServer, generateFilename, generatePath, generateOverride, globalPermissions, users, roles, environments)
+	err := context.GenerateSingleDocument(generateServer, generateFilename, generatePath, generateOverride, globalPermissions, users, roles, environments, applications)
 	if err != nil {
 		util.Fatal("Error while generating document: %s\n", err)
 	}
@@ -54,4 +55,5 @@ func init() {
 	generateFlags.BoolVarP(&users, "users", "u", false, "Add to the generated file all the users in system")
 	generateFlags.BoolVarP(&roles, "roles", "r", false, "Add to the generated file all the roles in system")
 	generateFlags.BoolVarP(&environments, "environments", "e", false, "Add to the generated file all environments")
+	generateFlags.BoolVarP(&applications, "applications", "a", false, "Add to the generated file all the applications in system")
 }
