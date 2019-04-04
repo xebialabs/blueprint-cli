@@ -39,7 +39,7 @@ spec:
     - name: Foo
       # expression and functions will be supported for 'value'
       value: hello 
-      dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends" # do this later
+      dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends" # do this later
     - name: bar
       value: true
     # 'skip-files' can be used to skip files and can be conditional using dependsOn

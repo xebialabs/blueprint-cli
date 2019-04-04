@@ -45,47 +45,6 @@ const (
 
 var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfirm}
 
-// Blueprint YAML doc definition
-type BlueprintYaml struct {
-	ApiVersion      string `yaml:"apiVersion,omitempty"`
-	Kind            string `yaml:"kind,omitempty"`
-	Metadata        Metadata
-	Parameters      interface{} `yaml:"parameters,omitempty"`
-	Files           interface{} `yaml:"files,omitempty"`
-	Spec            Spec
-	TemplateConfigs []TemplateConfig
-	Variables       []Variable
-}
-type Metadata struct {
-	ProjectName  string `yaml:"projectName,omitempty"`
-	Description  string `yaml:"description,omitempty"`
-	Author       string `yaml:"author,omitempty"`
-	Version      string `yaml:"version,omitempty"`
-	Instructions string `yaml:"instructions,omitempty"`
-}
-type Spec struct {
-	Parameters interface{} `yaml:"parameters,omitempty"`
-	Files      interface{} `yaml:"files,omitempty"`
-}
-type VarField struct {
-	Val  string
-	Bool bool
-	Tag  string
-}
-type Variable struct {
-	Name           VarField
-	Type           VarField
-	Secret         VarField
-	Value          VarField
-	Description    VarField
-	Default        VarField
-	DependsOnTrue  VarField
-	DependsOnFalse VarField
-	Options        []VarField
-	Pattern        VarField
-	SaveInXlVals   VarField
-	UseRawValue    VarField
-}
 type PreparedData struct {
 	TemplateData map[string]interface{}
 	DefaultData  map[string]interface{}
@@ -431,30 +390,38 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 }
 
 // parse blueprint definition doc
-func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintYaml, error) {
+func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(*blueprintVars))
 	decoder.SetStrict(true)
-	doc := BlueprintYaml{}
-	err := decoder.Decode(&doc)
+	yamlDoc := BlueprintYaml{}
+	err := decoder.Decode(&yamlDoc)
 	if err != nil {
 		return nil, err
 	}
 
 	// parse & validate
-	err = doc.parseParameters()
+	variables, err := yamlDoc.parseParameters()
 	if err != nil {
 		return nil, err
 	}
-	err = doc.parseFiles(templatePath, blueprintRepository, isLocal)
+	templateConfigs, err := yamlDoc.parseFiles(templatePath, blueprintRepository, isLocal)
 	if err != nil {
 		return nil, err
 	}
-	err = doc.validate()
-	return &doc, err
+	bpConfig := BlueprintConfig{
+		ApiVersion:      yamlDoc.ApiVersion,
+		Kind:            yamlDoc.Kind,
+		Metadata:        yamlDoc.Metadata,
+		Include:         nil, // TODO
+		TemplateConfigs: templateConfigs,
+		Variables:       variables,
+	}
+	err = bpConfig.validate()
+	return &bpConfig, err
 }
 
 // verify blueprint directory & generate full paths for local files
-func (blueprintDoc *BlueprintYaml) verifyTemplateDirAndGenFullPaths(templatePath string) error {
+func (blueprintDoc *BlueprintConfig) verifyTemplateDirAndGenFullPaths(templatePath string) error {
 	if util.PathExists(templatePath, true) {
 		util.Verbose("[repository] Verifying local path and files within: %s \n", templatePath)
 		var filePaths []string
@@ -500,9 +467,17 @@ func (blueprintDoc *BlueprintYaml) verifyTemplateDirAndGenFullPaths(templatePath
 }
 
 // parse doc parameters into list of variables
-func (blueprintDoc *BlueprintYaml) parseParameters() error {
+func (blueprintDoc *BlueprintYaml) parseParameters() ([]Variable, error) {
 	var parameters []map[interface{}]interface{}
-	if blueprintDoc.Spec != (Spec{}) {
+	variables := []Variable{}
+	// emptySpec := Spec{Include: []IncludedBlueprint{
+	// 	{
+	// 		ParameterValues: []ParameterValues{},
+	// 		SkipFiles:       []SkipFiles{},
+	// 	},
+	// }}
+	// TODO check test case
+	if blueprintDoc.Spec.Parameters != nil {
 		parameters = util.TransformToMap(blueprintDoc.Spec.Parameters)
 	} else {
 		parameters = util.TransformToMap(blueprintDoc.Parameters)
@@ -510,17 +485,19 @@ func (blueprintDoc *BlueprintYaml) parseParameters() error {
 	for _, m := range parameters {
 		parsedVar, err := parseParameterMap(&m)
 		if err != nil {
-			return err
+			return variables, err
 		}
-		blueprintDoc.Variables = append(blueprintDoc.Variables, parsedVar)
+		variables = append(variables, parsedVar)
 	}
-	return nil
+	return variables, nil
 }
 
 // parse doc files into list of TemplateConfig
-func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, blueprintRepository *BlueprintContext, isLocal bool) error {
+func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, blueprintRepository *BlueprintContext, isLocal bool) ([]TemplateConfig, error) {
 	var files []map[interface{}]interface{}
-	if blueprintDoc.Spec != (Spec{}) {
+	templateConfigs := []TemplateConfig{}
+	// TODO check test case
+	if blueprintDoc.Spec.Parameters != nil || blueprintDoc.Spec.Files != nil {
 		files = util.TransformToMap(blueprintDoc.Spec.Files)
 	} else {
 		files = util.TransformToMap(blueprintDoc.Files)
@@ -528,19 +505,19 @@ func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, blueprintRepo
 	for _, m := range files {
 		templateConfig, err := parseFileMap(&m)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if isLocal {
 			// If local mode, fix path separator in needed cases
 			templateConfig.File = AdjustPathSeperatorIfNeeded(templateConfig.File)
 		}
-		blueprintDoc.TemplateConfigs = append(blueprintDoc.TemplateConfigs, templateConfig)
+		templateConfigs = append(templateConfigs, templateConfig)
 	}
-	return nil
+	return templateConfigs, nil
 }
 
 // validate blueprint yaml document based on required fields
-func (blueprintDoc *BlueprintYaml) validate() error {
+func (blueprintDoc *BlueprintConfig) validate() error {
 	if blueprintDoc.ApiVersion != models.YamlFormatVersion {
 		return fmt.Errorf("api version needs to be %s", models.YamlFormatVersion)
 	}
@@ -555,7 +532,7 @@ func (blueprintDoc *BlueprintYaml) validate() error {
 }
 
 // get values from answers file
-func (blueprintDoc *BlueprintYaml) getValuesFromAnswersFile(answersFilePath string) (map[string]interface{}, error) {
+func getValuesFromAnswersFile(answersFilePath string) (map[string]interface{}, error) {
 	if util.PathExists(answersFilePath, false) {
 		// read file contents
 		content, err := ioutil.ReadFile(answersFilePath)
@@ -575,7 +552,7 @@ func (blueprintDoc *BlueprintYaml) getValuesFromAnswersFile(answersFilePath stri
 }
 
 // prepare template data by getting user input and calling named functions
-func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, strictAnswers bool, useDefaultsAsValue bool, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
+func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string, strictAnswers bool, useDefaultsAsValue bool, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
 	data := NewPreparedData()
 
 	// if exists, get map of answers from file
@@ -585,7 +562,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 	if answersFilePath != "" {
 		// parse answers file
 		util.Verbose("[dataPrep] Using answers file [%s] (strict: %t) instead of asking questions from console\n", answersFilePath, strictAnswers)
-		answerMap, err = blueprintDoc.getValuesFromAnswersFile(answersFilePath)
+		answerMap, err = getValuesFromAnswersFile(answersFilePath)
 		if err != nil {
 			return nil, err
 		}
