@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strings"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -123,20 +122,28 @@ func (repo *GitHubBlueprintRepository) ListBlueprintsFromRepo() (map[string]*mod
 			return nil, nil, err
 		}
 
-		if strings.ToLower(strings.TrimSuffix(filename, path.Ext(filename))) == repository.BlueprintMetadataFileName {
+		if repository.CheckIfBlueprintDefinitionFile(filename) {
 			// If this is blueprints definition, this is considered as the root path for the blueprint
 			currentPath = path.Dir(entry.GetPath())
 			blueprintDirs = append(blueprintDirs, currentPath)
 
 			// Add remote definition file to blueprint
-			blueprints[currentPath].DefinitionFile = createRemoteFileDefinition(blueprints, currentPath, filename, entry, parsedUrl)
+			blueprints[currentPath].DefinitionFile = repository.GenerateBlueprintFileDefinition(
+			    blueprints,
+			    currentPath,
+			    filename,
+			    entry.GetPath(),
+			    parsedUrl,
+			)
 		} else if entry.GetType() == "tree" {
 			// pass
 		} else {
 			// Bypass root items
 			if currentPath != "." && path.Dir(entry.GetPath()) != "." {
 				// Add remote template file to blueprint
-				blueprints[currentPath].AddFile(createRemoteFileDefinition(blueprints, currentPath, filename, entry, parsedUrl))
+				blueprints[currentPath].AddFile(
+				    repository.GenerateBlueprintFileDefinition(blueprints, currentPath, filename, entry.GetPath(), parsedUrl),
+				)
 			}
 		}
 	}
@@ -197,18 +204,6 @@ func (repo *GitHubBlueprintRepository) GetLargeFileContents(filePath string) ([]
 }
 
 // utility functions
-func createRemoteFileDefinition(blueprints map[string]*models.BlueprintRemote, currentPath string, filename string, entry github.TreeEntry, parsedUrl *url.URL) models.RemoteFile {
-	// Initialize map item if needed
-	if _, exists := blueprints[currentPath]; !exists {
-		blueprints[currentPath] = models.NewBlueprintRemote(currentPath, currentPath)
-	}
-	return models.RemoteFile{
-		Filename: filename,
-		Path:     entry.GetPath(),
-		Url:      parsedUrl,
-	}
-}
-
 func isTooLargeBlobError(err error) bool {
 	if giterr, ok := err.(*github.ErrorResponse); ok {
 		if giterr != nil && giterr.Errors != nil {

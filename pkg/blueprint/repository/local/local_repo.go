@@ -1,7 +1,7 @@
 package local
 
 import (
-	"fmt"
+    "fmt"
     "github.com/thoas/go-funk"
     "io/ioutil"
     "os"
@@ -10,21 +10,24 @@ import (
 
     "github.com/xebialabs/xl-cli/pkg/blueprint/repository"
     "github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+    "github.com/xebialabs/xl-cli/pkg/util"
 )
-
-// list of ignored files
-var ignoredFiles = []string {".DS_Store"}
 
 // Local Blueprint Repository Provider implementation
 type LocalBlueprintRepository struct {
-	Name   string
-	Path   string
+	Name          string
+	Path          string
+	LocalFiles    []string
+    BlueprintDirs []string
+	IgnoredDirs   []string
+	IgnoredFiles  []string
 }
 
 func NewLocalBlueprintRepository(confMap map[string]string) (*LocalBlueprintRepository, error) {
 	repo := new(LocalBlueprintRepository)
 	repo.Name = confMap["name"]
+	repo.LocalFiles = []string {}
+	repo.BlueprintDirs = []string {}
 
     // parse & check local blueprint repo path
     if !util.MapContainsKeyWithVal(confMap, "path") {
@@ -39,6 +42,24 @@ func NewLocalBlueprintRepository(confMap map[string]string) (*LocalBlueprintRepo
         return nil, fmt.Errorf("got file path [%s] instead of a local directory path", confMap["path"])
     }
     repo.Path = confMap["path"]
+
+    // parse ignored dirs & files
+    if util.MapContainsKeyWithVal(confMap, "ignored-dirs") {
+        repo.IgnoredDirs = strings.Split(confMap["ignored-dirs"], ",")
+        for i := range repo.IgnoredDirs {
+            repo.IgnoredDirs[i] = strings.TrimSpace(repo.IgnoredDirs[i])
+        }
+    } else {
+        repo.IgnoredDirs = []string {}
+    }
+    if util.MapContainsKeyWithVal(confMap, "ignored-files") {
+        repo.IgnoredFiles = strings.Split(confMap["ignored-files"], ",")
+        for i := range repo.IgnoredFiles {
+            repo.IgnoredFiles[i] = strings.TrimSpace(repo.IgnoredFiles[i])
+        }
+    } else {
+        repo.IgnoredFiles = []string {}
+    }
 
 	return repo, nil
 }
@@ -57,11 +78,44 @@ func (repo *LocalBlueprintRepository) GetProvider() string {
 
 func (repo *LocalBlueprintRepository) GetInfo() string {
 	return fmt.Sprintf(
-		"Provider: %s\n  Repository name: %s\n  Local path: %s",
+		"Provider: %s\n  Repository name: %s\n  Local path: %s\n  Ignored directories: %s\n  Ignored files: %s",
 		repo.GetProvider(),
 		repo.Name,
 		repo.Path,
+		repo.IgnoredDirs,
+		repo.IgnoredFiles,
 	)
+}
+
+func (repo *LocalBlueprintRepository) traversePath(path string, info os.FileInfo, err error) error {
+    if info.IsDir() {
+        // skip ignored directories
+        dir := filepath.Base(path)
+        if funk.Contains(repo.IgnoredDirs, dir) {
+            util.Verbose("[local] Ignoring local directory [%s] because it's in ignore list\n", path)
+            return filepath.SkipDir
+        }
+    } else {
+        // handle file
+        filename := filepath.Base(path)
+        if !funk.Contains(repo.IgnoredFiles, filename) {
+            fileDir, err := filepath.Rel(repo.Path, filepath.Dir(path))
+            if err != nil {
+                return err
+            }
+            if fileDir != "." {
+                repo.LocalFiles = append(repo.LocalFiles, path)
+
+                if repository.CheckIfBlueprintDefinitionFile(filename) {
+                    // mark directory if this is a blueprint root dir
+                    repo.BlueprintDirs = append(repo.BlueprintDirs, filepath.Dir(path))
+                }
+            }
+        } else {
+            util.Verbose("[local] Ignoring local file [%s] because it's in ignore list\n", path)
+        }
+    }
+    return nil
 }
 
 func (repo *LocalBlueprintRepository) ListBlueprintsFromRepo() (map[string]*models.BlueprintRemote, []string, error) {
@@ -69,57 +123,39 @@ func (repo *LocalBlueprintRepository) ListBlueprintsFromRepo() (map[string]*mode
 	var blueprintDirs []string
 
 	// walk root directory
-    currentPath := "."
-	err := filepath.Walk(repo.Path, func(path string, info os.FileInfo, err error) error {
-	    if !info.IsDir() {
-	        // found a file
-            filename := filepath.Base(path)
-
-            // todo: fix incorrect mappings!
-            // check if file should be skipped
-            if !funk.Contains(ignoredFiles, filename) {
-                if strings.ToLower(strings.TrimSuffix(filename, filepath.Ext(filename))) == repository.BlueprintMetadataFileName {
-                    // If this is blueprints definition file, it is considered as the root path for the blueprint
-                    currentPath, err = filepath.Rel(repo.Path, filepath.Dir(path))
-                    if err != nil {
-                        return err
-                    }
-
-                    // skip root folder
-                    if currentPath != "." {
-                        // Add local definition file to blueprint
-                        blueprintDirs = append(blueprintDirs, currentPath)
-                        blueprints[currentPath].DefinitionFile = createLocalFileDefinition(blueprints, currentPath, filename, path)
-                    }
-                } else {
-                    // skip root folder
-                    if currentPath != "." && filepath.Dir(path) != repo.Path {
-                        // Add local template file to blueprint
-                        blueprints[currentPath].AddFile(createLocalFileDefinition(blueprints, currentPath, filename, path))
-                    }
-                }
-            } else {
-                util.Verbose("[local] Ignoring local file [%s] because it's in ignore list\n", path)
-            }
-        }
-        return nil
-    })
+	err := filepath.Walk(repo.Path, repo.traversePath)
 	if err != nil {
 	    return nil, nil, err
     }
 
-    // todo: remove debug logging!
-    for k, v := range blueprints {
-        util.Verbose("====> %s:\n", k)
-        for _, file := range v.Files {
-            util.Verbose("\t[%s] - %s\n", k, file.Path)
+	// construct blueprint map
+    for _, file := range repo.LocalFiles {
+        if blueprintDir := findRelatedBlueprintDir(repo.BlueprintDirs, file); blueprintDir != "" {
+            filename := filepath.Base(file)
+            currentPath, _ := filepath.Rel(repo.Path, blueprintDir)
+            filePath := filepath.Join(currentPath, filename)
+            if repository.CheckIfBlueprintDefinitionFile(filename) {
+                blueprints[currentPath].DefinitionFile = repository.GenerateBlueprintFileDefinition(
+                    blueprints,
+                    currentPath,
+                    filename,
+                    filePath,
+                    nil,
+                )
+                blueprintDirs = append(blueprintDirs, currentPath)
+            } else {
+                blueprints[currentPath].AddFile(
+                    repository.GenerateBlueprintFileDefinition(blueprints, currentPath, filename, filePath, nil),
+                )
+            }
         }
     }
 	return blueprints, blueprintDirs, nil
 }
 
 func (repo *LocalBlueprintRepository) GetFileContents(filePath string) (*[]byte, error) {
-    content, err := ioutil.ReadFile(filePath)
+    fullPath := filepath.Join(repo.Path, filePath)
+    content, err := ioutil.ReadFile(fullPath)
     if err != nil {
         return nil, err
     }
@@ -127,13 +163,11 @@ func (repo *LocalBlueprintRepository) GetFileContents(filePath string) (*[]byte,
 }
 
 // utility functions
-func createLocalFileDefinition(blueprints map[string]*models.BlueprintRemote, currentPath string, filename string, fullPath string) models.RemoteFile {
-    // Initialize map item if needed
-    if _, exists := blueprints[currentPath]; !exists {
-        blueprints[currentPath] = models.NewBlueprintRemote(currentPath, currentPath)
+func findRelatedBlueprintDir(blueprintDirs []string, fullPath string) string {
+    for _, blueprintDir := range blueprintDirs {
+        if strings.Contains(fullPath, blueprintDir) {
+            return blueprintDir
+        }
     }
-    return models.RemoteFile{
-        Filename: filename,
-        Path:     fullPath,
-    }
+    return ""
 }
