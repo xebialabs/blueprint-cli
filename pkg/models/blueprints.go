@@ -5,6 +5,7 @@ import "net/url"
 const (
 	BlueprintOutputDir   = "xebialabs"
 	BlueprintFinalPrompt = "Confirm to generate blueprint files?"
+	UpFinalPrompt = "Do you want to accept the default values?"
 )
 
 // Function Result definition

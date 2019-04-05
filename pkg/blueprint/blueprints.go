@@ -71,6 +71,8 @@ func InstantiateBlueprint(
 	outputDir string,
 	answersFile string,
 	strictAnswers bool,
+	useDefaultsAsValue bool,
+	fromUpCommand bool,
 	surveyOpts ...survey.AskOpt,
 ) error {
 	var err error
@@ -104,11 +106,27 @@ func InstantiateBlueprint(
 	util.Verbose("[dataPrep] Got blueprint metadata: %#v\n", blueprintDoc.Metadata)
 
 	// ask for user input
-	preparedData, err := blueprintDoc.prepareTemplateData(answersFile, strictAnswers, surveyOpts...)
+	preparedData, err := blueprintDoc.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
 	if err != nil {
 		return err
 	}
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
+
+	// if this is use-defaults mode, show used default values as table
+	if useDefaultsAsValue && fromUpCommand {
+		// Final prompt from user to start generation process
+		toContinue := false
+		question := models.UpFinalPrompt
+
+		err := survey.AskOne(&survey.Confirm{Message: question, Default: true}, &toContinue, nil, surveyOpts...)
+		if err != nil {
+			return err
+		}
+		if !toContinue {
+			util.Fatal("xl-up command cancelled \n")
+			return nil
+		}
+	}
 
 	// save prepared data to values & secrets files
 	err = writeConfigToFile(valuesFileHeader, preparedData.Values, path.Join(outputDir, valuesFile))
@@ -133,6 +151,7 @@ func InstantiateBlueprint(
 		if err != nil {
 			return err
 		}
+
 		if skipFile {
 			util.Verbose("[file] skipping file [%s] since it has dependsOn value set\n", config.File)
 			continue

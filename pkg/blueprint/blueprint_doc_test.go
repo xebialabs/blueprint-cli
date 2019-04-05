@@ -173,15 +173,6 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		assert.Equal(t, "default_val", defaultVal)
 	})
 
-	t.Run("should return false string when confirm field is not set", func(t *testing.T) {
-		v := Variable{
-			Name: VarField{Val: "test"},
-			Type: VarField{Val: TypeConfirm},
-		}
-		defaultVal := v.GetDefaultVal(dummyData)
-		assert.Equal(t, false, defaultVal)
-	})
-
 	t.Run("should return empty string when invalid function tag in default field", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Val: "test"},
@@ -512,6 +503,22 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 		}
 		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnTrue.Val, variables[0].Value.Bool, NewPreparedData(), "", false))
 	})
+    t.Run("should skip question and default value should be false (dependsOnTrue)", func(t *testing.T) {
+        data := NewPreparedData()
+        variables := make([]Variable, 2)
+        variables[0] = Variable{
+            Name:  VarField{Val: "confirm"},
+            Type:  VarField{Val: TypeConfirm},
+            Value: VarField{Bool: false, Val: "false"},
+        }
+        variables[1] = Variable{
+            Name:          VarField{Val: "test"},
+            Type:          VarField{Val: TypeConfirm},
+            DependsOnTrue: VarField{Val: "confirm"},
+        }
+        assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnTrue.Val, variables[0].Value.Bool, data, "", false))
+        assert.False(t, data.TemplateData[variables[1].Name.Val].(bool))
+    })
 
 	t.Run("should not skip question (dependsOnFalse)", func(t *testing.T) {
 		variables := make([]Variable, 2)
@@ -1361,7 +1368,7 @@ confirm=true
     }
 }
 
-func TestGetAnswerFromMap(t *testing.T) {
+func TestVerifyVariableValue(t *testing.T) {
     // Create needed temporary directory for tests
     os.MkdirAll("test", os.ModePerm)
     defer os.RemoveAll("test")
@@ -1369,17 +1376,17 @@ func TestGetAnswerFromMap(t *testing.T) {
     ioutil.WriteFile(filepath.Join("test", "sample.txt"), contents, os.ModePerm)
 
     tests := []struct {
-        name       string
-        variable   Variable
-        answerMap  map[string]interface{}
-        parameters map[string]interface{}
-        wantOut    interface{}
-        errOut     error
+        name         string
+        variable     Variable
+        answer       interface{}
+        parameters   map[string]interface{}
+        wantOut      interface{}
+        errOut       error
     }{
         {
             "answers from map: save string answer value to variable value with type Input",
             Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
-            map[string]interface{}{"Test": "sample answer"},
+            "sample answer",
             map[string]interface{}{},
             "sample answer",
             nil,
@@ -1387,7 +1394,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: save float answer value to variable value with type Input",
             Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
-            map[string]interface{}{"Test": 5.45},
+            5.45,
             map[string]interface{}{},
             5.45,
             nil,
@@ -1395,7 +1402,15 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: save boolean answer value to variable value with type Confirm",
             Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeConfirm}},
-            map[string]interface{}{"Test": true},
+            true,
+            map[string]interface{}{},
+            true,
+            nil,
+        },
+        {
+            "answers from map: save boolean answer value (convert from string) to variable value with type Confirm",
+            Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeConfirm}},
+            "true",
             map[string]interface{}{},
             true,
             nil,
@@ -1403,7 +1418,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: save long text answer value to variable value with type Editor",
             Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeEditor}},
-            map[string]interface{}{"Test": "long text for testing..\nand the rest of it\n"},
+            "long text for testing..\nand the rest of it\n",
             map[string]interface{}{},
             "long text for testing..\nand the rest of it\n",
             nil,
@@ -1411,7 +1426,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: save long text answer value to variable value with type File",
             Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
-            map[string]interface{}{"Test": filepath.Join("test", "sample.txt")},
+            filepath.Join("test", "sample.txt"),
             map[string]interface{}{},
             "hello\ngo\n",
             nil,
@@ -1419,7 +1434,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: give error on file not found (input type: File)",
             Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
-            map[string]interface{}{"Test": filepath.Join("test", "error.txt")},
+            filepath.Join("test", "error.txt"),
             map[string]interface{}{},
             "",
             fmt.Errorf(
@@ -1431,7 +1446,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: save string answer value to variable value with type Select",
             Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
-            map[string]interface{}{"Test": "b"},
+            "b",
             map[string]interface{}{},
             "b",
             nil,
@@ -1439,7 +1454,7 @@ func TestGetAnswerFromMap(t *testing.T) {
         {
             "answers from map: give error on unknown select option value",
             Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
-            map[string]interface{}{"Test": "c"},
+            "c",
             map[string]interface{}{},
             "",
             fmt.Errorf("answer [c] is not one of the available options [a b] for variable [Test]"),
@@ -1447,7 +1462,7 @@ func TestGetAnswerFromMap(t *testing.T) {
     }
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            got, err := tt.variable.GetAnswerFromMap(tt.answerMap, tt.parameters)
+            got, err := tt.variable.VerifyVariableValue(tt.answer, tt.parameters)
             assert.Equal(t, tt.errOut, err)
             assert.Equal(t, tt.wantOut, got)
         })
