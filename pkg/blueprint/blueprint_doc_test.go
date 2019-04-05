@@ -1470,3 +1470,81 @@ func TestVerifyVariableValue(t *testing.T) {
         })
     }
 }
+
+func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
+	SkipUserInput = true
+	SkipFinalPrompt = true
+	type args struct {
+		answersFilePath    string
+		strictAnswers      bool
+		useDefaultsAsValue bool
+	}
+	tests := []struct {
+		name    string
+		fields  BlueprintYaml
+		args    args
+		want    *PreparedData
+		wantErr bool
+	}{
+		{
+			"prepare template data should show password hidden if ShowOnPreview is false",
+			BlueprintYaml{
+				Spec: Spec{
+					Parameters: []interface{}{},
+					Files: []interface{}{},
+				},
+				Variables: []Variable{
+					{
+					    Name: VarField{Val: "input1"},
+					    Type: VarField{Val: "Input"},
+						Value: VarField{Bool: false, Val: ""},
+						Default: VarField{Bool: false, Val: "default1"},
+					},
+                    {
+                        Name: VarField{Val: "input2"},
+                        Type: VarField{Val: "Input"},
+                        Value: VarField{Bool: false, Val: ""},
+                        Default: VarField{Bool: false, Val: "default2"},
+                        Secret: VarField{Bool: true, Val: "true"},
+                    },
+                    {
+                        Name: VarField{Val: "input3"},
+                        Type: VarField{Val: "Input"},
+                        Value: VarField{Bool: false, Val: ""},
+                        Default: VarField{Bool: false, Val: "default3"},
+                        Secret: VarField{Bool: true, Val: "true"},
+                        ShowOnPreview: VarField{Bool: true, Val: "true"},
+                    },
+				},
+			},
+			args{"", false, true},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"input1": "default1", "input2": "!value input2", "input3":"!value input3"},
+				DefaultData:  map[string]interface{}{"input1": "default1", "input2": "*****", "input3":"default3"},
+				Secrets:      map[string]interface{}{"input2":"default2", "input3":"default3"},
+				Values:       map[string]interface{}{},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			blueprintDoc := &BlueprintYaml{
+				ApiVersion:      tt.fields.ApiVersion,
+				Kind:            tt.fields.Kind,
+				Metadata:        tt.fields.Metadata,
+				Parameters:      tt.fields.Parameters,
+				Files:           tt.fields.Files,
+				Spec:            tt.fields.Spec,
+				TemplateConfigs: tt.fields.TemplateConfigs,
+				Variables:       tt.fields.Variables,
+			}
+			got, err := blueprintDoc.prepareTemplateData(tt.args.answersFilePath, tt.args.strictAnswers, tt.args.useDefaultsAsValue, nil)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("BlueprintYaml.prepareTemplateData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
