@@ -1,9 +1,10 @@
 package repository
 
 import (
+    "github.com/thoas/go-funk"
     "github.com/xebialabs/xl-cli/pkg/models"
     "net/url"
-    "path/filepath"
+    "path"
     "strings"
 )
 
@@ -21,7 +22,6 @@ type BlueprintRepository interface {
 
 // utility functions
 func GenerateBlueprintFileDefinition(blueprints map[string]*models.BlueprintRemote, blueprintPath string, filename string, path string, parsedUrl *url.URL) models.RemoteFile {
-    // todo: add unit tests
     // Initialize map item if needed
     if _, exists := blueprints[blueprintPath]; !exists {
         blueprints[blueprintPath] = models.NewBlueprintRemote(blueprintPath, blueprintPath)
@@ -34,6 +34,5 @@ func GenerateBlueprintFileDefinition(blueprints map[string]*models.BlueprintRemo
 }
 
 func CheckIfBlueprintDefinitionFile(filename string) bool {
-    // todo: add unit tests
-    return strings.ToLower(strings.TrimSuffix(filename, filepath.Ext(filename))) == BlueprintMetadataFileName
+    return (strings.ToLower(strings.TrimSuffix(filename, path.Ext(filename))) == BlueprintMetadataFileName) && (funk.Contains(BlueprintMetadataFileExtensions, strings.ToLower(path.Ext(filename))))
 }
