@@ -58,16 +58,21 @@ func askSetupMode(surveyOpts ...survey.AskOpt) string {
 }
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool, advancedSetup bool, blueprintTemplate string, cfgOverridden bool) {
-	if !(quickSetup || advancedSetup) {
-		// ask for setup mode.
-		mode := askSetupMode()
+func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool, advancedSetup bool, blueprintTemplate string, cfgOverridden bool, upAnswerFile string) {
 
-		if mode == "quick" {
-			quickSetup = true
-		} else {
-			advancedSetup = true
+	if upAnswerFile == "" {
+		if !(quickSetup || advancedSetup) {
+			// ask for setup mode.
+			mode := askSetupMode()
+
+			if mode == "quick" {
+				quickSetup = true
+			} else {
+				advancedSetup = true
+			}
 		}
+	} else {
+		advancedSetup = true
 	}
 
 	// Skip Generate blueprint file
@@ -88,11 +93,11 @@ func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool,
 		context.BlueprintContext.ActiveRepo = &repo
 	}
 
-	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir, "", false, quickSetup, true)
+	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, models.BlueprintOutputDir, upAnswerFile, false, quickSetup, true)
 	if err != nil {
-        util.Fatal("Error while creating Blueprint: %s \n", err)
+		util.Fatal("Error while creating Blueprint: %s \n", err)
 	}
-    util.IsQuiet = false
+	util.IsQuiet = false
 
 	applyFilesAndSave()
 	// TODO: Ask for the version to deploy

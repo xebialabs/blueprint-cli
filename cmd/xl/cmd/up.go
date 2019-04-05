@@ -28,12 +28,13 @@ var upLocalMode bool
 var upQuickSetup bool
 var upAdvancedSetup bool
 var upBlueprintTemplate string
+var upAnswerFile string
 var cfgOverridden bool
 
 // DoUp executes the up command
 func DoUp(context *xl.Context) {
 	util.Verbose("Running XL Seed\n")
-	xl.InvokeBlueprintAndSeed(context, upLocalMode, upQuickSetup, upAdvancedSetup, upBlueprintTemplate, cfgOverridden)
+	xl.InvokeBlueprintAndSeed(context, upLocalMode, upQuickSetup, upAdvancedSetup, upBlueprintTemplate, cfgOverridden, upAnswerFile)
 }
 
 func init() {
@@ -44,6 +45,7 @@ func init() {
 	upFlags.StringVarP(&upBlueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local folder path")
 	upFlags.BoolVarP(&upQuickSetup, "quick-setup", "", false, "Quickly run setup with all default values")
 	upFlags.BoolVarP(&upAdvancedSetup, "advanced-setup", "", false, "Advanced setup")
+	upFlags.StringVarP(&upAnswerFile, "answers", "a", "", "The file containing answers for the questions")
 	upFlags.BoolVarP(&cfgOverridden, "dev", "d", false, "Enable dev mode, uses repository config from your local config instead")
 	err := upFlags.MarkHidden("dev")
 	if err != nil {
