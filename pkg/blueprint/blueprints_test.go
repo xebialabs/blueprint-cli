@@ -104,18 +104,38 @@ func TestAdjustPathSeperatorIfNeeded(t *testing.T) {
 
 func TestInstantiateBlueprint(t *testing.T) {
 	SkipFinalPrompt = true
+
 	t.Run("should error on unknown template", func(t *testing.T) {
-		err := InstantiateBlueprint(true, "abc", getDefaultBlueprintContext(t), "xebialabs", "", false, false, false)
+		err := InstantiateBlueprint(
+		    false,
+		    "abc",
+            getLocalTestBlueprintContext(t),
+		    "xebialabs",
+		    "",
+		    false,
+		    false,
+		    false,
+		)
 
 		require.NotNil(t, err)
-		assert.Equal(t, "template not found in path abc/blueprint.yml", err.Error())
+		assert.Equal(t, "blueprint [abc] not found in repository Test", err.Error())
 	})
-	t.Run("should error on invalid test template", func(t *testing.T) {
-		err := InstantiateBlueprint(true, GetTestTemplateDir("invalid"), getDefaultBlueprintContext(t), "xebialabs", "", false, false, false)
 
+	t.Run("should error on invalid test template", func(t *testing.T) {
+		err := InstantiateBlueprint(
+		    false,
+		    "invalid",
+            getLocalTestBlueprintContext(t),
+		    "xebialabs",
+		    "",
+		    false,
+		    false,
+		    false,
+		)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
 	})
+
 	t.Run("should create output files for valid test template with answers file", func(t *testing.T) {
 		outFolder := "xebialabs"
 		defer RemoveFiles("xld-*.yml")
@@ -123,7 +143,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		defer os.RemoveAll(outFolder)
 
 		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("answer-input"), getDefaultBlueprintContext(t), outFolder, GetTestTemplateDir("answer-input.yaml"), true, false, false)
+		err := InstantiateBlueprint(
+		    false,
+		    "answer-input",
+            getLocalTestBlueprintContext(t),
+		    outFolder,
+		    GetTestTemplateDir("answer-input.yaml"),
+		    true,
+		    false,
+		    false,
+		)
 		require.Nil(t, err)
 
 		// assertions
@@ -168,6 +197,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
 		}
 	})
+
 	t.Run("should create output files for valid test template in use defaults as values mode", func(t *testing.T) {
 		outFolder := "xebialabs"
 		defer RemoveFiles("xld-*.yml")
@@ -175,7 +205,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		defer os.RemoveAll(outFolder)
 
 		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("defaults-as-values"), getDefaultBlueprintContext(t), outFolder, "", false, true, false)
+		err := InstantiateBlueprint(
+		    false,
+		    "defaults-as-values",
+            getLocalTestBlueprintContext(t),
+		    outFolder,
+		    "",
+		    false,
+		    true,
+		    false,
+		)
 		require.Nil(t, err)
 
 		// assertions
@@ -216,13 +255,23 @@ func TestInstantiateBlueprint(t *testing.T) {
 			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
 		}
 	})
+
 	t.Run("should create output files for valid test template without prompts when no registry is defined", func(t *testing.T) {
 		outFolder := "xebialabs"
 		defer RemoveFiles("xld-*.yml")
 		defer RemoveFiles("xlr-*.yml")
 		defer os.RemoveAll(outFolder)
 		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder, "", false, false, false)
+		err := InstantiateBlueprint(
+		    false,
+		    "valid-no-prompt",
+            getLocalTestBlueprintContext(t),
+		    outFolder,
+		    "",
+		    false,
+		    false,
+		    false,
+		)
 		require.Nil(t, err)
 
 		// assertions
@@ -254,13 +303,23 @@ func TestInstantiateBlueprint(t *testing.T) {
 		}
 
 	})
+
 	t.Run("should create output files for valid test template from local path when a registry is defined", func(t *testing.T) {
 		outFolder := "xebialabs"
 		defer RemoveFiles("xld-*.yml")
 		defer RemoveFiles("xlr-*.yml")
 		defer os.RemoveAll(outFolder)
 		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), outFolder, "", false, false, false)
+		err := InstantiateBlueprint(
+		    false,
+		    "valid-no-prompt",
+            getLocalTestBlueprintContext(t),
+		    outFolder,
+		    "",
+		    false,
+		    false,
+		    false,
+		)
 		require.Nil(t, err)
 
 		// assertions
