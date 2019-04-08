@@ -30,11 +30,12 @@ var upAdvancedSetup bool
 var upBlueprintTemplate string
 var upAnswerFile string
 var cfgOverridden bool
+var noCleanup bool
 
 // DoUp executes the up command
 func DoUp(context *xl.Context) {
 	util.Verbose("Running XL Seed\n")
-	xl.InvokeBlueprintAndSeed(context, upLocalMode, upQuickSetup, upAdvancedSetup, upBlueprintTemplate, cfgOverridden, upAnswerFile)
+	xl.InvokeBlueprintAndSeed(context, upLocalMode, upQuickSetup, upAdvancedSetup, upBlueprintTemplate, cfgOverridden, upAnswerFile, noCleanup)
 }
 
 func init() {
@@ -47,6 +48,7 @@ func init() {
 	upFlags.BoolVarP(&upAdvancedSetup, "advanced-setup", "", false, "Advanced setup")
 	upFlags.StringVarP(&upAnswerFile, "answers", "a", "", "The file containing answers for the questions")
 	upFlags.BoolVarP(&cfgOverridden, "dev", "d", false, "Enable dev mode, uses repository config from your local config instead")
+	upFlags.BoolVar(&noCleanup, "no-cleanup", false, "Leave generated files on the filesystem")
 	err := upFlags.MarkHidden("dev")
 	if err != nil {
 		util.Error("error setting up cmd flags: %s\n", err.Error())
