@@ -33,6 +33,7 @@ scanning/
 #gradle, gogradle and dependencies output
 .gogradle/
 .gradle/
+.gotools/
 vendor/
 
 xl-cli.ipr

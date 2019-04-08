@@ -68,7 +68,7 @@ func InstantiateBlueprint(
 	blueprintLocalMode bool,
 	templatePath string,
 	blueprintContext *BlueprintContext,
-	outputDir string,
+	generatedBlueprint *GeneratedBlueprint,
 	answersFile string,
 	strictAnswers bool,
 	useDefaultsAsValue bool,
@@ -129,18 +129,18 @@ func InstantiateBlueprint(
 	}
 
 	// save prepared data to values & secrets files
-	err = writeConfigToFile(valuesFileHeader, preparedData.Values, path.Join(outputDir, valuesFile))
+	err = writeConfigToFile(valuesFileHeader, preparedData.Values, generatedBlueprint, path.Join(generatedBlueprint.OutputDir, valuesFile))
 	if err != nil {
 		return err
 	}
-	err = writeConfigToFile(secretsFileHeader, preparedData.Secrets, path.Join(outputDir, secretsFile))
+	err = writeConfigToFile(secretsFileHeader, preparedData.Secrets, generatedBlueprint, path.Join(generatedBlueprint.OutputDir, secretsFile))
 	if err != nil {
 		return err
 	}
 
 	// generate .gitignore file
 	gitignoreData := secretsFile
-	err = writeDataToFile(path.Join(outputDir, gitignoreFile), &gitignoreData)
+	err = writeDataToFile(generatedBlueprint, path.Join(generatedBlueprint.OutputDir, gitignoreFile), &gitignoreData)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func InstantiateBlueprint(
 
 			// write the processed template to a file
 			finalTmpl := strings.TrimSpace(processedTmpl.String())
-			err = writeDataToFile(strings.Replace(config.File, templateExtension, "", 1), &finalTmpl)
+			err = writeDataToFile(generatedBlueprint, strings.Replace(config.File, templateExtension, "", 1), &finalTmpl)
 			if err != nil {
 				return err
 			}
@@ -190,7 +190,7 @@ func InstantiateBlueprint(
 			} else {
 				// handle non-template files - copy as-it-is
 				util.Verbose("[file] Copying file %s\n", config.FullPath)
-				err = writeDataToFile(config.File, &templateString)
+				err = writeDataToFile(generatedBlueprint, config.File, &templateString)
 				if err != nil {
 					return err
 				}
@@ -213,14 +213,9 @@ func createDirectoryIfNeeded(fileName string) error {
 }
 
 // --utility functions
-func writeDataToFile(outputFileName string, data *string) error {
-	err := createDirectoryIfNeeded(outputFileName)
-	if err != nil {
-		return err
-	}
-
+func writeDataToFile(generatedBlueprint *GeneratedBlueprint, outputFileName string, data *string) error {
 	util.Verbose("[file] Creating blueprint output file %s\n", outputFileName)
-	file, err := os.Create(outputFileName)
+	file, err := generatedBlueprint.GetOutputFile(outputFileName)
 	if err != nil {
 		return err
 	}
@@ -241,11 +236,7 @@ func writeDataToFile(outputFileName string, data *string) error {
 	return nil
 }
 
-func writeConfigToFile(header string, config map[string]interface{}, filename string) error {
-	err := createDirectoryIfNeeded(filename)
-	if err != nil {
-		return err
-	}
+func writeConfigToFile(header string, config map[string]interface{}, generatedBlueprint *GeneratedBlueprint, filename string) error {
 	props := properties.NewProperties()
 
 	// sort based on keys
@@ -262,7 +253,7 @@ func writeConfigToFile(header string, config map[string]interface{}, filename st
 	}
 
 	// write properties to file
-	f, err := os.Create(filename)
+	f, err := generatedBlueprint.GetOutputFile(filename)
 	if err != nil {
 		return err
 	}
