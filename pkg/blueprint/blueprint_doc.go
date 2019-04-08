@@ -468,22 +468,15 @@ func (blueprintDoc *BlueprintConfig) verifyTemplateDirAndGenFullPaths(templatePa
 
 // parse doc parameters into list of variables
 func (blueprintDoc *BlueprintYaml) parseParameters() ([]Variable, error) {
-	var parameters []map[interface{}]interface{}
+	var parameters []Parameter
 	variables := []Variable{}
-	// emptySpec := Spec{Include: []IncludedBlueprint{
-	// 	{
-	// 		ParameterValues: []ParameterValues{},
-	// 		SkipFiles:       []SkipFiles{},
-	// 	},
-	// }}
-	// TODO check test case
 	if blueprintDoc.Spec.Parameters != nil {
-		parameters = util.TransformToMap(blueprintDoc.Spec.Parameters)
+		parameters = blueprintDoc.Spec.Parameters
 	} else {
-		parameters = util.TransformToMap(blueprintDoc.Parameters)
+		parameters = blueprintDoc.Parameters
 	}
 	for _, m := range parameters {
-		parsedVar, err := parseParameterMap(&m)
+		parsedVar, err := parseParameter(&m)
 		if err != nil {
 			return variables, err
 		}
@@ -494,16 +487,15 @@ func (blueprintDoc *BlueprintYaml) parseParameters() ([]Variable, error) {
 
 // parse doc files into list of TemplateConfig
 func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, blueprintRepository *BlueprintContext, isLocal bool) ([]TemplateConfig, error) {
-	var files []map[interface{}]interface{}
+	var files []File
 	templateConfigs := []TemplateConfig{}
-	// TODO check test case
-	if blueprintDoc.Spec.Parameters != nil || blueprintDoc.Spec.Files != nil {
-		files = util.TransformToMap(blueprintDoc.Spec.Files)
+	if blueprintDoc.Spec.Files != nil {
+		files = blueprintDoc.Spec.Files
 	} else {
-		files = util.TransformToMap(blueprintDoc.Files)
+		files = blueprintDoc.Files
 	}
 	for _, m := range files {
-		templateConfig, err := parseFileMap(&m)
+		templateConfig, err := parseFile(&m)
 		if err != nil {
 			return nil, err
 		}
@@ -580,15 +572,16 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		defaultVal := variable.GetDefaultVal(data.TemplateData)
 
 		// skip question based on DependsOn fields
-		if !util.IsStringEmpty(variable.DependsOnTrue.Val) {
-			dependsOnTrueVal, err := ParseDependsOnValue(variable.DependsOnTrue, &blueprintDoc.Variables, data.TemplateData)
+		if !util.IsStringEmpty(variable.DependsOn.Val) {
+			dependsOnTrueVal, err := ParseDependsOnValue(variable.DependsOn, &blueprintDoc.Variables, data.TemplateData)
 			if err != nil {
 				return nil, err
 			}
-			if skipQuestionOnCondition(&variable, variable.DependsOnTrue.Val, dependsOnTrueVal, data, defaultVal, false) {
+			if skipQuestionOnCondition(&variable, variable.DependsOn.Val, dependsOnTrueVal, data, defaultVal, false) {
 				continue
 			}
 		}
+		// TODO get rid
 		if !util.IsStringEmpty(variable.DependsOnFalse.Val) {
 			dependsOnFalseVal, err := ParseDependsOnValue(variable.DependsOnFalse, &blueprintDoc.Variables, data.TemplateData)
 			if err != nil {
@@ -756,64 +749,61 @@ func validateFiles(configs *[]TemplateConfig) error {
 	return nil
 }
 
-func parseParameterMap(m *map[interface{}]interface{}) (Variable, error) {
+func parseParameter(m *Parameter) (Variable, error) {
 	parsedVar := Variable{}
-	for k, v := range *m {
-		switch val := v.(type) {
+
+	parameterR := reflect.ValueOf(m).Elem()
+	typeOfT := parameterR.Type()
+
+	for i := 0; i < parameterR.NumField(); i++ {
+		fieldR := parameterR.Field(i)
+		fieldName := typeOfT.Field(i).Name
+		value := fieldR.Interface()
+		field := getVariableField(&parsedVar, strings.Title(fieldName))
+		switch val := value.(type) {
 		case string:
 			// Set string field
-			field := getVariableField(&parsedVar, strings.Title(k.(string)))
 			setVariableField(&field, &VarField{Val: val})
 		case int, uint, uint8, uint16, uint32, uint64:
 			// Set integer field
-			field := getVariableField(&parsedVar, strings.Title(k.(string)))
-			setVariableField(&field, &VarField{Val: fmt.Sprint(v)})
+			setVariableField(&field, &VarField{Val: fmt.Sprint(val)})
 		case float32, float64:
 			// Set float field
-			field := getVariableField(&parsedVar, strings.Title(k.(string)))
-			setVariableField(&field, &VarField{Val: fmt.Sprintf("%f", v)})
+			setVariableField(&field, &VarField{Val: fmt.Sprintf("%f", val)})
 		case bool:
 			// Set boolean field
-			field := getVariableField(&parsedVar, strings.Title(k.(string)))
 			setVariableField(&field, &VarField{Val: strconv.FormatBool(val), Bool: val})
 		case []interface{}:
 			// Set []VarField
-			field := getVariableField(&parsedVar, strings.Title(k.(string)))
 			list := val
 			if len(list) > 0 {
-				switch t := list[0].(type) {
-				case int, uint, uint8, uint16, uint32, uint64, float32, float64, string, yaml.CustomTag: //handle list of options
-					field.Set(reflect.MakeSlice(reflect.TypeOf([]VarField{}), len(list), len(list)))
-					for i, w := range list {
-						switch wType := w.(type) {
-						case int, uint, uint8, uint16, uint32, uint64:
-							field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprint(v)}))
-						case float32, float64:
-							field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprintf("%f", v)}))
-						case string:
-							field.Index(i).Set(reflect.ValueOf(VarField{Val: w.(string)}))
-						case yaml.CustomTag:
-							customTag := w.(yaml.CustomTag)
-							field.Index(i).Set(reflect.ValueOf(VarField{Val: customTag.Value, Tag: customTag.Tag}))
-						default:
-							return Variable{}, fmt.Errorf("unknown list item type %s", wType)
-						}
+				field.Set(reflect.MakeSlice(reflect.TypeOf([]VarField{}), len(list), len(list)))
+				for i, it := range list {
+					switch wVal := it.(type) {
+					case int, uint, uint8, uint16, uint32, uint64:
+						field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprint(wVal)}))
+					case float32, float64:
+						field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprintf("%f", wVal)}))
+					case string:
+						field.Index(i).Set(reflect.ValueOf(VarField{Val: wVal}))
+					case yaml.CustomTag:
+						field.Index(i).Set(reflect.ValueOf(VarField{Val: wVal.Value, Tag: wVal.Tag}))
+					default:
+						return Variable{}, fmt.Errorf("unknown list item type %s", wVal)
 					}
-				default:
-					return Variable{}, fmt.Errorf("unknown list type: %s", t)
 				}
+
 			}
 		case yaml.CustomTag:
 			// Set string field with YAML tag
 			switch val.Tag {
 			case tagFn, tagExpression:
-				field := getVariableField(&parsedVar, strings.Title(k.(string)))
 				setVariableField(&field, &VarField{Val: val.Value, Tag: val.Tag})
 			default:
 				return Variable{}, fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
 			}
 		case nil:
-			util.Verbose("[dataPrep] Got empty metadata variable field with key [%s]\n", k)
+			util.Verbose("[dataPrep] Got empty metadata variable field with key [%s]\n", fieldName)
 		default:
 			return Variable{}, fmt.Errorf("unknown variable type [%s]", val)
 		}
@@ -821,33 +811,36 @@ func parseParameterMap(m *map[interface{}]interface{}) (Variable, error) {
 	return parsedVar, nil
 }
 
-func parseFileMap(m *map[interface{}]interface{}) (TemplateConfig, error) {
+func parseFile(m *File) (TemplateConfig, error) {
 	config := TemplateConfig{}
-	for k, v := range *m {
-		keyName, ok := k.(string)
-		if ok {
-			switch val := v.(type) {
-			case string:
-				if keyName == "path" {
-					config.File = val
-				} else {
-					field := reflect.ValueOf(&config).Elem().FieldByName(strings.Title(keyName))
-					setVariableField(&field, &VarField{Val: val})
-				}
-			case yaml.CustomTag:
-				// Set string field with YAML tag
-				switch val.Tag {
-				case tagFn, tagExpression:
-					field := reflect.ValueOf(&config).Elem().FieldByName(strings.Title(keyName))
-					setVariableField(&field, &VarField{Val: val.Value, Tag: val.Tag})
-				default:
-					return TemplateConfig{}, fmt.Errorf("unknown tag %s %s in files", val.Tag, val.Value)
-				}
-			default:
-				return TemplateConfig{}, fmt.Errorf("unknown variable value type in files [%s]", val)
+
+	parameterR := reflect.ValueOf(m).Elem()
+	typeOfT := parameterR.Type()
+
+	for i := 0; i < parameterR.NumField(); i++ {
+		fieldR := parameterR.Field(i)
+		fieldName := typeOfT.Field(i).Name
+		value := fieldR.Interface()
+		field := reflect.ValueOf(&config).Elem().FieldByName(strings.Title(fieldName))
+		switch val := value.(type) {
+		case string:
+			if fieldName == "Path" {
+				config.File = val
+			} else {
+				setVariableField(&field, &VarField{Val: val})
 			}
-		} else {
-			return TemplateConfig{}, fmt.Errorf("unknown variable key type in files [%s]", k)
+		case yaml.CustomTag:
+			// Set string field with YAML tag
+			switch val.Tag {
+			case tagFn, tagExpression:
+				setVariableField(&field, &VarField{Val: val.Value, Tag: val.Tag})
+			default:
+				return TemplateConfig{}, fmt.Errorf("unknown tag %s %s in files", val.Tag, val.Value)
+			}
+		case nil:
+			// do nothing
+		default:
+			return TemplateConfig{}, fmt.Errorf("unknown variable value type in files [%s]", val)
 		}
 	}
 	return config, nil

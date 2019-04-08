@@ -46,12 +46,12 @@ func AdjustPathSeperatorIfNeeded(blueprintTemplate string) string {
 }
 
 func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
-	if !util.IsStringEmpty(templateConfig.DependsOnTrue.Val) {
-		dependsOnTrueVal, err := ParseDependsOnValue(templateConfig.DependsOnTrue, variables, parameters)
+	if !util.IsStringEmpty(templateConfig.DependsOn.Val) {
+		dependsOnVal, err := ParseDependsOnValue(templateConfig.DependsOn, variables, parameters)
 		if err != nil {
 			return false, err
 		}
-		return !dependsOnTrueVal, nil
+		return !dependsOnVal, nil
 	}
 	if !util.IsStringEmpty(templateConfig.DependsOnFalse.Val) {
 		dependsOnFalseVal, err := ParseDependsOnValue(templateConfig.DependsOnFalse, variables, parameters)

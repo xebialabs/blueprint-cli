@@ -328,9 +328,9 @@ func TestShouldSkipFile(t *testing.T) {
 			false,
 		},
 		{
-			"should return true if dependsOnTrue is defined and its value is false",
+			"should return true if dependsOn is defined and its value is false",
 			args{
-				TemplateConfig{File: "foo.yaml", DependsOnTrue: VarField{Val: "foo"}},
+				TemplateConfig{File: "foo.yaml", DependsOn: VarField{Val: "foo"}},
 				&[]Variable{
 					{Name: VarField{Val: "foo"}, Value: VarField{Bool: false}},
 				},

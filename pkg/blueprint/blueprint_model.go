@@ -2,80 +2,73 @@ package blueprint
 
 // Blueprint YAML schema definition
 type BlueprintYaml struct {
-	ApiVersion string `yaml:"apiVersion,omitempty"`
-	Kind       string `yaml:"kind,omitempty"`
+	ApiVersion string `yaml:"apiVersion"`
+	Kind       string `yaml:"kind"`
 	Metadata   Metadata
 	// TODO
-	// Parameters []Parameters
-	// Files      []Files
-	Parameters interface{} `yaml:"parameters,omitempty"`
-	Files      interface{} `yaml:"files,omitempty"`
-	Spec       Spec
+	Parameters []Parameter
+	Files      []File
+	// Parameters interface{} `yaml:"parameters,omitempty"`
+	// Files      interface{} `yaml:"files,omitempty"`
+	Spec Spec
 }
 
 type Metadata struct {
-	ProjectName  string `yaml:"projectName,omitempty"`
-	Description  string `yaml:"description,omitempty"`
-	Author       string `yaml:"author,omitempty"`
-	Version      string `yaml:"version,omitempty"`
-	Instructions string `yaml:"instructions,omitempty"`
-}
-
-type Parameters struct {
-	Name           string
-	Type           string
-	Secret         string
-	Value          string
-	Description    string
-	Default        string
-	DependsOn      string
-	DependsOnTrue  string
-	DependsOnFalse string
-	Options        []string
-	Pattern        string
-	SaveInXlVals   string
-	UseRawValue    string
-}
-
-type Files struct {
-	Path           string
-	DependsOn      string
-	DependsOnTrue  string
-	DependsOnFalse string
+	ProjectName  string `yaml:"projectName"`
+	Description  string `yaml:"description"`
+	Author       string `yaml:"author"`
+	Version      string `yaml:"version"`
+	Instructions string `yaml:"instructions"`
 }
 
 type Spec struct {
 	// TODO
-	// Parameters []Parameters
-	// Files      []Files
-	Parameters interface{} `yaml:"parameters,omitempty"`
-	Files      interface{} `yaml:"files,omitempty"`
-	Include    []IncludedBlueprint
+	Parameters []Parameter
+	Files      []File
+	// Parameters interface{} `yaml:"parameters,omitempty"`
+	// Files      interface{} `yaml:"files,omitempty"`
+	Include []IncludedBlueprint
+}
+
+type Parameter struct {
+	Name           interface{}   `yaml:"name"`
+	Type           interface{}   `yaml:"type"`
+	Secret         interface{}   `yaml:"secret"`
+	Value          interface{}   `yaml:"value"`
+	Description    interface{}   `yaml:"description"`
+	Default        interface{}   `yaml:"default"`
+	DependsOn      interface{}   `yaml:"dependsOn"`
+	DependsOnTrue  interface{}   `yaml:"dependsOnTrue"`
+	DependsOnFalse interface{}   `yaml:"dependsOnFalse"`
+	Options        []interface{} `yaml:"options"`
+	Pattern        interface{}   `yaml:"pattern"`
+	SaveInXlVals   interface{}   `yaml:"saveInXlVals"`
+	UseRawValue    interface{}   `yaml:"useRawValue"`
+}
+
+type File struct {
+	Path           interface{} `yaml:"path"`
+	DependsOn      interface{} `yaml:"dependsOn"`
+	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
+	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
 }
 
 type IncludedBlueprint struct {
-	Blueprint       string
-	Stage           string
-	ParameterValues []ParameterValues
-	SkipFiles       []SkipFiles
-	DependsOn       string
-	DependsOnTrue   string
-	DependsOnFalse  string
+	Blueprint       string `yaml:"blueprint"`
+	Stage           string `yaml:"stage"`
+	ParameterValues []ParameterValue
+	SkipFiles       []File
+	DependsOn       interface{} `yaml:"dependsOn"`
+	DependsOnTrue   interface{} `yaml:"dependsOnTrue"`
+	DependsOnFalse  interface{} `yaml:"dependsOnFalse"`
 }
 
-type ParameterValues struct {
-	Name           string
-	Value          string
-	DependsOn      string
-	DependsOnTrue  string
-	DependsOnFalse string
-}
-
-type SkipFiles struct {
-	Path           string
-	DependsOn      string
-	DependsOnTrue  string
-	DependsOnFalse string
+type ParameterValue struct {
+	Name           string      `yaml:"name"`
+	Value          string      `yaml:"value"`
+	DependsOn      interface{} `yaml:"dependsOn"`
+	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
+	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
 }
 
 // Blueprint YAML processed definition
@@ -89,14 +82,14 @@ type BlueprintConfig struct {
 }
 
 type Variable struct {
-	Name           VarField
-	Type           VarField
-	Secret         VarField
-	Value          VarField
-	Description    VarField
-	Default        VarField
-	DependsOn      VarField
-	DependsOnTrue  VarField // TODO remove
+	Name        VarField
+	Type        VarField
+	Secret      VarField
+	Value       VarField
+	Description VarField
+	Default     VarField
+	DependsOn   VarField
+	// DependsOnTrue  VarField // TODO remove
 	DependsOnFalse VarField // TODO remove
 	Options        []VarField
 	Pattern        VarField
@@ -106,10 +99,10 @@ type Variable struct {
 
 // TemplateConfig holds the merged template file definitions with repository info
 type TemplateConfig struct {
-	File           string
-	FullPath       string
-	DependsOn      VarField
-	DependsOnTrue  VarField // TODO remove
+	File      string
+	FullPath  string
+	DependsOn VarField
+	// DependsOnTrue  VarField // TODO remove
 	DependsOnFalse VarField // TODO remove
 }
 
