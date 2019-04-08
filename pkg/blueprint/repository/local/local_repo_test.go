@@ -73,6 +73,8 @@ func TestListBlueprintsFromRepo(t *testing.T) {
 			"name": "test",
 			"type": repoType,
 			"path": blueprintDir,
+            "ignored-dirs":  ".git, __test__",
+            "ignored-files": ".DS_Store",
 		})
 		require.Nil(t, err)
 		require.NotNil(t, repo)
@@ -85,6 +87,14 @@ func TestListBlueprintsFromRepo(t *testing.T) {
 		require.NotNil(t, blueprintDirs)
 		assert.NotEmpty(t, blueprintDirs)
 		assert.Len(t, blueprintDirs, 6)
+
+		answerInputBlueprint := blueprints["answer-input"]
+		assert.Equal(t, "answer-input", answerInputBlueprint.Path)
+		assert.Len(t, answerInputBlueprint.Files, 3)
+
+        validNoPromptBlueprint := blueprints["valid-no-prompt"]
+        assert.Equal(t, "valid-no-prompt", validNoPromptBlueprint.Path)
+        assert.Len(t, validNoPromptBlueprint.Files, 5)
 	})
 
     t.Run("should list empty blueprints list from local dir", func(t *testing.T) {
