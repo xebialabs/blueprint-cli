@@ -251,6 +251,18 @@ It is possible to define multiple blueprint repositories with same or different 
 
 > Note: Only *basic authentication* is supported at the moment for remote HTTP repositories.
 
+#### Local Repository Type - `type: local`
+
+Mainly intended to be used for local development and tests. Any local path can be used as a blueprint repository with this type.
+
+| Config Field | Expected Value | Default Value | Required | Explanation |
+|:------------:|:--------------:|:-------------:| :------: | :---------: |
+| name | — | — | ✔ | Repository configuration name |
+| type | `local` | — | ✔ | Repository type |
+| path | — | — | ✔ | Full local path where blueprint definitions are stored |
+| ignored-dirs | — | | **x** | List of directories, comma separated, to be ignored while traversing local path.</br>Ex. `.git, some-other-dir` |
+| ignored-files | — | | **x** | List of files, comma separated, to be ignored while traversing local path.</br>Ex. `.DS_Store, .gitignore` |
+
 ### Creating a New Blueprint Repository
 
 #### New GitHub Repository
@@ -291,7 +303,7 @@ Flags and options that can be set to `xl blueprint` command are the following:
 | `-h` | `--help` | — | `xl blueprint -h` | Prints out help text for blueprint command |
 | `-a` | `--answers` | — | `xl blueprint -a /path/to/answers.yaml` | When provided, values within answers file will be used as variable input. By default strict mode is off so any value that is not provided in the file will be asked to user. |
 | `-s` | `--strict-answers` | `false` | `xl blueprint -sa /path/to/answers.yaml` | If flag is set, all variables will be requested from the answers file, and error will be thrown if one of them is not there.<br/>If not set, existing answer values will be used from answers file, and remaining ones will be asked to user from command line. |
-| `-b` | `--blueprint` | | `xl blueprint -b aws/monolith`<br>`xl blueprint -b /path/to/local/blueprint/dir`<br/>`xl blueprint -b ../relative/path/to/local/blueprint/dir`  | Looks for the specified absolute or relative folder path in local file system, if not found looks for the path relative to the current remote repository and instead of asking user which blueprint to use, it will directly fetch the specified blueprint from remote repository, or give an error if blueprint not found in both local filesystem and remote repository |
+| `-b` | `--blueprint` | | `xl blueprint -b aws/monolith`  | Looks  for the path relative to the current repository and instead of asking user which blueprint to use, it will directly fetch the specified blueprint from repository, or give an error if blueprint not found in repository |
 | `-d` | `--use-defaults` | | `xl blueprint -d`  | If flag is set, default fields in variable definitions will be used as value fields, thus user will not be asked question for a variable if a default value is present |
 
 ---------------
