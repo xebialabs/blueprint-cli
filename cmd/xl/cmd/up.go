@@ -20,7 +20,7 @@ var upCmd = &cobra.Command{
 			context.PrintConfiguration()
 		}
 
-		DoUp(context)
+		DoUp(context, CliVersion)
 	},
 }
 
@@ -33,9 +33,9 @@ var cfgOverridden bool
 var noCleanup bool
 
 // DoUp executes the up command
-func DoUp(context *xl.Context) {
+func DoUp(context *xl.Context, branch_version string) {
 	util.Verbose("Running XL Seed\n")
-	xl.InvokeBlueprintAndSeed(context, upLocalMode, upQuickSetup, upAdvancedSetup, upBlueprintTemplate, cfgOverridden, upAnswerFile, noCleanup)
+	xl.InvokeBlueprintAndSeed(context, upLocalMode, upQuickSetup, upAdvancedSetup, upBlueprintTemplate, cfgOverridden, upAnswerFile, noCleanup, branch_version)
 }
 
 func init() {

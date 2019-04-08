@@ -58,7 +58,7 @@ func askSetupMode(surveyOpts ...survey.AskOpt) string {
 }
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool, advancedSetup bool, blueprintTemplate string, cfgOverridden bool, upAnswerFile string, noCleanup bool) {
+func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool, advancedSetup bool, blueprintTemplate string, cfgOverridden bool, upAnswerFile string, noCleanup bool, branch_version string) {
 
 	if upAnswerFile == "" {
 		if !(quickSetup || advancedSetup) {
@@ -86,6 +86,7 @@ func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool,
 			"name":      "xl-up-blueprint",
 			"repo-name": "xl-up-blueprint",
 			"owner":     "xebialabs",
+			"branch":    branch_version,
 		})
 		if err != nil {
 			util.Fatal("Error while creating Blueprint: %s \n", err)
