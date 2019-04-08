@@ -2,8 +2,10 @@ package local
 
 import (
 	"os"
-	"path/filepath"
-	"testing"
+    "path"
+    "path/filepath"
+    "strings"
+    "testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,8 +16,8 @@ const (
 )
 
 func GetLocalBlueprintTestRepoPath() string {
-	currentDir, _ := os.Getwd()
-	return filepath.Join(currentDir, "../../../../templates/test")
+    pwd, _ := os.Getwd()
+    return strings.Replace(pwd, path.Join("pkg", "blueprint", "repository", "local"), path.Join("templates", "test"), -1)
 }
 
 func TestNewGitHubBlueprintRepository(t *testing.T) {
