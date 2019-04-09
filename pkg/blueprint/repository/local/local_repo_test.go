@@ -31,6 +31,15 @@ func TestNewGitHubBlueprintRepository(t *testing.T) {
 		require.NotNil(t, err)
 		require.Nil(t, repo)
 	})
+    t.Run("should error when given path is a file", func(t *testing.T) {
+        repo, err := NewLocalBlueprintRepository(map[string]string{
+            "name": "test",
+            "type": repoType,
+            "path": filepath.Join(blueprintDir, "answer-input.yaml"),
+        })
+        require.NotNil(t, err)
+        require.Nil(t, repo)
+    })
 	t.Run("should set ignore lists empty when not set", func(t *testing.T) {
 		repo, err := NewLocalBlueprintRepository(map[string]string{
 			"name": "test",
