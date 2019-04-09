@@ -714,6 +714,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                  default: lala
                  saveInXlVals: true
                  description: help text
+                 showValueOnSummary: true
 
                files:
                - path: xebialabs/foo.yaml
@@ -729,11 +730,12 @@ func TestParseTemplateMetadata(t *testing.T) {
 			UseRawValue: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
-			Name:         VarField{Val: "test"},
-			Type:         VarField{Val: TypeInput},
-			Default:      VarField{Val: "lala"},
-			Description:  VarField{Val: "help text"},
-			SaveInXlVals: VarField{Bool: true, Val: "true"},
+			Name:               VarField{Val: "test"},
+			Type:               VarField{Val: TypeInput},
+			Default:            VarField{Val: "lala"},
+			Description:        VarField{Val: "help text"},
+			SaveInXlVals:       VarField{Bool: true, Val: "true"},
+			ShowValueOnSummary: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[1])
 		assert.Equal(t, TemplateConfig{
 			Path:     "xebialabs/foo.yaml",
@@ -1725,6 +1727,77 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 			got, err := blueprintDoc.parseParameters()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BlueprintYaml.parseParameters() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
+	SkipUserInput = true
+	SkipFinalPrompt = true
+	type args struct {
+		answersFilePath    string
+		strictAnswers      bool
+		useDefaultsAsValue bool
+	}
+	tests := []struct {
+		name    string
+		fields  BlueprintConfig
+		args    args
+		want    *PreparedData
+		wantErr bool
+	}{
+		{
+			"prepare template data should show password hidden if ShowValueOnSummary is false",
+			BlueprintConfig{
+				Variables: []Variable{
+					{
+						Name:    VarField{Val: "input1"},
+						Type:    VarField{Val: "Input"},
+						Value:   VarField{Bool: false, Val: ""},
+						Default: VarField{Bool: false, Val: "default1"},
+					},
+					{
+						Name:    VarField{Val: "input2"},
+						Type:    VarField{Val: "Input"},
+						Value:   VarField{Bool: false, Val: ""},
+						Default: VarField{Bool: false, Val: "default2"},
+						Secret:  VarField{Bool: true, Val: "true"},
+					},
+					{
+						Name:               VarField{Val: "input3"},
+						Type:               VarField{Val: "Input"},
+						Value:              VarField{Bool: false, Val: ""},
+						Default:            VarField{Bool: false, Val: "default3"},
+						Secret:             VarField{Bool: true, Val: "true"},
+						ShowValueOnSummary: VarField{Bool: true, Val: "true"},
+					},
+				},
+			},
+			args{"", false, true},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"input1": "default1", "input2": "!value input2", "input3": "!value input3"},
+				DefaultData:  map[string]interface{}{"input1": "default1", "input2": "*****", "input3": "default3"},
+				Secrets:      map[string]interface{}{"input2": "default2", "input3": "default3"},
+				Values:       map[string]interface{}{},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			blueprintDoc := &BlueprintConfig{
+				ApiVersion:      tt.fields.ApiVersion,
+				Kind:            tt.fields.Kind,
+				Metadata:        tt.fields.Metadata,
+				TemplateConfigs: tt.fields.TemplateConfigs,
+				Variables:       tt.fields.Variables,
+			}
+			got, err := blueprintDoc.prepareTemplateData(tt.args.answersFilePath, tt.args.strictAnswers, tt.args.useDefaultsAsValue, nil)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("BlueprintYaml.prepareTemplateData() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			assert.Equal(t, tt.want, got)

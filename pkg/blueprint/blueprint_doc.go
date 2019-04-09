@@ -23,6 +23,9 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
+// SkipUserInput is used in tests to skip the user input
+var SkipUserInput = false
+
 // Constants
 const (
 	FnAWS = "aws"
@@ -739,7 +742,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 				blueprintDoc.Variables[i] = variable
 			}
 			saveItemToTemplateDataMap(&variable, data, finalVal)
-			if variable.Secret.Bool == true {
+			if variable.Secret.Bool && !variable.ShowValueOnSummary.Bool {
 				data.DefaultData[variable.Name.Val] = "*****"
 			} else {
 				data.DefaultData[variable.Name.Val] = finalVal
@@ -775,7 +778,10 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		// * if not in default mode and default value is present
 		// * if answers file is not present or isPartial is set to TRUE and answer not found on file for the variable
 		util.Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Val, variable.Type.Val)
-		answer, err := variable.GetUserInput(defaultVal, data.TemplateData, surveyOpts...)
+		var answer interface{}
+		if !SkipUserInput {
+			answer, err = variable.GetUserInput(defaultVal, data.TemplateData, surveyOpts...)
+		}
 		if err != nil {
 			return nil, err
 		}

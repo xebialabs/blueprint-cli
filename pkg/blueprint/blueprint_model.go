@@ -33,12 +33,13 @@ type Parameter struct {
 	Default     interface{} `yaml:"default"`
 	DependsOn   interface{} `yaml:"dependsOn"`
 	// for backward compatibility
-	DependsOnTrue  interface{}   `yaml:"dependsOnTrue"`
-	DependsOnFalse interface{}   `yaml:"dependsOnFalse"`
-	Options        []interface{} `yaml:"options"`
-	Pattern        interface{}   `yaml:"pattern"`
-	SaveInXlVals   interface{}   `yaml:"saveInXlVals"`
-	UseRawValue    interface{}   `yaml:"useRawValue"`
+	DependsOnTrue      interface{}   `yaml:"dependsOnTrue"`
+	DependsOnFalse     interface{}   `yaml:"dependsOnFalse"`
+	Options            []interface{} `yaml:"options"`
+	Pattern            interface{}   `yaml:"pattern"`
+	SaveInXlVals       interface{}   `yaml:"saveInXlVals"`
+	UseRawValue        interface{}   `yaml:"useRawValue"`
+	ShowValueOnSummary interface{}   `yaml:"showValueOnSummary"`
 }
 
 type File struct {
@@ -80,18 +81,19 @@ type BlueprintConfig struct {
 }
 
 type Variable struct {
-	Name           VarField
-	Type           VarField
-	Secret         VarField
-	Value          VarField
-	Description    VarField
-	Default        VarField
-	DependsOn      VarField
-	DependsOnFalse VarField
-	Options        []VarField
-	Pattern        VarField
-	SaveInXlVals   VarField
-	UseRawValue    VarField
+	Name               VarField
+	Type               VarField
+	Secret             VarField
+	Value              VarField
+	Description        VarField
+	Default            VarField
+	DependsOn          VarField
+	DependsOnFalse     VarField
+	Options            []VarField
+	Pattern            VarField
+	SaveInXlVals       VarField
+	UseRawValue        VarField
+	ShowValueOnSummary VarField
 }
 
 // TemplateConfig holds the merged template file definitions with repository info
