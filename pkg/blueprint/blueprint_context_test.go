@@ -200,7 +200,7 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 		blueprintContext := BlueprintContext{}
 		tmpDir := path.Join("test", "blueprints")
 		templateConfig := TemplateConfig{
-			File: "test.yaml", FullPath: path.Join(tmpDir, "test.yaml"),
+			Path: "test.yaml", FullPath: path.Join(tmpDir, "test.yaml"),
 		}
 		os.MkdirAll(tmpDir, os.ModePerm)
 		defer os.RemoveAll("test")
@@ -237,7 +237,7 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 		blueprintContext := BlueprintContext{}
 		tmpPath := path.Join("aws", "monolith", "test.yaml.tmpl")
 		templateConfig := TemplateConfig{
-			File: "test.yaml", FullPath: tmpPath,
+			Path: "test.yaml", FullPath: tmpPath,
 		}
 		out, err := blueprintContext.fetchFileContents(templateConfig.FullPath, true, true)
 		require.Nil(t, out)
@@ -349,7 +349,7 @@ func TestCreateTemplateConfigForSingleFile(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, out)
 		assert.Equal(t, []TemplateConfig{
-			{File: "test.yaml.tmpl", FullPath: path.Join(tmpPath, "test.yaml.tmpl")},
+			{Path: "test.yaml.tmpl", FullPath: path.Join(tmpPath, "test.yaml.tmpl")},
 		}, out)
 	})
 	t.Run("should create template config for a file", func(t *testing.T) {
@@ -357,7 +357,7 @@ func TestCreateTemplateConfigForSingleFile(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, out)
 		assert.Equal(t, []TemplateConfig{
-			{File: "test.yaml.tmpl", FullPath: "test.yaml.tmpl"},
+			{Path: "test.yaml.tmpl", FullPath: "test.yaml.tmpl"},
 		}, out)
 	})
 	t.Run("should return err if template is empty", func(t *testing.T) {
@@ -419,9 +419,9 @@ func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
 			*repo,
 			tmpDir,
 			[]TemplateConfig{
-				{File: "xld-environment.yml.tmpl", FullPath: "test/blueprints/xld-environment.yml.tmpl"},
-				{File: "xld-infrastructure.yml.tmpl", FullPath: "test/blueprints/xld-infrastructure.yml.tmpl"},
-				{File: "xlr-pipeline.yml", FullPath: "test/blueprints/xlr-pipeline.yml"},
+				{Path: "xld-environment.yml.tmpl", FullPath: "test/blueprints/xld-environment.yml.tmpl"},
+				{Path: "xld-infrastructure.yml.tmpl", FullPath: "test/blueprints/xld-infrastructure.yml.tmpl"},
+				{Path: "xlr-pipeline.yml", FullPath: "test/blueprints/xlr-pipeline.yml"},
 			},
 			false,
 		},
@@ -478,9 +478,9 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 				"aws/monolith",
 			},
 			[]TemplateConfig{
-				{File: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
-				{File: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl"},
-				{File: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
+				{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
+				{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl"},
+				{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
 			},
 			false,
 		},

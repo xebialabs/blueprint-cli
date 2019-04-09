@@ -153,24 +153,24 @@ func InstantiateBlueprint(
 		}
 
 		if skipFile {
-			util.Verbose("[file] skipping file [%s] since it has dependsOn value set\n", config.File)
+			util.Verbose("[file] skipping file [%s] since it has dependsOn value set\n", config.Path)
 			continue
 		}
 
 		// read template contents
-		util.Verbose("[file] Fetching template file %s from %s\n", config.File, config.FullPath)
-		templateContent, err := blueprintContext.fetchFileContents(config.FullPath, blueprintLocalMode, strings.HasSuffix(config.File, templateExtension))
+		util.Verbose("[file] Fetching template file %s from %s\n", config.Path, config.FullPath)
+		templateContent, err := blueprintContext.fetchFileContents(config.FullPath, blueprintLocalMode, strings.HasSuffix(config.Path, templateExtension))
 		if err != nil {
 			return err
 		}
 		templateString := string(*templateContent)
 
 		// process the template file (filter based on extension)
-		if strings.HasSuffix(config.File, templateExtension) {
+		if strings.HasSuffix(config.Path, templateExtension) {
 			util.Verbose("[file] Processing template file %s\n", config.FullPath)
 
 			// read & process the template
-			tmpl := template.Must(template.New(config.File).Funcs(getFuncMaps()).Parse(templateString))
+			tmpl := template.Must(template.New(config.Path).Funcs(getFuncMaps()).Parse(templateString))
 			processedTmpl := &strings.Builder{}
 			err = tmpl.Execute(processedTmpl, preparedData.TemplateData)
 			if err != nil {
@@ -179,7 +179,7 @@ func InstantiateBlueprint(
 
 			// write the processed template to a file
 			finalTmpl := strings.TrimSpace(processedTmpl.String())
-			err = writeDataToFile(generatedBlueprint, strings.Replace(config.File, templateExtension, "", 1), &finalTmpl)
+			err = writeDataToFile(generatedBlueprint, strings.Replace(config.Path, templateExtension, "", 1), &finalTmpl)
 			if err != nil {
 				return err
 			}
@@ -190,7 +190,7 @@ func InstantiateBlueprint(
 			} else {
 				// handle non-template files - copy as-it-is
 				util.Verbose("[file] Copying file %s\n", config.FullPath)
-				err = writeDataToFile(generatedBlueprint, config.File, &templateString)
+				err = writeDataToFile(generatedBlueprint, config.Path, &templateString)
 				if err != nil {
 					return err
 				}

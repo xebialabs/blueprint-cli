@@ -278,7 +278,7 @@ func (blueprintContext *BlueprintContext) parseRemoteDefinitionFile(blueprints m
 
 	// Prepare full repository paths
 	for i, config := range blueprintDoc.TemplateConfigs {
-		config.FullPath = path.Join(templatePath, config.File)
+		config.FullPath = path.Join(templatePath, config.Path)
 		blueprintDoc.TemplateConfigs[i] = config
 	}
 	return blueprintDoc, err
@@ -333,7 +333,7 @@ func createTemplateConfigForSingleFile(blueprintTemplate string) ([]TemplateConf
 		var templateConfigs []TemplateConfig
 		_, fileName := filepath.Split(blueprintTemplate)
 		templateConfigs = append(templateConfigs, TemplateConfig{
-			File:     fileName,
+			Path:     fileName,
 			FullPath: blueprintTemplate,
 		})
 		return templateConfigs, nil

@@ -5,12 +5,9 @@ type BlueprintYaml struct {
 	ApiVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`
 	Metadata   Metadata
-	// TODO
 	Parameters []Parameter
 	Files      []File
-	// Parameters interface{} `yaml:"parameters,omitempty"`
-	// Files      interface{} `yaml:"files,omitempty"`
-	Spec Spec
+	Spec       Spec
 }
 
 type Metadata struct {
@@ -22,22 +19,20 @@ type Metadata struct {
 }
 
 type Spec struct {
-	// TODO
 	Parameters []Parameter
 	Files      []File
-	// Parameters interface{} `yaml:"parameters,omitempty"`
-	// Files      interface{} `yaml:"files,omitempty"`
-	Include []IncludedBlueprint
+	Include    []IncludedBlueprint
 }
 
 type Parameter struct {
-	Name           interface{}   `yaml:"name"`
-	Type           interface{}   `yaml:"type"`
-	Secret         interface{}   `yaml:"secret"`
-	Value          interface{}   `yaml:"value"`
-	Description    interface{}   `yaml:"description"`
-	Default        interface{}   `yaml:"default"`
-	DependsOn      interface{}   `yaml:"dependsOn"`
+	Name        interface{} `yaml:"name"`
+	Type        interface{} `yaml:"type"`
+	Secret      interface{} `yaml:"secret"`
+	Value       interface{} `yaml:"value"`
+	Description interface{} `yaml:"description"`
+	Default     interface{} `yaml:"default"`
+	DependsOn   interface{} `yaml:"dependsOn"`
+	// for backward compatibility
 	DependsOnTrue  interface{}   `yaml:"dependsOnTrue"`
 	DependsOnFalse interface{}   `yaml:"dependsOnFalse"`
 	Options        []interface{} `yaml:"options"`
@@ -47,8 +42,9 @@ type Parameter struct {
 }
 
 type File struct {
-	Path           interface{} `yaml:"path"`
-	DependsOn      interface{} `yaml:"dependsOn"`
+	Path      interface{} `yaml:"path"`
+	DependsOn interface{} `yaml:"dependsOn"`
+	// for backward compatibility
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
 	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
 }
@@ -59,14 +55,16 @@ type IncludedBlueprint struct {
 	ParameterValues []ParameterValue
 	SkipFiles       []File
 	DependsOn       interface{} `yaml:"dependsOn"`
-	DependsOnTrue   interface{} `yaml:"dependsOnTrue"`
-	DependsOnFalse  interface{} `yaml:"dependsOnFalse"`
+	// for backward compatibility
+	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
+	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
 }
 
 type ParameterValue struct {
-	Name           string      `yaml:"name"`
-	Value          string      `yaml:"value"`
-	DependsOn      interface{} `yaml:"dependsOn"`
+	Name      string      `yaml:"name"`
+	Value     string      `yaml:"value"`
+	DependsOn interface{} `yaml:"dependsOn"`
+	// for backward compatibility
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
 	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
 }
@@ -82,15 +80,14 @@ type BlueprintConfig struct {
 }
 
 type Variable struct {
-	Name        VarField
-	Type        VarField
-	Secret      VarField
-	Value       VarField
-	Description VarField
-	Default     VarField
-	DependsOn   VarField
-	// DependsOnTrue  VarField // TODO remove
-	DependsOnFalse VarField // TODO remove
+	Name           VarField
+	Type           VarField
+	Secret         VarField
+	Value          VarField
+	Description    VarField
+	Default        VarField
+	DependsOn      VarField
+	DependsOnFalse VarField
 	Options        []VarField
 	Pattern        VarField
 	SaveInXlVals   VarField
@@ -99,11 +96,10 @@ type Variable struct {
 
 // TemplateConfig holds the merged template file definitions with repository info
 type TemplateConfig struct {
-	File      string
-	FullPath  string
-	DependsOn VarField
-	// DependsOnTrue  VarField // TODO remove
-	DependsOnFalse VarField // TODO remove
+	Path           string
+	FullPath       string
+	DependsOn      VarField
+	DependsOnFalse VarField
 }
 
 type VarField struct {
@@ -116,17 +112,20 @@ type IncludedBlueprintProcessed struct {
 	Blueprint       string
 	Stage           string
 	ParameterValues []ParameterValuesProcessed
-	SkipFiles       []SkipFilesProcessed
+	SkipFiles       []TemplateConfig
 	DependsOn       VarField
+	DependsOnFalse  VarField
 }
 
 type ParameterValuesProcessed struct {
-	Name      string
-	Value     string
-	DependsOn VarField
+	Name           string
+	Value          string
+	DependsOn      VarField
+	DependsOnFalse VarField
 }
 
 type SkipFilesProcessed struct {
-	Path      string
-	DependsOn VarField
+	Path           string
+	DependsOn      VarField
+	DependsOnFalse VarField
 }
