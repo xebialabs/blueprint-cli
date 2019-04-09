@@ -456,7 +456,7 @@ func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
 				return
 			}
 			if got != nil && !reflect.DeepEqual(got.TemplateConfigs, tt.want) {
-				t.Errorf("BlueprintContext.parseLocalDefinitionFile() = %v (length %d), want length %d", got, len(got.TemplateConfigs), tt.want)
+				t.Errorf("BlueprintContext.parseLocalDefinitionFile() = %v (length %d), want length %d", got, len(got.TemplateConfigs), len(tt.want))
 			}
 		})
 	}
@@ -515,7 +515,7 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 				return
 			}
 			if got != nil && !reflect.DeepEqual(got.TemplateConfigs, tt.want) {
-				t.Errorf("BlueprintContext.parseLocalDefinitionFile() = %v (length %d), want length %d", got, len(got.TemplateConfigs), tt.want)
+				t.Errorf("BlueprintContext.parseLocalDefinitionFile() = %v (length %d), want length %d", got, len(got.TemplateConfigs), len(tt.want))
 			}
 		})
 	}

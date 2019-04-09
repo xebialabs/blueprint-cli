@@ -1,31 +1,32 @@
 package util
 
 import (
-	"github.com/briandowns/spinner"
 	"io"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
 	"sync"
-	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/osSpecific"
+	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 var currentTask = ""
 var ctDesc = ""
-var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+
 var deploy = true
+
 // TODO a better way or to use the APIs available
 var generatedPlan = "c.x.d.s.deployment.DeploymentService - Generated plan"
 var phaseLogEnd = "on K8S"
 var executedLog = "is completed with state [DONE]"
 var failExecutedLog = "is completed with state [FAILED]"
 
-
-func logCapture(w io.Writer, d []byte){
+func logCapture(w io.Writer, d []byte, s *spinner.Spinner) {
 	eventLog := string(d)
-
 
 	if strings.Index(eventLog, generatedPlan) != -1 {
 		currentTask = getCurrentTask(eventLog, strings.Index(eventLog, generatedPlan))
@@ -39,7 +40,7 @@ func logCapture(w io.Writer, d []byte){
 			if start >= 0 && end >= 0 {
 				s.Stop()
 				ctDesc = eventLog[start:end]
-				w.Write([]byte("Deploying " + ctDesc +"\n\n"))
+				w.Write([]byte("Deploying " + ctDesc + "\n\n"))
 				s.Start()
 			}
 		}
@@ -48,22 +49,21 @@ func logCapture(w io.Writer, d []byte){
 	if strings.Index(eventLog, failExecutedLog) != -1 {
 		s.Stop()
 		if deploy {
-			w.Write([]byte("Failed deploying for "+ ctDesc +"\n\n"))
-			w.Write([]byte("Undeploying "+ ctDesc +"\n\n"))
+			w.Write([]byte("Failed deploying for " + ctDesc + "\n\n"))
+			w.Write([]byte("Undeploying " + ctDesc + "\n\n"))
 			deploy = false
 		} else {
-			w.Write([]byte("Failed undeploying for "+ ctDesc +"\n\n"))
+			w.Write([]byte("Failed undeploying for " + ctDesc + "\n\n"))
 		}
 		s.Start()
 	}
 
-
 	if strings.Index(eventLog, executedLog) != -1 {
 		s.Stop()
 		if deploy {
-			w.Write([]byte("Deployed "+ ctDesc +"\n\n"))
+			w.Write([]byte("Deployed " + ctDesc + "\n\n"))
 		} else {
-			w.Write([]byte("Undeployed "+ ctDesc +"\n\n"))
+			w.Write([]byte("Undeployed " + ctDesc + "\n\n"))
 		}
 		s.Start()
 	}
@@ -84,17 +84,17 @@ func getCurrentTask(eventLog string, index int) string {
 		task := eventLog[start:end]
 		words := strings.Split(task, " ")
 
-		for  _, word := range words {
+		for _, word := range words {
 			char := strings.Split(word, "-")
 			if len(char) > 1 {
 				return word
 			}
- 		}
+		}
 	}
 	return ""
 }
 
-func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
+func copyAndCapture(w io.Writer, r io.Reader, s *spinner.Spinner) ([]byte, error) {
 	var out []byte
 	buf := make([]byte, 1024, 1024)
 	for {
@@ -110,9 +110,9 @@ func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 				}
 			}
 
-			logCapture(w, d)
+			logCapture(w, d, s)
 
- 		}
+		}
 		if err != nil {
 			// Read returns io.EOF at the end of file, which is not an error for us
 			if err == io.EOF {
@@ -124,12 +124,13 @@ func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
 	}
 }
 
-func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
-
+func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (string, string) {
 	cmd := exec.Command(command.Name, command.Args...)
 	if !IsVerbose {
 		s.Start()
 	}
+
+	cmd.SysProcAttr = osSpecific.GetSyscall()
 
 	var stdout, stderr []byte
 	var errStdout, errStderr error
@@ -139,28 +140,51 @@ func ExecuteCommandAndShowLogs(command models.Command) (string, string) {
 
 	err := cmd.Start()
 	if err != nil {
-		Fatal("cmd.Start() failed with '%s'\n", err)
+		Fatal("cmd.Start() failed with '%s' \n", err)
 	}
 
 	var wg sync.WaitGroup
 	wg.Add(1)
+
+	done := make(chan bool)
+	sig := make(chan os.Signal)
+	signal.Notify(sig, os.Interrupt)
+
 	go func() {
-		stdout, errStdout = copyAndCapture(os.Stdout, stdoutIn)
-		wg.Done()
+		for {
+			select {
+			case <-sig:
+				s.Stop()
+				cancel := false
+				survey.AskOne(
+					&survey.Confirm{
+						Message: "Do you want to cancel the deployment, this will lead to corrupted kubernetes environment?",
+						Default: false,
+					}, &cancel, nil)
+				if cancel {
+					s.Stop()
+					os.Exit(1)
+				} else {
+					s.Start()
+				}
+			case <-done:
+				return
+			}
+		}
 	}()
 
-	stderr, errStderr = copyAndCapture(os.Stderr, stderrIn)
+	go func() {
+		stdout, errStdout = copyAndCapture(os.Stdout, stdoutIn, s)
+		wg.Done()
+		done <- true
+	}()
 
+	stderr, errStderr = copyAndCapture(os.Stderr, stderrIn, s)
 	wg.Wait()
 
 	err = cmd.Wait()
 
 	outStr, errStr := string(stdout), string(stderr)
-
-	//if err != nil {
-	//	Info("Failed to run with %s\n", errStr)
-	//	Info("cmd.Run() failed with %s\n", err)
-	//}
 
 	if errStdout != nil || errStderr != nil {
 		Info("failed to capture stdout or stderr\n")
