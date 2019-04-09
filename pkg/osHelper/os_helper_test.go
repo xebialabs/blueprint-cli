@@ -42,13 +42,13 @@ func TestApiServerUrlOnMacos(t *testing.T) {
 
 func TestApiServerUrlOnLinux(t *testing.T) {
 	currentOperatingSystem = "linux"
-	testScenarios(t, ms, "https://localhost:6443")
+	testScenarios(t, ms, "")
 }
 
 func TestApiServerUrlOnOther(t *testing.T) {
 
 	currentOperatingSystem = "other"
-	testScenarios(t, ms, "https://localhost:6443")
+	testScenarios(t, ms, "")
 }
 
 func TestApiServerURL(t *testing.T) {
@@ -72,7 +72,17 @@ func TestApiServerURL(t *testing.T) {
 		require.NotNil(t, err)
 	})
 }
+
 func TestOperatingSystem(t *testing.T) {
-	ms := OperatingSystem{}
-	assert.EqualValues(t, ms.getOs(), runtime.GOOS)
+	t.Run("should return the correct operating system", func(t *testing.T) {
+		ms := OperatingSystem{}
+		assert.EqualValues(t, ms.getOs(), runtime.GOOS)
+	})
+
+	t.Run("should return the operating system in which it is running", func(t *testing.T) {
+		result, err := CallOSFuncByName(Os)
+		require.Nil(t, err)
+		os, _ := result.GetResult(Os, "", 1)
+		assert.EqualValues(t, os, []string{runtime.GOOS})
+	})
 }
