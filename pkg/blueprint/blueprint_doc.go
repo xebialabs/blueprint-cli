@@ -88,7 +88,7 @@ type Variable struct {
 	Pattern        VarField
 	SaveInXlVals   VarField
 	UseRawValue    VarField
-    ShowOnPreview  VarField
+    ShowValueOnSummary  VarField
 }
 type PreparedData struct {
 	TemplateData map[string]interface{}
@@ -339,7 +339,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	case TypeInput:
 		if variable.Secret.Bool == true {
 			questionMsg := prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))
-			if defaultVal != "" && variable.ShowOnPreview.Bool == true {
+			if defaultVal != "" {
 				questionMsg += fmt.Sprintf(" (%s)", defaultVal)
 			}
 			err = survey.AskOne(
@@ -660,7 +660,7 @@ func (blueprintDoc *BlueprintYaml) prepareTemplateData(answersFilePath string, s
 				blueprintDoc.Variables[i] = variable
 			}
 			saveItemToTemplateDataMap(&variable, data, finalVal)
-			if variable.Secret.Bool == true && variable.ShowOnPreview.Bool == false {
+			if variable.Secret.Bool && !variable.ShowValueOnSummary.Bool {
 				data.DefaultData[variable.Name.Val] = "*****"
 			} else {
 				data.DefaultData[variable.Name.Val] = finalVal

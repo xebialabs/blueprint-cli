@@ -47,7 +47,7 @@ Parameters are defined by the blueprint creator in the `blueprint.yaml` file, it
 | **dependsOnFalse** | — | - CreateNewCluster<br>- `!fn aws.credentials().IsAvailable`<br>- `!expression "CreateNewCluster == true"` | — | **x** | Reverse logic for dependsOnTrue, see above
 | **saveInXlVals** | `true`/`false` | — | `true` for secret fields<br>`false` for other fields | **x** | If true, output variable will be included in the `values.xlvals` output file. By default every secret field will be written to `secrets.xlvals` file and this setting doesn't effect that functionality |
 | **useRawValue** | `true`/`false` | — | `false` | **x** | If set to `true`, output variable will be used as raw value instead of with `!value` tag. Useful in cases where variable will be used with a post-process function in any template file. <br/> This parameter is only valid for secret fields, for all other it will be silently ignored. |
-| **showOnPreview** | `true`/`false` | — | `false` | **x** | If set to `true`, the default value will be present during question prompt. This parameter only applies for secret variables. |
+| **ShowValueOnSummary** | `true`/`false` | — | `false` | **x** | If set to `true`, the value will be present on the summary table. This parameter only applies for secret variables. |
 
 > Note #1: `File` type doesn't support `value` parameter. `default` parameter for this field expects to have a file path instead of final value string.
 

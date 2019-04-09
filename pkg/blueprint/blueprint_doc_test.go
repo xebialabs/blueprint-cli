@@ -503,22 +503,22 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 		}
 		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnTrue.Val, variables[0].Value.Bool, NewPreparedData(), "", false))
 	})
-    t.Run("should skip question and default value should be false (dependsOnTrue)", func(t *testing.T) {
-        data := NewPreparedData()
-        variables := make([]Variable, 2)
-        variables[0] = Variable{
-            Name:  VarField{Val: "confirm"},
-            Type:  VarField{Val: TypeConfirm},
-            Value: VarField{Bool: false, Val: "false"},
-        }
-        variables[1] = Variable{
-            Name:          VarField{Val: "test"},
-            Type:          VarField{Val: TypeConfirm},
-            DependsOnTrue: VarField{Val: "confirm"},
-        }
-        assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnTrue.Val, variables[0].Value.Bool, data, "", false))
-        assert.False(t, data.TemplateData[variables[1].Name.Val].(bool))
-    })
+	t.Run("should skip question and default value should be false (dependsOnTrue)", func(t *testing.T) {
+		data := NewPreparedData()
+		variables := make([]Variable, 2)
+		variables[0] = Variable{
+			Name:  VarField{Val: "confirm"},
+			Type:  VarField{Val: TypeConfirm},
+			Value: VarField{Bool: false, Val: "false"},
+		}
+		variables[1] = Variable{
+			Name:          VarField{Val: "test"},
+			Type:          VarField{Val: TypeConfirm},
+			DependsOnTrue: VarField{Val: "confirm"},
+		}
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnTrue.Val, variables[0].Value.Bool, data, "", false))
+		assert.False(t, data.TemplateData[variables[1].Name.Val].(bool))
+	})
 
 	t.Run("should not skip question (dependsOnFalse)", func(t *testing.T) {
 		variables := make([]Variable, 2)
@@ -697,7 +697,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                 default: lala
                 saveInXlVals: true
                 description: help text
-                showOnPreview: true
+                showValueOnSummary: true
 
               files:
               - path: xebialabs/foo.yaml
@@ -710,15 +710,15 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Type:        VarField{Val: TypeInput},
 			Description: VarField{Val: "password?"},
 			Secret:      VarField{Bool: true, Val: "true"},
-            UseRawValue: VarField{Bool: true, Val: "true"},
+			UseRawValue: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
-			Name:         VarField{Val: "test"},
-			Type:         VarField{Val: TypeInput},
-			Default:      VarField{Val: "lala"},
-			Description:  VarField{Val: "help text"},
-			SaveInXlVals: VarField{Bool: true, Val: "true"},
-            ShowOnPreview: VarField{Bool: true, Val: "true"},
+			Name:               VarField{Val: "test"},
+			Type:               VarField{Val: TypeInput},
+			Default:            VarField{Val: "lala"},
+			Description:        VarField{Val: "help text"},
+			SaveInXlVals:       VarField{Bool: true, Val: "true"},
+			ShowValueOnSummary: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[1])
 		assert.Equal(t, TemplateConfig{
 			File:     "xebialabs/foo.yaml",
@@ -1315,160 +1315,160 @@ func TestParseFileMap(t *testing.T) {
 }
 
 func TestGetValuesFromAnswersFile(t *testing.T) {
-    // Create needed temporary directory for tests
-    os.MkdirAll("test", os.ModePerm)
-    defer os.RemoveAll("test")
-    validContent := []byte(`test: testing
+	// Create needed temporary directory for tests
+	os.MkdirAll("test", os.ModePerm)
+	defer os.RemoveAll("test")
+	validContent := []byte(`test: testing
 sample: 5.45
 confirm: true
 `)
-    badFormatContent := []byte(`test=testing
+	badFormatContent := []byte(`test=testing
 sample=5.45
 confirm=true
 `)
-    validFilePath := filepath.Join("test", "answers.yaml")
-    badFormatFilePath := filepath.Join("test", "badformat.yaml")
-    ioutil.WriteFile(validFilePath, validContent, os.ModePerm)
-    ioutil.WriteFile(badFormatFilePath, badFormatContent, os.ModePerm)
-    blueprintDoc := BlueprintYaml{}
+	validFilePath := filepath.Join("test", "answers.yaml")
+	badFormatFilePath := filepath.Join("test", "badformat.yaml")
+	ioutil.WriteFile(validFilePath, validContent, os.ModePerm)
+	ioutil.WriteFile(badFormatFilePath, badFormatContent, os.ModePerm)
+	blueprintDoc := BlueprintYaml{}
 
-    tests := []struct {
-        name            string
-        answersFilePath string
-        wantOut         map[string]interface{}
-        errOut          bool
-    }{
-        {
-            "answers file: error when file not found",
-            "error.yaml",
-            nil,
-            true,
-        },
-        {
-            "answers file: error when content is not proper yaml",
-            badFormatFilePath,
-            nil,
-            true,
-        },
-        {
-            "answers file: parse map of answers from valid file",
-            validFilePath,
-            map[string]interface{}{"test": "testing", "sample": 5.45, "confirm": true},
-            false,
-        },
-    }
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got, err := blueprintDoc.getValuesFromAnswersFile(tt.answersFilePath)
-            if tt.errOut {
-                require.NotNil(t, err)
-            } else {
-                require.Nil(t, err)
-            }
-            assert.Equal(t, tt.wantOut, got)
-        })
-    }
+	tests := []struct {
+		name            string
+		answersFilePath string
+		wantOut         map[string]interface{}
+		errOut          bool
+	}{
+		{
+			"answers file: error when file not found",
+			"error.yaml",
+			nil,
+			true,
+		},
+		{
+			"answers file: error when content is not proper yaml",
+			badFormatFilePath,
+			nil,
+			true,
+		},
+		{
+			"answers file: parse map of answers from valid file",
+			validFilePath,
+			map[string]interface{}{"test": "testing", "sample": 5.45, "confirm": true},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := blueprintDoc.getValuesFromAnswersFile(tt.answersFilePath)
+			if tt.errOut {
+				require.NotNil(t, err)
+			} else {
+				require.Nil(t, err)
+			}
+			assert.Equal(t, tt.wantOut, got)
+		})
+	}
 }
 
 func TestVerifyVariableValue(t *testing.T) {
-    // Create needed temporary directory for tests
-    os.MkdirAll("test", os.ModePerm)
-    defer os.RemoveAll("test")
-    contents := []byte("hello\ngo\n")
-    ioutil.WriteFile(filepath.Join("test", "sample.txt"), contents, os.ModePerm)
+	// Create needed temporary directory for tests
+	os.MkdirAll("test", os.ModePerm)
+	defer os.RemoveAll("test")
+	contents := []byte("hello\ngo\n")
+	ioutil.WriteFile(filepath.Join("test", "sample.txt"), contents, os.ModePerm)
 
-    tests := []struct {
-        name         string
-        variable     Variable
-        answer       interface{}
-        parameters   map[string]interface{}
-        wantOut      interface{}
-        errOut       error
-    }{
-        {
-            "answers from map: save string answer value to variable value with type Input",
-            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
-            "sample answer",
-            map[string]interface{}{},
-            "sample answer",
-            nil,
-        },
-        {
-            "answers from map: save float answer value to variable value with type Input",
-            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
-            5.45,
-            map[string]interface{}{},
-            5.45,
-            nil,
-        },
-        {
-            "answers from map: save boolean answer value to variable value with type Confirm",
-            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeConfirm}},
-            true,
-            map[string]interface{}{},
-            true,
-            nil,
-        },
-        {
-            "answers from map: save boolean answer value (convert from string) to variable value with type Confirm",
-            Variable{Name: VarField{Val:"Test"}, Type: VarField{Val:TypeConfirm}},
-            "true",
-            map[string]interface{}{},
-            true,
-            nil,
-        },
-        {
-            "answers from map: save long text answer value to variable value with type Editor",
-            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeEditor}},
-            "long text for testing..\nand the rest of it\n",
-            map[string]interface{}{},
-            "long text for testing..\nand the rest of it\n",
-            nil,
-        },
-        {
-            "answers from map: save long text answer value to variable value with type File",
-            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
-            filepath.Join("test", "sample.txt"),
-            map[string]interface{}{},
-            "hello\ngo\n",
-            nil,
-        },
-        {
-            "answers from map: give error on file not found (input type: File)",
-            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
-            filepath.Join("test", "error.txt"),
-            map[string]interface{}{},
-            "",
-            fmt.Errorf(
-                "error reading input file [%s]: open %s: no such file or directory",
-                filepath.Join("test", "error.txt"),
-                filepath.Join("test", "error.txt"),
-            ),
-        },
-        {
-            "answers from map: save string answer value to variable value with type Select",
-            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
-            "b",
-            map[string]interface{}{},
-            "b",
-            nil,
-        },
-        {
-            "answers from map: give error on unknown select option value",
-            Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
-            "c",
-            map[string]interface{}{},
-            "",
-            fmt.Errorf("answer [c] is not one of the available options [a b] for variable [Test]"),
-        },
-    }
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got, err := tt.variable.VerifyVariableValue(tt.answer, tt.parameters)
-            assert.Equal(t, tt.errOut, err)
-            assert.Equal(t, tt.wantOut, got)
-        })
-    }
+	tests := []struct {
+		name       string
+		variable   Variable
+		answer     interface{}
+		parameters map[string]interface{}
+		wantOut    interface{}
+		errOut     error
+	}{
+		{
+			"answers from map: save string answer value to variable value with type Input",
+			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
+			"sample answer",
+			map[string]interface{}{},
+			"sample answer",
+			nil,
+		},
+		{
+			"answers from map: save float answer value to variable value with type Input",
+			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
+			5.45,
+			map[string]interface{}{},
+			5.45,
+			nil,
+		},
+		{
+			"answers from map: save boolean answer value to variable value with type Confirm",
+			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeConfirm}},
+			true,
+			map[string]interface{}{},
+			true,
+			nil,
+		},
+		{
+			"answers from map: save boolean answer value (convert from string) to variable value with type Confirm",
+			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeConfirm}},
+			"true",
+			map[string]interface{}{},
+			true,
+			nil,
+		},
+		{
+			"answers from map: save long text answer value to variable value with type Editor",
+			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeEditor}},
+			"long text for testing..\nand the rest of it\n",
+			map[string]interface{}{},
+			"long text for testing..\nand the rest of it\n",
+			nil,
+		},
+		{
+			"answers from map: save long text answer value to variable value with type File",
+			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
+			filepath.Join("test", "sample.txt"),
+			map[string]interface{}{},
+			"hello\ngo\n",
+			nil,
+		},
+		{
+			"answers from map: give error on file not found (input type: File)",
+			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
+			filepath.Join("test", "error.txt"),
+			map[string]interface{}{},
+			"",
+			fmt.Errorf(
+				"error reading input file [%s]: open %s: no such file or directory",
+				filepath.Join("test", "error.txt"),
+				filepath.Join("test", "error.txt"),
+			),
+		},
+		{
+			"answers from map: save string answer value to variable value with type Select",
+			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
+			"b",
+			map[string]interface{}{},
+			"b",
+			nil,
+		},
+		{
+			"answers from map: give error on unknown select option value",
+			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
+			"c",
+			map[string]interface{}{},
+			"",
+			fmt.Errorf("answer [c] is not one of the available options [a b] for variable [Test]"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.variable.VerifyVariableValue(tt.answer, tt.parameters)
+			assert.Equal(t, tt.errOut, err)
+			assert.Equal(t, tt.wantOut, got)
+		})
+	}
 }
 
 func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
@@ -1487,41 +1487,41 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"prepare template data should show password hidden if ShowOnPreview is false",
+			"prepare template data should show password hidden if ShowValueOnSummary is false",
 			BlueprintYaml{
 				Spec: Spec{
 					Parameters: []interface{}{},
-					Files: []interface{}{},
+					Files:      []interface{}{},
 				},
 				Variables: []Variable{
 					{
-					    Name: VarField{Val: "input1"},
-					    Type: VarField{Val: "Input"},
-						Value: VarField{Bool: false, Val: ""},
+						Name:    VarField{Val: "input1"},
+						Type:    VarField{Val: "Input"},
+						Value:   VarField{Bool: false, Val: ""},
 						Default: VarField{Bool: false, Val: "default1"},
 					},
-                    {
-                        Name: VarField{Val: "input2"},
-                        Type: VarField{Val: "Input"},
-                        Value: VarField{Bool: false, Val: ""},
-                        Default: VarField{Bool: false, Val: "default2"},
-                        Secret: VarField{Bool: true, Val: "true"},
-                    },
-                    {
-                        Name: VarField{Val: "input3"},
-                        Type: VarField{Val: "Input"},
-                        Value: VarField{Bool: false, Val: ""},
-                        Default: VarField{Bool: false, Val: "default3"},
-                        Secret: VarField{Bool: true, Val: "true"},
-                        ShowOnPreview: VarField{Bool: true, Val: "true"},
-                    },
+					{
+						Name:    VarField{Val: "input2"},
+						Type:    VarField{Val: "Input"},
+						Value:   VarField{Bool: false, Val: ""},
+						Default: VarField{Bool: false, Val: "default2"},
+						Secret:  VarField{Bool: true, Val: "true"},
+					},
+					{
+						Name:               VarField{Val: "input3"},
+						Type:               VarField{Val: "Input"},
+						Value:              VarField{Bool: false, Val: ""},
+						Default:            VarField{Bool: false, Val: "default3"},
+						Secret:             VarField{Bool: true, Val: "true"},
+						ShowValueOnSummary: VarField{Bool: true, Val: "true"},
+					},
 				},
 			},
 			args{"", false, true},
 			&PreparedData{
-				TemplateData: map[string]interface{}{"input1": "default1", "input2": "!value input2", "input3":"!value input3"},
-				DefaultData:  map[string]interface{}{"input1": "default1", "input2": "*****", "input3":"default3"},
-				Secrets:      map[string]interface{}{"input2":"default2", "input3":"default3"},
+				TemplateData: map[string]interface{}{"input1": "default1", "input2": "!value input2", "input3": "!value input3"},
+				DefaultData:  map[string]interface{}{"input1": "default1", "input2": "*****", "input3": "default3"},
+				Secrets:      map[string]interface{}{"input2": "default2", "input3": "default3"},
 				Values:       map[string]interface{}{},
 			},
 			false,
