@@ -6,21 +6,25 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
-	mapset "github.com/deckarep/golang-set"
+	"github.com/briandowns/spinner"
+	"github.com/deckarep/golang-set"
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
-	survey "gopkg.in/AlecAivazis/survey.v1"
+	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 const (
 	Docker    = "docker"
 	SeedImage = "xl-docker.xebialabs.com/xl-seed:demo"
 )
+
+var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 
 var pullSeedImage = models.Command{
 	Name: Docker,
@@ -107,13 +111,16 @@ func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool,
 	applyFilesAndSave()
 	// TODO: Ask for the version to deploy
 	util.Info("Generated files for deployment successfully! \nSpinning up xl seed! \n")
+
 	runAndCaptureResponse("pulling", pullSeedImage)
 	runAndCaptureResponse("running", runSeed())
+
 }
 
 func runAndCaptureResponse(status string, cmd models.Command) {
+
 	completedTask := false
-	outStr, errorStr := util.ExecuteCommandAndShowLogs(cmd)
+	outStr, errorStr := util.ExecuteCommandAndShowLogs(cmd, s)
 
 	if outStr != "" {
 		createLogFile("xl-seed-log.txt", outStr)
@@ -126,10 +133,12 @@ func runAndCaptureResponse(status string, cmd models.Command) {
 
 	if errorStr != "" {
 		createLogFile("xl-seed-error.txt", errorStr)
+		s.Stop()
 		if !completedTask {
 			util.Fatal("Error while running xl up: \n %s", errorStr)
 		}
 	}
+
 }
 
 func createLogFile(fileName string, contents string) {
