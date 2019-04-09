@@ -112,20 +112,23 @@ func InvokeBlueprintAndSeed(context *Context, upLocalMode bool, quickSetup bool,
 }
 
 func runAndCaptureResponse(status string, cmd models.Command) {
-
+	completedTask := false
 	outStr, errorStr := util.ExecuteCommandAndShowLogs(cmd)
 
 	if outStr != "" {
 		createLogFile("xl-seed-log.txt", outStr)
 		indx := strings.Index(outStr, "***************")
 		if indx != -1 {
+			completedTask = true
 			util.Info(outStr[indx:])
 		}
 	}
 
 	if errorStr != "" {
 		createLogFile("xl-seed-error.txt", errorStr)
-		util.Fatal("Error while running xl up: \n %s", errorStr)
+		if !completedTask {
+			util.Fatal("Error while running xl up: \n %s", errorStr)
+		}
 	}
 }
 
