@@ -413,52 +413,6 @@ func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprint
 	return &bpConfig, err
 }
 
-// verify blueprint directory & generate full paths for local files
-func (blueprintDoc *BlueprintConfig) verifyTemplateDirAndGenFullPaths(templatePath string) error {
-	if util.PathExists(templatePath, true) {
-		util.Verbose("[repository] Verifying local path and files within: %s \n", templatePath)
-		var filePaths []string
-
-		// walk the root directory
-		err := filepath.Walk(templatePath, func(path string, fileInfo os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if !fileInfo.IsDir() {
-				filePaths = append(filePaths, path)
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-		if len(filePaths) == 0 {
-			return fmt.Errorf("path [%s] doesn't include any valid files", templatePath)
-		}
-
-		// generate full local paths
-		sort.Strings(filePaths)
-		for _, filePath := range filePaths {
-			relativePath := getFilePathRelativeToTemplatePath(filePath, templatePath)
-			_, filename := filepath.Split(filePath)
-			if filename != repository.BlueprintMetadataFileName+".yaml" && filename != repository.BlueprintMetadataFileName+".yml" {
-				// Append full path to existing file, or create new one
-				configIndex := findInTemplateConfigs(blueprintDoc.TemplateConfigs, relativePath)
-				if configIndex == -1 {
-					blueprintDoc.TemplateConfigs = append(blueprintDoc.TemplateConfigs, TemplateConfig{
-						Path:     relativePath,
-						FullPath: filePath,
-					})
-				} else {
-					blueprintDoc.TemplateConfigs[configIndex].FullPath = filePath
-				}
-			}
-		}
-		return nil
-	}
-	return fmt.Errorf("path [%s] doesn't exist", templatePath)
-}
-
 // parse doc parameters into list of variables
 func (blueprintDoc *BlueprintYaml) parseParameters() ([]Variable, error) {
 	var parameters []Parameter
@@ -514,6 +468,180 @@ func (blueprintDoc *BlueprintYaml) parseIncludes() ([]IncludedBlueprintProcessed
 	return processedIncludes, nil
 }
 
+func parseParameter(m *Parameter) (Variable, error) {
+	parsedVar := Variable{}
+	err := parseFieldsFromStruct(m, func() reflect.Value {
+		return reflect.ValueOf(&parsedVar).Elem()
+	})
+	return parsedVar, err
+}
+
+func parseFile(m *File) (TemplateConfig, error) {
+	parsedConfig := TemplateConfig{}
+	err := parseFieldsFromStruct(m, func() reflect.Value {
+		return reflect.ValueOf(&parsedConfig).Elem()
+	})
+	return parsedConfig, err
+}
+
+func parseInclude(m *IncludedBlueprint) (IncludedBlueprintProcessed, error) {
+	parsedInclude := IncludedBlueprintProcessed{}
+	err := parseFieldsFromStruct(m, func() reflect.Value {
+		return reflect.ValueOf(&parsedInclude).Elem()
+	})
+	return parsedInclude, err
+}
+
+func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflect.Value) error {
+	parameterR := reflect.ValueOf(original).Elem()
+	typeOfT := parameterR.Type()
+	// iterate over the struct fields and map them
+	for i := 0; i < parameterR.NumField(); i++ {
+		fieldR := parameterR.Field(i)
+		fieldName := typeOfT.Field(i).Name
+		value := fieldR.Interface()
+		// for backward compatibility
+		if strings.ToLower(fieldName) == "dependsontrue" && value != nil {
+			fieldName = "DependsOn"
+		}
+		field := getFieldByReflect().FieldByName(strings.Title(fieldName))
+		switch val := value.(type) {
+		case string:
+			// Set string field
+			setVariableField(&field, val, VarField{Val: val})
+		case int, uint, uint8, uint16, uint32, uint64:
+			// Set integer field
+			setVariableField(&field, fmt.Sprint(val), VarField{Val: fmt.Sprint(val)})
+		case float32, float64:
+			// Set float field
+			setVariableField(&field, fmt.Sprintf("%f", val), VarField{Val: fmt.Sprintf("%f", val)})
+		case bool:
+			// Set boolean field
+			setVariableField(&field, strconv.FormatBool(val), VarField{Val: strconv.FormatBool(val), Bool: val})
+		case []interface{}:
+			// Set options array field for Parameters
+			if len(val) > 0 {
+				field.Set(reflect.MakeSlice(reflect.TypeOf([]VarField{}), len(val), len(val)))
+				for i, it := range val {
+					switch wVal := it.(type) {
+					case int, uint, uint8, uint16, uint32, uint64:
+						field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprint(wVal)}))
+					case float32, float64:
+						field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprintf("%f", wVal)}))
+					case string:
+						field.Index(i).Set(reflect.ValueOf(VarField{Val: wVal}))
+					case yaml.CustomTag:
+						field.Index(i).Set(reflect.ValueOf(VarField{Val: wVal.Value, Tag: wVal.Tag}))
+					default:
+						return fmt.Errorf("unknown list item type %s", wVal)
+					}
+				}
+			}
+		case []ParameterValue:
+			// Set ParameterValue array field for Include
+			if len(val) > 0 {
+				field.Set(reflect.MakeSlice(reflect.TypeOf([]ParameterValuesProcessed{}), len(val), len(val)))
+				for i, it := range val {
+					parsed := ParameterValuesProcessed{}
+					err := parseFieldsFromStruct(&it, func() reflect.Value {
+						return reflect.ValueOf(&parsed).Elem()
+					})
+					if err != nil {
+						return err
+					}
+					field.Index(i).Set(reflect.ValueOf(parsed))
+				}
+			}
+		case []File:
+			// Set File array field for Include
+			if len(val) > 0 {
+				field.Set(reflect.MakeSlice(reflect.TypeOf([]TemplateConfig{}), len(val), len(val)))
+				for i, it := range val {
+					parsed := TemplateConfig{}
+					err := parseFieldsFromStruct(&it, func() reflect.Value {
+						return reflect.ValueOf(&parsed).Elem()
+					})
+					if err != nil {
+						return err
+					}
+					field.Index(i).Set(reflect.ValueOf(parsed))
+				}
+			}
+		case yaml.CustomTag:
+			// Set string field with YAML tag
+			switch val.Tag {
+			case tagFn, tagExpression:
+				setVariableField(&field, val.Value, VarField{Val: val.Value, Tag: val.Tag})
+			default:
+				return fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
+			}
+		case nil:
+			util.Verbose("[dataPrep] Got empty variable field with key [%s]\n", fieldName)
+			// do nothing when field is not set
+		default:
+			return fmt.Errorf("unknown variable type [%s]", val)
+		}
+	}
+	return nil
+}
+
+func setVariableField(field *reflect.Value, val interface{}, varField VarField) {
+	if field.IsValid() && field.CanInterface() {
+		switch field.Interface().(type) {
+		case string:
+			field.Set(reflect.ValueOf(val))
+		case VarField:
+			field.Set(reflect.ValueOf(varField))
+		}
+	}
+}
+
+// verify blueprint directory & generate full paths for local files
+func (blueprintDoc *BlueprintConfig) verifyTemplateDirAndGenFullPaths(templatePath string) error {
+	if util.PathExists(templatePath, true) {
+		util.Verbose("[repository] Verifying local path and files within: %s \n", templatePath)
+		var filePaths []string
+
+		// walk the root directory
+		err := filepath.Walk(templatePath, func(path string, fileInfo os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !fileInfo.IsDir() {
+				filePaths = append(filePaths, path)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		if len(filePaths) == 0 {
+			return fmt.Errorf("path [%s] doesn't include any valid files", templatePath)
+		}
+
+		// generate full local paths
+		sort.Strings(filePaths)
+		for _, filePath := range filePaths {
+			relativePath := getFilePathRelativeToTemplatePath(filePath, templatePath)
+			_, filename := filepath.Split(filePath)
+			if filename != repository.BlueprintMetadataFileName+".yaml" && filename != repository.BlueprintMetadataFileName+".yml" {
+				// Append full path to existing file, or create new one
+				configIndex := findInTemplateConfigs(blueprintDoc.TemplateConfigs, relativePath)
+				if configIndex == -1 {
+					blueprintDoc.TemplateConfigs = append(blueprintDoc.TemplateConfigs, TemplateConfig{
+						Path:     relativePath,
+						FullPath: filePath,
+					})
+				} else {
+					blueprintDoc.TemplateConfigs[configIndex].FullPath = filePath
+				}
+			}
+		}
+		return nil
+	}
+	return fmt.Errorf("path [%s] doesn't exist", templatePath)
+}
+
 // validate blueprint yaml document based on required fields
 func (blueprintDoc *BlueprintConfig) validate() error {
 	if blueprintDoc.ApiVersion != models.YamlFormatVersion {
@@ -527,26 +655,6 @@ func (blueprintDoc *BlueprintConfig) validate() error {
 		return err
 	}
 	return validateFiles(&blueprintDoc.TemplateConfigs)
-}
-
-// get values from answers file
-func getValuesFromAnswersFile(answersFilePath string) (map[string]interface{}, error) {
-	if util.PathExists(answersFilePath, false) {
-		// read file contents
-		content, err := ioutil.ReadFile(answersFilePath)
-		if err != nil {
-			return nil, err
-		}
-
-		// parse answers file
-		answers := make(map[string]interface{})
-		err = yaml.Unmarshal(content, answers)
-		if err != nil {
-			return nil, err
-		}
-		return answers, nil
-	}
-	return nil, fmt.Errorf("blueprint answers file not found in path %s", answersFilePath)
 }
 
 // prepare template data by getting user input and calling named functions
@@ -699,7 +807,27 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 	return data, nil
 }
 
-// --utility functions
+// get values from answers file
+func getValuesFromAnswersFile(answersFilePath string) (map[string]interface{}, error) {
+	if util.PathExists(answersFilePath, false) {
+		// read file contents
+		content, err := ioutil.ReadFile(answersFilePath)
+		if err != nil {
+			return nil, err
+		}
+
+		// parse answers file
+		answers := make(map[string]interface{})
+		err = yaml.Unmarshal(content, answers)
+		if err != nil {
+			return nil, err
+		}
+		return answers, nil
+	}
+	return nil, fmt.Errorf("blueprint answers file not found in path %s", answersFilePath)
+}
+
+// utility functions
 func getFileContents(filepath string) (string, error) {
 	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
@@ -754,135 +882,6 @@ func validateFiles(configs *[]TemplateConfig) error {
 	return nil
 }
 
-func parseParameter(m *Parameter) (Variable, error) {
-	parsedVar := Variable{}
-	err := parseFieldsFromStruct(m, func() reflect.Value {
-		return reflect.ValueOf(&parsedVar).Elem()
-	})
-	return parsedVar, err
-}
-
-func parseFile(m *File) (TemplateConfig, error) {
-	parsedConfig := TemplateConfig{}
-	err := parseFieldsFromStruct(m, func() reflect.Value {
-		return reflect.ValueOf(&parsedConfig).Elem()
-	})
-	return parsedConfig, err
-}
-
-func parseInclude(m *IncludedBlueprint) (IncludedBlueprintProcessed, error) {
-	parsedInclude := IncludedBlueprintProcessed{}
-	err := parseFieldsFromStruct(m, func() reflect.Value {
-		return reflect.ValueOf(&parsedInclude).Elem()
-	})
-	return parsedInclude, err
-}
-
-func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflect.Value) error {
-	parameterR := reflect.ValueOf(original).Elem()
-	typeOfT := parameterR.Type()
-	// iterate over the struct fields and map them
-	for i := 0; i < parameterR.NumField(); i++ {
-		fieldR := parameterR.Field(i)
-		fieldName := typeOfT.Field(i).Name
-		value := fieldR.Interface()
-		// for backward compatibility
-		if strings.ToLower(fieldName) == "dependsontrue" && value != nil {
-			fieldName = "DependsOn"
-		}
-		field := getFieldByReflect().FieldByName(strings.Title(fieldName))
-		switch val := value.(type) {
-		case string:
-			// Set string field
-			setVariableField(&field, val, VarField{Val: val})
-		case int, uint, uint8, uint16, uint32, uint64:
-			// Set integer field
-			setVariableField(&field, fmt.Sprint(val), VarField{Val: fmt.Sprint(val)})
-		case float32, float64:
-			// Set float field
-			setVariableField(&field, fmt.Sprintf("%f", val), VarField{Val: fmt.Sprintf("%f", val)})
-		case bool:
-			// Set boolean field
-			setVariableField(&field, strconv.FormatBool(val), VarField{Val: strconv.FormatBool(val), Bool: val})
-		case []interface{}:
-			// Set options array field for Parameters
-			if len(val) > 0 {
-				field.Set(reflect.MakeSlice(reflect.TypeOf([]VarField{}), len(val), len(val)))
-				for i, it := range val {
-					switch wVal := it.(type) {
-					case int, uint, uint8, uint16, uint32, uint64:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprint(wVal)}))
-					case float32, float64:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprintf("%f", wVal)}))
-					case string:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: wVal}))
-					case yaml.CustomTag:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: wVal.Value, Tag: wVal.Tag}))
-					default:
-						return fmt.Errorf("unknown list item type %s", wVal)
-					}
-				}
-			}
-		case []ParameterValue:
-			// Set ParameterValue array field for Include
-			if len(val) > 0 {
-				field.Set(reflect.MakeSlice(reflect.TypeOf([]ParameterValuesProcessed{}), len(val), len(val)))
-				for i, it := range val {
-					parsed := ParameterValuesProcessed{}
-					err := parseFieldsFromStruct(&it, func() reflect.Value {
-						return reflect.ValueOf(&parsed).Elem()
-					})
-					if err != nil {
-						return err
-					}
-					field.Index(i).Set(reflect.ValueOf(parsed))
-				}
-			}
-		case []File:
-			// Set File array field for Include
-			if len(val) > 0 {
-				field.Set(reflect.MakeSlice(reflect.TypeOf([]TemplateConfig{}), len(val), len(val)))
-				for i, it := range val {
-					parsed := TemplateConfig{}
-					err := parseFieldsFromStruct(&it, func() reflect.Value {
-						return reflect.ValueOf(&parsed).Elem()
-					})
-					if err != nil {
-						return err
-					}
-					field.Index(i).Set(reflect.ValueOf(parsed))
-				}
-			}
-		case yaml.CustomTag:
-			// Set string field with YAML tag
-			switch val.Tag {
-			case tagFn, tagExpression:
-				setVariableField(&field, val.Value, VarField{Val: val.Value, Tag: val.Tag})
-			default:
-				return fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
-			}
-		case nil:
-			util.Verbose("[dataPrep] Got empty variable field with key [%s]\n", fieldName)
-			// do nothing when field is not set
-		default:
-			return fmt.Errorf("unknown variable type [%s]", val)
-		}
-	}
-	return nil
-}
-
-func setVariableField(field *reflect.Value, val interface{}, varField VarField) {
-	if field.IsValid() && field.CanInterface() {
-		switch field.Interface().(type) {
-		case string:
-			field.Set(reflect.ValueOf(val))
-		case VarField:
-			field.Set(reflect.ValueOf(varField))
-		}
-	}
-}
-
-// utility functions
 func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error {
 	return func(val interface{}) error {
 		// if empty value is not allowed, check for any value
