@@ -34,22 +34,22 @@ spec:
   - blueprint: kubernetes/gke-cluster 
     # 'stage' will decide if the blueprint should be composed before or after the master blueprint, this will affect the order of question and order in which files are written, multiple before/after will stack based on order of definition.
     stage: before 
-    # 'parameter-values' we can provide values for any parameter in the blueprint being composed. This way we can force to skip any question by providing a value for it, these can be conditional using dependsOn
-    parameter-values: 
+    # 'parameterValues' we can provide values for any parameter in the blueprint being composed. This way we can force to skip any question by providing a value for it, these can be conditional using dependsOn
+    parameterValues: 
     - name: Foo
       # expression and functions will be supported for 'value'
       value: hello 
       dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends" # do this later
     - name: bar
       value: true
-    # 'skip-files' can be used to skip files and can be conditional using dependsOn
-    skip-files: 
+    # 'skipFiles' can be used to skip files and can be conditional using dependsOn
+    skipFiles: 
     - path: xld-infrastructure.yml.tmpl
       dependsOnTrue: TestDepends # do this later
   - blueprint: kubernetes/namespace
     dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
     stage: after
-    parameter-overrides:
+    parameterValues:
     - name: Foo
       value: hello
 ```

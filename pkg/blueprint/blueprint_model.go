@@ -50,11 +50,11 @@ type File struct {
 }
 
 type IncludedBlueprint struct {
-	Blueprint       string `yaml:"blueprint"`
-	Stage           string `yaml:"stage"`
-	ParameterValues []ParameterValue
-	SkipFiles       []File
-	DependsOn       interface{} `yaml:"dependsOn"`
+	Blueprint       string           `yaml:"blueprint"`
+	Stage           string           `yaml:"stage"`
+	ParameterValues []ParameterValue `yaml:"parameterValues"`
+	SkipFiles       []File           `yaml:"skipFiles"`
+	DependsOn       interface{}      `yaml:"dependsOn"`
 	// for backward compatibility
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
 	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
@@ -62,7 +62,7 @@ type IncludedBlueprint struct {
 
 type ParameterValue struct {
 	Name      string      `yaml:"name"`
-	Value     string      `yaml:"value"`
+	Value     interface{} `yaml:"value"`
 	DependsOn interface{} `yaml:"dependsOn"`
 	// for backward compatibility
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
@@ -119,7 +119,7 @@ type IncludedBlueprintProcessed struct {
 
 type ParameterValuesProcessed struct {
 	Name           string
-	Value          string
+	Value          VarField
 	DependsOn      VarField
 	DependsOnFalse VarField
 }

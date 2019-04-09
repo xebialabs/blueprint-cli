@@ -147,6 +147,24 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
              dependsOn: isitnot
            - path: foo.md
              dependsOnFalse: !expression "!!isitnot"
+           include:
+           - blueprint: kubernetes/gke-cluster
+             stage: before
+             parameterValues:
+             - name: Foo
+               value: hello
+               dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends" # do this later
+             - name: bar
+               value: true
+             skipFiles:
+             - path: xld-infrastructure.yml.tmpl
+               dependsOnTrue: TestDepends # do this later
+           - blueprint: kubernetes/namespace
+             dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
+             stage: after
+             parameterValues:
+             - name: Foo
+               value: hello
 `, models.YamlFormatVersion))
 	return parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 }
@@ -803,6 +821,43 @@ func TestParseTemplateMetadata(t *testing.T) {
 			FullPath:       "",
 			DependsOnFalse: VarField{Val: "!!isitnot", Tag: tagExpression},
 		}, doc.TemplateConfigs[3])
+	})
+	t.Run("should parse includes from valid metadata", func(t *testing.T) {
+		doc, err := getValidTestBlueprintMetadata("templatePath/test", blueprintRepository)
+		require.Nil(t, err)
+		assert.Equal(t, 2, len(doc.Include))
+		assert.Equal(t, IncludedBlueprintProcessed{
+			Blueprint: "kubernetes/gke-cluster",
+			Stage:     "before",
+			ParameterValues: []ParameterValuesProcessed{
+				{
+					Name:      "Foo",
+					Value:     VarField{Val: "hello"},
+					DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
+				},
+				{
+					Name:  "bar",
+					Value: VarField{Val: "true", Bool: true},
+				},
+			},
+			SkipFiles: []TemplateConfig{
+				{
+					Path:      "xld-infrastructure.yml.tmpl",
+					DependsOn: VarField{Val: "TestDepends"},
+				},
+			},
+		}, doc.Include[0])
+		assert.Equal(t, IncludedBlueprintProcessed{
+			Blueprint: "kubernetes/namespace",
+			Stage:     "after",
+			ParameterValues: []ParameterValuesProcessed{
+				{
+					Name:  "Foo",
+					Value: VarField{Val: "hello"},
+				},
+			},
+			DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
+		}, doc.Include[1])
 	})
 	t.Run("should parse metadata fields", func(t *testing.T) {
 		doc, err := getValidTestBlueprintMetadata("templatePath/test", blueprintRepository)
@@ -1706,8 +1761,13 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 								},
 								{
 									Name:          "bar",
-									Value:         "foo",
+									Value:         true,
 									DependsOnTrue: yaml.CustomTag{Tag: "!fn", Value: "foo"},
+								},
+								{
+									Name:           "barr",
+									Value:          10.5,
+									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 							},
 							SkipFiles: []File{
@@ -1739,13 +1799,18 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 					ParameterValues: []ParameterValuesProcessed{
 						{
 							Name:      "foo",
-							Value:     "bar",
+							Value:     VarField{Val: "bar"},
 							DependsOn: VarField{Val: "1 > 2", Tag: "!expression"},
 						},
 						{
 							Name:      "bar",
-							Value:     "foo",
+							Value:     VarField{Val: "true", Bool: true},
 							DependsOn: VarField{Tag: "!fn", Val: "foo"},
+						},
+						{
+							Name:           "barr",
+							Value:          VarField{Val: "10.500000"},
+							DependsOnFalse: VarField{Tag: "!fn", Val: "foo"},
 						},
 					},
 					SkipFiles: []TemplateConfig{
