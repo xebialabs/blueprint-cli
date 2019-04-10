@@ -1,14 +1,16 @@
 package local
 
 import (
-	"os"
+    "os"
+    "os/user"
     "path"
     "path/filepath"
+    "runtime"
     "strings"
     "testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
 )
 
 const (
@@ -40,6 +42,22 @@ func TestNewGitHubBlueprintRepository(t *testing.T) {
         require.NotNil(t, err)
         require.Nil(t, repo)
     })
+	if runtime.GOOS != "windows" {
+        t.Run("should expand home dir", func(t *testing.T) {
+            currentUser, _ := user.Current()
+            repo, err := NewLocalBlueprintRepository(map[string]string{
+                "name": "test",
+                "type": repoType,
+                "path": "~/",
+            })
+            require.Nil(t, err)
+            require.NotNil(t, repo)
+            assert.Equal(t, "test", repo.GetName())
+            assert.Equal(t, currentUser.HomeDir, repo.Path)
+            err = repo.Initialize()
+            require.Nil(t, err)
+        })
+    }
 	t.Run("should set ignore lists empty when not set", func(t *testing.T) {
 		repo, err := NewLocalBlueprintRepository(map[string]string{
 			"name": "test",
@@ -177,4 +195,53 @@ func TestFindRelatedBlueprintDir(t *testing.T) {
 			assert.Equal(t, tt.expected, got)
 		})
 	}
+}
+
+func TestExpandHomeDirIfNeeded(t *testing.T) {
+    // not to be tested on windows
+    if runtime.GOOS != "windows" {
+        currentUser, _ := user.Current()
+        tests := []struct {
+            name     string
+            repoPath string
+            expected string
+        }{
+            {
+                "should expand home path when given ~",
+                "~",
+                currentUser.HomeDir,
+            },
+            {
+                "should expand home path when given ~/",
+                "~",
+                currentUser.HomeDir,
+            },
+            {
+                "should expand home path when given relative path to ~",
+                "~/some/dir",
+                filepath.Join(currentUser.HomeDir, "some/dir"),
+            },
+            {
+                "should not expand home path when given a path including ~ in between",
+                "/tmp/~/some/dir",
+                "/tmp/~/some/dir",
+            },
+            {
+                "should return original path when a full path is given",
+                "/tmp/path/to/some/local/dir/",
+                "/tmp/path/to/some/local/dir/",
+            },
+            {
+                "should return original path when a root path is given",
+                "/",
+                "/",
+            },
+        }
+        for _, tt := range tests {
+            t.Run(tt.name, func(t *testing.T) {
+                got := expandHomeDirIfNeeded(tt.repoPath, currentUser)
+                assert.Equal(t, tt.expected, got)
+            })
+        }
+    }
 }

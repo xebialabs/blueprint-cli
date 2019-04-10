@@ -265,9 +265,11 @@ Mainly intended to be used for local development and tests. Any local path can b
 |:------------:|:--------------:|:-------------:| :------: | :---------: |
 | name | — | — | ✔ | Repository configuration name |
 | type | `local` | — | ✔ | Repository type |
-| path | — | — | ✔ | Full local path where blueprint definitions are stored |
+| path | — | — | ✔ | Full local path where blueprint definitions are stored. `~` can be used for stating current user's home directory under Unix systems. |
 | ignored-dirs | — | | **x** | List of directories, comma separated, to be ignored while traversing local path.</br>Ex. `.git, some-other-dir` |
 | ignored-files | — | | **x** | List of files, comma separated, to be ignored while traversing local path.</br>Ex. `.DS_Store, .gitignore` |
+
+> Note: Please note that in case of local repository being a too generic path, like `~`, traversing file path will be quite big and it may result in blueprint command to run very slow.
 
 ### Creating a New Blueprint Repository
 
