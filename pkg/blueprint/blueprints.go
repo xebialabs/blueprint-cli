@@ -2,7 +2,6 @@ package blueprint
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -11,14 +10,14 @@ import (
 	"text/template"
 
 	"github.com/fatih/color"
-	"github.com/thoas/go-funk"
+	funk "github.com/thoas/go-funk"
 
 	"github.com/magiconair/properties"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 
 	"github.com/Masterminds/sprig"
-	"gopkg.in/AlecAivazis/survey.v1"
+	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 // SkipFinalPrompt is used in tests to skip the confirmation prompt
@@ -80,7 +79,7 @@ func InstantiateBlueprint(
 
 	// if remote mode, initialize repository client
 	if !blueprintLocalMode {
-		util.Verbose("[cmd] Reading blueprints from remote provider: %s\n", (*blueprintContext.ActiveRepo).GetProvider())
+		util.Verbose("[cmd] Reading blueprints from provider: %s\n", (*blueprintContext.ActiveRepo).GetProvider())
 		blueprints, err = blueprintContext.initCurrentRepoClient()
 		if err != nil {
 			return err
@@ -129,18 +128,18 @@ func InstantiateBlueprint(
 	}
 
 	// save prepared data to values & secrets files
-	err = writeConfigToFile(valuesFileHeader, preparedData.Values, generatedBlueprint, path.Join(generatedBlueprint.OutputDir, valuesFile))
+	err = writeConfigToFile(valuesFileHeader, preparedData.Values, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, valuesFile))
 	if err != nil {
 		return err
 	}
-	err = writeConfigToFile(secretsFileHeader, preparedData.Secrets, generatedBlueprint, path.Join(generatedBlueprint.OutputDir, secretsFile))
+	err = writeConfigToFile(secretsFileHeader, preparedData.Secrets, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, secretsFile))
 	if err != nil {
 		return err
 	}
 
 	// generate .gitignore file
 	gitignoreData := secretsFile
-	err = writeDataToFile(generatedBlueprint, path.Join(generatedBlueprint.OutputDir, gitignoreFile), &gitignoreData)
+	err = writeDataToFile(generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, gitignoreFile), &gitignoreData)
 	if err != nil {
 		return err
 	}

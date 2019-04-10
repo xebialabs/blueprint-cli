@@ -108,28 +108,55 @@ func TestAdjustPathSeperatorIfNeeded(t *testing.T) {
 
 func TestInstantiateBlueprint(t *testing.T) {
 	SkipFinalPrompt = true
+
 	t.Run("should error on unknown template", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		err := InstantiateBlueprint(true, "abc", getDefaultBlueprintContext(t), gb, "", false, false, false)
+		err := InstantiateBlueprint(
+		    false,
+		    "abc",
+            getLocalTestBlueprintContext(t),
+            gb,
+		    "xebialabs",
+		    false,
+		    false,
+		    false,
+		)
 
 		require.NotNil(t, err)
-		assert.Equal(t, "template not found in path abc/blueprint.yml", err.Error())
+		assert.Equal(t, "blueprint [abc] not found in repository Test", err.Error())
 	})
-	t.Run("should error on invalid test template", func(t *testing.T) {
-		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
-		defer gb.Cleanup()
-		err := InstantiateBlueprint(true, GetTestTemplateDir("invalid"), getDefaultBlueprintContext(t), gb, "", false, false, false)
 
+	t.Run("should error on invalid test template", func(t *testing.T) {
+        gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
+        defer gb.Cleanup()
+		err := InstantiateBlueprint(
+		    false,
+		    "invalid",
+            getLocalTestBlueprintContext(t),
+            gb,
+		    "xebialabs",
+		    false,
+		    false,
+		    false,
+		)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
 	})
+
 	t.Run("should create output files for valid test template with answers file", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-
-		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("answer-input"), getDefaultBlueprintContext(t), gb, GetTestTemplateDir("answer-input.yaml"), true, false, false)
+		err := InstantiateBlueprint(
+		    false,
+		    "answer-input",
+            getLocalTestBlueprintContext(t),
+            gb,
+		    GetTestTemplateDir("answer-input.yaml"),
+		    true,
+		    false,
+		    false,
+		)
 		require.Nil(t, err)
 
 		// assertions
@@ -178,9 +205,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 	t.Run("should create output files for valid test template in use defaults as values mode", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-
-		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("defaults-as-values"), getDefaultBlueprintContext(t), gb, "", false, true, false)
+		err := InstantiateBlueprint(
+		    false,
+		    "defaults-as-values",
+            getLocalTestBlueprintContext(t),
+		    gb,
+		    "",
+		    false,
+		    true,
+		    false,
+		)
 		require.Nil(t, err)
 
 		// assertions
@@ -221,11 +255,20 @@ func TestInstantiateBlueprint(t *testing.T) {
 			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
 		}
 	})
+
 	t.Run("should create output files for valid test template without prompts when no registry is defined", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), gb, "", false, false, false)
+		err := InstantiateBlueprint(
+		    false,
+		    "valid-no-prompt",
+            getLocalTestBlueprintContext(t),
+		    gb,
+		    "",
+		    false,
+		    false,
+		    false,
+		)
 		require.Nil(t, err)
 
 		// assertions
@@ -257,11 +300,20 @@ func TestInstantiateBlueprint(t *testing.T) {
 		}
 
 	})
+
 	t.Run("should create output files for valid test template from local path when a registry is defined", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		// create blueprint
-		err := InstantiateBlueprint(true, GetTestTemplateDir("valid-no-prompt"), getDefaultBlueprintContext(t), gb, "", false, false, false)
+		err := InstantiateBlueprint(
+		    false,
+		    "valid-no-prompt",
+            getLocalTestBlueprintContext(t),
+		    gb,
+		    "",
+		    false,
+		    false,
+		    false,
+		)
 		require.Nil(t, err)
 
 		// assertions

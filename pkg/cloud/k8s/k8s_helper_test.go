@@ -3,7 +3,7 @@ package k8s
 import (
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"testing"
@@ -86,11 +86,11 @@ users:
     client-certificate-data: 123==123`
 
 func Setupk8sConfig() {
-	tmpDir := path.Join("test", "blueprints")
+	tmpDir := filepath.Join("test", "blueprints")
 	os.MkdirAll(tmpDir, os.ModePerm)
 	d1 := []byte(sampleKubeConfig)
-	ioutil.WriteFile(path.Join(tmpDir, "config"), d1, os.ModePerm)
-	os.Setenv("KUBECONFIG", path.Join(tmpDir, "config"))
+	ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
+	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
 }
 
 func TestGetKubeConfigFile(t *testing.T) {

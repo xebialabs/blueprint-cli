@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"testing"
@@ -87,11 +86,11 @@ users:
     client-certificate-data: 123==`
 
 func Setupk8sConfig() {
-	tmpDir := path.Join("test", "blueprints")
+	tmpDir := filepath.Join("test", "blueprints")
 	os.MkdirAll(tmpDir, os.ModePerm)
 	d1 := []byte(sampleKubeConfig)
-	ioutil.WriteFile(path.Join(tmpDir, "config"), d1, os.ModePerm)
-	os.Setenv("KUBECONFIG", path.Join(tmpDir, "config"))
+	ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
+	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
 }
 
 func getValidTestBlueprintMetadata(templatePath string, blueprintRepository BlueprintContext) (*BlueprintConfig, error) {
@@ -571,11 +570,11 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 func TestParseTemplateMetadata(t *testing.T) {
 	templatePath := "test/blueprints"
 	blueprintRepository := BlueprintContext{}
-	tmpDir := path.Join("test", "blueprints")
+	tmpDir := filepath.Join("test", "blueprints")
 	os.MkdirAll(tmpDir, os.ModePerm)
 	defer os.RemoveAll("test")
 	d1 := []byte("hello\ngo\n")
-	ioutil.WriteFile(path.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
+	ioutil.WriteFile(filepath.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
 
 	t.Run("should error on invalid xl yaml", func(t *testing.T) {
 		metadata := []byte("test: blueprint")
@@ -739,11 +738,11 @@ func TestParseTemplateMetadata(t *testing.T) {
 		}, doc.Variables[1])
 		assert.Equal(t, TemplateConfig{
 			Path:     "xebialabs/foo.yaml",
-			FullPath: "",
+			FullPath: filepath.Join("aws/test", "xebialabs/foo.yaml"),
 		}, doc.TemplateConfigs[0])
 		assert.Equal(t, TemplateConfig{
 			Path:      "readme.md",
-			FullPath:  "",
+			FullPath:  filepath.Join("aws/test", "readme.md"),
 			DependsOn: VarField{Val: "isit"},
 		}, doc.TemplateConfigs[1])
 	})
@@ -806,21 +805,21 @@ func TestParseTemplateMetadata(t *testing.T) {
 		assert.Equal(t, 4, len(doc.TemplateConfigs))
 		assert.Equal(t, TemplateConfig{
 			Path:     "xebialabs/foo.yaml",
-			FullPath: "",
+			FullPath: "templatePath/test/xebialabs/foo.yaml",
 		}, doc.TemplateConfigs[0])
 		assert.Equal(t, TemplateConfig{
 			Path:      "readme.md",
-			FullPath:  "",
+			FullPath:  "templatePath/test/readme.md",
 			DependsOn: VarField{Val: "isit"},
 		}, doc.TemplateConfigs[1])
 		assert.Equal(t, TemplateConfig{
 			Path:      "bar.md",
-			FullPath:  "",
+			FullPath:  "templatePath/test/bar.md",
 			DependsOn: VarField{Val: "isitnot"},
 		}, doc.TemplateConfigs[2])
 		assert.Equal(t, TemplateConfig{
 			Path:           "foo.md",
-			FullPath:       "",
+			FullPath:       "templatePath/test/foo.md",
 			DependsOnFalse: VarField{Val: "!!isitnot", Tag: tagExpression},
 		}, doc.TemplateConfigs[3])
 	})
@@ -900,22 +899,22 @@ func TestParseTemplateMetadata(t *testing.T) {
 	})
 }
 
-func TestVerifyTemplateDirAndGenFullPaths(t *testing.T) {
+func TestVerifyTemplateDirAndPaths(t *testing.T) {
 	t.Run("should get template config from relative paths", func(t *testing.T) {
-		tmpDir := path.Join("test", "blueprints")
+		tmpDir := filepath.Join("test", "blueprints")
 		os.MkdirAll(tmpDir, os.ModePerm)
 		defer os.RemoveAll("test")
 		d1 := []byte("hello\ngo\n")
-		ioutil.WriteFile(path.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
-		ioutil.WriteFile(path.Join(tmpDir, "test2.yaml.tmpl"), d1, os.ModePerm)
+		ioutil.WriteFile(filepath.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
+		ioutil.WriteFile(filepath.Join(tmpDir, "test2.yaml.tmpl"), d1, os.ModePerm)
 
 		blueprintDoc := BlueprintConfig{
 			TemplateConfigs: []TemplateConfig{
-				{Path: "test.yaml.tmpl"},
-				{Path: "test2.yaml.tmpl"},
+				{Path: "test.yaml.tmpl", FullPath: filepath.Join(tmpDir, "test.yaml.tmpl")},
+				{Path: "test2.yaml.tmpl", FullPath: filepath.Join(tmpDir, "test2.yaml.tmpl")},
 			},
 		}
-		err := blueprintDoc.verifyTemplateDirAndGenFullPaths(tmpDir)
+		err := blueprintDoc.verifyTemplateDirAndPaths(tmpDir)
 		require.Nil(t, err)
 		require.NotNil(t, blueprintDoc.TemplateConfigs)
 		assert.Equal(t, []TemplateConfig{
@@ -924,25 +923,25 @@ func TestVerifyTemplateDirAndGenFullPaths(t *testing.T) {
 		}, blueprintDoc.TemplateConfigs)
 	})
 	t.Run("should get template config from relative nested paths", func(t *testing.T) {
-		tmpDir := path.Join("test", "blueprints")
-		os.MkdirAll(path.Join(tmpDir, "nested"), os.ModePerm)
+		tmpDir := filepath.Join("test", "blueprints")
+		os.MkdirAll(filepath.Join(tmpDir, "nested"), os.ModePerm)
 		defer os.RemoveAll("test")
 		d1 := []byte("hello\ngo\n")
-		ioutil.WriteFile(path.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
-		ioutil.WriteFile(path.Join(tmpDir, "nested", "test2.yaml.tmpl"), d1, os.ModePerm)
+		ioutil.WriteFile(filepath.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
+		ioutil.WriteFile(filepath.Join(tmpDir, "nested", "test2.yaml.tmpl"), d1, os.ModePerm)
 
 		blueprintDoc := BlueprintConfig{
 			TemplateConfigs: []TemplateConfig{
-				{Path: path.Join("nested", "test2.yaml.tmpl")},
-				{Path: "test.yaml.tmpl"},
+				{Path: filepath.Join("nested", "test2.yaml.tmpl"), FullPath: filepath.Join(tmpDir, filepath.Join("nested", "test2.yaml.tmpl"))},
+				{Path: "test.yaml.tmpl", FullPath: filepath.Join(tmpDir, "test.yaml.tmpl")},
 			},
 		}
-		err := blueprintDoc.verifyTemplateDirAndGenFullPaths(tmpDir)
+		err := blueprintDoc.verifyTemplateDirAndPaths(tmpDir)
 		require.Nil(t, err)
 		require.NotNil(t, blueprintDoc.TemplateConfigs)
 		assert.Equal(t, []TemplateConfig{
-			{Path: path.Join("nested", "test2.yaml.tmpl"), FullPath: path.Join(tmpDir, path.Join("nested", "test2.yaml.tmpl"))},
-			{Path: "test.yaml.tmpl", FullPath: path.Join(tmpDir, "test.yaml.tmpl")},
+			{Path: filepath.Join("nested", "test2.yaml.tmpl"), FullPath: filepath.Join(tmpDir, filepath.Join("nested", "test2.yaml.tmpl"))},
+			{Path: "test.yaml.tmpl", FullPath: filepath.Join(tmpDir, "test.yaml.tmpl")},
 		}, blueprintDoc.TemplateConfigs)
 	})
 
@@ -950,42 +949,59 @@ func TestVerifyTemplateDirAndGenFullPaths(t *testing.T) {
 		tmpDir, err := ioutil.TempDir("", "blueprints")
 		require.Nil(t, err)
 		defer os.RemoveAll(tmpDir)
-		os.MkdirAll(path.Join(tmpDir, "nested"), os.ModePerm)
+		os.MkdirAll(filepath.Join(tmpDir, "nested"), os.ModePerm)
 		d1 := []byte("hello\ngo\n")
-		ioutil.WriteFile(path.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
-		ioutil.WriteFile(path.Join(tmpDir, "nested", "test2.yaml.tmpl"), d1, os.ModePerm)
+		ioutil.WriteFile(filepath.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
+		ioutil.WriteFile(filepath.Join(tmpDir, "nested", "test2.yaml.tmpl"), d1, os.ModePerm)
 
 		blueprintDoc := BlueprintConfig{
 			TemplateConfigs: []TemplateConfig{
-				{Path: path.Join("nested", "test2.yaml.tmpl")},
-				{Path: "test.yaml.tmpl"},
+				{Path: filepath.Join("nested", "test2.yaml.tmpl"), FullPath: filepath.Join(tmpDir, filepath.Join("nested", "test2.yaml.tmpl"))},
+				{Path: "test.yaml.tmpl", FullPath: filepath.Join(tmpDir, "test.yaml.tmpl")},
 			},
 		}
-		err = blueprintDoc.verifyTemplateDirAndGenFullPaths(tmpDir)
+		err = blueprintDoc.verifyTemplateDirAndPaths(tmpDir)
 		require.Nil(t, err)
 		require.NotNil(t, blueprintDoc.TemplateConfigs)
 		assert.Equal(t, []TemplateConfig{
-			{Path: path.Join("nested", "test2.yaml.tmpl"), FullPath: path.Join(tmpDir, path.Join("nested", "test2.yaml.tmpl"))},
-			{Path: "test.yaml.tmpl", FullPath: path.Join(tmpDir, "test.yaml.tmpl")},
+			{Path: filepath.Join("nested", "test2.yaml.tmpl"), FullPath: filepath.Join(tmpDir, filepath.Join("nested", "test2.yaml.tmpl"))},
+			{Path: "test.yaml.tmpl", FullPath: filepath.Join(tmpDir, "test.yaml.tmpl")},
 		}, blueprintDoc.TemplateConfigs)
 	})
 	t.Run("should return error if directory is empty", func(t *testing.T) {
-		tmpDir := path.Join("test", "blueprints")
+		tmpDir := filepath.Join("test", "blueprints")
 		os.MkdirAll(tmpDir, os.ModePerm)
 		defer os.RemoveAll("test")
 
 		blueprintDoc := BlueprintConfig{}
-		err := blueprintDoc.verifyTemplateDirAndGenFullPaths(tmpDir)
+		err := blueprintDoc.verifyTemplateDirAndPaths(tmpDir)
 		require.Nil(t, blueprintDoc.TemplateConfigs)
 		require.NotNil(t, err)
 		require.Equal(t, "path [test/blueprints] doesn't include any valid files", err.Error())
 	})
 	t.Run("should return error if directory doesn't exist", func(t *testing.T) {
 		blueprintDoc := BlueprintConfig{}
-		err := blueprintDoc.verifyTemplateDirAndGenFullPaths(path.Join("test", "blueprints"))
+		err := blueprintDoc.verifyTemplateDirAndPaths(filepath.Join("test", "blueprints"))
 		require.Nil(t, blueprintDoc.TemplateConfigs)
 		require.NotNil(t, err)
 		require.Equal(t, "path [test/blueprints] doesn't exist", err.Error())
+	})
+	t.Run("should return error if a file doesn't exist", func(t *testing.T) {
+		tmpDir := filepath.Join("test", "blueprints")
+		os.MkdirAll(tmpDir, os.ModePerm)
+		defer os.RemoveAll("test")
+		d1 := []byte("hello\ngo\n")
+		ioutil.WriteFile(filepath.Join(tmpDir, "test2.yaml.tmpl"), d1, os.ModePerm)
+
+		blueprintDoc := BlueprintConfig{
+			TemplateConfigs: []TemplateConfig{
+				{Path: "test.yaml.tmpl", FullPath: "test/blueprints/test.yaml.tmpl"},
+			},
+		}
+		err := blueprintDoc.verifyTemplateDirAndPaths(filepath.Join("test", "blueprints"))
+		require.NotNil(t, blueprintDoc.TemplateConfigs)
+		require.NotNil(t, err)
+		require.Equal(t, "path [test/blueprints/test.yaml.tmpl] doesn't exist", err.Error())
 	})
 }
 
@@ -1110,9 +1126,9 @@ func TestProcessCustomFunction_K8S(t *testing.T) {
 }
 func TestProcessCustomFunction_K8S_noconfig(t *testing.T) {
 	defer os.RemoveAll("test")
-	tmpDir := path.Join("test", "blueprints")
+	tmpDir := filepath.Join("test", "blueprints")
 	os.MkdirAll(tmpDir, os.ModePerm)
-	os.Setenv("KUBECONFIG", path.Join(tmpDir, "config"))
+	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
 
 	t.Run("should check if kubernetes config is available when file doesn't exist", func(t *testing.T) {
 		out, err := ProcessCustomFunction("k8s.config().IsAvailable")
@@ -1172,7 +1188,7 @@ func TestValidatePrompt(t *testing.T) {
 }
 
 func TestValidateFilePath(t *testing.T) {
-	tmpDir := path.Join("test", "file-input")
+	tmpDir := filepath.Join("test", "file-input")
 	type args struct {
 		value      string
 		fileExists bool
@@ -1182,7 +1198,7 @@ func TestValidateFilePath(t *testing.T) {
 		args args
 		want error
 	}{
-		{"should pass on existing valid file path input", args{path.Join(tmpDir, "valid.txt"), true}, nil},
+		{"should pass on existing valid file path input", args{filepath.Join(tmpDir, "valid.txt"), true}, nil},
 		{"should fail on non-existing file path input", args{"not-valid.txt", false}, fmt.Errorf("file not found on path not-valid.txt")},
 		{"should fail on directory path input", args{tmpDir, false}, fmt.Errorf("given path is a directory, file path is needed")},
 		{"should fail on empty input", args{"", false}, fmt.Errorf("Value is required")},
@@ -1209,6 +1225,7 @@ func TestValidateFilePath(t *testing.T) {
 }
 
 func TestBlueprintYaml_parseFiles(t *testing.T) {
+	templatePath := "aws/monolith"
 	tests := []struct {
 		name    string
 		fields  BlueprintYaml
@@ -1226,8 +1243,8 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 				},
 			},
 			[]TemplateConfig{
-				{Path: "test.yaml", FullPath: ""},
-				{Path: "test2.yaml", FullPath: ""},
+				{Path: "test.yaml", FullPath: filepath.Join(templatePath, "test.yaml")},
+				{Path: "test2.yaml", FullPath: filepath.Join(templatePath, "test2.yaml")},
 			},
 			nil,
 		},
@@ -1249,11 +1266,11 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 				},
 			},
 			[]TemplateConfig{
-				{Path: "test.yaml", FullPath: ""},
-				{Path: "test2.yaml", FullPath: "", DependsOn: VarField{Val: "foo", Tag: ""}},
-				{Path: "test3.yaml", FullPath: "", DependsOnFalse: VarField{Val: "bar", Tag: ""}},
-				{Path: "test4.yaml", FullPath: "", DependsOn: VarField{Val: "bar", Tag: ""}},
-				{Path: "test5.yaml", FullPath: "", DependsOnFalse: VarField{Val: "foo", Tag: ""}},
+				{Path: "test.yaml", FullPath: filepath.Join(templatePath, "test.yaml")},
+				{Path: "test2.yaml", FullPath: filepath.Join(templatePath, "test2.yaml"), DependsOn: VarField{Val: "foo", Tag: ""}},
+				{Path: "test3.yaml", FullPath: filepath.Join(templatePath, "test3.yaml"), DependsOnFalse: VarField{Val: "bar", Tag: ""}},
+				{Path: "test4.yaml", FullPath: filepath.Join(templatePath, "test4.yaml"), DependsOn: VarField{Val: "bar", Tag: ""}},
+				{Path: "test5.yaml", FullPath: filepath.Join(templatePath, "test5.yaml"), DependsOnFalse: VarField{Val: "foo", Tag: ""}},
 			},
 			nil,
 		},
@@ -1266,7 +1283,7 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 				Metadata:   tt.fields.Metadata,
 				Spec:       tt.fields.Spec,
 			}
-			tconfigs, err := blueprintDoc.parseFiles(true)
+			tconfigs, err := blueprintDoc.parseFiles(templatePath, true)
 			if tt.wantErr == nil || err == nil {
 				assert.Equal(t, tt.wantErr, err)
 			} else {

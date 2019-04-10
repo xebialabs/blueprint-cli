@@ -1,27 +1,28 @@
 package blueprint
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
-	"path/filepath"
-	"sort"
-	"strings"
+    "fmt"
+    "io/ioutil"
+    "os"
+    "path"
+    "path/filepath"
+    "sort"
+    "strings"
 
-	"github.com/xebialabs/yaml"
+    "github.com/xebialabs/yaml"
 
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
+    "github.com/spf13/pflag"
+    "github.com/spf13/viper"
 
-	"gopkg.in/AlecAivazis/survey.v1"
+    "gopkg.in/AlecAivazis/survey.v1"
 
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/http"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/mock"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+    "github.com/xebialabs/xl-cli/pkg/blueprint/repository"
+    "github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
+    "github.com/xebialabs/xl-cli/pkg/blueprint/repository/http"
+    "github.com/xebialabs/xl-cli/pkg/blueprint/repository/local"
+    "github.com/xebialabs/xl-cli/pkg/blueprint/repository/mock"
+    "github.com/xebialabs/xl-cli/pkg/models"
+    "github.com/xebialabs/xl-cli/pkg/util"
 )
 
 const (
@@ -132,6 +133,8 @@ func ConstructBlueprintContext(v *viper.Viper, configPath string) (*BlueprintCon
 		switch repoProvider {
 		case models.ProviderMock: // only used for testing purposes
 			repo, err = mock.NewMockBlueprintRepository(repoDefinition)
+        case models.ProviderLocal:
+            repo, err = local.NewLocalBlueprintRepository(repoDefinition)
 		case models.ProviderGitHub:
 			repo, err = github.NewGitHubBlueprintRepository(repoDefinition)
 		case models.ProviderHttp:
@@ -305,7 +308,7 @@ func (blueprintContext *BlueprintContext) parseLocalDefinitionFile(templatePath 
 	}
 
 	// Prepare full paths for the template files
-	err = blueprintDoc.verifyTemplateDirAndGenFullPaths(templatePath)
+	err = blueprintDoc.verifyTemplateDirAndPaths(templatePath)
 	if err != nil {
 		return nil, err
 	}
