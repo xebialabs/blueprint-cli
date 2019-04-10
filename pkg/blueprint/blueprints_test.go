@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -117,7 +118,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		    "abc",
             getLocalTestBlueprintContext(t),
             gb,
-		    "xebialabs",
+		    "",
 		    false,
 		    false,
 		    false,
@@ -135,7 +136,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		    "invalid",
             getLocalTestBlueprintContext(t),
             gb,
-		    "xebialabs",
+		    "",
 		    false,
 		    false,
 		    false,
@@ -420,6 +421,59 @@ func TestShouldSkipFile(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("shouldSkipFile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_getBlueprintConfig(t *testing.T) {
+	type args struct {
+		blueprintContext   *BlueprintContext
+		blueprintLocalMode bool
+		blueprints         map[string]*models.BlueprintRemote
+		templatePath       string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *BlueprintConfig
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getBlueprintConfig(tt.args.blueprintContext, tt.args.blueprintLocalMode, tt.args.blueprints, tt.args.templatePath)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getBlueprintConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getBlueprintConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_composeBlueprints(t *testing.T) {
+	type args struct {
+		blueprintDoc       *BlueprintConfig
+		blueprintContext   *BlueprintContext
+		blueprintLocalMode bool
+		blueprints         map[string]*models.BlueprintRemote
+		templatePath       string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := composeBlueprints(tt.args.blueprintDoc, tt.args.blueprintContext, tt.args.blueprintLocalMode, tt.args.blueprints, tt.args.templatePath); (err != nil) != tt.wantErr {
+				t.Errorf("composeBlueprints() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
