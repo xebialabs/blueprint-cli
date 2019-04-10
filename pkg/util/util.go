@@ -118,7 +118,7 @@ func DefaultConfigfilePath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	xebialabsFolder := path.Join(home, ".xebialabs", "config.yaml")
+	xebialabsFolder := filepath.Join(home, ".xebialabs", "config.yaml")
 	return xebialabsFolder, nil
 }
 

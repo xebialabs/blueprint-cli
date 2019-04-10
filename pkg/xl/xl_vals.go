@@ -2,7 +2,7 @@ package xl
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/xebialabs/xl-cli/pkg/util"
@@ -13,7 +13,7 @@ func ListHomeXlValsFiles() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	xebialabsFolder := path.Join(home, ".xebialabs")
+	xebialabsFolder := filepath.Join(home, ".xebialabs")
 	if _, err := os.Stat(xebialabsFolder); os.IsNotExist(err) {
 		return []string{}, nil
 	}
