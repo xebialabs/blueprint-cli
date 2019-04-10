@@ -141,7 +141,7 @@ with a new line`),
 
       spec:
         parameters:
-        - name: Test
+        - name: Bar
           type: Input
           value: testing
         include:

@@ -229,9 +229,10 @@ func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *Blueprin
 		}
 		if composedBlueprintDoc != nil {
 			if included.Stage == "before" {
-				// TODO LOVE-833
 				// prepend params
+				blueprintDoc.Variables = append(composedBlueprintDoc.Variables, blueprintDoc.Variables...)
 				// prepend files
+				blueprintDoc.TemplateConfigs = append(composedBlueprintDoc.TemplateConfigs, blueprintDoc.TemplateConfigs...)
 			} else {
 				// append params
 				blueprintDoc.Variables = append(blueprintDoc.Variables, composedBlueprintDoc.Variables...)
