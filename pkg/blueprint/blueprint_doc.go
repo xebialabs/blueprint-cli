@@ -5,21 +5,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/thoas/go-funk"
+	funk "github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/osHelper"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/yaml"
-	"gopkg.in/AlecAivazis/survey.v1"
+	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 // SkipUserInput is used in tests to skip the user input
@@ -527,7 +526,7 @@ func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, blueprintRepo
 			// If local mode, fix path separator in needed cases
 			adjustedPath := AdjustPathSeperatorIfNeeded(templateConfig.File)
 			templateConfig.File = adjustedPath
-			templateConfig.FullPath = path.Join(templatePath, adjustedPath)
+			templateConfig.FullPath = filepath.Join(templatePath, adjustedPath)
 		}
 		blueprintDoc.TemplateConfigs = append(blueprintDoc.TemplateConfigs, templateConfig)
 	}
