@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -114,14 +113,14 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-		    false,
-		    "abc",
-            getLocalTestBlueprintContext(t),
-            gb,
-		    "",
-		    false,
-		    false,
-		    false,
+			false,
+			"abc",
+			getLocalTestBlueprintContext(t),
+			gb,
+			"",
+			false,
+			false,
+			false,
 		)
 
 		require.NotNil(t, err)
@@ -129,17 +128,17 @@ func TestInstantiateBlueprint(t *testing.T) {
 	})
 
 	t.Run("should error on invalid test template", func(t *testing.T) {
-        gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
-        defer gb.Cleanup()
+		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
+		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-		    false,
-		    "invalid",
-            getLocalTestBlueprintContext(t),
-            gb,
-		    "",
-		    false,
-		    false,
-		    false,
+			false,
+			"invalid",
+			getLocalTestBlueprintContext(t),
+			gb,
+			"",
+			false,
+			false,
+			false,
 		)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
@@ -149,14 +148,14 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-		    false,
-		    "answer-input",
-            getLocalTestBlueprintContext(t),
-            gb,
-		    GetTestTemplateDir("answer-input.yaml"),
-		    true,
-		    false,
-		    false,
+			false,
+			"answer-input",
+			getLocalTestBlueprintContext(t),
+			gb,
+			GetTestTemplateDir("answer-input.yaml"),
+			true,
+			false,
+			false,
 		)
 		require.Nil(t, err)
 
@@ -207,14 +206,14 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-		    false,
-		    "defaults-as-values",
-            getLocalTestBlueprintContext(t),
-		    gb,
-		    "",
-		    false,
-		    true,
-		    false,
+			false,
+			"defaults-as-values",
+			getLocalTestBlueprintContext(t),
+			gb,
+			"",
+			false,
+			true,
+			false,
 		)
 		require.Nil(t, err)
 
@@ -261,14 +260,14 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-		    false,
-		    "valid-no-prompt",
-            getLocalTestBlueprintContext(t),
-		    gb,
-		    "",
-		    false,
-		    false,
-		    false,
+			false,
+			"valid-no-prompt",
+			getLocalTestBlueprintContext(t),
+			gb,
+			"",
+			false,
+			false,
+			false,
 		)
 		require.Nil(t, err)
 
@@ -306,14 +305,14 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-		    false,
-		    "valid-no-prompt",
-            getLocalTestBlueprintContext(t),
-		    gb,
-		    "",
-		    false,
-		    false,
-		    false,
+			false,
+			"valid-no-prompt",
+			getLocalTestBlueprintContext(t),
+			gb,
+			"",
+			false,
+			false,
+			false,
 		)
 		require.Nil(t, err)
 
@@ -421,59 +420,6 @@ func TestShouldSkipFile(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("shouldSkipFile() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_getBlueprintConfig(t *testing.T) {
-	type args struct {
-		blueprintContext   *BlueprintContext
-		blueprintLocalMode bool
-		blueprints         map[string]*models.BlueprintRemote
-		templatePath       string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    *BlueprintConfig
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := getBlueprintConfig(tt.args.blueprintContext, tt.args.blueprintLocalMode, tt.args.blueprints, tt.args.templatePath)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getBlueprintConfig() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getBlueprintConfig() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_composeBlueprints(t *testing.T) {
-	type args struct {
-		blueprintDoc       *BlueprintConfig
-		blueprintContext   *BlueprintContext
-		blueprintLocalMode bool
-		blueprints         map[string]*models.BlueprintRemote
-		templatePath       string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := composeBlueprints(tt.args.blueprintDoc, tt.args.blueprintContext, tt.args.blueprintLocalMode, tt.args.blueprints, tt.args.templatePath); (err != nil) != tt.wantErr {
-				t.Errorf("composeBlueprints() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

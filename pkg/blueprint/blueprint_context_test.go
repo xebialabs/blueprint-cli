@@ -8,8 +8,8 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-    "strings"
-    "testing"
+	"strings"
+	"testing"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/spf13/viper"
@@ -33,7 +33,6 @@ blueprint:
     repo-name: blueprints
     branch: master`
 
-
 func GetViperConf(t *testing.T, yaml string) *viper.Viper {
 	configdir, err := ioutil.TempDir("", "xebialabsconfig")
 	if err != nil {
@@ -51,22 +50,22 @@ func GetViperConf(t *testing.T, yaml string) *viper.Viper {
 }
 
 func getLocalTestBlueprintContext(t *testing.T) *BlueprintContext {
-    configdir, _ := ioutil.TempDir("", "xebialabsconfig")
-    pwd, _ := os.Getwd()
-    localPath := strings.Replace(pwd, path.Join("pkg", "blueprint"), path.Join("templates", "test"), -1)
-    contextYaml := fmt.Sprintf(`
+	configdir, _ := ioutil.TempDir("", "xebialabsconfig")
+	pwd, _ := os.Getwd()
+	localPath := strings.Replace(pwd, path.Join("pkg", "blueprint"), path.Join("templates", "test"), -1)
+	contextYaml := fmt.Sprintf(`
 blueprint:
   current-repository: Test
   repositories:
   - name: Test
     type: local
     path: %s`, localPath)
-    v := GetViperConf(t, contextYaml)
-    c, err := ConstructBlueprintContext(v, configdir)
-    if err != nil {
-        t.Error(err)
-    }
-    return c
+	v := GetViperConf(t, contextYaml)
+	c, err := ConstructBlueprintContext(v, configdir)
+	if err != nil {
+		t.Error(err)
+	}
+	return c
 }
 
 func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
@@ -471,7 +470,7 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 	require.Len(t, blueprints, 2)
 
 	type args struct {
-		blueprints   map[string]*models.BlueprintRemote
+		blueprint    *models.BlueprintRemote
 		templatePath string
 	}
 	tests := []struct {
@@ -485,7 +484,7 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 			"should error if path doesnt exist",
 			*repo,
 			args{
-				blueprints,
+				nil,
 				"test",
 			},
 			nil,
@@ -495,7 +494,7 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 			"should parse blueprint definition file",
 			*repo,
 			args{
-				blueprints,
+				blueprints["aws/monolith"],
 				"aws/monolith",
 			},
 			[]TemplateConfig{
@@ -509,7 +508,7 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			blueprintContext := tt.blueprintContext
-			got, err := blueprintContext.parseRemoteDefinitionFile(tt.args.blueprints, tt.args.templatePath)
+			got, err := blueprintContext.parseRemoteDefinitionFile(tt.args.blueprint, tt.args.templatePath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BlueprintContext.parseRemoteDefinitionFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
