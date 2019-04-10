@@ -313,7 +313,7 @@ func (blueprintContext *BlueprintContext) parseLocalDefinitionFile(templatePath 
 	}
 
 	// Prepare full paths for the template files
-	err = blueprintDoc.verifyTemplateDirAndGenFullPaths(templatePath)
+	err = blueprintDoc.verifyTemplateDirAndPaths(templatePath)
 	if err != nil {
 		return nil, err
 	}

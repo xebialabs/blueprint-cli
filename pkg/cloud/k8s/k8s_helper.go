@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 
 	"github.com/mitchellh/go-homedir"
@@ -172,7 +172,7 @@ func GetKubeConfigFile() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		configPath = path.Join(home, ".kube", "config")
+		configPath = filepath.Join(home, ".kube", "config")
 	}
 	// read file from path and return string
 	return ioutil.ReadFile(configPath)
