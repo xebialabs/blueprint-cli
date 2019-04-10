@@ -79,7 +79,7 @@ func InstantiateBlueprint(
 
 	// if remote mode, initialize repository client
 	if !blueprintLocalMode {
-		util.Verbose("[cmd] Reading blueprints from remote provider: %s\n", (*blueprintContext.ActiveRepo).GetProvider())
+		util.Verbose("[cmd] Reading blueprints from provider: %s\n", (*blueprintContext.ActiveRepo).GetProvider())
 		blueprints, err = blueprintContext.initCurrentRepoClient()
 		if err != nil {
 			return err

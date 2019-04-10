@@ -8,10 +8,11 @@ import (
 // Repository provider enum - used in blueprint repository configuration
 const (
 	ProviderMock       string = "mock"
+	ProviderLocal      string = "local"
 	ProviderGitHub     string = "github"
 	ProviderHttp       string = "http"
 )
-var RepoProviders = []string { ProviderMock, ProviderGitHub, ProviderHttp }
+var RepoProviders = []string { ProviderMock, ProviderLocal, ProviderGitHub, ProviderHttp }
 
 func GetRepoProvider(s string) (string, error) {
 	for _, repoProvider := range RepoProviders {

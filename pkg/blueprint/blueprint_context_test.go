@@ -8,7 +8,8 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"testing"
+    "strings"
+    "testing"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/spf13/viper"
@@ -32,6 +33,7 @@ blueprint:
     repo-name: blueprints
     branch: master`
 
+
 func GetViperConf(t *testing.T, yaml string) *viper.Viper {
 	configdir, err := ioutil.TempDir("", "xebialabsconfig")
 	if err != nil {
@@ -48,7 +50,26 @@ func GetViperConf(t *testing.T, yaml string) *viper.Viper {
 	return v
 }
 
-func getDefaultBlueprintContext(t *testing.T) *BlueprintContext {
+func getLocalTestBlueprintContext(t *testing.T) *BlueprintContext {
+    configdir, _ := ioutil.TempDir("", "xebialabsconfig")
+    pwd, _ := os.Getwd()
+    localPath := strings.Replace(pwd, path.Join("pkg", "blueprint"), path.Join("templates", "test"), -1)
+    contextYaml := fmt.Sprintf(`
+blueprint:
+  current-repository: Test
+  repositories:
+  - name: Test
+    type: local
+    path: %s`, localPath)
+    v := GetViperConf(t, contextYaml)
+    c, err := ConstructBlueprintContext(v, configdir)
+    if err != nil {
+        t.Error(err)
+    }
+    return c
+}
+
+func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 	configdir, _ := ioutil.TempDir("", "xebialabsconfig")
 
 	v := GetViperConf(t, defaultContextYaml)
@@ -212,7 +233,7 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 	})
 
 	t.Run("should fetch a template from remote path", func(t *testing.T) {
-		repo := getDefaultBlueprintContext(t)
+		repo := getMockHttpBlueprintContext(t)
 		blueprints, err := repo.initCurrentRepoClient()
 		require.Nil(t, err)
 		require.NotNil(t, blueprints)
@@ -369,7 +390,7 @@ func TestCreateTemplateConfigForSingleFile(t *testing.T) {
 
 func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
-	repo := getDefaultBlueprintContext(t)
+	repo := getMockHttpBlueprintContext(t)
 	blueprints, err := repo.initCurrentRepoClient()
 	require.Nil(t, err)
 	require.NotNil(t, blueprints)
@@ -443,7 +464,7 @@ func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
 
 func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
-	repo := getDefaultBlueprintContext(t)
+	repo := getMockHttpBlueprintContext(t)
 	blueprints, err := repo.initCurrentRepoClient()
 	require.Nil(t, err)
 	require.NotNil(t, blueprints)
@@ -503,7 +524,7 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 func TestBlueprintContext_initCurrentRepoClient(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	t.Run("should init repo client with http blueprint provider", func(t *testing.T) {
-		repo := getDefaultBlueprintContext(t)
+		repo := getMockHttpBlueprintContext(t)
 		blueprints, err := repo.initCurrentRepoClient()
 		require.Nil(t, err)
 		require.NotNil(t, blueprints)
@@ -513,7 +534,7 @@ func TestBlueprintContext_initCurrentRepoClient(t *testing.T) {
 
 func TestBlueprintContext_parseRepositoryTree(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
-	repo := getDefaultBlueprintContext(t)
+	repo := getMockHttpBlueprintContext(t)
 	(*repo.ActiveRepo).Initialize()
 	tests := []struct {
 		name    string
