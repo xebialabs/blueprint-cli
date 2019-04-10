@@ -95,10 +95,9 @@ func InstantiateBlueprint(
 	} else {
 		templatePath = AdjustPathSeperatorIfNeeded(templatePath)
 	}
-	blueprint := blueprints[templatePath]
 
 	// get local/remote blueprint definition
-	blueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprint, templatePath)
+	blueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprints, templatePath)
 	if err != nil {
 		return err
 	}
@@ -202,38 +201,43 @@ func InstantiateBlueprint(
 	return nil
 }
 
-func getBlueprintConfig(blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprint *models.BlueprintRemote, templatePath string) (*BlueprintConfig, error) {
+func getBlueprintConfig(blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote, templatePath string) (*BlueprintConfig, error) {
 	util.Verbose("[cmd] Parsing Blueprint from %s\n", templatePath)
+	blueprint := blueprints[templatePath]
 	blueprintDoc, err := blueprintContext.parseDefinitionFile(blueprintLocalMode, blueprint, templatePath)
 	if err != nil {
 		return blueprintDoc, err
 	}
 
-	// if len(blueprintDoc.Include) > 0 {
-	// 	util.Verbose("[dataPrep] Found %d included blueprints\n", len(blueprintDoc.Include))
-	// 	err := composeBlueprints(blueprintDoc, blueprintContext, blueprintLocalMode, blueprint, templatePath)
-	// 	if err != nil {
-	// 		return blueprintDoc, err
-	// 	}
-	// }
+	if len(blueprintDoc.Include) > 0 {
+		util.Verbose("[dataPrep] Found %d included blueprints\n", len(blueprintDoc.Include))
+		err := composeBlueprints(blueprintDoc, blueprintContext, blueprintLocalMode, blueprints)
+		if err != nil {
+			return blueprintDoc, err
+		}
+	}
 	return blueprintDoc, nil
 }
 
-func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprint *models.BlueprintRemote, templatePath string) error {
+func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote) error {
 	for _, included := range blueprintDoc.Include {
 		util.Verbose("[dataPrep] Fetch included blueprint %s\n", included.Blueprint)
-		if included.Stage != "after" && included.Stage != "before" {
-			included.Stage = "after"
-		}
 		// fetch blueprint from current repo
-		composedBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprint, templatePath)
+		composedBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprints, included.Blueprint)
 		if err != nil {
 			return err
 		}
 		if composedBlueprintDoc != nil {
-			// parse it
-			// prepend/append params
-			// prepend/append files
+			if included.Stage == "before" {
+				// TODO LOVE-833
+				// prepend params
+				// prepend files
+			} else {
+				// append params
+				blueprintDoc.Variables = append(blueprintDoc.Variables, composedBlueprintDoc.Variables...)
+				// append files
+				blueprintDoc.TemplateConfigs = append(blueprintDoc.TemplateConfigs, composedBlueprintDoc.TemplateConfigs...)
+			}
 		}
 	}
 	return nil

@@ -46,6 +46,10 @@ spec:
     skipFiles: 
     - path: xld-infrastructure.yml.tmpl
       dependsOnTrue: TestDepends # do this later
+    renameFiles: 
+    - path: xld-infrastructure.yml.tmpl
+      renameTo: xld-infrastructure2.yml
+      dependsOnTrue: TestDepends # do this later
   - blueprint: kubernetes/namespace
     dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
     stage: after
