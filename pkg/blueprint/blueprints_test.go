@@ -257,51 +257,6 @@ func TestInstantiateBlueprint(t *testing.T) {
 		}
 	})
 
-	t.Run("should create output files for valid test template without prompts when no registry is defined", func(t *testing.T) {
-		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
-		defer gb.Cleanup()
-		err := InstantiateBlueprint(
-			false,
-			"valid-no-prompt",
-			getLocalTestBlueprintContext(t),
-			gb,
-			"",
-			false,
-			false,
-			false,
-		)
-		require.Nil(t, err)
-
-		// assertions
-		assert.FileExists(t, "xld-environment.yml")
-		assert.FileExists(t, "xld-infrastructure.yml")
-		assert.False(t, util.PathExists("xlr-pipeline.yml", false))
-		assert.True(t, util.PathExists("xlr-pipeline-2.yml", false))
-		assert.True(t, util.PathExists("xlr-pipeline-3.yml", false))
-		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
-		assert.FileExists(t, path.Join(gb.OutputDir, secretsFile))
-		assert.FileExists(t, path.Join(gb.OutputDir, gitignoreFile))
-		envFile := GetFileContent("xld-environment.yml")
-		assert.Contains(t, envFile, fmt.Sprintf("region: %s", "us-west"))
-		infraFile := GetFileContent("xld-infrastructure.yml")
-		infraChecks := []string{
-			fmt.Sprintf("- name: %s-ecs-fargate-cluster", "testApp"),
-			fmt.Sprintf("- name: %s-ecs-vpc", "testApp"),
-			fmt.Sprintf("- name: %s-ecs-subnet-ipv4-az-1a", "testApp"),
-			fmt.Sprintf("- name: %s-ecs-route-table", "testApp"),
-			fmt.Sprintf("- name: %s-ecs-security-group", "testApp"),
-			fmt.Sprintf("- name: %s-targetgroup", "testApp"),
-			fmt.Sprintf("- name: %s-ecs-alb", "testApp"),
-			fmt.Sprintf("- name: %s-ecs-db-subnet-group", "testApp"),
-			fmt.Sprintf("- name: %s-ecs-dictionary", "testApp"),
-			"MYSQL_DB_ADDRESS: '{{%address%}}'",
-		}
-		for _, infraCheck := range infraChecks {
-			assert.Contains(t, infraFile, infraCheck)
-		}
-
-	})
-
 	t.Run("should create output files for valid test template from local path when a registry is defined", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
@@ -356,6 +311,92 @@ func TestInstantiateBlueprint(t *testing.T) {
 		assert.Contains(t, secretsFileContent, "AWSAccessKey = accesskey")
 		assert.Contains(t, secretsFileContent, "AWSAccessSecret = accesssecret")
 		assert.NotContains(t, secretsFileContent, "SuperSecret = invisible")
+
+	})
+
+	t.Run("should create output files for valid test template composed from local path", func(t *testing.T) {
+		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
+		defer gb.Cleanup()
+		err := InstantiateBlueprint(
+			false,
+			"composed",
+			getLocalTestBlueprintContext(t),
+			gb,
+			"",
+			false,
+			true,
+			false,
+		)
+		require.Nil(t, err)
+
+		// assertions
+		assert.FileExists(t, "xld-environment.yml")                  // this comes from composed blueprint 'valid-no-prompt'
+		assert.FileExists(t, "xld-infrastructure.yml")               // this comes from composed blueprint 'valid-no-prompt'
+		assert.True(t, util.PathExists("xlr-pipeline.yml", false))   // this comes from composed blueprint 'defaults-as-values'
+		assert.True(t, util.PathExists("xlr-pipeline-4.yml", false)) // this comes from blueprint 'composed'
+
+		// these files are from the main blueprint 'composed'
+		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, secretsFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, gitignoreFile))
+
+		envFile := GetFileContent("xld-environment.yml")
+		assert.Contains(t, envFile, fmt.Sprintf("region: %s", "eu-central-1")) // the value is overridden by the last blueprint composed
+		infraFile := GetFileContent("xld-infrastructure.yml")
+		// the values are overridden by the last blueprint composed
+		infraChecks := []string{
+			fmt.Sprintf("- name: %s-ecs-fargate-cluster", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-vpc", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-subnet-ipv4-az-1a", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-route-table", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-security-group", "TestApp"),
+			fmt.Sprintf("- name: %s-targetgroup", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-alb", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-db-subnet-group", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-dictionary", "TestApp"),
+			"MYSQL_DB_ADDRESS: '{{%address%}}'",
+		}
+		for _, infraCheck := range infraChecks {
+			assert.Contains(t, infraFile, infraCheck)
+		}
+
+		// the values are overridden by the last blueprint composed
+		// Check if only secret marked fields are in values.xlvals
+		secretsFileContent := GetFileContent(models.BlueprintOutputDir + string(os.PathSeparator) + secretsFile)
+
+		assert.Contains(t, secretsFileContent, "AWSAccessKey = accesskey")
+		assert.Contains(t, secretsFileContent, "AWSAccessSecret = accesssecret")
+		assert.NotContains(t, secretsFileContent, "SuperSecret = invisible")
+
+		// check __test__ directory is not there
+		_, err = os.Stat("__test__")
+		assert.True(t, os.IsNotExist(err))
+
+		// check values file
+		valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
+		valueMap := map[string]string{
+			"Test":               "testing",
+			"ClientCert":         "this is a multiline\\ntext\\n\\nwith escape chars\\n",
+			"AppName":            "TestApp",
+			"SuperSecret":        "supersecret",
+			"AWSRegion":          "eu-central-1",
+			"DiskSize":           "10",
+			"DiskSizeWithBuffer": "125.6",
+			"ShouldNotBeThere":   "",
+		}
+		for k, v := range valueMap {
+			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+
+		// check secrets file
+		secretsFile := GetFileContent(path.Join(gb.OutputDir, secretsFile))
+		secretsMap := map[string]string{
+			"AWSAccessKey":    "accesskey",
+			"AWSAccessSecret": "accesssecret",
+		}
+		for k, v := range secretsMap {
+			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+		}
 
 	})
 }
