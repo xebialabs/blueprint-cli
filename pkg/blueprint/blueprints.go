@@ -29,6 +29,8 @@ const (
 	secretsFile       = "secrets.xlvals"
 	secretsFileHeader = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
 	gitignoreFile     = ".gitignore"
+	skipOperation     = "skip"
+	renameOperation   = "rename"
 )
 
 var ignoredPaths = []string{"__test__"}
@@ -227,11 +229,25 @@ func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *Blueprin
 		if err != nil {
 			return err
 		}
-		// if included.SkipFiles != nil {
-		// 	for _, skip := range included.SkipFiles {
-		//         skip.Path
-		// 	}
-		// }
+		if included.ParameterOverrides != nil {
+			for _, overide := range included.ParameterOverrides {
+				targetIndex := findParameter(composedBlueprintDoc.Variables, overide.Name)
+				if targetIndex != -1 {
+					composedBlueprintDoc.Variables[targetIndex].Value = overide.Value
+					break
+				}
+			}
+		}
+		if included.FileOverrides != nil {
+			for _, overide := range included.FileOverrides {
+				targetIndex := findTemplateConfig(composedBlueprintDoc.TemplateConfigs, overide.Path)
+				if targetIndex != -1 {
+					composedBlueprintDoc.TemplateConfigs[targetIndex].Operation = overide.Operation
+					composedBlueprintDoc.TemplateConfigs[targetIndex].Rename = overide.Rename
+					break
+				}
+			}
+		}
 		if composedBlueprintDoc != nil {
 			if included.Stage == "before" {
 				// prepend params
@@ -247,6 +263,24 @@ func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *Blueprin
 		}
 	}
 	return nil
+}
+
+func findParameter(params []Variable, name string) int {
+	for i, param := range params {
+		if param.Name.Val == name {
+			return i
+		}
+	}
+	return -1
+}
+
+func findTemplateConfig(configs []TemplateConfig, path string) int {
+	for i, config := range configs {
+		if config.Path == path {
+			return i
+		}
+	}
+	return -1
 }
 
 func createDirectoryIfNeeded(fileName string) error {

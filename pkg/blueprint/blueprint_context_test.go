@@ -148,7 +148,7 @@ with a new line`),
         - blueprint: aws/monolith
           stage: before
           parameterOverrides:
-          - name: Foo
+          - name: Test
             value: hello
             dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
           - name: bar

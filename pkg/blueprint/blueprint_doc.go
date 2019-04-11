@@ -264,7 +264,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		// do pattern validation if needed
 		if variable.Pattern.Val != "" {
 			allowEmpty := false
-			if variable.Type.Val == TypeInput && variable.Secret.Bool == true {
+			if variable.Type.Val == TypeInput && variable.Secret.Bool {
 				allowEmpty = true
 			}
 			validationErr := validatePrompt(variable.Pattern.Val, allowEmpty)(value)
@@ -282,7 +282,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	defaultValStr := fmt.Sprintf("%v", defaultVal)
 	switch variable.Type.Val {
 	case TypeInput:
-		if variable.Secret.Bool == true {
+		if variable.Secret.Bool {
 			questionMsg := prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))
 			if defaultVal != "" {
 				questionMsg += fmt.Sprintf(" (%s)", defaultVal)
@@ -958,17 +958,17 @@ func findVariableByName(variables *[]Variable, name string) (*Variable, error) {
 }
 
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
-	if variable.Secret.Bool == true {
+	if variable.Secret.Bool {
 		preparedData.Secrets[variable.Name.Val] = data
 		// Use raw value of secret field if flag is set
-		if variable.UseRawValue.Bool == true {
+		if variable.UseRawValue.Bool {
 			preparedData.TemplateData[variable.Name.Val] = data
 		} else {
 			preparedData.TemplateData[variable.Name.Val] = fmt.Sprintf(fmtTagValue, variable.Name.Val)
 		}
 	} else {
 		// Save to values file if switch is ON
-		if variable.SaveInXlVals.Bool == true {
+		if variable.SaveInXlVals.Bool {
 			preparedData.Values[variable.Name.Val] = data
 		}
 		preparedData.TemplateData[variable.Name.Val] = data
