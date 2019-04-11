@@ -402,7 +402,7 @@ func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprint
 	if err != nil {
 		return nil, err
 	}
-	bpConfig := BlueprintConfig{
+	blueprintConfig := BlueprintConfig{
 		ApiVersion:      yamlDoc.ApiVersion,
 		Kind:            yamlDoc.Kind,
 		Metadata:        yamlDoc.Metadata,
@@ -410,17 +410,18 @@ func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprint
 		TemplateConfigs: templateConfigs,
 		Variables:       variables,
 	}
-	err = bpConfig.validate()
-	return &bpConfig, err
+	err = blueprintConfig.validate()
+	return &blueprintConfig, err
 }
 
 // parse doc parameters into list of variables
 func (blueprintDoc *BlueprintYaml) parseParameters() ([]Variable, error) {
-	var parameters []Parameter
+	parameters := []Parameter{}
 	variables := []Variable{}
 	if blueprintDoc.Spec.Parameters != nil {
 		parameters = blueprintDoc.Spec.Parameters
 	} else {
+		// for backward compatibility with v8.5
 		parameters = blueprintDoc.Parameters
 	}
 	for _, m := range parameters {
@@ -435,11 +436,12 @@ func (blueprintDoc *BlueprintYaml) parseParameters() ([]Variable, error) {
 
 // parse doc files into list of TemplateConfig
 func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, isLocal bool) ([]TemplateConfig, error) {
-	var files []File
+	files := []File{}
 	templateConfigs := []TemplateConfig{}
 	if blueprintDoc.Spec.Files != nil {
 		files = blueprintDoc.Spec.Files
 	} else {
+		// for backward compatibility with v8.5
 		files = blueprintDoc.Files
 	}
 	for _, m := range files {
