@@ -147,24 +147,26 @@ with a new line`),
         include:
         - blueprint: aws/monolith
           stage: before
-          parameterValues:
+          parameterOverrides:
           - name: Foo
             value: hello
             dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
           - name: bar
             value: true
-          skipFiles:
+          fileOverrides:
           - path: xld-infrastructure.yml.tmpl
+            operation: skip
             dependsOnTrue: TestDepends
         - blueprint: aws/datalake
           dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
           stage: after
-          parameterValues:
+          parameterOverrides:
           - name: Foo
             value: hello
-          renameFiles:
+          fileOverrides:
           - path: xlr-pipeline.yml
-            renameTo: xlr-pipeline2.yml
+            operation: rename
+            rename: xlr-pipeline2.yml
             dependsOnTrue: TestDepends
 
         files:

@@ -44,7 +44,8 @@ type Parameter struct {
 
 type File struct {
 	Path      interface{} `yaml:"path"`
-	RenameTo  interface{} `yaml:"renameTo"`
+	Operation interface{} `yaml:"operation"`
+	Rename    interface{} `yaml:"rename"`
 	DependsOn interface{} `yaml:"dependsOn"`
 	// for backward compatibility
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
@@ -52,18 +53,17 @@ type File struct {
 }
 
 type IncludedBlueprint struct {
-	Blueprint       string           `yaml:"blueprint"`
-	Stage           string           `yaml:"stage"`
-	ParameterValues []ParameterValue `yaml:"parameterValues"`
-	SkipFiles       []File           `yaml:"skipFiles"`
-	RenameFiles     []File           `yaml:"renameFiles"`
-	DependsOn       interface{}      `yaml:"dependsOn"`
+	Blueprint          string              `yaml:"blueprint"`
+	Stage              string              `yaml:"stage"`
+	ParameterOverrides []ParameterOverride `yaml:"parameterOverrides"`
+	FileOverrides      []File              `yaml:"fileOverrides"`
+	DependsOn          interface{}         `yaml:"dependsOn"`
 	// for backward compatibility
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
 	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
 }
 
-type ParameterValue struct {
+type ParameterOverride struct {
 	Name      string      `yaml:"name"`
 	Value     interface{} `yaml:"value"`
 	DependsOn interface{} `yaml:"dependsOn"`
@@ -102,7 +102,8 @@ type Variable struct {
 type TemplateConfig struct {
 	Path           string
 	FullPath       string
-	RenameTo       VarField
+	Operation      string
+	Rename         VarField
 	DependsOn      VarField
 	DependsOnFalse VarField
 }
@@ -114,23 +115,22 @@ type VarField struct {
 }
 
 type IncludedBlueprintProcessed struct {
-	Blueprint       string
-	Stage           string
-	ParameterValues []ParameterValuesProcessed
-	SkipFiles       []TemplateConfig
-	RenameFiles     []TemplateConfig
-	DependsOn       VarField
-	DependsOnFalse  VarField
+	Blueprint          string
+	Stage              string
+	ParameterOverrides []ParameterOverridesProcessed
+	FileOverrides      []TemplateConfig
+	DependsOn          VarField
+	DependsOnFalse     VarField
 }
 
-type ParameterValuesProcessed struct {
+type ParameterOverridesProcessed struct {
 	Name           string
 	Value          VarField
 	DependsOn      VarField
 	DependsOnFalse VarField
 }
 
-type SkipFilesProcessed struct {
+type FileOverridesProcessed struct {
 	Path           string
 	DependsOn      VarField
 	DependsOnFalse VarField

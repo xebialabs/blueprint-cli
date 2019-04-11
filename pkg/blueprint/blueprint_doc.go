@@ -542,12 +542,12 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 					}
 				}
 			}
-		case []ParameterValue:
-			// Set ParameterValue array field for Include
+		case []ParameterOverride:
+			// Set ParameterOverride array field for Include
 			if len(val) > 0 {
-				field.Set(reflect.MakeSlice(reflect.TypeOf([]ParameterValuesProcessed{}), len(val), len(val)))
+				field.Set(reflect.MakeSlice(reflect.TypeOf([]ParameterOverridesProcessed{}), len(val), len(val)))
 				for i, it := range val {
-					parsed := ParameterValuesProcessed{}
+					parsed := ParameterOverridesProcessed{}
 					err := parseFieldsFromStruct(&it, func() reflect.Value {
 						return reflect.ValueOf(&parsed).Elem()
 					})

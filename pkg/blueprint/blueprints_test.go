@@ -538,7 +538,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 					IncludedBlueprintProcessed{
 						Blueprint: "aws/monolith",
 						Stage:     "before",
-						ParameterValues: []ParameterValuesProcessed{
+						ParameterOverrides: []ParameterOverridesProcessed{
 							{
 								Name:      "Foo",
 								Value:     VarField{Val: "hello"},
@@ -549,9 +549,10 @@ func Test_getBlueprintConfig(t *testing.T) {
 								Value: VarField{Val: "true", Bool: true},
 							},
 						},
-						SkipFiles: []TemplateConfig{
+						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xld-infrastructure.yml.tmpl",
+								Operation: "skip",
 								DependsOn: VarField{Val: "TestDepends"},
 							},
 						},
@@ -559,17 +560,18 @@ func Test_getBlueprintConfig(t *testing.T) {
 					IncludedBlueprintProcessed{
 						Blueprint: "aws/datalake",
 						Stage:     "after",
-						ParameterValues: []ParameterValuesProcessed{
+						ParameterOverrides: []ParameterOverridesProcessed{
 							{
 								Name:  "Foo",
 								Value: VarField{Val: "hello"},
 							},
 						},
 						DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
-						RenameFiles: []TemplateConfig{
+						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xlr-pipeline.yml",
-								RenameTo:  VarField{Val: "xlr-pipeline2.yml"},
+								Operation: "rename",
+								Rename:    VarField{Val: "xlr-pipeline2.yml"},
 								DependsOn: VarField{Val: "TestDepends"},
 							},
 						},
@@ -673,17 +675,18 @@ func Test_composeBlueprints(t *testing.T) {
 					Include: []IncludedBlueprintProcessed{
 						IncludedBlueprintProcessed{
 							Blueprint: "aws/datalake",
-							ParameterValues: []ParameterValuesProcessed{
+							ParameterOverrides: []ParameterOverridesProcessed{
 								{
 									Name:  "Foo",
 									Value: VarField{Val: "hello"},
 								},
 							},
 							DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
-							RenameFiles: []TemplateConfig{
+							FileOverrides: []TemplateConfig{
 								{
 									Path:      "xlr-pipeline.yml",
-									RenameTo:  VarField{Val: "xlr-pipeline2.yml"},
+									Operation: "rename",
+									Rename:    VarField{Val: "xlr-pipeline2.yml"},
 									DependsOn: VarField{Val: "TestDepends"},
 								},
 							},
@@ -709,17 +712,18 @@ func Test_composeBlueprints(t *testing.T) {
 				Include: []IncludedBlueprintProcessed{
 					IncludedBlueprintProcessed{
 						Blueprint: "aws/datalake",
-						ParameterValues: []ParameterValuesProcessed{
+						ParameterOverrides: []ParameterOverridesProcessed{
 							{
 								Name:  "Foo",
 								Value: VarField{Val: "hello"},
 							},
 						},
 						DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
-						RenameFiles: []TemplateConfig{
+						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xlr-pipeline.yml",
-								RenameTo:  VarField{Val: "xlr-pipeline2.yml"},
+								Operation: "rename",
+								Rename:    VarField{Val: "xlr-pipeline2.yml"},
 								DependsOn: VarField{Val: "TestDepends"},
 							},
 						},
@@ -750,7 +754,7 @@ func Test_composeBlueprints(t *testing.T) {
 						IncludedBlueprintProcessed{
 							Blueprint: "aws/monolith",
 							Stage:     "before",
-							ParameterValues: []ParameterValuesProcessed{
+							ParameterOverrides: []ParameterOverridesProcessed{
 								{
 									Name:      "Foo",
 									Value:     VarField{Val: "hello"},
@@ -761,7 +765,7 @@ func Test_composeBlueprints(t *testing.T) {
 									Value: VarField{Val: "true", Bool: true},
 								},
 							},
-							SkipFiles: []TemplateConfig{
+							FileOverrides: []TemplateConfig{
 								{
 									Path:      "xld-infrastructure.yml.tmpl",
 									DependsOn: VarField{Val: "TestDepends"},
@@ -771,17 +775,18 @@ func Test_composeBlueprints(t *testing.T) {
 						IncludedBlueprintProcessed{
 							Blueprint: "aws/datalake",
 							Stage:     "after",
-							ParameterValues: []ParameterValuesProcessed{
+							ParameterOverrides: []ParameterOverridesProcessed{
 								{
 									Name:  "Foo",
 									Value: VarField{Val: "hello"},
 								},
 							},
 							DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
-							RenameFiles: []TemplateConfig{
+							FileOverrides: []TemplateConfig{
 								{
 									Path:      "xlr-pipeline.yml",
-									RenameTo:  VarField{Val: "xlr-pipeline2.yml"},
+									Operation: "rename",
+									Rename:    VarField{Val: "xlr-pipeline2.yml"},
 									DependsOn: VarField{Val: "TestDepends"},
 								},
 							},
@@ -808,7 +813,7 @@ func Test_composeBlueprints(t *testing.T) {
 					IncludedBlueprintProcessed{
 						Blueprint: "aws/monolith",
 						Stage:     "before",
-						ParameterValues: []ParameterValuesProcessed{
+						ParameterOverrides: []ParameterOverridesProcessed{
 							{
 								Name:      "Foo",
 								Value:     VarField{Val: "hello"},
@@ -819,7 +824,7 @@ func Test_composeBlueprints(t *testing.T) {
 								Value: VarField{Val: "true", Bool: true},
 							},
 						},
-						SkipFiles: []TemplateConfig{
+						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xld-infrastructure.yml.tmpl",
 								DependsOn: VarField{Val: "TestDepends"},
@@ -829,17 +834,18 @@ func Test_composeBlueprints(t *testing.T) {
 					IncludedBlueprintProcessed{
 						Blueprint: "aws/datalake",
 						Stage:     "after",
-						ParameterValues: []ParameterValuesProcessed{
+						ParameterOverrides: []ParameterOverridesProcessed{
 							{
 								Name:  "Foo",
 								Value: VarField{Val: "hello"},
 							},
 						},
 						DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
-						RenameFiles: []TemplateConfig{
+						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xlr-pipeline.yml",
-								RenameTo:  VarField{Val: "xlr-pipeline2.yml"},
+								Operation: "rename",
+								Rename:    VarField{Val: "xlr-pipeline2.yml"},
 								DependsOn: VarField{Val: "TestDepends"},
 							},
 						},

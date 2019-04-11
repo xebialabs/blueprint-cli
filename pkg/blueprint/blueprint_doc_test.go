@@ -149,19 +149,20 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
            include:
            - blueprint: kubernetes/gke-cluster
              stage: before
-             parameterValues:
+             parameterOverrides:
              - name: Foo
                value: hello
                dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
              - name: bar
                value: true
-             skipFiles:
+             fileOverrides:
              - path: xld-infrastructure.yml.tmpl
+               operation: skip
                dependsOnTrue: TestDepends
            - blueprint: kubernetes/namespace
              dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
              stage: after
-             parameterValues:
+             parameterOverrides:
              - name: Foo
                value: hello
 `, models.YamlFormatVersion))
@@ -830,7 +831,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 		assert.Equal(t, IncludedBlueprintProcessed{
 			Blueprint: "kubernetes/gke-cluster",
 			Stage:     "before",
-			ParameterValues: []ParameterValuesProcessed{
+			ParameterOverrides: []ParameterOverridesProcessed{
 				{
 					Name:      "Foo",
 					Value:     VarField{Val: "hello"},
@@ -841,9 +842,10 @@ func TestParseTemplateMetadata(t *testing.T) {
 					Value: VarField{Val: "true", Bool: true},
 				},
 			},
-			SkipFiles: []TemplateConfig{
+			FileOverrides: []TemplateConfig{
 				{
 					Path:      "xld-infrastructure.yml.tmpl",
+					Operation: "skip",
 					DependsOn: VarField{Val: "TestDepends"},
 				},
 			},
@@ -851,7 +853,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 		assert.Equal(t, IncludedBlueprintProcessed{
 			Blueprint: "kubernetes/namespace",
 			Stage:     "after",
-			ParameterValues: []ParameterValuesProcessed{
+			ParameterOverrides: []ParameterOverridesProcessed{
 				{
 					Name:  "Foo",
 					Value: VarField{Val: "hello"},
@@ -1843,7 +1845,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 						{
 							Blueprint: "foo",
 							Stage:     "before",
-							ParameterValues: []ParameterValue{
+							ParameterOverrides: []ParameterOverride{
 								{
 									Name:      "foo",
 									Value:     "bar",
@@ -1860,25 +1862,27 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 							},
-							SkipFiles: []File{
+							FileOverrides: []File{
 								{
 									Path:      "foo/bar.md",
+									Operation: "skip",
 									DependsOn: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 								{
 									Path:           "foo/bar2.md",
+									Operation:      "skip",
 									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
-							},
-							RenameFiles: []File{
 								{
 									Path:      "foo/bar.md",
-									RenameTo:  "foo/baar.md",
+									Operation: "rename",
+									Rename:    "foo/baar.md",
 									DependsOn: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 								{
 									Path:           "foo/bar2.md",
-									RenameTo:       yaml.CustomTag{Tag: "!expression", Value: "1 > 2 ? 'foo' : 'bar'"},
+									Operation:      "rename",
+									Rename:         yaml.CustomTag{Tag: "!expression", Value: "1 > 2 ? 'foo' : 'bar'"},
 									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 							},
@@ -1898,7 +1902,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 				{
 					Blueprint: "foo",
 					Stage:     "before",
-					ParameterValues: []ParameterValuesProcessed{
+					ParameterOverrides: []ParameterOverridesProcessed{
 						{
 							Name:      "foo",
 							Value:     VarField{Val: "bar"},
@@ -1915,25 +1919,27 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 							DependsOnFalse: VarField{Tag: "!fn", Val: "foo"},
 						},
 					},
-					SkipFiles: []TemplateConfig{
+					FileOverrides: []TemplateConfig{
 						{
 							Path:      "foo/bar.md",
+							Operation: "skip",
 							DependsOn: VarField{Tag: "!fn", Val: "foo"},
 						},
 						{
 							Path:           "foo/bar2.md",
+							Operation:      "skip",
 							DependsOnFalse: VarField{Tag: "!fn", Val: "foo"},
 						},
-					},
-					RenameFiles: []TemplateConfig{
 						{
 							Path:      "foo/bar.md",
-							RenameTo:  VarField{Val: "foo/baar.md"},
+							Operation: "rename",
+							Rename:    VarField{Val: "foo/baar.md"},
 							DependsOn: VarField{Tag: "!fn", Val: "foo"},
 						},
 						{
 							Path:           "foo/bar2.md",
-							RenameTo:       VarField{Tag: "!expression", Val: "1 > 2 ? 'foo' : 'bar'"},
+							Operation:      "rename",
+							Rename:         VarField{Tag: "!expression", Val: "1 > 2 ? 'foo' : 'bar'"},
 							DependsOnFalse: VarField{Tag: "!fn", Val: "foo"},
 						},
 					},

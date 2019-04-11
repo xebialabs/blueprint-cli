@@ -227,6 +227,11 @@ func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *Blueprin
 		if err != nil {
 			return err
 		}
+		// if included.SkipFiles != nil {
+		// 	for _, skip := range included.SkipFiles {
+		//         skip.Path
+		// 	}
+		// }
 		if composedBlueprintDoc != nil {
 			if included.Stage == "before" {
 				// prepend params
