@@ -35,14 +35,6 @@ const (
 	ViperKeyBlueprintCurrentRepository = ContextPrefix + ".current-repository"
 )
 
-// TemplateConfig holds the merged template file definitions with repository info
-type TemplateConfig struct {
-	File           string
-	FullPath       string
-	DependsOnTrue  VarField
-	DependsOnFalse VarField
-}
-
 // BlueprintContext holds necessary remote/local repository information for connection
 type BlueprintContext struct {
 	ActiveRepo   *repository.BlueprintRepository
@@ -261,7 +253,7 @@ func (blueprintContext *BlueprintContext) fetchLocalFile(filePath string) (*[]by
 	return blueprintContext.fetchFileContents(variableConfigs[0].FullPath, true, false)
 }
 
-func (blueprintContext *BlueprintContext) parseDefinitionFile(blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote, templatePath string) (*BlueprintYaml, error) {
+func (blueprintContext *BlueprintContext) parseDefinitionFile(blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote, templatePath string) (*BlueprintConfig, error) {
 	// local/remote
 	if blueprintLocalMode {
 		return blueprintContext.parseLocalDefinitionFile(templatePath)
@@ -269,7 +261,7 @@ func (blueprintContext *BlueprintContext) parseDefinitionFile(blueprintLocalMode
 	return blueprintContext.parseRemoteDefinitionFile(blueprints, templatePath)
 }
 
-func (blueprintContext *BlueprintContext) parseRemoteDefinitionFile(blueprints map[string]*models.BlueprintRemote, templatePath string) (*BlueprintYaml, error) {
+func (blueprintContext *BlueprintContext) parseRemoteDefinitionFile(blueprints map[string]*models.BlueprintRemote, templatePath string) (*BlueprintConfig, error) {
 	// Check if user provided/selected template path is in available blueprints map
 	if _, ok := blueprints[templatePath]; !ok {
 		return nil, fmt.Errorf("blueprint [%s] not found in repository %s", templatePath, (*blueprintContext.ActiveRepo).GetName())
@@ -289,13 +281,13 @@ func (blueprintContext *BlueprintContext) parseRemoteDefinitionFile(blueprints m
 
 	// Prepare full repository paths
 	for i, config := range blueprintDoc.TemplateConfigs {
-		config.FullPath = path.Join(templatePath, config.File)
+		config.FullPath = path.Join(templatePath, config.Path)
 		blueprintDoc.TemplateConfigs[i] = config
 	}
 	return blueprintDoc, err
 }
 
-func (blueprintContext *BlueprintContext) parseLocalDefinitionFile(templatePath string) (*BlueprintYaml, error) {
+func (blueprintContext *BlueprintContext) parseLocalDefinitionFile(templatePath string) (*BlueprintConfig, error) {
 	// Parse blueprint document contents
 	var ymlContent *[]byte
 	var err error
@@ -344,7 +336,7 @@ func createTemplateConfigForSingleFile(blueprintTemplate string) ([]TemplateConf
 		var templateConfigs []TemplateConfig
 		_, fileName := filepath.Split(blueprintTemplate)
 		templateConfigs = append(templateConfigs, TemplateConfig{
-			File:     fileName,
+			Path:     fileName,
 			FullPath: blueprintTemplate,
 		})
 		return templateConfigs, nil

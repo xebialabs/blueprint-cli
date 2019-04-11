@@ -373,16 +373,16 @@ func TestShouldSkipFile(t *testing.T) {
 		{
 			"should return false if dependsOn not defined",
 			args{
-				TemplateConfig{File: "foo.yaml"},
+				TemplateConfig{Path: "foo.yaml"},
 				nil,
 			},
 			false,
 			false,
 		},
 		{
-			"should return true if dependsOnTrue is defined and its value is false",
+			"should return true if dependsOn is defined and its value is false",
 			args{
-				TemplateConfig{File: "foo.yaml", DependsOnTrue: VarField{Val: "foo"}},
+				TemplateConfig{Path: "foo.yaml", DependsOn: VarField{Val: "foo"}},
 				&[]Variable{
 					{Name: VarField{Val: "foo"}, Value: VarField{Bool: false}},
 				},
@@ -393,7 +393,7 @@ func TestShouldSkipFile(t *testing.T) {
 		{
 			"should return true if dependsOnFalse is defined and its value is true",
 			args{
-				TemplateConfig{File: "foo.yaml", DependsOnFalse: VarField{Val: "foo"}},
+				TemplateConfig{Path: "foo.yaml", DependsOnFalse: VarField{Val: "foo"}},
 				&[]Variable{
 					{Name: VarField{Val: "foo"}, Value: VarField{Bool: true}},
 				},
@@ -404,7 +404,7 @@ func TestShouldSkipFile(t *testing.T) {
 		{
 			"should return error if dependsOn value cannot be processed",
 			args{
-				TemplateConfig{File: "foo.yaml", DependsOnFalse: VarField{Val: "foo"}},
+				TemplateConfig{Path: "foo.yaml", DependsOnFalse: VarField{Val: "foo"}},
 				&[]Variable{},
 			},
 			false,
