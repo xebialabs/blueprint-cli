@@ -581,7 +581,6 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 				return fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
 			}
 		case nil:
-			util.Verbose("[dataPrep] Got empty variable field with key [%s]\n", fieldName)
 			// do nothing when field is not set
 		default:
 			return fmt.Errorf("unknown variable type [%s]", val)
