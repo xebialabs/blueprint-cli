@@ -47,6 +47,10 @@ func AdjustPathSeperatorIfNeeded(blueprintTemplate string) string {
 }
 
 func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
+	// skipped via composed blueprint
+	if templateConfig.Operation == skipOperation {
+		return true, nil
+	}
 	if !util.IsStringEmpty(templateConfig.DependsOn.Val) {
 		dependsOnVal, err := ParseDependsOnValue(templateConfig.DependsOn, variables, parameters)
 		if err != nil {
@@ -178,7 +182,11 @@ func InstantiateBlueprint(
 
 			// write the processed template to a file
 			finalTmpl := strings.TrimSpace(processedTmpl.String())
-			err = writeDataToFile(generatedBlueprint, strings.Replace(config.Path, templateExtension, "", 1), &finalTmpl)
+			finalFileName := config.Path
+			// if config.Renamedpath.Val != "" {
+			// 	finalFileName = config.Renamedpath.Val
+			// }
+			err = writeDataToFile(generatedBlueprint, strings.Replace(finalFileName, templateExtension, "", 1), &finalTmpl)
 			if err != nil {
 				return err
 			}
@@ -243,7 +251,7 @@ func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *Blueprin
 				targetIndex := findTemplateConfig(composedBlueprintDoc.TemplateConfigs, overide.Path)
 				if targetIndex != -1 {
 					composedBlueprintDoc.TemplateConfigs[targetIndex].Operation = overide.Operation
-					composedBlueprintDoc.TemplateConfigs[targetIndex].Rename = overide.Rename
+					composedBlueprintDoc.TemplateConfigs[targetIndex].Renamed = overide.Renamed
 					break
 				}
 			}
