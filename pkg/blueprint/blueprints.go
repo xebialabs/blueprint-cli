@@ -156,7 +156,7 @@ func InstantiateBlueprint(
 		}
 
 		if skipFile {
-			util.Verbose("[file] skipping file [%s] since it has dependsOn value set\n", config.Path)
+			util.Verbose("[file] skipping file [%s] since it has dependsOn value set or is skipped by composed blueprint\n", config.Path)
 			continue
 		}
 
@@ -167,6 +167,11 @@ func InstantiateBlueprint(
 			return err
 		}
 		templateString := string(*templateContent)
+		finalFileName := config.Path
+		if config.RenamedPath.Val != "" {
+			finalFileName = config.RenamedPath.Val
+			util.Verbose("[file] Renaming template file %s to %s as it is overridden by composed blueprint\n", config.Path, finalFileName)
+		}
 
 		// process the template file (filter based on extension)
 		if strings.HasSuffix(config.Path, templateExtension) {
@@ -182,10 +187,7 @@ func InstantiateBlueprint(
 
 			// write the processed template to a file
 			finalTmpl := strings.TrimSpace(processedTmpl.String())
-			finalFileName := config.Path
-			if config.RenamedPath.Val != "" {
-				finalFileName = config.RenamedPath.Val
-			}
+
 			err = writeDataToFile(generatedBlueprint, strings.Replace(finalFileName, templateExtension, "", 1), &finalTmpl)
 			if err != nil {
 				return err
@@ -197,7 +199,7 @@ func InstantiateBlueprint(
 			} else {
 				// handle non-template files - copy as-it-is
 				util.Verbose("[file] Copying file %s\n", config.FullPath)
-				err = writeDataToFile(generatedBlueprint, config.Path, &templateString)
+				err = writeDataToFile(generatedBlueprint, finalFileName, &templateString)
 				if err != nil {
 					return err
 				}
@@ -220,7 +222,7 @@ func getBlueprintConfig(blueprintContext *BlueprintContext, blueprintLocalMode b
 	}
 
 	if len(blueprintDoc.Include) > 0 {
-		util.Verbose("[dataPrep] Found %d included blueprints\n", len(blueprintDoc.Include))
+		util.Verbose("[compose] Found %d included blueprints\n", len(blueprintDoc.Include))
 		err := composeBlueprints(blueprintDoc, blueprintContext, blueprintLocalMode, blueprints)
 		if err != nil {
 			return blueprintDoc, err
@@ -231,7 +233,7 @@ func getBlueprintConfig(blueprintContext *BlueprintContext, blueprintLocalMode b
 
 func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote) error {
 	for _, included := range blueprintDoc.Include {
-		util.Verbose("[dataPrep] Fetch included blueprint %s\n", included.Blueprint)
+		util.Verbose("[compose] Fetch included blueprint %s\n", included.Blueprint)
 		// fetch blueprint from current repo
 		composedBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprints, included.Blueprint)
 		if err != nil {
@@ -242,7 +244,8 @@ func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *Blueprin
 				targetIndex := findParameter(composedBlueprintDoc.Variables, overide.Name)
 				if targetIndex != -1 {
 					composedBlueprintDoc.Variables[targetIndex].Value = overide.Value
-					break
+				} else {
+					util.Verbose("[compose] Could not find parameterOverride for %s\n", overide.Name)
 				}
 			}
 		}
@@ -252,7 +255,8 @@ func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *Blueprin
 				if targetIndex != -1 {
 					composedBlueprintDoc.TemplateConfigs[targetIndex].Operation = overide.Operation
 					composedBlueprintDoc.TemplateConfigs[targetIndex].RenamedPath = overide.RenamedPath
-					break
+				} else {
+					util.Verbose("[compose] Could not find fileOverride for %s\n", overide.Path)
 				}
 			}
 		}

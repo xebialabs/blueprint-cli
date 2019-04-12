@@ -166,7 +166,7 @@ with a new line`),
           fileOverrides:
           - path: xlr-pipeline.yml
             operation: rename
-            renamedPath: xlr-pipeline2.yml
+            renamedPath: xlr-pipeline2-new.yml
             dependsOnTrue: TestDepends
 
         files:
