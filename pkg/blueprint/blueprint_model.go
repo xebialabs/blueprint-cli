@@ -43,10 +43,10 @@ type Parameter struct {
 }
 
 type File struct {
-	Path      interface{} `yaml:"path"`
-	Operation interface{} `yaml:"operation"`
-	Rename    interface{} `yaml:"rename"`
-	DependsOn interface{} `yaml:"dependsOn"`
+	Path        interface{} `yaml:"path"`
+	Operation   interface{} `yaml:"operation"`
+	RenamedPath interface{} `yaml:"renamedPath"`
+	DependsOn   interface{} `yaml:"dependsOn"`
 	// for backward compatibility
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
 	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
@@ -103,7 +103,7 @@ type TemplateConfig struct {
 	Path           string
 	FullPath       string
 	Operation      string
-	Rename         VarField
+	RenamedPath    VarField
 	DependsOn      VarField
 	DependsOnFalse VarField
 }

@@ -183,9 +183,9 @@ func InstantiateBlueprint(
 			// write the processed template to a file
 			finalTmpl := strings.TrimSpace(processedTmpl.String())
 			finalFileName := config.Path
-			// if config.Renamedpath.Val != "" {
-			// 	finalFileName = config.Renamedpath.Val
-			// }
+			if config.RenamedPath.Val != "" {
+				finalFileName = config.RenamedPath.Val
+			}
 			err = writeDataToFile(generatedBlueprint, strings.Replace(finalFileName, templateExtension, "", 1), &finalTmpl)
 			if err != nil {
 				return err
@@ -251,7 +251,7 @@ func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *Blueprin
 				targetIndex := findTemplateConfig(composedBlueprintDoc.TemplateConfigs, overide.Path)
 				if targetIndex != -1 {
 					composedBlueprintDoc.TemplateConfigs[targetIndex].Operation = overide.Operation
-					composedBlueprintDoc.TemplateConfigs[targetIndex].Renamed = overide.Renamed
+					composedBlueprintDoc.TemplateConfigs[targetIndex].RenamedPath = overide.RenamedPath
 					break
 				}
 			}
