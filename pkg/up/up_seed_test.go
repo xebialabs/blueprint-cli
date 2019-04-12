@@ -1,7 +1,8 @@
-package xl
+package up
 
 import (
 	"fmt"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -17,15 +18,15 @@ import (
 	"github.com/xebialabs/yaml"
 )
 
-const blueprintDir = "xebialabs"
+const blueprintDir = Xebialabs
 
 type TestInfra struct {
-	documents []Document
+	documents []xl.Document
 	xldServer *httptest.Server
 	xlrServer *httptest.Server
 }
 
-func (infra *TestInfra) appendDoc(document Document) {
+func (infra *TestInfra) appendDoc(document xl.Document) {
 	infra.documents = append(infra.documents, document)
 }
 
@@ -34,7 +35,7 @@ func (infra *TestInfra) shutdown() {
 	infra.xlrServer.Close()
 }
 
-func (infra *TestInfra) doc(index int) Document {
+func (infra *TestInfra) doc(index int) xl.Document {
 	return infra.documents[index]
 }
 
@@ -47,12 +48,12 @@ func (infra *TestInfra) metadata(index int) map[interface{}]interface{} {
 }
 
 func CreateTestInfra(viper *viper.Viper) *TestInfra {
-	infra := &TestInfra{documents: make([]Document, 0)}
+	infra := &TestInfra{documents: make([]xl.Document, 0)}
 
 	xldHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
 		body, err := ioutil.ReadAll(request.Body)
 		check(err)
-		doc, err := ParseYamlDocument(string(body))
+		doc, err := xl.ParseYamlDocument(string(body))
 		check(err)
 		infra.appendDoc(*doc)
 		_, _ = responseWriter.Write([]byte("{}"))
@@ -61,7 +62,7 @@ func CreateTestInfra(viper *viper.Viper) *TestInfra {
 	xlrHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
 		body, err := ioutil.ReadAll(request.Body)
 		check(err)
-		doc, err := ParseYamlDocument(string(body))
+		doc, err := xl.ParseYamlDocument(string(body))
 		check(err)
 		infra.appendDoc(*doc)
 		_, _ = responseWriter.Write([]byte("{}"))
@@ -109,7 +110,7 @@ apiVersion: %s
 kind: Applications
 spec:
 - name: App1
-`, XlrApiVersion, XldApiVersion))
+`, xl.XlrApiVersion, xl.XldApiVersion))
 
 		v := blueprint.GetDefaultBlueprintViperConfig(viper.GetViper())
 		infra := CreateTestInfra(v)
@@ -120,10 +121,16 @@ spec:
 		fileContents, err := ioutil.ReadFile(filepath.Join(blueprintDir, "yaml1.yaml"))
 		check(err)
 
-		doc, _ := ParseYamlDocument(string(fileContents))
+		doc, _ := xl.ParseYamlDocument(string(fileContents))
 		infra.appendDoc(*doc)
 
 		assert.Equal(t, infra.spec(0)[1]["replaceTest"], "success1")
 		assert.Equal(t, infra.spec(0)[2]["file"], yaml.CustomTag(yaml.CustomTag{Tag: "!file", Value: "../path/to/the/file/"}))
 	})
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
