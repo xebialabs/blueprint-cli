@@ -1,24 +1,24 @@
 package blueprint
 
 import (
-	"bytes"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"reflect"
-	"regexp"
-	"strconv"
-	"strings"
+    "bytes"
+    "fmt"
+    "io/ioutil"
+    "os"
+    "path/filepath"
+    "reflect"
+    "regexp"
+    "strconv"
+    "strings"
 
-	funk "github.com/thoas/go-funk"
-	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
-	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/osHelper"
-	"github.com/xebialabs/xl-cli/pkg/util"
-	"github.com/xebialabs/yaml"
-	survey "gopkg.in/AlecAivazis/survey.v1"
+    "github.com/thoas/go-funk"
+    "github.com/xebialabs/xl-cli/pkg/cloud/aws"
+    "github.com/xebialabs/xl-cli/pkg/cloud/k8s"
+    "github.com/xebialabs/xl-cli/pkg/models"
+    "github.com/xebialabs/xl-cli/pkg/osHelper"
+    "github.com/xebialabs/xl-cli/pkg/util"
+    "github.com/xebialabs/yaml"
+    "gopkg.in/AlecAivazis/survey.v1"
 )
 
 // SkipUserInput is used in tests to skip the user input
@@ -84,7 +84,7 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 		}
 		return dependsOnVal, nil
 	case tagExpression:
-		value, err := ProcessCustomExpression(fieldVal, parameters)
+		value, err := ProcessCustomExpression(fieldVal, parameters, "", nil)
 		if err != nil {
 			return false, err
 		}
@@ -125,7 +125,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 			return values[0]
 		}
 	case tagExpression:
-		value, err := ProcessCustomExpression(defaultVal, variables)
+		value, err := ProcessCustomExpression(defaultVal, variables, "", nil)
 		if err != nil {
 			util.Info("Error while processing default value !expression [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
 			defaultVal = ""
@@ -164,7 +164,7 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) in
 		}
 		return values[0]
 	case tagExpression:
-		value, err := ProcessCustomExpression(variable.Value.Val, parameters)
+		value, err := ProcessCustomExpression(variable.Value.Val, parameters, "", nil)
 		if err != nil {
 			util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
 			return ""
@@ -196,7 +196,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Val, opts)
 			options = append(options, opts...)
 		case tagExpression:
-			opts, err := ProcessCustomExpression(option.Val, parameters)
+			opts, err := ProcessCustomExpression(option.Val, parameters, "", nil)
 			if err != nil {
 				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
 				return nil
@@ -221,7 +221,27 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 	return options
 }
 
+// Get variable validate expression
+func (variable *Variable) GetValidateExpr() (string, error) {
+    // todo: unit tests
+    if variable.Validate.Val == "" {
+        return "",  nil
+    }
+
+    switch variable.Validate.Tag {
+    case tagExpression:
+        return variable.Validate.Val, nil
+    }
+    return "", fmt.Errorf("only '!expression' tag is supported for validate attribute")
+}
+
 func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[string]interface{}) (interface{}, error) {
+    // get validate expression
+    validateExpr, err := variable.GetValidateExpr()
+    if err != nil {
+        return nil, fmt.Errorf("error getting validation expression: %s", err.Error())
+    }
+
 	// specific conversions by type if needed
 	switch variable.Type.Val {
 	case TypeConfirm:
@@ -267,7 +287,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 			if variable.Type.Val == TypeInput && variable.Secret.Bool == true {
 				allowEmpty = true
 			}
-			validationErr := validatePrompt(variable.Pattern.Val, allowEmpty)(value)
+			validationErr := validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, allowEmpty, parameters)(value)
 			if validationErr != nil {
 				return nil, fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", value, variable.Name.Val, validationErr.Error())
 			}
@@ -280,6 +300,13 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	var answer string
 	var err error
 	defaultValStr := fmt.Sprintf("%v", defaultVal)
+
+	// get validate expression
+	validateExpr, err := variable.GetValidateExpr()
+	if err != nil {
+	    return nil, fmt.Errorf("error getting validation expression: %s", err.Error())
+    }
+
 	switch variable.Type.Val {
 	case TypeInput:
 		if variable.Secret.Bool == true {
@@ -290,7 +317,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			err = survey.AskOne(
 				&survey.Password{Message: questionMsg},
 				&answer,
-				validatePrompt(variable.Pattern.Val, true),
+				validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, true, parameters),
 				surveyOpts...,
 			)
 
@@ -306,7 +333,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 					Default: defaultValStr,
 				},
 				&answer,
-				validatePrompt(variable.Pattern.Val, false),
+				validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
 				surveyOpts...,
 			)
 		}
@@ -319,7 +346,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				AppendDefault: true,
 			},
 			&answer,
-			validatePrompt(variable.Pattern.Val, false),
+			validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
 			surveyOpts...,
 		)
 	case TypeFile:
@@ -343,9 +370,6 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		answer = string(data)
 	case TypeSelect:
 		options := variable.GetOptions(parameters)
-		if err != nil {
-			return "", err
-		}
 		err = survey.AskOne(
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Description.Val, fmt.Sprintf("Select value for %s?", variable.Name.Val)),
@@ -354,7 +378,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				PageSize: 10,
 			},
 			&answer,
-			validatePrompt(variable.Pattern.Val, false),
+			validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
 			surveyOpts...,
 		)
 	case TypeConfirm:
@@ -365,7 +389,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Default: variable.Default.Bool,
 			},
 			&confirm,
-			validatePrompt(variable.Pattern.Val, false),
+			validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
 			surveyOpts...,
 		)
 		if err != nil {
@@ -879,7 +903,7 @@ func validateFiles(configs *[]TemplateConfig) error {
 	return nil
 }
 
-func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error {
+func validatePrompt(varName string, validateExpr string, pattern string, allowEmpty bool, parameters map[string]interface{}) func(val interface{}) error {
 	return func(val interface{}) error {
 		// if empty value is not allowed, check for any value
 		if !allowEmpty {
@@ -889,6 +913,7 @@ func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error
 			}
 		}
 
+		// do pattern validation - TODO: to be removed after v9.0
 		if pattern != "" {
 			// the reflect value of the result
 			value := reflect.ValueOf(val)
@@ -901,6 +926,19 @@ func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error
 				return fmt.Errorf("Value should match pattern %s", pattern)
 			}
 		}
+
+		// run validation function
+		if validateExpr != "" {
+		    isSuccess, err := ProcessCustomExpression(validateExpr, parameters, varName, val)
+		    if err != nil {
+		        return err
+            }
+		    if !isSuccess.(bool) {
+		        return fmt.Errorf("validation failed for field [%s] with value %s", varName, val)
+            }
+		    return nil
+        }
+
 		return nil
 	}
 }

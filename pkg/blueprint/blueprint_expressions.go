@@ -1,12 +1,12 @@
 package blueprint
 
 import (
-	"fmt"
-	"math"
-	"strconv"
-
-	"github.com/Knetic/govaluate"
-	"github.com/xebialabs/xl-cli/pkg/util"
+    "fmt"
+    "github.com/Knetic/govaluate"
+    "github.com/xebialabs/xl-cli/pkg/util"
+    "math"
+    "regexp"
+    "strconv"
 )
 
 var functions = map[string]govaluate.ExpressionFunction{
@@ -41,11 +41,27 @@ var functions = map[string]govaluate.ExpressionFunction{
 	"string": func(args ...interface{}) (interface{}, error) {
 		return fmt.Sprintf("%v", args[0]), nil
 	},
+	"regex": func(args ...interface{}) (interface{}, error) {
+	    // todo: unit tests
+	    if len(args) != 2 {
+	        return nil, fmt.Errorf("invalid number of arguments for regex fn, expecting 2 got %d", len(args))
+        }
+        pattern := args[0].(string)
+        value := fmt.Sprintf("%v", args[1])
+        match, err := regexp.MatchString("^"+pattern+"$", value)
+        if err != nil {
+            return false, err
+        }
+        if !match {
+            return false, fmt.Errorf("Value should match pattern %s", pattern)
+        }
+	    return true, nil
+    },
 }
 
 // ProcessCustomExpression evaluates the expressions passed in the blueprint.yaml file using https://github.com/Knetic/govaluate
 // {parameters} are the result of the spec -> parameters defined in the blueprint yaml. Parameters needs to be defined before use.
-func ProcessCustomExpression(exStr string, parameters map[string]interface{}) (interface{}, error) {
+func ProcessCustomExpression(exStr string, parameters map[string]interface{}, currentKey string, currentVal interface{}) (interface{}, error) {
 	util.Verbose("[expression] Evaluating expression [%s]\n", exStr)
 
 	expression, err := govaluate.NewEvaluableExpressionWithFunctions(exStr, functions)
@@ -53,7 +69,12 @@ func ProcessCustomExpression(exStr string, parameters map[string]interface{}) (i
 		return nil, err
 	}
 
-	return expression.Evaluate(fixValueTypes(parameters))
+	// add this value to the map of parameters for expression
+	expressionParams := fixValueTypes(parameters)
+	if currentKey != "" {
+        expressionParams[currentKey] = currentVal
+    }
+	return expression.Evaluate(expressionParams)
 }
 
 func fixValueTypes(parameters map[string]interface{}) map[string]interface{} {
