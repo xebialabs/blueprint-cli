@@ -474,7 +474,6 @@ func Test_getBlueprintConfig(t *testing.T) {
 	blueprints, err := repo.initCurrentRepoClient()
 	require.Nil(t, err)
 	require.NotNil(t, blueprints)
-	require.Len(t, blueprints, 3)
 
 	type args struct {
 		blueprintContext   *BlueprintContext
@@ -627,7 +626,6 @@ func Test_composeBlueprints(t *testing.T) {
 	blueprints, err := repo.initCurrentRepoClient()
 	require.Nil(t, err)
 	require.NotNil(t, blueprints)
-	require.Len(t, blueprints, 3)
 
 	type args struct {
 		blueprintDoc       *BlueprintConfig
@@ -665,6 +663,60 @@ func Test_composeBlueprints(t *testing.T) {
 				},
 			},
 			true,
+		},
+		{
+			"should not fail when blueprints with empty param or files are passed",
+			args{
+				&BlueprintConfig{
+					ApiVersion: "xl/v1",
+					Kind:       "Blueprint",
+					Metadata:   Metadata{ProjectName: "Test Project"},
+					Include: []IncludedBlueprintProcessed{
+						IncludedBlueprintProcessed{
+							Blueprint: "aws/emptyfiles",
+						},
+						IncludedBlueprintProcessed{
+							Blueprint: "aws/emptyparams",
+						},
+					},
+					Variables: []Variable{
+						{Name: VarField{Val: "Bar", Bool: false, Tag: ""}, Type: VarField{Val: "Input", Bool: false, Tag: ""}, Value: VarField{Val: "testing", Bool: false, Tag: ""}},
+					},
+					TemplateConfigs: []TemplateConfig{
+						{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
+						{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/compose/xld-infrastructure.yml.tmpl"},
+						{Path: "xlr-pipeline.yml", FullPath: "aws/compose/xlr-pipeline.yml"},
+					},
+				},
+				repo,
+				false,
+				blueprints,
+			},
+			&BlueprintConfig{
+				ApiVersion: "xl/v1",
+				Kind:       "Blueprint",
+				Metadata:   Metadata{ProjectName: "Test Project"},
+				Include: []IncludedBlueprintProcessed{
+					IncludedBlueprintProcessed{
+						Blueprint: "aws/emptyfiles",
+					},
+					IncludedBlueprintProcessed{
+						Blueprint: "aws/emptyparams",
+					},
+				},
+				Variables: []Variable{
+					{Name: VarField{Val: "Bar", Bool: false, Tag: ""}, Type: VarField{Val: "Input", Bool: false, Tag: ""}, Value: VarField{Val: "testing", Bool: false, Tag: ""}},
+					{Name: VarField{Val: "Foo", Bool: false, Tag: ""}, Type: VarField{Val: "Input", Bool: false, Tag: ""}, Value: VarField{Val: "testing", Bool: false, Tag: ""}},
+				},
+				TemplateConfigs: []TemplateConfig{
+					{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
+					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/compose/xld-infrastructure.yml.tmpl"},
+					{Path: "xlr-pipeline.yml", FullPath: "aws/compose/xlr-pipeline.yml"},
+					{Path: "xld-app.yml.tmpl", FullPath: "aws/emptyparams/xld-app.yml.tmpl"},
+					{Path: "xlr-pipeline.yml", FullPath: "aws/emptyparams/xlr-pipeline.yml"},
+				},
+			},
+			false,
 		},
 		{
 			"should compose the given blueprints together in after stage by default",
