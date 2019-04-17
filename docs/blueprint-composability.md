@@ -53,12 +53,8 @@ spec:
       rename: xld-infrastructure2.yml
       dependsOn: TestDepends # do this later
 
-    - name: var1
-      type: Select
-      options: 
-
   - blueprint: kubernetes/namespace
-    dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
+    dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
     stage: after
     parameterValues:
     - name: Foo
