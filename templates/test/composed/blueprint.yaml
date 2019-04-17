@@ -1,0 +1,45 @@
+apiVersion: xl/v1
+kind: Blueprint
+metadata:
+  projectName: Test Project
+  description: Is just a test blueprint project
+  author: XebiaLabs
+  version: 1.0
+spec:
+  parameters:
+  - name: TestCompose
+    type: Input
+    value: testing
+    saveInXlVals: true
+
+  files:
+  - path: xlr-pipeline-4.yml
+    dependsOnFalse: TestDepends3
+
+  include:
+  # 'blueprint' we will look in the current-repository being used for these
+  - blueprint: valid-no-prompt
+    # 'stage' will decide if the blueprint should be composed before or after the master blueprint, this will affect the order of question and order in which files are written, multiple before/after will stack based on order of definition.
+    stage: before
+    # 'parameterValues' we can provide values for any parameter in the blueprint being composed. This way we can force to skip any question by providing a value for it, these can be conditional using dependsOn
+    # parameterValues:
+    # - name: Foo
+    #   # expression and functions will be supported for 'value'
+    #   value: hello
+    #   dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends" # do this later
+    # - name: bar
+    #   value: true
+    # # 'skipFiles' can be used to skip files and can be conditional using dependsOn
+    # skipFiles:
+    # - path: xld-infrastructure.yml.tmpl
+    #   dependsOnTrue: TestDepends # do this later
+    # renameFiles:
+    # - path: xld-infrastructure.yml.tmpl
+    #   renameTo: xld-infrastructure2.yml
+    #   dependsOnTrue: TestDepends # do this later
+  - blueprint: defaults-as-values
+    # dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
+    stage: after
+    # parameterValues:
+    # - name: Foo
+    #   value: hello

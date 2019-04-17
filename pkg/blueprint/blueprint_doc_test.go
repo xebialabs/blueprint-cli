@@ -152,12 +152,12 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
              parameterValues:
              - name: Foo
                value: hello
-               dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends" # do this later
+               dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
              - name: bar
                value: true
              skipFiles:
              - path: xld-infrastructure.yml.tmpl
-               dependsOnTrue: TestDepends # do this later
+               dependsOnTrue: TestDepends
            - blueprint: kubernetes/namespace
              dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
              stage: after
@@ -1870,6 +1870,18 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 							},
+							RenameFiles: []File{
+								{
+									Path:      "foo/bar.md",
+									RenameTo:  "foo/baar.md",
+									DependsOn: yaml.CustomTag{Tag: "!fn", Value: "foo"},
+								},
+								{
+									Path:           "foo/bar2.md",
+									RenameTo:       yaml.CustomTag{Tag: "!expression", Value: "1 > 2 ? 'foo' : 'bar'"},
+									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
+								},
+							},
 							DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 							DependsOnFalse: "Var",
 						},
@@ -1910,6 +1922,18 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 						},
 						{
 							Path:           "foo/bar2.md",
+							DependsOnFalse: VarField{Tag: "!fn", Val: "foo"},
+						},
+					},
+					RenameFiles: []TemplateConfig{
+						{
+							Path:      "foo/bar.md",
+							RenameTo:  VarField{Val: "foo/baar.md"},
+							DependsOn: VarField{Tag: "!fn", Val: "foo"},
+						},
+						{
+							Path:           "foo/bar2.md",
+							RenameTo:       VarField{Tag: "!expression", Val: "1 > 2 ? 'foo' : 'bar'"},
 							DependsOnFalse: VarField{Tag: "!fn", Val: "foo"},
 						},
 					},

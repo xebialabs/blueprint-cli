@@ -97,12 +97,10 @@ func InstantiateBlueprint(
 	}
 
 	// get local/remote blueprint definition
-	util.Verbose("[cmd] Parsing Blueprint from %s\n", templatePath)
-	blueprintDoc, err := blueprintContext.parseDefinitionFile(blueprintLocalMode, blueprints, templatePath)
+	blueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprints, templatePath)
 	if err != nil {
 		return err
 	}
-	util.Verbose("[dataPrep] Got blueprint metadata: %#v\n", blueprintDoc.Metadata)
 
 	// ask for user input
 	preparedData, err := blueprintDoc.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
@@ -122,7 +120,7 @@ func InstantiateBlueprint(
 			return err
 		}
 		if !toContinue {
-			util.Fatal("xl-up command cancelled \n")
+			util.Fatal("xl up command cancelled \n")
 			return nil
 		}
 	}
@@ -196,9 +194,52 @@ func InstantiateBlueprint(
 			}
 		}
 	}
-    util.Info("Please refer to file 'xebialabs/secrets.xlvals' for the default secrets\n")
+	util.Info("Please refer to file 'xebialabs/secrets.xlvals' for the default secrets\n")
 	if blueprintDoc.Metadata.Instructions != "" {
 		util.Info("\n\n%s\n\n", color.GreenString(blueprintDoc.Metadata.Instructions))
+	}
+	return nil
+}
+
+func getBlueprintConfig(blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote, templatePath string) (*BlueprintConfig, error) {
+	util.Verbose("[cmd] Parsing Blueprint from %s\n", templatePath)
+	blueprint := blueprints[templatePath]
+	blueprintDoc, err := blueprintContext.parseDefinitionFile(blueprintLocalMode, blueprint, templatePath)
+	if err != nil {
+		return blueprintDoc, err
+	}
+
+	if len(blueprintDoc.Include) > 0 {
+		util.Verbose("[dataPrep] Found %d included blueprints\n", len(blueprintDoc.Include))
+		err := composeBlueprints(blueprintDoc, blueprintContext, blueprintLocalMode, blueprints)
+		if err != nil {
+			return blueprintDoc, err
+		}
+	}
+	return blueprintDoc, nil
+}
+
+func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote) error {
+	for _, included := range blueprintDoc.Include {
+		util.Verbose("[dataPrep] Fetch included blueprint %s\n", included.Blueprint)
+		// fetch blueprint from current repo
+		composedBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprints, included.Blueprint)
+		if err != nil {
+			return err
+		}
+		if composedBlueprintDoc != nil {
+			if included.Stage == "before" {
+				// prepend params
+				blueprintDoc.Variables = append(composedBlueprintDoc.Variables, blueprintDoc.Variables...)
+				// prepend files
+				blueprintDoc.TemplateConfigs = append(composedBlueprintDoc.TemplateConfigs, blueprintDoc.TemplateConfigs...)
+			} else {
+				// append params
+				blueprintDoc.Variables = append(blueprintDoc.Variables, composedBlueprintDoc.Variables...)
+				// append files
+				blueprintDoc.TemplateConfigs = append(blueprintDoc.TemplateConfigs, composedBlueprintDoc.TemplateConfigs...)
+			}
+		}
 	}
 	return nil
 }

@@ -8,8 +8,8 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-    "strings"
-    "testing"
+	"strings"
+	"testing"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/spf13/viper"
@@ -33,7 +33,6 @@ blueprint:
     repo-name: blueprints
     branch: master`
 
-
 func GetViperConf(t *testing.T, yaml string) *viper.Viper {
 	configdir, err := ioutil.TempDir("", "xebialabsconfig")
 	if err != nil {
@@ -51,22 +50,22 @@ func GetViperConf(t *testing.T, yaml string) *viper.Viper {
 }
 
 func getLocalTestBlueprintContext(t *testing.T) *BlueprintContext {
-    configdir, _ := ioutil.TempDir("", "xebialabsconfig")
-    pwd, _ := os.Getwd()
-    localPath := strings.Replace(pwd, path.Join("pkg", "blueprint"), path.Join("templates", "test"), -1)
-    contextYaml := fmt.Sprintf(`
+	configdir, _ := ioutil.TempDir("", "xebialabsconfig")
+	pwd, _ := os.Getwd()
+	localPath := strings.Replace(pwd, path.Join("pkg", "blueprint"), path.Join("templates", "test"), -1)
+	contextYaml := fmt.Sprintf(`
 blueprint:
   current-repository: Test
   repositories:
   - name: Test
     type: local
     path: %s`, localPath)
-    v := GetViperConf(t, contextYaml)
-    c, err := ConstructBlueprintContext(v, configdir)
-    if err != nil {
-        t.Error(err)
-    }
-    return c
+	v := GetViperConf(t, contextYaml)
+	c, err := ConstructBlueprintContext(v, configdir)
+	if err != nil {
+		t.Error(err)
+	}
+	return c
 }
 
 func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
@@ -82,7 +81,7 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 	httpmock.RegisterResponder(
 		"GET",
 		mockEndpoint+"index.json",
-		httpmock.NewStringResponder(200, `["aws/monolith", "aws/datalake"]`),
+		httpmock.NewStringResponder(200, `["aws/monolith", "aws/datalake", "aws/compose"]`),
 	)
 
 	yaml := `
@@ -106,17 +105,77 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 		mockEndpoint+"aws/monolith/blueprint.yaml",
 		httpmock.NewStringResponder(200, yaml),
 	)
+
+	yaml = `
+    apiVersion: xl/v1
+    kind: Blueprint
+    metadata:
+      projectName: Test Project 2
+
+    parameters:
+    - name: Foo
+      type: Input
+      value: testing
+
+    files:
+    - path: xld-app.yml.tmpl
+    - path: xlr-pipeline.yml`
+
 	httpmock.RegisterResponder(
 		"GET",
 		mockEndpoint+"aws/datalake/blueprint.yaml",
-		httpmock.NewStringResponder(200, `sample test text
-with a new line`),
+		httpmock.NewStringResponder(200, yaml),
 	)
 	httpmock.RegisterResponder(
 		"GET",
 		mockEndpoint+"aws/monolith/test.yaml",
 		httpmock.NewStringResponder(200, `sample test text
 with a new line`),
+	)
+
+	yaml = `
+      apiVersion: xl/v1
+      kind: Blueprint
+      metadata:
+        projectName: Test Project
+
+      spec:
+        parameters:
+        - name: Bar
+          type: Input
+          value: testing
+        include:
+        - blueprint: aws/monolith
+          stage: before
+          parameterValues:
+          - name: Foo
+            value: hello
+            dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
+          - name: bar
+            value: true
+          skipFiles:
+          - path: xld-infrastructure.yml.tmpl
+            dependsOnTrue: TestDepends
+        - blueprint: aws/datalake
+          dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
+          stage: after
+          parameterValues:
+          - name: Foo
+            value: hello
+          renameFiles:
+          - path: xlr-pipeline.yml
+            renameTo: xlr-pipeline2.yml
+            dependsOnTrue: TestDepends
+
+        files:
+        - path: xld-environment.yml.tmpl
+        - path: xld-infrastructure.yml.tmpl
+        - path: xlr-pipeline.yml`
+
+	httpmock.RegisterResponder(
+		"GET",
+		mockEndpoint+"aws/compose/blueprint.yaml",
+		httpmock.NewStringResponder(200, yaml),
 	)
 
 	return c
@@ -237,7 +296,7 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 		blueprints, err := repo.initCurrentRepoClient()
 		require.Nil(t, err)
 		require.NotNil(t, blueprints)
-		require.Len(t, blueprints, 2)
+		require.Len(t, blueprints, 3)
 
 		t.Run("should get file contents", func(t *testing.T) {
 			contents, err := repo.fetchFileContents("aws/monolith/test.yaml", false, false)
@@ -394,7 +453,7 @@ func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
 	blueprints, err := repo.initCurrentRepoClient()
 	require.Nil(t, err)
 	require.NotNil(t, blueprints)
-	require.Len(t, blueprints, 2)
+	require.Len(t, blueprints, 3)
 
 	yaml := `
       apiVersion: xl/v1
@@ -468,10 +527,10 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 	blueprints, err := repo.initCurrentRepoClient()
 	require.Nil(t, err)
 	require.NotNil(t, blueprints)
-	require.Len(t, blueprints, 2)
+	require.Len(t, blueprints, 3)
 
 	type args struct {
-		blueprints   map[string]*models.BlueprintRemote
+		blueprint    *models.BlueprintRemote
 		templatePath string
 	}
 	tests := []struct {
@@ -485,7 +544,7 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 			"should error if path doesnt exist",
 			*repo,
 			args{
-				blueprints,
+				blueprints["test"],
 				"test",
 			},
 			nil,
@@ -495,7 +554,7 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 			"should parse blueprint definition file",
 			*repo,
 			args{
-				blueprints,
+				blueprints["aws/monolith"],
 				"aws/monolith",
 			},
 			[]TemplateConfig{
@@ -509,7 +568,7 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			blueprintContext := tt.blueprintContext
-			got, err := blueprintContext.parseRemoteDefinitionFile(tt.args.blueprints, tt.args.templatePath)
+			got, err := blueprintContext.parseRemoteDefinitionFile(tt.args.blueprint, tt.args.templatePath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BlueprintContext.parseRemoteDefinitionFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -528,7 +587,7 @@ func TestBlueprintContext_initCurrentRepoClient(t *testing.T) {
 		blueprints, err := repo.initCurrentRepoClient()
 		require.Nil(t, err)
 		require.NotNil(t, blueprints)
-		require.Len(t, blueprints, 2)
+		require.Len(t, blueprints, 3)
 	})
 }
 
@@ -543,7 +602,7 @@ func TestBlueprintContext_parseRepositoryTree(t *testing.T) {
 	}{
 		{
 			"should fetch 2 blueprints",
-			2,
+			3,
 			false,
 		},
 	}
