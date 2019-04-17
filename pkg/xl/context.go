@@ -126,7 +126,7 @@ func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Ch
 	return server.SendDoc(doc)
 }
 
-func (c *Context) processSingleDocumentAndGetContents(doc *Document, artifactsDir string, fileName string) ([]byte, error) {
+func (c *Context) ProcessSingleDocumentAndGetContents(doc *Document, artifactsDir string, fileName string) ([]byte, error) {
 	err := doc.ConditionalPreprocess(c, artifactsDir)
 	if err != nil {
 		return nil, err
