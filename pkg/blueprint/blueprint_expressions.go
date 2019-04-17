@@ -6,6 +6,7 @@ import (
     "github.com/xebialabs/xl-cli/pkg/util"
     "math"
     "net/url"
+    "os/user"
     "regexp"
     "strconv"
 )
@@ -58,13 +59,23 @@ var functions = map[string]govaluate.ExpressionFunction{
 	    return true, nil
     },
     "isFile": func(args ...interface{}) (interface{}, error) {
-        if util.PathExists(args[0].(string), false) {
+        currentUser, err := user.Current()
+        if err != nil {
+            return nil, fmt.Errorf("cannot get current user: %s", err.Error())
+        }
+        filePath := util.ExpandHomeDirIfNeeded(args[0].(string), currentUser)
+        if util.PathExists(filePath, false) {
             return true, nil
         }
         return false, nil
     },
     "isDir": func(args ...interface{}) (interface{}, error) {
-        if util.PathExists(args[0].(string), true) {
+        currentUser, err := user.Current()
+        if err != nil {
+            return nil, fmt.Errorf("cannot get current user: %s", err.Error())
+        }
+        dirPath := util.ExpandHomeDirIfNeeded(args[0].(string), currentUser)
+        if util.PathExists(dirPath, true) {
             return true, nil
         }
         return false, nil

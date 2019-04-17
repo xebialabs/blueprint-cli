@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+    "os/user"
+    "path"
 	"path/filepath"
 	"sort"
+    "strings"
 
-	"github.com/mitchellh/go-homedir"
+    "github.com/mitchellh/go-homedir"
 	funk "github.com/thoas/go-funk"
 )
 
@@ -55,6 +57,17 @@ func PathExists(filename string, mustBeDir bool) bool {
 		return err == nil && info.IsDir()
 	}
 	return err == nil
+}
+
+func ExpandHomeDirIfNeeded(path string, currentUser *user.User) string {
+    if path == "~" || path == "~/" {
+        Verbose("[path] path is user home directory [~]\n")
+        return currentUser.HomeDir
+    } else if strings.HasPrefix(path, "~/") {
+        Verbose("[path] expanding local relative path [%s] for user [%s]\n", path, currentUser.Username)
+        return filepath.Join(currentUser.HomeDir, path[2:])
+    }
+    return path
 }
 
 func PrintableFileName(path string) string {
