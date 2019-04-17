@@ -45,6 +45,7 @@ type Parameter struct {
 
 type File struct {
 	Path      interface{} `yaml:"path"`
+	RenameTo  interface{} `yaml:"renameTo"`
 	DependsOn interface{} `yaml:"dependsOn"`
 	// for backward compatibility
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
@@ -56,6 +57,7 @@ type IncludedBlueprint struct {
 	Stage           string           `yaml:"stage"`
 	ParameterValues []ParameterValue `yaml:"parameterValues"`
 	SkipFiles       []File           `yaml:"skipFiles"`
+	RenameFiles     []File           `yaml:"renameFiles"`
 	DependsOn       interface{}      `yaml:"dependsOn"`
 	// for backward compatibility
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
@@ -102,6 +104,7 @@ type Variable struct {
 type TemplateConfig struct {
 	Path           string
 	FullPath       string
+	RenameTo       VarField
 	DependsOn      VarField
 	DependsOnFalse VarField
 }
@@ -117,6 +120,7 @@ type IncludedBlueprintProcessed struct {
 	Stage           string
 	ParameterValues []ParameterValuesProcessed
 	SkipFiles       []TemplateConfig
+	RenameFiles     []TemplateConfig
 	DependsOn       VarField
 	DependsOnFalse  VarField
 }
