@@ -10,6 +10,8 @@ func Test_processCustomExpression(t *testing.T) {
 	type args struct {
 		exStr      string
 		parameters map[string]interface{}
+		currentKey string
+		currentVal interface{}
 	}
 	tests := []struct {
 		name    string
@@ -24,6 +26,8 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"foo": "foo",
 				},
+                "",
+                nil,
 			},
 			nil,
 			true,
@@ -35,6 +39,8 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Foo": "100",
 				},
+                "",
+                nil,
 			},
 			float64(100),
 			false,
@@ -46,6 +52,8 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Foo": "100",
 				},
+                "",
+                nil,
 			},
 			true,
 			false,
@@ -58,6 +66,8 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": true,
 					"Bar": false,
 				},
+                "",
+                nil,
 			},
 			false,
 			false,
@@ -69,6 +79,8 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Foo": 100,
 				},
+                "",
+                nil,
 			},
 			false,
 			false,
@@ -81,6 +93,8 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": "10",
 					"Bar": "200",
 				},
+                "",
+                nil,
 			},
 			float64(200),
 			false,
@@ -93,6 +107,8 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": "10",
 					"Bar": "200",
 				},
+                "",
+                nil,
 			},
 			"200",
 			false,
@@ -105,6 +121,8 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": true,
 					"Bar": []string{"test", "foo"},
 				},
+                "",
+                nil,
 			},
 			[]string{"test", "foo"},
 			false,
@@ -117,6 +135,8 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": "10",
 					"Bar": "200",
 				},
+                "",
+                nil,
 			},
 			true,
 			false,
@@ -129,6 +149,8 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": "75",
 					"Bar": 25,
 				},
+                "",
+                nil,
 			},
 			float64(100),
 			false,
@@ -141,6 +163,8 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": "foo",
 					"Bar": "bar",
 				},
+                "",
+                nil,
 			},
 			"foo+bar",
 			false,
@@ -152,6 +176,8 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Foo": "foo0",
 				},
+                "",
+                nil,
 			},
 			float64(4),
 			false,
@@ -164,6 +190,8 @@ func Test_processCustomExpression(t *testing.T) {
 					"arg1": "2",
 					"arg2": 1,
 				},
+                "",
+                nil,
 			},
 			float64(2),
 			false,
@@ -175,6 +203,8 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"arg": "1234",
 				},
+                "",
+                nil,
 			},
 			float64(4),
 			false,
@@ -186,6 +216,8 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"arg": "9",
 				},
+                "",
+                nil,
 			},
 			"009",
 			false,
@@ -197,6 +229,8 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"arg": "90",
 				},
+                "",
+                nil,
 			},
 			"090",
 			false,
@@ -208,6 +242,8 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"arg": "100",
 				},
+                "",
+                nil,
 			},
 			float64(100),
 			false,
@@ -220,6 +256,8 @@ func Test_processCustomExpression(t *testing.T) {
 					"arg1": "2",
 					"arg2": "1",
 				},
+                "",
+                nil,
 			},
 			float64(2),
 			false,
@@ -231,10 +269,56 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"arg": "2.12556",
 				},
+                "",
+                nil,
 			},
 			float64(2),
 			false,
 		},
+        {
+            "should error on invalid number of args for regex expression",
+            args{
+                "regex('[a-zA-Z-]*')",
+                map[string]interface{}{},
+                "",
+                nil,
+            },
+            nil,
+            true,
+        },
+        {
+            "should return success regex match for own valid value",
+            args{
+                "regex('[a-zA-Z-]*', TestVar)",
+                map[string]interface{}{},
+                "TestVar",
+                "SomeName",
+            },
+            true,
+            false,
+        },
+        {
+            "should return fail regex match for own invalid value",
+            args{
+                "regex('[a-zA-Z-]*', TestVar)",
+                map[string]interface{}{},
+                "TestVar",
+                "SomeName123",
+            },
+            false,
+            false,
+        },
+        {
+            "should use both own value and other parameter value in expression function",
+            args{
+                "min(TestVar1, TestVar2)",
+                map[string]interface{}{"TestVar1": 123},
+                "TestVar2",
+                100,
+            },
+            100.0,
+            false,
+        },
 		{
 			"should return true when a complex logical expression is evaluated",
 			args{
@@ -244,6 +328,8 @@ func Test_processCustomExpression(t *testing.T) {
 					"Bar":  200,
 					"Fooz": "test",
 				},
+                "",
+                nil,
 			},
 			true,
 			false,
@@ -257,6 +343,8 @@ func Test_processCustomExpression(t *testing.T) {
 					"Bar":  200,
 					"Fooz": "1.88888",
 				},
+                "",
+                nil,
 			},
 			float64(3),
 			false,
@@ -266,6 +354,8 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"strlen(randPassword())",
 				map[string]interface{}{},
+                "",
+                nil,
 			},
 			float64(16),
 			false,
@@ -273,7 +363,7 @@ func Test_processCustomExpression(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ProcessCustomExpression(tt.args.exStr, tt.args.parameters)
+			got, err := ProcessCustomExpression(tt.args.exStr, tt.args.parameters, tt.args.currentKey, tt.args.currentVal)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("processCustomExpression() error = %v, wantErr %v", err, tt.wantErr)
 				return

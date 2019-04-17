@@ -42,7 +42,6 @@ var functions = map[string]govaluate.ExpressionFunction{
 		return fmt.Sprintf("%v", args[0]), nil
 	},
 	"regex": func(args ...interface{}) (interface{}, error) {
-	    // todo: unit tests
 	    if len(args) != 2 {
 	        return nil, fmt.Errorf("invalid number of arguments for regex fn, expecting 2 got %d", len(args))
         }
@@ -53,7 +52,7 @@ var functions = map[string]govaluate.ExpressionFunction{
             return false, err
         }
         if !match {
-            return false, fmt.Errorf("Value should match pattern %s", pattern)
+            return false, nil
         }
 	    return true, nil
     },
