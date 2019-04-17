@@ -223,7 +223,6 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 
 // Get variable validate expression
 func (variable *Variable) GetValidateExpr() (string, error) {
-    // todo: unit tests
     if variable.Validate.Val == "" {
         return "",  nil
     }

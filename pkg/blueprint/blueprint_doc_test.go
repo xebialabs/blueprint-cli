@@ -1143,6 +1143,56 @@ func TestProcessCustomFunction_K8S_noconfig(t *testing.T) {
 	})
 }
 
+func TestGetValidateExpr(t *testing.T) {
+    tests := []struct {
+        name      string
+        variable  *Variable
+        wantStr   string
+        wantErr   error
+    }{
+        {
+            "should error on empty tag for validate attribute",
+            &Variable{Validate: VarField{Val: "test"}},
+            "",
+            fmt.Errorf("only '!expression' tag is supported for validate attribute"),
+        },
+        {
+            "should error on non-expression tag for validate attribute",
+            &Variable{Validate: VarField{Val: "test", Tag: "!fn"}},
+            "",
+            fmt.Errorf("only '!expression' tag is supported for validate attribute"),
+        },
+        {
+            "should return empty string for empty expression value with tag value",
+            &Variable{Validate: VarField{Val: "", Tag: "!expression"}},
+            "",
+            nil,
+        },
+        {
+            "should return empty string for empty expression value without tag value",
+            &Variable{Validate: VarField{Val: ""}},
+            "",
+            nil,
+        },
+        {
+            "should return expression string for valid expression tag",
+            &Variable{Validate: VarField{Val: "regex('*', TestVar)", Tag: "!expression"}},
+            "regex('*', TestVar)",
+            nil,
+        },
+    }
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got, err := tt.variable.GetValidateExpr()
+            if tt.wantErr == nil || err == nil {
+                assert.Equal(t, tt.wantStr, got)
+            } else {
+                assert.Equal(t, tt.wantErr.Error(), err.Error())
+            }
+        })
+    }
+}
+
 func TestValidatePrompt(t *testing.T) {
 	type args struct {
 	    varName      string
