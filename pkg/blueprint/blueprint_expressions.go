@@ -5,6 +5,7 @@ import (
     "github.com/Knetic/govaluate"
     "github.com/xebialabs/xl-cli/pkg/util"
     "math"
+    "net/url"
     "regexp"
     "strconv"
 )
@@ -41,7 +42,7 @@ var functions = map[string]govaluate.ExpressionFunction{
 	"string": func(args ...interface{}) (interface{}, error) {
 		return fmt.Sprintf("%v", args[0]), nil
 	},
-	"regex": func(args ...interface{}) (interface{}, error) {
+	"regexMatch": func(args ...interface{}) (interface{}, error) {
 	    if len(args) != 2 {
 	        return nil, fmt.Errorf("invalid number of arguments for regex fn, expecting 2 got %d", len(args))
         }
@@ -55,6 +56,25 @@ var functions = map[string]govaluate.ExpressionFunction{
             return false, nil
         }
 	    return true, nil
+    },
+    "isFile": func(args ...interface{}) (interface{}, error) {
+        if util.PathExists(args[0].(string), false) {
+            return true, nil
+        }
+        return false, nil
+    },
+    "isDir": func(args ...interface{}) (interface{}, error) {
+        if util.PathExists(args[0].(string), true) {
+            return true, nil
+        }
+        return false, nil
+    },
+    "isValidUrl": func(args ...interface{}) (interface{}, error) {
+        _, err := url.ParseRequestURI(args[0].(string))
+        if err != nil {
+            return false, nil
+        }
+        return true, nil
     },
 }
 

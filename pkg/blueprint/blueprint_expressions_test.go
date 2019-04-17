@@ -278,7 +278,7 @@ func Test_processCustomExpression(t *testing.T) {
         {
             "should error on invalid number of args for regex expression",
             args{
-                "regex('[a-zA-Z-]*')",
+                "regexMatch('[a-zA-Z-]*')",
                 map[string]interface{}{},
                 "",
                 nil,
@@ -289,7 +289,7 @@ func Test_processCustomExpression(t *testing.T) {
         {
             "should return success regex match for own valid value",
             args{
-                "regex('[a-zA-Z-]*', TestVar)",
+                "regexMatch('[a-zA-Z-]*', TestVar)",
                 map[string]interface{}{},
                 "TestVar",
                 "SomeName",
@@ -300,7 +300,7 @@ func Test_processCustomExpression(t *testing.T) {
         {
             "should return fail regex match for own invalid value",
             args{
-                "regex('[a-zA-Z-]*', TestVar)",
+                "regexMatch('[a-zA-Z-]*', TestVar)",
                 map[string]interface{}{},
                 "TestVar",
                 "SomeName123",
