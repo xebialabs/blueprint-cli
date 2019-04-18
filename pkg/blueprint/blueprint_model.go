@@ -90,7 +90,6 @@ type Variable struct {
 	Description        VarField
 	Default            VarField
 	DependsOn          VarField
-	DependsOnFalse     VarField
 	Options            []VarField
 	Pattern            VarField
 	SaveInXlVals       VarField
@@ -100,18 +99,18 @@ type Variable struct {
 
 // TemplateConfig holds the merged template file definitions with repository info
 type TemplateConfig struct {
-	Path           string
-	FullPath       string
-	Operation      string
-	RenamedPath    VarField
-	DependsOn      VarField
-	DependsOnFalse VarField
+	Path        string
+	FullPath    string
+	Operation   string
+	RenamedPath VarField
+	DependsOn   VarField
 }
 
 type VarField struct {
-	Val  string
-	Bool bool
-	Tag  string
+	Val        string
+	Bool       bool
+	Tag        string
+	InvertBool bool
 }
 
 type IncludedBlueprintProcessed struct {
@@ -120,18 +119,15 @@ type IncludedBlueprintProcessed struct {
 	ParameterOverrides []ParameterOverridesProcessed
 	FileOverrides      []TemplateConfig
 	DependsOn          VarField
-	DependsOnFalse     VarField
 }
 
 type ParameterOverridesProcessed struct {
-	Name           string
-	Value          VarField
-	DependsOn      VarField
-	DependsOnFalse VarField
+	Name      string
+	Value     VarField
+	DependsOn VarField
 }
 
 type FileOverridesProcessed struct {
-	Path           string
-	DependsOn      VarField
-	DependsOnFalse VarField
+	Path      string
+	DependsOn VarField
 }

@@ -58,13 +58,6 @@ func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parame
 		}
 		return !dependsOnVal, nil
 	}
-	if !util.IsStringEmpty(templateConfig.DependsOnFalse.Val) {
-		dependsOnFalseVal, err := ParseDependsOnValue(templateConfig.DependsOnFalse, variables, parameters)
-		if err != nil {
-			return false, err
-		}
-		return dependsOnFalseVal, nil
-	}
 	return false, nil
 }
 

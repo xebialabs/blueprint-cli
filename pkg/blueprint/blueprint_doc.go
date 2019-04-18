@@ -82,6 +82,9 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 		if err != nil {
 			return false, err
 		}
+		if varField.InvertBool {
+			return !dependsOnVal, nil
+		}
 		return dependsOnVal, nil
 	case tagExpression:
 		value, err := ProcessCustomExpression(fieldVal, parameters)
@@ -91,6 +94,9 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 		dependsOnVal, ok := value.(bool)
 		if ok {
 			util.Verbose("[expression] Processed value of expression [%s] is: %v\n", fieldVal, dependsOnVal)
+			if varField.InvertBool {
+				return !dependsOnVal, nil
+			}
 			return dependsOnVal, nil
 		}
 		return false, fmt.Errorf("Expression [%s] result is invalid for a boolean field", fieldVal)
@@ -98,6 +104,9 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 	dependsOnVar, err := findVariableByName(variables, fieldVal)
 	if err != nil {
 		return false, err
+	}
+	if varField.InvertBool {
+		return !dependsOnVar.Value.Bool, nil
 	}
 	return dependsOnVar.Value.Bool, nil
 }
@@ -506,23 +515,25 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 		fieldName := typeOfT.Field(i).Name
 		value := fieldR.Interface()
 		// for backward compatibility
-		if strings.ToLower(fieldName) == "dependsontrue" && value != nil {
+		invertBool := false
+		if (strings.ToLower(fieldName) == "dependsontrue" || strings.ToLower(fieldName) == "dependsonfalse") && value != nil {
+			invertBool = strings.ToLower(fieldName) == "dependsonfalse"
 			fieldName = "DependsOn"
 		}
 		field := getFieldByReflect().FieldByName(strings.Title(fieldName))
 		switch val := value.(type) {
 		case string:
 			// Set string field
-			setVariableField(&field, val, VarField{Val: val})
+			setVariableField(&field, val, VarField{Val: val, InvertBool: invertBool})
 		case int, uint, uint8, uint16, uint32, uint64:
 			// Set integer field
-			setVariableField(&field, fmt.Sprint(val), VarField{Val: fmt.Sprint(val)})
+			setVariableField(&field, fmt.Sprint(val), VarField{Val: fmt.Sprint(val), InvertBool: invertBool})
 		case float32, float64:
 			// Set float field
-			setVariableField(&field, fmt.Sprintf("%f", val), VarField{Val: fmt.Sprintf("%f", val)})
+			setVariableField(&field, fmt.Sprintf("%f", val), VarField{Val: fmt.Sprintf("%f", val), InvertBool: invertBool})
 		case bool:
 			// Set boolean field
-			setVariableField(&field, strconv.FormatBool(val), VarField{Val: strconv.FormatBool(val), Bool: val})
+			setVariableField(&field, strconv.FormatBool(val), VarField{Val: strconv.FormatBool(val), Bool: val, InvertBool: invertBool})
 		case []interface{}:
 			// Set options array field for Parameters
 			if len(val) > 0 {
@@ -576,7 +587,7 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 			// Set string field with YAML tag
 			switch val.Tag {
 			case tagFn, tagExpression:
-				setVariableField(&field, val.Value, VarField{Val: val.Value, Tag: val.Tag})
+				setVariableField(&field, val.Value, VarField{Val: val.Value, Tag: val.Tag, InvertBool: invertBool})
 			default:
 				return fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
 			}
@@ -681,24 +692,14 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 
 		// skip question based on DependsOn fields
 		if !util.IsStringEmpty(variable.DependsOn.Val) {
-			dependsOnTrueVal, err := ParseDependsOnValue(variable.DependsOn, &blueprintDoc.Variables, data.TemplateData)
+			dependsOnVal, err := ParseDependsOnValue(variable.DependsOn, &blueprintDoc.Variables, data.TemplateData)
 			if err != nil {
 				return nil, err
 			}
-			if skipQuestionOnCondition(&variable, variable.DependsOn.Val, dependsOnTrueVal, data, defaultVal, false) {
+			if skipQuestionOnCondition(&variable, variable.DependsOn.Val, dependsOnVal, data, defaultVal, variable.DependsOn.InvertBool) {
 				continue
 			}
 		}
-		if !util.IsStringEmpty(variable.DependsOnFalse.Val) {
-			dependsOnFalseVal, err := ParseDependsOnValue(variable.DependsOnFalse, &blueprintDoc.Variables, data.TemplateData)
-			if err != nil {
-				return nil, err
-			}
-			if skipQuestionOnCondition(&variable, variable.DependsOnFalse.Val, dependsOnFalseVal, data, defaultVal, true) {
-				continue
-			}
-		}
-
 		// skip user input if value field is present
 		if variable.Value.Val != "" {
 			parsedVal := variable.GetValueFieldVal(data.TemplateData)
