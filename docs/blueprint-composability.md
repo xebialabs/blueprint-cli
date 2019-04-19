@@ -39,22 +39,22 @@ spec:
     - name: Foo
       # expression and functions will be supported for 'value'
       value: hello 
-      dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends" # do this later
+    #   dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends" # Not decided yet
     - name: bar
       value: true
 
-    # 'fileOverrides' can be used to skip files and can be conditional using dependsOn
+    # 'fileOverrides' can be used to skip or rename files and can be conditional using dependsOn
     fileOverrides:
     - path: xld-infrastructure.yml.tmpl
       operation: skip
-      dependsOn: TestDepends # do this later
+    #   dependsOn: TestDepends # Not decided yet
     - path: xld-infrastructure.yml.tmpl
       operation: rename
       rename: xld-infrastructure2.yml
-      dependsOn: TestDepends # do this later
+    #   dependsOn: TestDepends # Not decided yet
 
   - blueprint: kubernetes/namespace
-    # To use parameters in dependsOn they need to defined before the expression is evaluated.
+    # To use parameters in dependsOn they need to be defined before the expression is evaluated.
     dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
     stage: after
     parameterValues:
