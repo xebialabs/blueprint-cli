@@ -94,6 +94,7 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
       - name: Test
         type: Input
         value: testing
+        saveInXlVals: true
 
       files:
       - path: xld-environment.yml.tmpl
@@ -183,7 +184,7 @@ with a new line`),
           parameterOverrides:
           - name: Test
             value: hello
-            dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
+            dependsOn: !expression "Bar == 'testing'"
           - name: bar
             value: true
           fileOverrides:
@@ -191,7 +192,7 @@ with a new line`),
             operation: skip
             dependsOnTrue: TestDepends
         - blueprint: aws/datalake
-          dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
+          dependsOnTrue: !expression "Bar == 'testing'"
           stage: after
           parameterOverrides:
           - name: Foo

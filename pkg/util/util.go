@@ -160,3 +160,9 @@ func ExtractStringKeysFromMap(m map[string]interface{}) (keys []string) {
 	}
 	return
 }
+
+func CopyIntoStringInterfaceMap(in map[string]interface{}, out map[string]interface{}) {
+	for k, v := range in {
+		out[k] = v
+	}
+}
