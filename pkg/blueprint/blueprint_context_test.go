@@ -81,7 +81,7 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 	httpmock.RegisterResponder(
 		"GET",
 		mockEndpoint+"index.json",
-		httpmock.NewStringResponder(200, `["aws/monolith", "aws/datalake", "aws/compose", "aws/emptyfiles", "aws/emptyparams"]`),
+		httpmock.NewStringResponder(200, `["aws/monolith", "aws/datalake", "aws/compose", "aws/compose-2", "aws/emptyfiles", "aws/emptyparams"]`),
 	)
 
 	yaml := `
@@ -211,6 +211,54 @@ with a new line`),
 	httpmock.RegisterResponder(
 		"GET",
 		mockEndpoint+"aws/compose/blueprint.yaml",
+		httpmock.NewStringResponder(200, yaml),
+	)
+
+	yaml = `
+      apiVersion: xl/v1
+      kind: Blueprint
+      metadata:
+        projectName: Test Project
+
+      spec:
+        parameters:
+        - name: Bar
+          type: Input
+          value: testing
+        include:
+        - blueprint: aws/monolith
+          stage: before
+          dependsOnFalse: !expression "2 > 1"
+          parameterOverrides:
+          - name: Test
+            value: hello
+            dependsOn: !expression "2 > 1"
+          - name: bar
+            value: true
+          fileOverrides:
+          - path: xld-infrastructure.yml.tmpl
+            operation: skip
+            dependsOnTrue: TestDepends
+        - blueprint: aws/datalake
+          dependsOnTrue: !expression "Bar != 'testing'"
+          stage: after
+          parameterOverrides:
+          - name: Foo
+            value: hello
+          fileOverrides:
+          - path: xlr-pipeline.yml
+            operation: rename
+            renamedPath: xlr-pipeline2-new.yml
+            dependsOnTrue: TestDepends
+
+        files:
+        - path: xld-environment.yml.tmpl
+        - path: xld-infrastructure.yml.tmpl
+        - path: xlr-pipeline.yml`
+
+	httpmock.RegisterResponder(
+		"GET",
+		mockEndpoint+"aws/compose-2/blueprint.yaml",
 		httpmock.NewStringResponder(200, yaml),
 	)
 
@@ -620,7 +668,7 @@ func TestBlueprintContext_initCurrentRepoClient(t *testing.T) {
 		blueprints, err := repo.initCurrentRepoClient()
 		require.Nil(t, err)
 		require.NotNil(t, blueprints)
-		require.Len(t, blueprints, 5)
+		require.Len(t, blueprints, 6)
 	})
 }
 
@@ -635,7 +683,7 @@ func TestBlueprintContext_parseRepositoryTree(t *testing.T) {
 	}{
 		{
 			"should fetch 2 blueprints",
-			5,
+			6,
 			false,
 		},
 	}

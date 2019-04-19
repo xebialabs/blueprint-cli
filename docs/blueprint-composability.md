@@ -54,6 +54,7 @@ spec:
       dependsOn: TestDepends # do this later
 
   - blueprint: kubernetes/namespace
+    # To use parameters in dependsOn they need to defined before the expression is evaluated.
     dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
     stage: after
     parameterValues:

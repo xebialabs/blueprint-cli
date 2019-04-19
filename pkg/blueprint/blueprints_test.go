@@ -1309,6 +1309,83 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"should return processed data for composed blueprint with dependsOn",
+			args{
+				repo,
+				false,
+				blueprints,
+				"aws/compose-2",
+				"",
+				false,
+				false,
+				[]survey.AskOpt{},
+			},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"Bar": "testing"},
+				DefaultData:  map[string]interface{}{},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{},
+			},
+			&BlueprintConfig{
+				ApiVersion: "xl/v1",
+				Kind:       "Blueprint",
+				Metadata:   Metadata{ProjectName: "Test Project"},
+				Include: []IncludedBlueprintProcessed{
+					IncludedBlueprintProcessed{
+						Blueprint: "aws/monolith",
+						Stage:     "before",
+						ParameterOverrides: []ParameterOverridesProcessed{
+							{
+								Name:      "Test",
+								Value:     VarField{Val: "hello"},
+								DependsOn: VarField{Tag: "!expression", Val: "2 > 1"},
+							},
+							{
+								Name:  "bar",
+								Value: VarField{Val: "true", Bool: true},
+							},
+						},
+						DependsOn: VarField{Tag: "!expression", Val: "2 > 1", InvertBool: true},
+						FileOverrides: []TemplateConfig{
+							{
+								Path:      "xld-infrastructure.yml.tmpl",
+								Operation: skipOperation,
+								DependsOn: VarField{Val: "TestDepends"},
+							},
+						},
+					},
+					IncludedBlueprintProcessed{
+						Blueprint: "aws/datalake",
+						Stage:     "after",
+						ParameterOverrides: []ParameterOverridesProcessed{
+							{
+								Name:  "Foo",
+								Value: VarField{Val: "hello"},
+							},
+						},
+						DependsOn: VarField{Tag: "!expression", Val: "Bar != 'testing'"},
+						FileOverrides: []TemplateConfig{
+							{
+								Path:        "xlr-pipeline.yml",
+								Operation:   renameOperation,
+								RenamedPath: VarField{Val: "xlr-pipeline2-new.yml"},
+								DependsOn:   VarField{Val: "TestDepends"},
+							},
+						},
+					},
+				},
+				Variables: []Variable{
+					{Name: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+				},
+				TemplateConfigs: []TemplateConfig{
+					{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose-2/xld-environment.yml.tmpl"},
+					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/compose-2/xld-infrastructure.yml.tmpl"},
+					{Path: "xlr-pipeline.yml", FullPath: "aws/compose-2/xlr-pipeline.yml"},
+				},
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
