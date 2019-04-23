@@ -50,7 +50,7 @@ spec:
     #   dependsOn: TestDepends # Not decided yet
     - path: xld-infrastructure.yml.tmpl
       operation: rename
-      rename: xld-infrastructure2.yml
+      renamedPath: xld-infrastructure2.yml
     #   dependsOn: TestDepends # Not decided yet
 
   - blueprint: kubernetes/namespace
