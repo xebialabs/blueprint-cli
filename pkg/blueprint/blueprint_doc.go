@@ -937,7 +937,7 @@ func validatePrompt(varName string, validateExpr string, pattern string, allowEm
 				return err
 			}
 			if !isSuccess.(bool) {
-				return fmt.Errorf("validation failed for field [%s] with value %s", varName, val)
+				return fmt.Errorf("validation failed for field [%s] with value [%s] and expression [%s]", varName, val, validateExpr)
 			}
 			return nil
 		}
