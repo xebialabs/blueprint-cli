@@ -262,7 +262,7 @@ func (blueprintContext *BlueprintContext) parseDefinitionFile(blueprintLocalMode
 }
 
 func (blueprintContext *BlueprintContext) parseRemoteDefinitionFile(blueprint *models.BlueprintRemote, templatePath string) (*BlueprintConfig, error) {
-	// Check if user provided/selected template path is in available blueprints map
+	// Since we pass a reference from a map here, it could be nil
 	if blueprint == nil {
 		return nil, fmt.Errorf("blueprint [%s] not found in repository %s", templatePath, (*blueprintContext.ActiveRepo).GetName())
 	}

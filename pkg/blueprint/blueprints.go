@@ -1,7 +1,8 @@
 package blueprint
 
 import (
-	"os"
+    "fmt"
+    "os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -23,15 +24,25 @@ import (
 // SkipFinalPrompt is used in tests to skip the confirmation prompt
 var SkipFinalPrompt = false
 
+// SkipUserInput is used in tests to skip the user input
+var SkipUserInput = false
+
 const (
 	valuesFile        = "values.xlvals"
 	valuesFileHeader  = "# This file includes all non-secret values, you can add variables here and then refer them with '!value' tag in YAML files"
 	secretsFile       = "secrets.xlvals"
 	secretsFileHeader = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
 	gitignoreFile     = ".gitignore"
+	skipOperation     = "skip"
+	renameOperation   = "rename"
 )
 
 var ignoredPaths = []string{"__test__"}
+
+type ComposedBlueprint struct {
+	BlueprintConfig *BlueprintConfig
+	DependsOn       VarField
+}
 
 func getFuncMaps() template.FuncMap {
 	funcMaps := sprig.TxtFuncMap()
@@ -45,19 +56,16 @@ func AdjustPathSeperatorIfNeeded(blueprintTemplate string) string {
 }
 
 func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
+	// skipped via composed blueprint
+	if templateConfig.Operation == skipOperation {
+		return true, nil
+	}
 	if !util.IsStringEmpty(templateConfig.DependsOn.Val) {
 		dependsOnVal, err := ParseDependsOnValue(templateConfig.DependsOn, variables, parameters)
 		if err != nil {
 			return false, err
 		}
 		return !dependsOnVal, nil
-	}
-	if !util.IsStringEmpty(templateConfig.DependsOnFalse.Val) {
-		dependsOnFalseVal, err := ParseDependsOnValue(templateConfig.DependsOnFalse, variables, parameters)
-		if err != nil {
-			return false, err
-		}
-		return dependsOnFalseVal, nil
 	}
 	return false, nil
 }
@@ -96,14 +104,7 @@ func InstantiateBlueprint(
 		templatePath = AdjustPathSeperatorIfNeeded(templatePath)
 	}
 
-	// get local/remote blueprint definition
-	blueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprints, templatePath)
-	if err != nil {
-		return err
-	}
-
-	// ask for user input
-	preparedData, err := blueprintDoc.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
+	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprintLocalMode, blueprints, templatePath, answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
 	if err != nil {
 		return err
 	}
@@ -150,7 +151,7 @@ func InstantiateBlueprint(
 		}
 
 		if skipFile {
-			util.Verbose("[file] skipping file [%s] since it has dependsOn value set\n", config.Path)
+			util.Verbose("[file] skipping file [%s] since it has dependsOn value set or is skipped by composed blueprint\n", config.Path)
 			continue
 		}
 
@@ -161,6 +162,11 @@ func InstantiateBlueprint(
 			return err
 		}
 		templateString := string(*templateContent)
+		finalFileName := config.Path
+		if config.RenamedPath.Val != "" {
+			finalFileName = config.RenamedPath.Val
+			util.Verbose("[file] Renaming template file %s to %s as it is overridden by composed blueprint\n", config.Path, finalFileName)
+		}
 
 		// process the template file (filter based on extension)
 		if strings.HasSuffix(config.Path, templateExtension) {
@@ -176,7 +182,8 @@ func InstantiateBlueprint(
 
 			// write the processed template to a file
 			finalTmpl := strings.TrimSpace(processedTmpl.String())
-			err = writeDataToFile(generatedBlueprint, strings.Replace(config.Path, templateExtension, "", 1), &finalTmpl)
+
+			err = writeDataToFile(generatedBlueprint, strings.Replace(finalFileName, templateExtension, "", 1), &finalTmpl)
 			if err != nil {
 				return err
 			}
@@ -187,7 +194,7 @@ func InstantiateBlueprint(
 			} else {
 				// handle non-template files - copy as-it-is
 				util.Verbose("[file] Copying file %s\n", config.FullPath)
-				err = writeDataToFile(generatedBlueprint, config.Path, &templateString)
+				err = writeDataToFile(generatedBlueprint, finalFileName, &templateString)
 				if err != nil {
 					return err
 				}
@@ -201,47 +208,156 @@ func InstantiateBlueprint(
 	return nil
 }
 
-func getBlueprintConfig(blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote, templatePath string) (*BlueprintConfig, error) {
-	util.Verbose("[cmd] Parsing Blueprint from %s\n", templatePath)
-	blueprint := blueprints[templatePath]
-	blueprintDoc, err := blueprintContext.parseDefinitionFile(blueprintLocalMode, blueprint, templatePath)
+func prepareMergedTemplateData(
+	blueprintContext *BlueprintContext,
+	blueprintLocalMode bool,
+	blueprints map[string]*models.BlueprintRemote,
+	templatePath string,
+	answersFile string,
+	strictAnswers bool,
+	useDefaultsAsValue bool,
+	surveyOpts ...survey.AskOpt,
+) (*PreparedData, *BlueprintConfig, error) {
+	// get local/remote blueprint definition
+	blueprintDocs, masterBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprints, templatePath, VarField{})
 	if err != nil {
-		return blueprintDoc, err
+		return nil, nil, err
 	}
 
-	if len(blueprintDoc.Include) > 0 {
-		util.Verbose("[dataPrep] Found %d included blueprints\n", len(blueprintDoc.Include))
-		err := composeBlueprints(blueprintDoc, blueprintContext, blueprintLocalMode, blueprints)
+	mergedData := NewPreparedData()
+	mergedBlueprintDoc := &BlueprintConfig{
+		ApiVersion: masterBlueprintDoc.ApiVersion,
+		Kind:       masterBlueprintDoc.Kind,
+		Metadata:   masterBlueprintDoc.Metadata,
+		Include:    masterBlueprintDoc.Include,
+	}
+	for _, blueprintDoc := range blueprintDocs {
+		// Evaluate dependsOn
+		ok, err := evaluateAndSkipIfDependsOnIsFalse(blueprintDoc.DependsOn, &mergedBlueprintDoc.Variables, mergedData)
 		if err != nil {
-			return blueprintDoc, err
+			return nil, nil, err
+		}
+		if ok {
+			// ask for user input
+			preparedData, err := blueprintDoc.BlueprintConfig.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// merge
+			util.CopyIntoStringInterfaceMap(preparedData.TemplateData, mergedData.TemplateData)
+			util.CopyIntoStringInterfaceMap(preparedData.DefaultData, mergedData.DefaultData)
+			util.CopyIntoStringInterfaceMap(preparedData.Values, mergedData.Values)
+			util.CopyIntoStringInterfaceMap(preparedData.Secrets, mergedData.Secrets)
+			// append params
+			mergedBlueprintDoc.Variables = append(mergedBlueprintDoc.Variables, blueprintDoc.BlueprintConfig.Variables...)
+			// append files
+			mergedBlueprintDoc.TemplateConfigs = append(mergedBlueprintDoc.TemplateConfigs, blueprintDoc.BlueprintConfig.TemplateConfigs...)
 		}
 	}
-	return blueprintDoc, nil
+
+    if !SkipFinalPrompt {
+        // Final prompt from user to start generation process
+        toContinue := false
+        err := survey.AskOne(&survey.Confirm{Message: models.BlueprintFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
+        if err != nil {
+            return nil, nil, err
+        }
+        if !toContinue {
+            return nil, nil, fmt.Errorf("blueprint generation cancelled")
+        }
+    }
+
+	return mergedData, mergedBlueprintDoc, nil
 }
 
-func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote) error {
+func evaluateAndSkipIfDependsOnIsFalse(dependsOn VarField, variables *[]Variable, mergedData *PreparedData) (bool, error) {
+	if util.IsStringEmpty(dependsOn.Val) {
+		return true, nil
+	}
+	dependsOnVal, err := ParseDependsOnValue(dependsOn, variables, mergedData.TemplateData)
+	if err != nil {
+		return false, err
+	}
+	return dependsOnVal, nil
+}
+
+func getBlueprintConfig(blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote, templatePath string, dependsOn VarField) ([]*ComposedBlueprint, *BlueprintConfig, error) {
+	util.Verbose("[cmd] Parsing Blueprint from %s\n", templatePath)
+	blueprintDocs := make([]*ComposedBlueprint, 0)
+	blueprint := blueprints[templatePath]
+	masterBlueprintDoc, err := blueprintContext.parseDefinitionFile(blueprintLocalMode, blueprint, templatePath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	util.Verbose("[compose] Found %d included blueprints\n", len(masterBlueprintDoc.Include))
+	blueprintDocs, err = composeBlueprints(masterBlueprintDoc, blueprintContext, blueprintLocalMode, blueprints, dependsOn)
+	if err != nil {
+		return nil, nil, err
+	}
+	return blueprintDocs, masterBlueprintDoc, nil
+}
+
+func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote, dependsOn VarField) ([]*ComposedBlueprint, error) {
+	blueprintDocs := make([]*ComposedBlueprint, 0)
+	// add the master blueprint
+	blueprintDocs = append(blueprintDocs, &ComposedBlueprint{blueprintDoc, dependsOn})
 	for _, included := range blueprintDoc.Include {
-		util.Verbose("[dataPrep] Fetch included blueprint %s\n", included.Blueprint)
+		util.Verbose("[compose] Fetch included blueprint %s\n", included.Blueprint)
 		// fetch blueprint from current repo
-		composedBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprints, included.Blueprint)
+		composedBlueprintDocs, currentBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprints, included.Blueprint, included.DependsOn)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		if composedBlueprintDoc != nil {
+		if included.ParameterOverrides != nil {
+			for _, overide := range included.ParameterOverrides {
+				targetIndex := findParameter(currentBlueprintDoc.Variables, overide.Name)
+				if targetIndex != -1 {
+					currentBlueprintDoc.Variables[targetIndex].Value = overide.Value
+				} else {
+					util.Verbose("[compose] Could not find parameterOverride for %s\n", overide.Name)
+				}
+			}
+		}
+		if included.FileOverrides != nil {
+			for _, overide := range included.FileOverrides {
+				targetIndex := findTemplateConfig(currentBlueprintDoc.TemplateConfigs, overide.Path)
+				if targetIndex != -1 {
+					currentBlueprintDoc.TemplateConfigs[targetIndex].Operation = overide.Operation
+					currentBlueprintDoc.TemplateConfigs[targetIndex].RenamedPath = overide.RenamedPath
+				} else {
+					util.Verbose("[compose] Could not find fileOverride for %s\n", overide.Path)
+				}
+			}
+		}
+		if currentBlueprintDoc != nil {
 			if included.Stage == "before" {
-				// prepend params
-				blueprintDoc.Variables = append(composedBlueprintDoc.Variables, blueprintDoc.Variables...)
-				// prepend files
-				blueprintDoc.TemplateConfigs = append(composedBlueprintDoc.TemplateConfigs, blueprintDoc.TemplateConfigs...)
+				blueprintDocs = append(composedBlueprintDocs, blueprintDocs...)
 			} else {
-				// append params
-				blueprintDoc.Variables = append(blueprintDoc.Variables, composedBlueprintDoc.Variables...)
-				// append files
-				blueprintDoc.TemplateConfigs = append(blueprintDoc.TemplateConfigs, composedBlueprintDoc.TemplateConfigs...)
+				blueprintDocs = append(blueprintDocs, composedBlueprintDocs...)
 			}
 		}
 	}
-	return nil
+	return blueprintDocs, nil
+}
+
+func findParameter(params []Variable, name string) int {
+	for i, param := range params {
+		if param.Name.Val == name {
+			return i
+		}
+	}
+	return -1
+}
+
+func findTemplateConfig(configs []TemplateConfig, path string) int {
+	for i, config := range configs {
+		if config.Path == path {
+			return i
+		}
+	}
+	return -1
 }
 
 func createDirectoryIfNeeded(fileName string) error {

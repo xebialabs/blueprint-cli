@@ -67,7 +67,7 @@ func (generatedBlueprint *GeneratedBlueprint) Cleanup() error {
 	for _, file := range generatedBlueprint.GeneratedFiles {
 		if isDir, _ := isDirectory(file); isDir {
 			directories = append(directories, file)
-		} else {
+		} else if util.PathExists(file, false) {
 			if err := os.Remove(file); err != nil {
 				return err
 			}
@@ -78,9 +78,11 @@ func (generatedBlueprint *GeneratedBlueprint) Cleanup() error {
 
 	for _, dir := range directories {
 		util.Verbose("[file] Removing directory %s\n", dir)
-		if empty, _ := isDirectoryEmpty(dir); empty {
-			if err := os.Remove(dir); err != nil {
-				return err
+		if util.PathExists(dir, true) {
+			if empty, _ := isDirectoryEmpty(dir); empty {
+				if err := os.Remove(dir); err != nil {
+					return err
+				}
 			}
 		}
 	}

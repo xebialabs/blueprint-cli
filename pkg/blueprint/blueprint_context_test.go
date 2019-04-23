@@ -81,7 +81,7 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 	httpmock.RegisterResponder(
 		"GET",
 		mockEndpoint+"index.json",
-		httpmock.NewStringResponder(200, `["aws/monolith", "aws/datalake", "aws/compose"]`),
+		httpmock.NewStringResponder(200, `["aws/monolith", "aws/datalake", "aws/compose", "aws/compose-2", "aws/emptyfiles", "aws/emptyparams"]`),
 	)
 
 	yaml := `
@@ -94,6 +94,7 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
       - name: Test
         type: Input
         value: testing
+        saveInXlVals: true
 
       files:
       - path: xld-environment.yml.tmpl
@@ -104,6 +105,13 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 		"GET",
 		mockEndpoint+"aws/monolith/blueprint.yaml",
 		httpmock.NewStringResponder(200, yaml),
+	)
+
+	httpmock.RegisterResponder(
+		"GET",
+		mockEndpoint+"aws/monolith/test.yaml",
+		httpmock.NewStringResponder(200, `sample test text
+with a new line`),
 	)
 
 	yaml = `
@@ -126,11 +134,37 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 		mockEndpoint+"aws/datalake/blueprint.yaml",
 		httpmock.NewStringResponder(200, yaml),
 	)
+
+	yaml = `
+    apiVersion: xl/v1
+    kind: Blueprint
+    metadata:
+      projectName: Test Project 3
+
+    parameters:
+    - name: Foo
+      type: Input
+      value: testing`
+
 	httpmock.RegisterResponder(
 		"GET",
-		mockEndpoint+"aws/monolith/test.yaml",
-		httpmock.NewStringResponder(200, `sample test text
-with a new line`),
+		mockEndpoint+"aws/emptyfiles/blueprint.yaml",
+		httpmock.NewStringResponder(200, yaml),
+	)
+
+	yaml = `
+    apiVersion: xl/v1
+    kind: Blueprint
+    metadata:
+      projectName: Test Project 4
+    files:
+    - path: xld-app.yml.tmpl
+    - path: xlr-pipeline.yml`
+
+	httpmock.RegisterResponder(
+		"GET",
+		mockEndpoint+"aws/emptyparams/blueprint.yaml",
+		httpmock.NewStringResponder(200, yaml),
 	)
 
 	yaml = `
@@ -147,24 +181,26 @@ with a new line`),
         include:
         - blueprint: aws/monolith
           stage: before
-          parameterValues:
-          - name: Foo
+          parameterOverrides:
+          - name: Test
             value: hello
-            dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
+            dependsOn: !expression "Bar == 'testing'"
           - name: bar
             value: true
-          skipFiles:
+          fileOverrides:
           - path: xld-infrastructure.yml.tmpl
+            operation: skip
             dependsOnTrue: TestDepends
         - blueprint: aws/datalake
-          dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
+          dependsOnTrue: !expression "Bar == 'testing'"
           stage: after
-          parameterValues:
+          parameterOverrides:
           - name: Foo
             value: hello
-          renameFiles:
+          fileOverrides:
           - path: xlr-pipeline.yml
-            renameTo: xlr-pipeline2.yml
+            operation: rename
+            renamedPath: xlr-pipeline2-new.yml
             dependsOnTrue: TestDepends
 
         files:
@@ -175,6 +211,54 @@ with a new line`),
 	httpmock.RegisterResponder(
 		"GET",
 		mockEndpoint+"aws/compose/blueprint.yaml",
+		httpmock.NewStringResponder(200, yaml),
+	)
+
+	yaml = `
+      apiVersion: xl/v1
+      kind: Blueprint
+      metadata:
+        projectName: Test Project
+
+      spec:
+        parameters:
+        - name: Bar
+          type: Input
+          value: testing
+        include:
+        - blueprint: aws/monolith
+          stage: before
+          dependsOnFalse: !expression "2 > 1"
+          parameterOverrides:
+          - name: Test
+            value: hello
+            dependsOn: !expression "2 > 1"
+          - name: bar
+            value: true
+          fileOverrides:
+          - path: xld-infrastructure.yml.tmpl
+            operation: skip
+            dependsOnTrue: TestDepends
+        - blueprint: aws/datalake
+          dependsOnTrue: !expression "Bar != 'testing'"
+          stage: after
+          parameterOverrides:
+          - name: Foo
+            value: hello
+          fileOverrides:
+          - path: xlr-pipeline.yml
+            operation: rename
+            renamedPath: xlr-pipeline2-new.yml
+            dependsOnTrue: TestDepends
+
+        files:
+        - path: xld-environment.yml.tmpl
+        - path: xld-infrastructure.yml.tmpl
+        - path: xlr-pipeline.yml`
+
+	httpmock.RegisterResponder(
+		"GET",
+		mockEndpoint+"aws/compose-2/blueprint.yaml",
 		httpmock.NewStringResponder(200, yaml),
 	)
 
@@ -296,7 +380,6 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 		blueprints, err := repo.initCurrentRepoClient()
 		require.Nil(t, err)
 		require.NotNil(t, blueprints)
-		require.Len(t, blueprints, 3)
 
 		t.Run("should get file contents", func(t *testing.T) {
 			contents, err := repo.fetchFileContents("aws/monolith/test.yaml", false, false)
@@ -453,7 +536,6 @@ func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
 	blueprints, err := repo.initCurrentRepoClient()
 	require.Nil(t, err)
 	require.NotNil(t, blueprints)
-	require.Len(t, blueprints, 3)
 
 	yaml := `
       apiVersion: xl/v1
@@ -527,7 +609,6 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 	blueprints, err := repo.initCurrentRepoClient()
 	require.Nil(t, err)
 	require.NotNil(t, blueprints)
-	require.Len(t, blueprints, 3)
 
 	type args struct {
 		blueprint    *models.BlueprintRemote
@@ -587,7 +668,7 @@ func TestBlueprintContext_initCurrentRepoClient(t *testing.T) {
 		blueprints, err := repo.initCurrentRepoClient()
 		require.Nil(t, err)
 		require.NotNil(t, blueprints)
-		require.Len(t, blueprints, 3)
+		require.Len(t, blueprints, 6)
 	})
 }
 
@@ -602,7 +683,7 @@ func TestBlueprintContext_parseRepositoryTree(t *testing.T) {
 	}{
 		{
 			"should fetch 2 blueprints",
-			3,
+			6,
 			false,
 		},
 	}

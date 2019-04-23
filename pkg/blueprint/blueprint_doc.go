@@ -21,9 +21,6 @@ import (
 	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
-// SkipUserInput is used in tests to skip the user input
-var SkipUserInput = false
-
 // Constants
 const (
 	FnAWS = "aws"
@@ -82,6 +79,9 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 		if err != nil {
 			return false, err
 		}
+		if varField.InvertBool {
+			return !dependsOnVal, nil
+		}
 		return dependsOnVal, nil
 	case tagExpression:
 		value, err := ProcessCustomExpression(fieldVal, parameters)
@@ -91,6 +91,9 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 		dependsOnVal, ok := value.(bool)
 		if ok {
 			util.Verbose("[expression] Processed value of expression [%s] is: %v\n", fieldVal, dependsOnVal)
+			if varField.InvertBool {
+				return !dependsOnVal, nil
+			}
 			return dependsOnVal, nil
 		}
 		return false, fmt.Errorf("Expression [%s] result is invalid for a boolean field", fieldVal)
@@ -98,6 +101,9 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 	dependsOnVar, err := findVariableByName(variables, fieldVal)
 	if err != nil {
 		return false, err
+	}
+	if varField.InvertBool {
+		return !dependsOnVar.Value.Bool, nil
 	}
 	return dependsOnVar.Value.Bool, nil
 }
@@ -264,7 +270,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		// do pattern validation if needed
 		if variable.Pattern.Val != "" {
 			allowEmpty := false
-			if variable.Type.Val == TypeInput && variable.Secret.Bool == true {
+			if variable.Type.Val == TypeInput && variable.Secret.Bool {
 				allowEmpty = true
 			}
 			validationErr := validatePrompt(variable.Pattern.Val, allowEmpty)(value)
@@ -282,7 +288,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	defaultValStr := fmt.Sprintf("%v", defaultVal)
 	switch variable.Type.Val {
 	case TypeInput:
-		if variable.Secret.Bool == true {
+		if variable.Secret.Bool {
 			questionMsg := prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))
 			if defaultVal != "" {
 				questionMsg += fmt.Sprintf(" (%s)", defaultVal)
@@ -506,23 +512,25 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 		fieldName := typeOfT.Field(i).Name
 		value := fieldR.Interface()
 		// for backward compatibility
-		if strings.ToLower(fieldName) == "dependsontrue" && value != nil {
+		invertBool := false
+		if (strings.ToLower(fieldName) == "dependsontrue" || strings.ToLower(fieldName) == "dependsonfalse") && value != nil {
+			invertBool = strings.ToLower(fieldName) == "dependsonfalse"
 			fieldName = "DependsOn"
 		}
 		field := getFieldByReflect().FieldByName(strings.Title(fieldName))
 		switch val := value.(type) {
 		case string:
 			// Set string field
-			setVariableField(&field, val, VarField{Val: val})
+			setVariableField(&field, val, VarField{Val: val, InvertBool: invertBool})
 		case int, uint, uint8, uint16, uint32, uint64:
 			// Set integer field
-			setVariableField(&field, fmt.Sprint(val), VarField{Val: fmt.Sprint(val)})
+			setVariableField(&field, fmt.Sprint(val), VarField{Val: fmt.Sprint(val), InvertBool: invertBool})
 		case float32, float64:
 			// Set float field
-			setVariableField(&field, fmt.Sprintf("%f", val), VarField{Val: fmt.Sprintf("%f", val)})
+			setVariableField(&field, fmt.Sprintf("%f", val), VarField{Val: fmt.Sprintf("%f", val), InvertBool: invertBool})
 		case bool:
 			// Set boolean field
-			setVariableField(&field, strconv.FormatBool(val), VarField{Val: strconv.FormatBool(val), Bool: val})
+			setVariableField(&field, strconv.FormatBool(val), VarField{Val: strconv.FormatBool(val), Bool: val, InvertBool: invertBool})
 		case []interface{}:
 			// Set options array field for Parameters
 			if len(val) > 0 {
@@ -542,12 +550,12 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 					}
 				}
 			}
-		case []ParameterValue:
-			// Set ParameterValue array field for Include
+		case []ParameterOverride:
+			// Set ParameterOverride array field for Include
 			if len(val) > 0 {
-				field.Set(reflect.MakeSlice(reflect.TypeOf([]ParameterValuesProcessed{}), len(val), len(val)))
+				field.Set(reflect.MakeSlice(reflect.TypeOf([]ParameterOverridesProcessed{}), len(val), len(val)))
 				for i, it := range val {
-					parsed := ParameterValuesProcessed{}
+					parsed := ParameterOverridesProcessed{}
 					err := parseFieldsFromStruct(&it, func() reflect.Value {
 						return reflect.ValueOf(&parsed).Elem()
 					})
@@ -576,7 +584,7 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 			// Set string field with YAML tag
 			switch val.Tag {
 			case tagFn, tagExpression:
-				setVariableField(&field, val.Value, VarField{Val: val.Value, Tag: val.Tag})
+				setVariableField(&field, val.Value, VarField{Val: val.Value, Tag: val.Tag, InvertBool: invertBool})
 			default:
 				return fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
 			}
@@ -681,24 +689,14 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 
 		// skip question based on DependsOn fields
 		if !util.IsStringEmpty(variable.DependsOn.Val) {
-			dependsOnTrueVal, err := ParseDependsOnValue(variable.DependsOn, &blueprintDoc.Variables, data.TemplateData)
+			dependsOnVal, err := ParseDependsOnValue(variable.DependsOn, &blueprintDoc.Variables, data.TemplateData)
 			if err != nil {
 				return nil, err
 			}
-			if skipQuestionOnCondition(&variable, variable.DependsOn.Val, dependsOnTrueVal, data, defaultVal, false) {
+			if skipQuestionOnCondition(&variable, variable.DependsOn.Val, dependsOnVal, data, defaultVal, variable.DependsOn.InvertBool) {
 				continue
 			}
 		}
-		if !util.IsStringEmpty(variable.DependsOnFalse.Val) {
-			dependsOnFalseVal, err := ParseDependsOnValue(variable.DependsOnFalse, &blueprintDoc.Variables, data.TemplateData)
-			if err != nil {
-				return nil, err
-			}
-			if skipQuestionOnCondition(&variable, variable.DependsOnFalse.Val, dependsOnFalseVal, data, defaultVal, true) {
-				continue
-			}
-		}
-
 		// skip user input if value field is present
 		if variable.Value.Val != "" {
 			parsedVal := variable.GetValueFieldVal(data.TemplateData)
@@ -787,18 +785,6 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		// use util.Print so that this is not skipped in quiet mode
 		util.Print("Using default values:\n")
 		util.Print(util.DataMapTable(&data.DefaultData, util.TableAlignLeft, 30, 50, "\t"))
-	}
-
-	if !SkipFinalPrompt {
-		// Final prompt from user to start generation process
-		toContinue := false
-		err := survey.AskOne(&survey.Confirm{Message: models.BlueprintFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
-		if err != nil {
-			return nil, err
-		}
-		if !toContinue {
-			return nil, fmt.Errorf("blueprint generation cancelled")
-		}
 	}
 
 	return data, nil
@@ -958,17 +944,17 @@ func findVariableByName(variables *[]Variable, name string) (*Variable, error) {
 }
 
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
-	if variable.Secret.Bool == true {
+	if variable.Secret.Bool {
 		preparedData.Secrets[variable.Name.Val] = data
 		// Use raw value of secret field if flag is set
-		if variable.UseRawValue.Bool == true {
+		if variable.UseRawValue.Bool {
 			preparedData.TemplateData[variable.Name.Val] = data
 		} else {
 			preparedData.TemplateData[variable.Name.Val] = fmt.Sprintf(fmtTagValue, variable.Name.Val)
 		}
 	} else {
 		// Save to values file if switch is ON
-		if variable.SaveInXlVals.Bool == true {
+		if variable.SaveInXlVals.Bool {
 			preparedData.Values[variable.Name.Val] = data
 		}
 		preparedData.TemplateData[variable.Name.Val] = data

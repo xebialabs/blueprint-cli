@@ -149,19 +149,20 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
            include:
            - blueprint: kubernetes/gke-cluster
              stage: before
-             parameterValues:
+             parameterOverrides:
              - name: Foo
                value: hello
                dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
              - name: bar
                value: true
-             skipFiles:
+             fileOverrides:
              - path: xld-infrastructure.yml.tmpl
+               operation: skip
                dependsOnTrue: TestDepends
            - blueprint: kubernetes/namespace
              dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
              stage: after
-             parameterValues:
+             parameterOverrides:
              - name: Foo
                value: hello
 `, models.YamlFormatVersion))
@@ -500,11 +501,11 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 			Value: VarField{Bool: true, Val: "true"},
 		}
 		variables[1] = Variable{
-			Name:           VarField{Val: "test"},
-			Type:           VarField{Val: TypeInput},
-			DependsOnFalse: VarField{Val: "confirm"},
+			Name:      VarField{Val: "test"},
+			Type:      VarField{Val: TypeInput},
+			DependsOn: VarField{Val: "confirm", InvertBool: true},
 		}
-		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnFalse.Val, variables[0].Value.Bool, NewPreparedData(), "", true))
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
 	t.Run("should skip question (dependsOn)", func(t *testing.T) {
 		variables := make([]Variable, 2)
@@ -518,7 +519,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 			Type:      VarField{Val: TypeInput},
 			DependsOn: VarField{Val: "confirm"},
 		}
-		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", false))
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
 	t.Run("should skip question and default value should be false (dependsOn)", func(t *testing.T) {
 		data := NewPreparedData()
@@ -533,7 +534,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 			Type:      VarField{Val: TypeConfirm},
 			DependsOn: VarField{Val: "confirm"},
 		}
-		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, data, "", false))
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, data, "", variables[1].DependsOn.InvertBool))
 		assert.False(t, data.TemplateData[variables[1].Name.Val].(bool))
 	})
 
@@ -545,11 +546,11 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 			Value: VarField{Bool: false, Val: "false"},
 		}
 		variables[1] = Variable{
-			Name:           VarField{Val: "test"},
-			Type:           VarField{Val: TypeInput},
-			DependsOnFalse: VarField{Val: "confirm"},
+			Name:      VarField{Val: "test"},
+			Type:      VarField{Val: TypeInput},
+			DependsOn: VarField{Val: "confirm", InvertBool: true},
 		}
-		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOnFalse.Val, variables[0].Value.Bool, NewPreparedData(), "", true))
+		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
 	t.Run("should not skip question (dependsOn)", func(t *testing.T) {
 		variables := make([]Variable, 2)
@@ -563,7 +564,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 			Type:      VarField{Val: TypeInput},
 			DependsOn: VarField{Val: "confirm"},
 		}
-		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", false))
+		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
 }
 
@@ -792,11 +793,10 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Description: VarField{Val: "negative question?"},
 		}, doc.Variables[5])
 		assert.Equal(t, Variable{
-			Name:           VarField{Val: "dep"},
-			Type:           VarField{Val: TypeInput},
-			Description:    VarField{Val: "depends on others"},
-			DependsOn:      VarField{Val: "isit && true", Tag: tagExpression},
-			DependsOnFalse: VarField{Val: "isitnot"},
+			Name:        VarField{Val: "dep"},
+			Type:        VarField{Val: TypeInput},
+			Description: VarField{Val: "depends on others"},
+			DependsOn:   VarField{Val: "isitnot", InvertBool: true},
 		}, doc.Variables[6])
 	})
 	t.Run("should parse files from valid metadata", func(t *testing.T) {
@@ -818,9 +818,9 @@ func TestParseTemplateMetadata(t *testing.T) {
 			DependsOn: VarField{Val: "isitnot"},
 		}, doc.TemplateConfigs[2])
 		assert.Equal(t, TemplateConfig{
-			Path:           "foo.md",
-			FullPath:       "templatePath/test/foo.md",
-			DependsOnFalse: VarField{Val: "!!isitnot", Tag: tagExpression},
+			Path:      "foo.md",
+			FullPath:  "templatePath/test/foo.md",
+			DependsOn: VarField{Val: "!!isitnot", Tag: tagExpression, InvertBool: true},
 		}, doc.TemplateConfigs[3])
 	})
 	t.Run("should parse includes from valid metadata", func(t *testing.T) {
@@ -830,7 +830,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 		assert.Equal(t, IncludedBlueprintProcessed{
 			Blueprint: "kubernetes/gke-cluster",
 			Stage:     "before",
-			ParameterValues: []ParameterValuesProcessed{
+			ParameterOverrides: []ParameterOverridesProcessed{
 				{
 					Name:      "Foo",
 					Value:     VarField{Val: "hello"},
@@ -841,9 +841,10 @@ func TestParseTemplateMetadata(t *testing.T) {
 					Value: VarField{Val: "true", Bool: true},
 				},
 			},
-			SkipFiles: []TemplateConfig{
+			FileOverrides: []TemplateConfig{
 				{
 					Path:      "xld-infrastructure.yml.tmpl",
+					Operation: "skip",
 					DependsOn: VarField{Val: "TestDepends"},
 				},
 			},
@@ -851,7 +852,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 		assert.Equal(t, IncludedBlueprintProcessed{
 			Blueprint: "kubernetes/namespace",
 			Stage:     "after",
-			ParameterValues: []ParameterValuesProcessed{
+			ParameterOverrides: []ParameterOverridesProcessed{
 				{
 					Name:  "Foo",
 					Value: VarField{Val: "hello"},
@@ -1268,9 +1269,9 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 			[]TemplateConfig{
 				{Path: "test.yaml", FullPath: filepath.Join(templatePath, "test.yaml")},
 				{Path: "test2.yaml", FullPath: filepath.Join(templatePath, "test2.yaml"), DependsOn: VarField{Val: "foo", Tag: ""}},
-				{Path: "test3.yaml", FullPath: filepath.Join(templatePath, "test3.yaml"), DependsOnFalse: VarField{Val: "bar", Tag: ""}},
+				{Path: "test3.yaml", FullPath: filepath.Join(templatePath, "test3.yaml"), DependsOn: VarField{Val: "bar", Tag: "", InvertBool: true}},
 				{Path: "test4.yaml", FullPath: filepath.Join(templatePath, "test4.yaml"), DependsOn: VarField{Val: "bar", Tag: ""}},
-				{Path: "test5.yaml", FullPath: filepath.Join(templatePath, "test5.yaml"), DependsOnFalse: VarField{Val: "foo", Tag: ""}},
+				{Path: "test5.yaml", FullPath: filepath.Join(templatePath, "test5.yaml"), DependsOn: VarField{Val: "foo", Tag: "", InvertBool: true}},
 			},
 			nil,
 		},
@@ -1336,7 +1337,7 @@ func TestParseFile(t *testing.T) {
 			&File{
 				Path: "test.yaml", DependsOn: "foo", DependsOnFalse: "bar",
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "foo"}, DependsOnFalse: VarField{Val: "bar"}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "bar", InvertBool: true}},
 			nil,
 		},
 		{
@@ -1625,14 +1626,13 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 			},
 			[]Variable{
 				{
-					Name:           VarField{Val: "test"},
-					Type:           VarField{Val: "Input"},
-					Secret:         VarField{Bool: true, Val: "true"},
-					Value:          VarField{Val: "string"},
-					Description:    VarField{Val: "desc"},
-					Default:        VarField{Val: "string2"},
-					DependsOn:      VarField{Tag: "!expression", Val: "1 > 2"},
-					DependsOnFalse: VarField{Val: "Var"},
+					Name:        VarField{Val: "test"},
+					Type:        VarField{Val: "Input"},
+					Secret:      VarField{Bool: true, Val: "true"},
+					Value:       VarField{Val: "string"},
+					Description: VarField{Val: "desc"},
+					Default:     VarField{Val: "string2"},
+					DependsOn:   VarField{Val: "Var", InvertBool: true},
 					Options: []VarField{
 						VarField{Val: "test"}, VarField{Val: "foo"}, VarField{Val: "10"}, VarField{Val: "13.400000"},
 					},
@@ -1641,14 +1641,13 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 					UseRawValue:  VarField{Bool: false, Val: "false"},
 				},
 				{
-					Name:           VarField{Val: "test"},
-					Type:           VarField{Val: "Confirm"},
-					Secret:         VarField{Bool: false, Val: "false"},
-					Value:          VarField{Bool: true, Val: "true"},
-					Description:    VarField{Val: "desc"},
-					Default:        VarField{Bool: false, Val: "false"},
-					DependsOn:      VarField{Tag: "!expression", Val: "1 > 2"},
-					DependsOnFalse: VarField{Val: "Var"},
+					Name:        VarField{Val: "test"},
+					Type:        VarField{Val: "Confirm"},
+					Secret:      VarField{Bool: false, Val: "false"},
+					Value:       VarField{Bool: true, Val: "true"},
+					Description: VarField{Val: "desc"},
+					Default:     VarField{Bool: false, Val: "false"},
+					DependsOn:   VarField{Val: "Var", InvertBool: true},
 					Options: []VarField{
 						VarField{Val: "test"}, VarField{Tag: "!expression", Val: "1 > 2"},
 					},
@@ -1698,14 +1697,13 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 			Spec{},
 			[]Variable{
 				{
-					Name:           VarField{Val: "test"},
-					Type:           VarField{Val: "Input"},
-					Secret:         VarField{Bool: true, Val: "true"},
-					Value:          VarField{Val: "string"},
-					Description:    VarField{Val: "desc"},
-					Default:        VarField{Val: "string2"},
-					DependsOn:      VarField{Tag: "!expression", Val: "1 > 2"},
-					DependsOnFalse: VarField{Val: "Var"},
+					Name:        VarField{Val: "test"},
+					Type:        VarField{Val: "Input"},
+					Secret:      VarField{Bool: true, Val: "true"},
+					Value:       VarField{Val: "string"},
+					Description: VarField{Val: "desc"},
+					Default:     VarField{Val: "string2"},
+					DependsOn:   VarField{Val: "Var", InvertBool: true},
 					Options: []VarField{
 						VarField{Val: "test"}, VarField{Val: "foo"}, VarField{Val: "10"}, VarField{Val: "13.400000"},
 					},
@@ -1714,14 +1712,13 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 					UseRawValue:  VarField{Bool: false, Val: "false"},
 				},
 				{
-					Name:           VarField{Val: "test"},
-					Type:           VarField{Val: "Confirm"},
-					Secret:         VarField{Bool: false, Val: "false"},
-					Value:          VarField{Bool: true, Val: "true"},
-					Description:    VarField{Val: "desc"},
-					Default:        VarField{Bool: false, Val: "false"},
-					DependsOn:      VarField{Tag: "!expression", Val: "1 > 2"},
-					DependsOnFalse: VarField{Val: "Var"},
+					Name:        VarField{Val: "test"},
+					Type:        VarField{Val: "Confirm"},
+					Secret:      VarField{Bool: false, Val: "false"},
+					Value:       VarField{Bool: true, Val: "true"},
+					Description: VarField{Val: "desc"},
+					Default:     VarField{Bool: false, Val: "false"},
+					DependsOn:   VarField{Val: "Var", InvertBool: true},
 					Options: []VarField{
 						VarField{Val: "test"}, VarField{Tag: "!expression", Val: "1 > 2"},
 					},
@@ -1843,7 +1840,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 						{
 							Blueprint: "foo",
 							Stage:     "before",
-							ParameterValues: []ParameterValue{
+							ParameterOverrides: []ParameterOverride{
 								{
 									Name:      "foo",
 									Value:     "bar",
@@ -1860,25 +1857,27 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 							},
-							SkipFiles: []File{
+							FileOverrides: []File{
 								{
 									Path:      "foo/bar.md",
+									Operation: "skip",
 									DependsOn: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 								{
 									Path:           "foo/bar2.md",
+									Operation:      "skip",
 									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
-							},
-							RenameFiles: []File{
 								{
-									Path:      "foo/bar.md",
-									RenameTo:  "foo/baar.md",
-									DependsOn: yaml.CustomTag{Tag: "!fn", Value: "foo"},
+									Path:        "foo/bar.md",
+									Operation:   "rename",
+									RenamedPath: "foo/baar.md",
+									DependsOn:   yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 								{
 									Path:           "foo/bar2.md",
-									RenameTo:       yaml.CustomTag{Tag: "!expression", Value: "1 > 2 ? 'foo' : 'bar'"},
+									Operation:      "rename",
+									RenamedPath:    yaml.CustomTag{Tag: "!expression", Value: "1 > 2 ? 'foo' : 'bar'"},
 									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 							},
@@ -1890,15 +1889,14 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 			},
 			[]IncludedBlueprintProcessed{
 				{
-					Blueprint:      "bar",
-					Stage:          "after",
-					DependsOn:      VarField{Val: "1 > 2", Tag: "!expression"},
-					DependsOnFalse: VarField{Val: "Var"},
+					Blueprint: "bar",
+					Stage:     "after",
+					DependsOn: VarField{Val: "Var", InvertBool: true},
 				},
 				{
 					Blueprint: "foo",
 					Stage:     "before",
-					ParameterValues: []ParameterValuesProcessed{
+					ParameterOverrides: []ParameterOverridesProcessed{
 						{
 							Name:      "foo",
 							Value:     VarField{Val: "bar"},
@@ -1910,35 +1908,36 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 							DependsOn: VarField{Tag: "!fn", Val: "foo"},
 						},
 						{
-							Name:           "barr",
-							Value:          VarField{Val: "10.500000"},
-							DependsOnFalse: VarField{Tag: "!fn", Val: "foo"},
+							Name:      "barr",
+							Value:     VarField{Val: "10.500000"},
+							DependsOn: VarField{Tag: "!fn", Val: "foo", InvertBool: true},
 						},
 					},
-					SkipFiles: []TemplateConfig{
+					FileOverrides: []TemplateConfig{
 						{
 							Path:      "foo/bar.md",
+							Operation: "skip",
 							DependsOn: VarField{Tag: "!fn", Val: "foo"},
 						},
 						{
-							Path:           "foo/bar2.md",
-							DependsOnFalse: VarField{Tag: "!fn", Val: "foo"},
-						},
-					},
-					RenameFiles: []TemplateConfig{
-						{
-							Path:      "foo/bar.md",
-							RenameTo:  VarField{Val: "foo/baar.md"},
-							DependsOn: VarField{Tag: "!fn", Val: "foo"},
+							Path:      "foo/bar2.md",
+							Operation: "skip",
+							DependsOn: VarField{Tag: "!fn", Val: "foo", InvertBool: true},
 						},
 						{
-							Path:           "foo/bar2.md",
-							RenameTo:       VarField{Tag: "!expression", Val: "1 > 2 ? 'foo' : 'bar'"},
-							DependsOnFalse: VarField{Tag: "!fn", Val: "foo"},
+							Path:        "foo/bar.md",
+							Operation:   "rename",
+							RenamedPath: VarField{Val: "foo/baar.md"},
+							DependsOn:   VarField{Tag: "!fn", Val: "foo"},
+						},
+						{
+							Path:        "foo/bar2.md",
+							Operation:   "rename",
+							RenamedPath: VarField{Tag: "!expression", Val: "1 > 2 ? 'foo' : 'bar'"},
+							DependsOn:   VarField{Tag: "!fn", Val: "foo", InvertBool: true},
 						},
 					},
-					DependsOn:      VarField{Val: "1 > 2", Tag: "!expression"},
-					DependsOnFalse: VarField{Val: "Var"},
+					DependsOn: VarField{Val: "Var", InvertBool: true},
 				},
 			},
 			nil,
