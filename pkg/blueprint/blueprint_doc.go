@@ -1,24 +1,24 @@
 package blueprint
 
 import (
-    "bytes"
-    "fmt"
-    "io/ioutil"
-    "os"
-    "path/filepath"
-    "reflect"
-    "regexp"
-    "strconv"
-    "strings"
+	"bytes"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"reflect"
+	"regexp"
+	"strconv"
+	"strings"
 
-    "github.com/thoas/go-funk"
-    "github.com/xebialabs/xl-cli/pkg/cloud/aws"
-    "github.com/xebialabs/xl-cli/pkg/cloud/k8s"
-    "github.com/xebialabs/xl-cli/pkg/models"
-    "github.com/xebialabs/xl-cli/pkg/osHelper"
-    "github.com/xebialabs/xl-cli/pkg/util"
-    "github.com/xebialabs/yaml"
-    "gopkg.in/AlecAivazis/survey.v1"
+	"github.com/thoas/go-funk"
+	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
+	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
+	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/osHelper"
+	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/yaml"
+	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 // SkipUserInput is used in tests to skip the user input
@@ -84,7 +84,7 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 		}
 		return dependsOnVal, nil
 	case tagExpression:
-		value, err := ProcessCustomExpression(fieldVal, parameters, "", nil)
+		value, err := ProcessCustomExpression(fieldVal, parameters)
 		if err != nil {
 			return false, err
 		}
@@ -125,7 +125,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 			return values[0]
 		}
 	case tagExpression:
-		value, err := ProcessCustomExpression(defaultVal, variables, "", nil)
+		value, err := ProcessCustomExpression(defaultVal, variables)
 		if err != nil {
 			util.Info("Error while processing default value !expression [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
 			defaultVal = ""
@@ -164,7 +164,7 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) in
 		}
 		return values[0]
 	case tagExpression:
-		value, err := ProcessCustomExpression(variable.Value.Val, parameters, "", nil)
+		value, err := ProcessCustomExpression(variable.Value.Val, parameters)
 		if err != nil {
 			util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
 			return ""
@@ -196,7 +196,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Val, opts)
 			options = append(options, opts...)
 		case tagExpression:
-			opts, err := ProcessCustomExpression(option.Val, parameters, "", nil)
+			opts, err := ProcessCustomExpression(option.Val, parameters)
 			if err != nil {
 				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
 				return nil
@@ -223,23 +223,23 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 
 // Get variable validate expression
 func (variable *Variable) GetValidateExpr() (string, error) {
-    if variable.Validate.Val == "" {
-        return "",  nil
-    }
+	if variable.Validate.Val == "" {
+		return "", nil
+	}
 
-    switch variable.Validate.Tag {
-    case tagExpression:
-        return variable.Validate.Val, nil
-    }
-    return "", fmt.Errorf("only '!expression' tag is supported for validate attribute")
+	switch variable.Validate.Tag {
+	case tagExpression:
+		return variable.Validate.Val, nil
+	}
+	return "", fmt.Errorf("only '!expression' tag is supported for validate attribute")
 }
 
 func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[string]interface{}) (interface{}, error) {
-    // get validate expression
-    validateExpr, err := variable.GetValidateExpr()
-    if err != nil {
-        return nil, fmt.Errorf("error getting validation expression: %s", err.Error())
-    }
+	// get validate expression
+	validateExpr, err := variable.GetValidateExpr()
+	if err != nil {
+		return nil, fmt.Errorf("error getting validation expression: %s", err.Error())
+	}
 
 	// specific conversions by type if needed
 	switch variable.Type.Val {
@@ -303,8 +303,8 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	// get validate expression
 	validateExpr, err := variable.GetValidateExpr()
 	if err != nil {
-	    return nil, fmt.Errorf("error getting validation expression: %s", err.Error())
-    }
+		return nil, fmt.Errorf("error getting validation expression: %s", err.Error())
+	}
 
 	switch variable.Type.Val {
 	case TypeInput:
@@ -928,15 +928,19 @@ func validatePrompt(varName string, validateExpr string, pattern string, allowEm
 
 		// run validation function
 		if validateExpr != "" {
-		    isSuccess, err := ProcessCustomExpression(validateExpr, parameters, varName, val)
-		    if err != nil {
-		        return err
-            }
-		    if !isSuccess.(bool) {
-		        return fmt.Errorf("validation failed for field [%s] with value %s", varName, val)
-            }
-		    return nil
-        }
+			// add this value to the map of parameters for expression
+			if varName != "" {
+				parameters[varName] = val
+			}
+			isSuccess, err := ProcessCustomExpression(validateExpr, parameters)
+			if err != nil {
+				return err
+			}
+			if !isSuccess.(bool) {
+				return fmt.Errorf("validation failed for field [%s] with value %s", varName, val)
+			}
+			return nil
+		}
 
 		return nil
 	}
