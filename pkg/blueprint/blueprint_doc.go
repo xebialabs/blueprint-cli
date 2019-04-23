@@ -11,14 +11,14 @@ import (
 	"strconv"
 	"strings"
 
-	funk "github.com/thoas/go-funk"
+	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/osHelper"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/yaml"
-	survey "gopkg.in/AlecAivazis/survey.v1"
+	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 // Constants
@@ -227,7 +227,26 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 	return options
 }
 
+// Get variable validate expression
+func (variable *Variable) GetValidateExpr() (string, error) {
+	if variable.Validate.Val == "" {
+		return "", nil
+	}
+
+	switch variable.Validate.Tag {
+	case tagExpression:
+		return variable.Validate.Val, nil
+	}
+	return "", fmt.Errorf("only '!expression' tag is supported for validate attribute")
+}
+
 func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[string]interface{}) (interface{}, error) {
+	// get validate expression
+	validateExpr, err := variable.GetValidateExpr()
+	if err != nil {
+		return nil, fmt.Errorf("error getting validation expression: %s", err.Error())
+	}
+
 	// specific conversions by type if needed
 	switch variable.Type.Val {
 	case TypeConfirm:
@@ -273,7 +292,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 			if variable.Type.Val == TypeInput && variable.Secret.Bool {
 				allowEmpty = true
 			}
-			validationErr := validatePrompt(variable.Pattern.Val, allowEmpty)(value)
+			validationErr := validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, allowEmpty, parameters)(value)
 			if validationErr != nil {
 				return nil, fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", value, variable.Name.Val, validationErr.Error())
 			}
@@ -286,6 +305,13 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	var answer string
 	var err error
 	defaultValStr := fmt.Sprintf("%v", defaultVal)
+
+	// get validate expression
+	validateExpr, err := variable.GetValidateExpr()
+	if err != nil {
+		return nil, fmt.Errorf("error getting validation expression: %s", err.Error())
+	}
+
 	switch variable.Type.Val {
 	case TypeInput:
 		if variable.Secret.Bool {
@@ -296,7 +322,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			err = survey.AskOne(
 				&survey.Password{Message: questionMsg},
 				&answer,
-				validatePrompt(variable.Pattern.Val, true),
+				validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, true, parameters),
 				surveyOpts...,
 			)
 
@@ -312,7 +338,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 					Default: defaultValStr,
 				},
 				&answer,
-				validatePrompt(variable.Pattern.Val, false),
+				validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
 				surveyOpts...,
 			)
 		}
@@ -325,7 +351,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				AppendDefault: true,
 			},
 			&answer,
-			validatePrompt(variable.Pattern.Val, false),
+			validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
 			surveyOpts...,
 		)
 	case TypeFile:
@@ -349,9 +375,6 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		answer = string(data)
 	case TypeSelect:
 		options := variable.GetOptions(parameters)
-		if err != nil {
-			return "", err
-		}
 		err = survey.AskOne(
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Description.Val, fmt.Sprintf("Select value for %s?", variable.Name.Val)),
@@ -360,7 +383,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				PageSize: 10,
 			},
 			&answer,
-			validatePrompt(variable.Pattern.Val, false),
+			validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
 			surveyOpts...,
 		)
 	case TypeConfirm:
@@ -371,7 +394,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Default: variable.Default.Bool,
 			},
 			&confirm,
-			validatePrompt(variable.Pattern.Val, false),
+			validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
 			surveyOpts...,
 		)
 		if err != nil {
@@ -865,7 +888,7 @@ func validateFiles(configs *[]TemplateConfig) error {
 	return nil
 }
 
-func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error {
+func validatePrompt(varName string, validateExpr string, pattern string, allowEmpty bool, parameters map[string]interface{}) func(val interface{}) error {
 	return func(val interface{}) error {
 		// if empty value is not allowed, check for any value
 		if !allowEmpty {
@@ -875,6 +898,7 @@ func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error
 			}
 		}
 
+		// do pattern validation - TODO: to be removed after v9.0
 		if pattern != "" {
 			// the reflect value of the result
 			value := reflect.ValueOf(val)
@@ -887,6 +911,23 @@ func validatePrompt(pattern string, allowEmpty bool) func(val interface{}) error
 				return fmt.Errorf("Value should match pattern %s", pattern)
 			}
 		}
+
+		// run validation function
+		if validateExpr != "" {
+			// add this value to the map of parameters for expression
+			if varName != "" {
+				parameters[varName] = val
+			}
+			isSuccess, err := ProcessCustomExpression(validateExpr, parameters)
+			if err != nil {
+				return err
+			}
+			if !isSuccess.(bool) {
+				return fmt.Errorf("validation [%s] failed with value [%s]", validateExpr, val)
+			}
+			return nil
+		}
+
 		return nil
 	}
 }

@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
-	"testing"
+    "os/user"
+    "path"
+    "path/filepath"
+    "runtime"
+    "testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -47,6 +50,55 @@ func TestPathExists(t *testing.T) {
 		assert.True(t, PathExists(path.Join(tmpDir, "nopermission"), false))
 		assert.False(t, PathExists(path.Join(tmpDir, "nopermission", "test.yaml"), false))
 	})
+}
+
+func TestExpandHomeDirIfNeeded(t *testing.T) {
+    // not to be tested on windows
+    if runtime.GOOS != "windows" {
+        currentUser, _ := user.Current()
+        tests := []struct {
+            name     string
+            testPath string
+            expected string
+        }{
+            {
+                "should expand home path when given ~",
+                "~",
+                currentUser.HomeDir,
+            },
+            {
+                "should expand home path when given ~/",
+                "~",
+                currentUser.HomeDir,
+            },
+            {
+                "should expand home path when given relative path to ~",
+                "~/some/dir",
+                filepath.Join(currentUser.HomeDir, "some/dir"),
+            },
+            {
+                "should not expand home path when given a path including ~ in between",
+                "/tmp/~/some/dir",
+                "/tmp/~/some/dir",
+            },
+            {
+                "should return original path when a full path is given",
+                "/tmp/path/to/some/local/dir/",
+                "/tmp/path/to/some/local/dir/",
+            },
+            {
+                "should return original path when a root path is given",
+                "/",
+                "/",
+            },
+        }
+        for _, tt := range tests {
+            t.Run(tt.name, func(t *testing.T) {
+                got := ExpandHomeDirIfNeeded(tt.testPath, currentUser)
+                assert.Equal(t, tt.expected, got)
+            })
+        }
+    }
 }
 
 func TestMapContainsKeyWithVal(t *testing.T) {

@@ -39,7 +39,7 @@ func NewLocalBlueprintRepository(confMap map[string]string) (*LocalBlueprintRepo
     if err != nil {
         return nil, fmt.Errorf("cannot get current user: %s", err.Error())
     }
-    repoDir := expandHomeDirIfNeeded(confMap["path"], currentUser)
+    repoDir := util.ExpandHomeDirIfNeeded(confMap["path"], currentUser)
 
 	// parse & check local blueprint repo path
 	dirInfo, err := os.Stat(repoDir)
@@ -179,15 +179,4 @@ func findRelatedBlueprintDir(blueprintDirs []string, fullPath string) string {
 		}
 	}
 	return ""
-}
-
-func expandHomeDirIfNeeded(path string, currentUser *user.User) string {
-    if path == "~" || path == "~/" {
-        util.Verbose("[local] repo path is user home directory [~]\n")
-        return currentUser.HomeDir
-    } else if strings.HasPrefix(path, "~/") {
-        util.Verbose("[local] expanding local repo path [%s] for user [%s]\n", path, currentUser.Username)
-        return filepath.Join(currentUser.HomeDir, path[2:])
-    }
-    return path
 }

@@ -36,10 +36,11 @@ type Parameter struct {
 	DependsOnTrue      interface{}   `yaml:"dependsOnTrue"`
 	DependsOnFalse     interface{}   `yaml:"dependsOnFalse"`
 	Options            []interface{} `yaml:"options"`
-	Pattern            interface{}   `yaml:"pattern"`
+	Pattern            interface{}   `yaml:"pattern"` // TODO: to be removed after v9.0
 	SaveInXlVals       interface{}   `yaml:"saveInXlVals"`
 	UseRawValue        interface{}   `yaml:"useRawValue"`
 	ShowValueOnSummary interface{}   `yaml:"showValueOnSummary"`
+	Validate           interface{}   `yaml:"validate"`
 }
 
 type File struct {
@@ -91,10 +92,11 @@ type Variable struct {
 	Default            VarField
 	DependsOn          VarField
 	Options            []VarField
-	Pattern            VarField
+	Pattern            VarField // TODO: to be removed after v9.0
 	SaveInXlVals       VarField
 	UseRawValue        VarField
 	ShowValueOnSummary VarField
+	Validate           VarField
 }
 
 // TemplateConfig holds the merged template file definitions with repository info

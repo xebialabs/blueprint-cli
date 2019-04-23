@@ -3,6 +3,9 @@ package blueprint
 import (
 	"fmt"
 	"math"
+	"net/url"
+	"os/user"
+	"regexp"
 	"strconv"
 
 	"github.com/Knetic/govaluate"
@@ -41,6 +44,50 @@ var functions = map[string]govaluate.ExpressionFunction{
 	"string": func(args ...interface{}) (interface{}, error) {
 		return fmt.Sprintf("%v", args[0]), nil
 	},
+	"regexMatch": func(args ...interface{}) (interface{}, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("invalid number of arguments for regexMatch expression, expecting 2 got %d", len(args))
+		}
+		pattern := args[0].(string)
+		value := fmt.Sprintf("%v", args[1])
+		match, err := regexp.MatchString("^"+pattern+"$", value)
+		if err != nil {
+			return false, err
+		}
+		if !match {
+			return false, nil
+		}
+		return true, nil
+	},
+	"isFile": func(args ...interface{}) (interface{}, error) {
+		currentUser, err := user.Current()
+		if err != nil {
+			return nil, fmt.Errorf("cannot get current user: %s", err.Error())
+		}
+		filePath := util.ExpandHomeDirIfNeeded(args[0].(string), currentUser)
+		if util.PathExists(filePath, false) {
+			return true, nil
+		}
+		return false, nil
+	},
+	"isDir": func(args ...interface{}) (interface{}, error) {
+		currentUser, err := user.Current()
+		if err != nil {
+			return nil, fmt.Errorf("cannot get current user: %s", err.Error())
+		}
+		dirPath := util.ExpandHomeDirIfNeeded(args[0].(string), currentUser)
+		if util.PathExists(dirPath, true) {
+			return true, nil
+		}
+		return false, nil
+	},
+	"isValidUrl": func(args ...interface{}) (interface{}, error) {
+		_, err := url.ParseRequestURI(args[0].(string))
+		if err != nil {
+			return false, nil
+		}
+		return true, nil
+	},
 }
 
 // ProcessCustomExpression evaluates the expressions passed in the blueprint.yaml file using https://github.com/Knetic/govaluate
@@ -53,7 +100,8 @@ func ProcessCustomExpression(exStr string, parameters map[string]interface{}) (i
 		return nil, err
 	}
 
-	return expression.Evaluate(fixValueTypes(parameters))
+	expressionParams := fixValueTypes(parameters)
+	return expression.Evaluate(expressionParams)
 }
 
 func fixValueTypes(parameters map[string]interface{}) map[string]interface{} {
