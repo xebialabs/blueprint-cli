@@ -21,9 +21,6 @@ import (
 	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
-// SkipUserInput is used in tests to skip the user input
-var SkipUserInput = false
-
 // Constants
 const (
 	FnAWS = "aws"
@@ -788,18 +785,6 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		// use util.Print so that this is not skipped in quiet mode
 		util.Print("Using default values:\n")
 		util.Print(util.DataMapTable(&data.DefaultData, util.TableAlignLeft, 30, 50, "\t"))
-	}
-
-	if !SkipFinalPrompt {
-		// Final prompt from user to start generation process
-		toContinue := false
-		err := survey.AskOne(&survey.Confirm{Message: models.BlueprintFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
-		if err != nil {
-			return nil, err
-		}
-		if !toContinue {
-			return nil, fmt.Errorf("blueprint generation cancelled")
-		}
 	}
 
 	return data, nil

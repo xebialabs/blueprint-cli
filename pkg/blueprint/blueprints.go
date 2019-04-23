@@ -1,7 +1,8 @@
 package blueprint
 
 import (
-	"os"
+    "fmt"
+    "os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -22,6 +23,9 @@ import (
 
 // SkipFinalPrompt is used in tests to skip the confirmation prompt
 var SkipFinalPrompt = false
+
+// SkipUserInput is used in tests to skip the user input
+var SkipUserInput = false
 
 const (
 	valuesFile        = "values.xlvals"
@@ -239,22 +243,11 @@ func prepareMergedTemplateData(
 			if err != nil {
 				return nil, nil, err
 			}
+
 			// merge
-			// for k, v := range preparedData.TemplateData {
-			// 	mergedData.TemplateData[k] = v
-			// }
 			util.CopyIntoStringInterfaceMap(preparedData.TemplateData, mergedData.TemplateData)
-			// for k, v := range preparedData.DefaultData {
-			//     mergedData.DefaultData[k] = v
-			// }
 			util.CopyIntoStringInterfaceMap(preparedData.DefaultData, mergedData.DefaultData)
-			// for k, v := range preparedData.Values {
-			//     mergedData.Values[k] = v
-			// }
 			util.CopyIntoStringInterfaceMap(preparedData.Values, mergedData.Values)
-			// for k, v := range preparedData.Secrets {
-			//     mergedData.Secrets[k] = v
-			// }
 			util.CopyIntoStringInterfaceMap(preparedData.Secrets, mergedData.Secrets)
 			// append params
 			mergedBlueprintDoc.Variables = append(mergedBlueprintDoc.Variables, blueprintDoc.BlueprintConfig.Variables...)
@@ -262,6 +255,19 @@ func prepareMergedTemplateData(
 			mergedBlueprintDoc.TemplateConfigs = append(mergedBlueprintDoc.TemplateConfigs, blueprintDoc.BlueprintConfig.TemplateConfigs...)
 		}
 	}
+
+    if !SkipFinalPrompt {
+        // Final prompt from user to start generation process
+        toContinue := false
+        err := survey.AskOne(&survey.Confirm{Message: models.BlueprintFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
+        if err != nil {
+            return nil, nil, err
+        }
+        if !toContinue {
+            return nil, nil, fmt.Errorf("blueprint generation cancelled")
+        }
+    }
+
 	return mergedData, mergedBlueprintDoc, nil
 }
 
