@@ -44,27 +44,27 @@ type Parameter struct {
 }
 
 type File struct {
-	Path      interface{} `yaml:"path"`
-	RenameTo  interface{} `yaml:"renameTo"`
-	DependsOn interface{} `yaml:"dependsOn"`
+	Path        interface{} `yaml:"path"`
+	Operation   interface{} `yaml:"operation"`
+	RenamedPath interface{} `yaml:"renamedPath"`
+	DependsOn   interface{} `yaml:"dependsOn"`
 	// for backward compatibility
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
 	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
 }
 
 type IncludedBlueprint struct {
-	Blueprint       string           `yaml:"blueprint"`
-	Stage           string           `yaml:"stage"`
-	ParameterValues []ParameterValue `yaml:"parameterValues"`
-	SkipFiles       []File           `yaml:"skipFiles"`
-	RenameFiles     []File           `yaml:"renameFiles"`
-	DependsOn       interface{}      `yaml:"dependsOn"`
+	Blueprint          string              `yaml:"blueprint"`
+	Stage              string              `yaml:"stage"`
+	ParameterOverrides []ParameterOverride `yaml:"parameterOverrides"`
+	FileOverrides      []File              `yaml:"fileOverrides"`
+	DependsOn          interface{}         `yaml:"dependsOn"`
 	// for backward compatibility
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
 	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
 }
 
-type ParameterValue struct {
+type ParameterOverride struct {
 	Name      string      `yaml:"name"`
 	Value     interface{} `yaml:"value"`
 	DependsOn interface{} `yaml:"dependsOn"`
@@ -91,7 +91,6 @@ type Variable struct {
 	Description        VarField
 	Default            VarField
 	DependsOn          VarField
-	DependsOnFalse     VarField
 	Options            []VarField
 	Pattern            VarField // TODO: to be removed after v9.0
 	SaveInXlVals       VarField
@@ -102,38 +101,35 @@ type Variable struct {
 
 // TemplateConfig holds the merged template file definitions with repository info
 type TemplateConfig struct {
-	Path           string
-	FullPath       string
-	RenameTo       VarField
-	DependsOn      VarField
-	DependsOnFalse VarField
+	Path        string
+	FullPath    string
+	Operation   string
+	RenamedPath VarField
+	DependsOn   VarField
 }
 
 type VarField struct {
-	Val  string
-	Bool bool
-	Tag  string
+	Val        string
+	Bool       bool
+	Tag        string
+	InvertBool bool
 }
 
 type IncludedBlueprintProcessed struct {
-	Blueprint       string
-	Stage           string
-	ParameterValues []ParameterValuesProcessed
-	SkipFiles       []TemplateConfig
-	RenameFiles     []TemplateConfig
-	DependsOn       VarField
-	DependsOnFalse  VarField
+	Blueprint          string
+	Stage              string
+	ParameterOverrides []ParameterOverridesProcessed
+	FileOverrides      []TemplateConfig
+	DependsOn          VarField
 }
 
-type ParameterValuesProcessed struct {
-	Name           string
-	Value          VarField
-	DependsOn      VarField
-	DependsOnFalse VarField
+type ParameterOverridesProcessed struct {
+	Name      string
+	Value     VarField
+	DependsOn VarField
 }
 
-type SkipFilesProcessed struct {
-	Path           string
-	DependsOn      VarField
-	DependsOnFalse VarField
+type FileOverridesProcessed struct {
+	Path      string
+	DependsOn VarField
 }
