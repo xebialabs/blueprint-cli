@@ -17,6 +17,7 @@ var users bool
 var roles bool
 var environments bool
 var applications bool
+var includePasswords bool
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
@@ -36,7 +37,7 @@ var generateCmd = &cobra.Command{
 }
 
 func DoGenerate(context *xl.Context) {
-	err := context.GenerateSingleDocument(generateServer, generateFilename, generatePath, generateOverride, globalPermissions, users, roles, environments, applications)
+	err := context.GenerateSingleDocument(generateServer, generateFilename, generatePath, generateOverride, globalPermissions, users, roles, environments, applications, includePasswords)
 	if err != nil {
 		util.Fatal("Error while generating document: %s\n", err)
 	}
@@ -56,4 +57,5 @@ func init() {
 	generateFlags.BoolVarP(&roles, "roles", "r", false, "Add to the generated file all the roles in system")
 	generateFlags.BoolVarP(&environments, "environments", "e", false, "Add to the generated file all environments")
 	generateFlags.BoolVarP(&applications, "applications", "a", false, "Add to the generated file all the applications in system")
+	generateFlags.BoolVar(&includePasswords, "passwords", false, "Generate a passwords.xlvals file that contains all password values. (Requires ADMIN permissions)")
 }
