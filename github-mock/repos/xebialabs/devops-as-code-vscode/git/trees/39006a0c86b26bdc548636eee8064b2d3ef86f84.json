@@ -1,0 +1,256 @@
+{
+    "sha": "39006a0c86b26bdc548636eee8064b2d3ef86f84",
+    "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/trees/39006a0c86b26bdc548636eee8064b2d3ef86f84",
+    "tree": [
+        {
+            "path": ".editorconfig",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "f9cfb08d888e023fc14b6e77753a447631c9d5dc",
+            "size": 175,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/f9cfb08d888e023fc14b6e77753a447631c9d5dc"
+        },
+        {
+            "path": ".gitignore",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d3e15b1e699c62e7fa62f79eae14fc3a6ed06fa0",
+            "size": 26,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/d3e15b1e699c62e7fa62f79eae14fc3a6ed06fa0"
+        },
+        {
+            "path": ".travis.yml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "7178b45cda3a1d17ed6dd45e630f1054b18cdfb9",
+            "size": 1143,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/7178b45cda3a1d17ed6dd45e630f1054b18cdfb9"
+        },
+        {
+            "path": ".vscode",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "4ac1a84df42a9b3de5370d7318ecfc0795247139",
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/trees/4ac1a84df42a9b3de5370d7318ecfc0795247139"
+        },
+        {
+            "path": ".vscode/extensions.json",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ad475c77af5094a99ef67691672a53e51dba9297",
+            "size": 266,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/ad475c77af5094a99ef67691672a53e51dba9297"
+        },
+        {
+            "path": ".vscode/launch.json",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "658b2717da8b119a640fd8e07b9219bb3a567280",
+            "size": 787,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/658b2717da8b119a640fd8e07b9219bb3a567280"
+        },
+        {
+            "path": ".vscode/settings.json",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "27bede280906bfd938ee5765c8823515782039f0",
+            "size": 571,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/27bede280906bfd938ee5765c8823515782039f0"
+        },
+        {
+            "path": ".vscode/tasks.json",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d06be06885039b00a9747f2fc323c462cea8428e",
+            "size": 986,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/d06be06885039b00a9747f2fc323c462cea8428e"
+        },
+        {
+            "path": ".vscodeignore",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5468c0b96e059226d86795001c17b4b09370ebf4",
+            "size": 217,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/5468c0b96e059226d86795001c17b4b09370ebf4"
+        },
+        {
+            "path": "CHANGELOG.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "f0025193710a2029974d89968c02582bfd30747f",
+            "size": 66,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/f0025193710a2029974d89968c02582bfd30747f"
+        },
+        {
+            "path": "Jenkinsfile",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "b5d8786493b1080a79019289f0ad0511a64a60fa",
+            "size": 1434,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/b5d8786493b1080a79019289f0ad0511a64a60fa"
+        },
+        {
+            "path": "LICENSE",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "6f63cdb879f485b768b9efdac3f7c80e8cb58b1e",
+            "size": 1082,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/6f63cdb879f485b768b9efdac3f7c80e8cb58b1e"
+        },
+        {
+            "path": "README.md",
+            "mode": "100755",
+            "type": "blob",
+            "sha": "99be14728030739d9df3fba0913827fec01d1a23",
+            "size": 5540,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/99be14728030739d9df3fba0913827fec01d1a23"
+        },
+        {
+            "path": "icon",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "6a809adc70d56bc210be7db94057383e51c589ee",
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/trees/6a809adc70d56bc210be7db94057383e51c589ee"
+        },
+        {
+            "path": "icon/icon128.png",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d0820da141c414a5b2263d6e3b6c59aeb41a216b",
+            "size": 4514,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/d0820da141c414a5b2263d6e3b6c59aeb41a216b"
+        },
+        {
+            "path": "images",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "b063a622caf28bf63e490792e7bbbb45c89a5b0f",
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/trees/b063a622caf28bf63e490792e7bbbb45c89a5b0f"
+        },
+        {
+            "path": "images/demo.gif",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "73056e570f95e38d6a23f5b6a8b8561984cb89c0",
+            "size": 3635297,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/73056e570f95e38d6a23f5b6a8b8561984cb89c0"
+        },
+        {
+            "path": "language-configuration.json",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "16dc5a02e860ba7bf46d896b6187b14fe5597c3a",
+            "size": 575,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/16dc5a02e860ba7bf46d896b6187b14fe5597c3a"
+        },
+        {
+            "path": "package-lock.json",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d8685ebaa2e6e442c26395c7aa343c74458406fc",
+            "size": 77643,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/d8685ebaa2e6e442c26395c7aa343c74458406fc"
+        },
+        {
+            "path": "package.json",
+            "mode": "100755",
+            "type": "blob",
+            "sha": "cc103bcccdecb1391aacf70f7bd09c86d7eadbc7",
+            "size": 4882,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/cc103bcccdecb1391aacf70f7bd09c86d7eadbc7"
+        },
+        {
+            "path": "snippets",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "9ef064c44bdc71c1a15d6845ed08a6495834dd88",
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/trees/9ef064c44bdc71c1a15d6845ed08a6495834dd88"
+        },
+        {
+            "path": "snippets/snippets.json",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d0c21c3fcf543072ed0ff1240f56d7fa9e777b39",
+            "size": 786,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/d0c21c3fcf543072ed0ff1240f56d7fa9e777b39"
+        },
+        {
+            "path": "src",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "4a872e7c9cd0dc4541c877669858afaf2c716830",
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/trees/4a872e7c9cd0dc4541c877669858afaf2c716830"
+        },
+        {
+            "path": "src/extension.ts",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "e704b8b2a6009bb45d4438d49a67bcf5c13eba2c",
+            "size": 4780,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/e704b8b2a6009bb45d4438d49a67bcf5c13eba2c"
+        },
+        {
+            "path": "src/schema-contributor.ts",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "8c7e91b88123587769ca54db6337d5c925c195c3",
+            "size": 2455,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/8c7e91b88123587769ca54db6337d5c925c195c3"
+        },
+        {
+            "path": "syntaxes",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "12fdd0c5f0e43a54ff3927c107a44df533fcb9da",
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/trees/12fdd0c5f0e43a54ff3927c107a44df533fcb9da"
+        },
+        {
+            "path": "syntaxes/yaml.tmLanguage.json",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "6f08b6e72c938bcd87cae86f8e3b468a145c0e77",
+            "size": 21681,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/6f08b6e72c938bcd87cae86f8e3b468a145c0e77"
+        },
+        {
+            "path": "test",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "9b816f97f77b342329836ffe26f480e67956cf62",
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/trees/9b816f97f77b342329836ffe26f480e67956cf62"
+        },
+        {
+            "path": "test/extension.test.ts",
+            "mode": "100755",
+            "type": "blob",
+            "sha": "960e23a5cceeb27adddea6b15942be2df36c44ea",
+            "size": 775,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/960e23a5cceeb27adddea6b15942be2df36c44ea"
+        },
+        {
+            "path": "test/index.ts",
+            "mode": "100755",
+            "type": "blob",
+            "sha": "c438886b8ba14a8ab523722511141b1f20f17fb9",
+            "size": 1036,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/c438886b8ba14a8ab523722511141b1f20f17fb9"
+        },
+        {
+            "path": "thirdpartynotices.txt",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ee4a8b327671308d761cbfc74dfc23621d0aa4a3",
+            "size": 5875,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/ee4a8b327671308d761cbfc74dfc23621d0aa4a3"
+        },
+        {
+            "path": "tsconfig.json",
+            "mode": "100755",
+            "type": "blob",
+            "sha": "e2b5ec49964269162b5ad3191795c4e1af4dfcfe",
+            "size": 263,
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/blobs/e2b5ec49964269162b5ad3191795c4e1af4dfcfe"
+        }
+    ],
+    "truncated": false
+}

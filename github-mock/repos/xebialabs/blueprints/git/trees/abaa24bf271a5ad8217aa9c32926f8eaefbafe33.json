@@ -1,0 +1,1483 @@
+{
+    "sha": "abaa24bf271a5ad8217aa9c32926f8eaefbafe33",
+    "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/abaa24bf271a5ad8217aa9c32926f8eaefbafe33",
+    "tree": [
+        {
+            "path": ".github",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "bb87dee266a4dec08e362a683ca2c1e25bbf213c",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/bb87dee266a4dec08e362a683ca2c1e25bbf213c"
+        },
+        {
+            "path": ".github/BLUEPRINT_README_TEMPLATE.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "2e515820f7fee84549133fdbb8d279dceaa84ed1",
+            "size": 1071,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/2e515820f7fee84549133fdbb8d279dceaa84ed1"
+        },
+        {
+            "path": ".github/ISSUE_TEMPLATE",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "dd9d82a35d767496b3cc198abfc0775e4dc50be9",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/dd9d82a35d767496b3cc198abfc0775e4dc50be9"
+        },
+        {
+            "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "a6cba7be7c11d99593d88515a46e333155b45bf4",
+            "size": 695,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/a6cba7be7c11d99593d88515a46e333155b45bf4"
+        },
+        {
+            "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "bbcbbe7d61558adde3cbfd0c7a63a67c27ed6d30",
+            "size": 595,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/bbcbbe7d61558adde3cbfd0c7a63a67c27ed6d30"
+        },
+        {
+            "path": ".github/PULL_REQUEST_TEMPLATE.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "294e0a9bc6653f26193241e0fb82f7179aa355fc",
+            "size": 4072,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/294e0a9bc6653f26193241e0fb82f7179aa355fc"
+        },
+        {
+            "path": ".gitignore",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "9f52177f643d1ab1add0911cc08fe725957f0162",
+            "size": 1758,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/9f52177f643d1ab1add0911cc08fe725957f0162"
+        },
+        {
+            "path": ".travis.yml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "bf63a4bb010fa073ddd67e2279a778fdab3ab0da",
+            "size": 705,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/bf63a4bb010fa073ddd67e2279a778fdab3ab0da"
+        },
+        {
+            "path": ".xebialabs",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "1fe196c66b7e3f0329885b04b44b855e698afa11",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/1fe196c66b7e3f0329885b04b44b855e698afa11"
+        },
+        {
+            "path": ".xebialabs/wrapper.conf",
+            "mode": "100755",
+            "type": "blob",
+            "sha": "1d14f3b35e6ef3ad01a0350015a55ceac0b79a1e",
+            "size": 75,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/1d14f3b35e6ef3ad01a0350015a55ceac0b79a1e"
+        },
+        {
+            "path": "CONTRIBUTING.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d9a8cac04f16c1c5fd135c5ab4ce93eb8a6a7a31",
+            "size": 3107,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/d9a8cac04f16c1c5fd135c5ab4ce93eb8a6a7a31"
+        },
+        {
+            "path": "Jenkinsfile",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "f010bea5bd872fd76be2ac4b4011868d4411e2d6",
+            "size": 939,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/f010bea5bd872fd76be2ac4b4011868d4411e2d6"
+        },
+        {
+            "path": "LICENSE.txt",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "6657a4bd9b885b3b0206eb4df5ee470b7e9d131b",
+            "size": 11369,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/6657a4bd9b885b3b0206eb4df5ee470b7e9d131b"
+        },
+        {
+            "path": "README.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "168b6fc6bfa86282288b778284601f1031725627",
+            "size": 3924,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/168b6fc6bfa86282288b778284601f1031725627"
+        },
+        {
+            "path": "aws",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "c4741e66bdca6b0704e73aa72d075e33e1f16c10",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/c4741e66bdca6b0704e73aa72d075e33e1f16c10"
+        },
+        {
+            "path": "aws/datalake",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "46aaa4092a59df49725b532f1c4639070f8efab3",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/46aaa4092a59df49725b532f1c4639070f8efab3"
+        },
+        {
+            "path": "aws/datalake/README.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "811a20760cc61f98f41c19a9f586024134430705",
+            "size": 2997,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/811a20760cc61f98f41c19a9f586024134430705"
+        },
+        {
+            "path": "aws/datalake/__test__",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "99205e921704e71a07b245e3339846d5b6a46a9f",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/99205e921704e71a07b245e3339846d5b6a46a9f"
+        },
+        {
+            "path": "aws/datalake/__test__/answers-01.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5ee3c4127288d86c1e8ea50425985de4100ed161",
+            "size": 230,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/5ee3c4127288d86c1e8ea50425985de4100ed161"
+        },
+        {
+            "path": "aws/datalake/__test__/test-01.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ee65cc96e0d48d8aa130b0229e5e0f75cc1c4e75",
+            "size": 676,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/ee65cc96e0d48d8aa130b0229e5e0f75cc1c4e75"
+        },
+        {
+            "path": "aws/datalake/blueprint.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "947efd67e2c717dffeace7ff95ef746df98cb0ee",
+            "size": 2935,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/947efd67e2c717dffeace7ff95ef746df98cb0ee"
+        },
+        {
+            "path": "aws/datalake/cloudformation",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "126444a1a1922a0a87c897553cf834880c61f939",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/126444a1a1922a0a87c897553cf834880c61f939"
+        },
+        {
+            "path": "aws/datalake/cloudformation/data-lake-api.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "bd84f84901658813442a54912cc4fe8042995f45",
+            "size": 70569,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/bd84f84901658813442a54912cc4fe8042995f45"
+        },
+        {
+            "path": "aws/datalake/cloudformation/data-lake-artifacts.zip",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "840616dde32a46a1cee0ab1c4a3d4e4c98023e13",
+            "size": 15111927,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/840616dde32a46a1cee0ab1c4a3d4e4c98023e13"
+        },
+        {
+            "path": "aws/datalake/cloudformation/data-lake-deploy-federated.master.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "74a8397aef4d85cdbcc9ded03e9224a05f13e050",
+            "size": 21745,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/74a8397aef4d85cdbcc9ded03e9224a05f13e050"
+        },
+        {
+            "path": "aws/datalake/cloudformation/data-lake-deploy.master.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "45a44fa47deafe32e850d2fdd06b21de1c2d3a85",
+            "size": 20712,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/45a44fa47deafe32e850d2fdd06b21de1c2d3a85"
+        },
+        {
+            "path": "aws/datalake/cloudformation/data-lake-services.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "cee910d40387faf51f293e034b4d475654bb033d",
+            "size": 43932,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/cee910d40387faf51f293e034b4d475654bb033d"
+        },
+        {
+            "path": "aws/datalake/cloudformation/data-lake-storage.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "7b707edda191492df388c0d7efaf6fbbb7492fe3",
+            "size": 10268,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/7b707edda191492df388c0d7efaf6fbbb7492fe3"
+        },
+        {
+            "path": "aws/datalake/docker",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "99eac09f3267475b980ba0845333c615a897120b",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/99eac09f3267475b980ba0845333c615a897120b"
+        },
+        {
+            "path": "aws/datalake/docker/data",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "4a614e032b6062e816ca2b3e817af6b24bf9cf60",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/4a614e032b6062e816ca2b3e817af6b24bf9cf60"
+        },
+        {
+            "path": "aws/datalake/docker/data/configure-xl-devops-platform.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5a797d7ea85623f13371d6ce30d6ab42d2608f8a",
+            "size": 163,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/5a797d7ea85623f13371d6ce30d6ab42d2608f8a"
+        },
+        {
+            "path": "aws/datalake/docker/docker-compose.yml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "99cb4a20f961cf91dc86e69e73a9fa85264836d6",
+            "size": 617,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/99cb4a20f961cf91dc86e69e73a9fa85264836d6"
+        },
+        {
+            "path": "aws/datalake/xebialabs.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ae1a867ef8ff5d6e85e1faf5e44a8c5f2cd8b491",
+            "size": 162,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/ae1a867ef8ff5d6e85e1faf5e44a8c5f2cd8b491"
+        },
+        {
+            "path": "aws/datalake/xebialabs",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "53a85cb69a46573666b5f7e6678170c5e06b0ff1",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/53a85cb69a46573666b5f7e6678170c5e06b0ff1"
+        },
+        {
+            "path": "aws/datalake/xebialabs/USAGE.md.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "74971b864c66efa8a2e7f70b532d41edab2c2d0e",
+            "size": 1367,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/74971b864c66efa8a2e7f70b532d41edab2c2d0e"
+        },
+        {
+            "path": "aws/datalake/xebialabs/xld-environment.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "a7b430f89c3ce1e9feb1a6b2b23c7b38a2f304a8",
+            "size": 741,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/a7b430f89c3ce1e9feb1a6b2b23c7b38a2f304a8"
+        },
+        {
+            "path": "aws/datalake/xebialabs/xld-infrastructure.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d9d77c5944da1b77cce7536370d80e6678c0e53c",
+            "size": 2600,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/d9d77c5944da1b77cce7536370d80e6678c0e53c"
+        },
+        {
+            "path": "aws/datalake/xebialabs/xlr-pipeline.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "3e7f863782c27622735ff0f54e0f57e734b13dad",
+            "size": 4994,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/3e7f863782c27622735ff0f54e0f57e734b13dad"
+        },
+        {
+            "path": "aws/microservice-ecommerce",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "99616622d6a7bf3aaaa70e60ad68401caad1655f",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/99616622d6a7bf3aaaa70e60ad68401caad1655f"
+        },
+        {
+            "path": "aws/microservice-ecommerce/README.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "cce65673d86c11757f8bdfae1b75433849d0b19b",
+            "size": 3350,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/cce65673d86c11757f8bdfae1b75433849d0b19b"
+        },
+        {
+            "path": "aws/microservice-ecommerce/__test__",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "fda617b730065c7d55baa18d3cbc1cd37a0c3b55",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/fda617b730065c7d55baa18d3cbc1cd37a0c3b55"
+        },
+        {
+            "path": "aws/microservice-ecommerce/__test__/answers-01.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "71b7de1212d3dff8687be39cc453d87e9b10b07e",
+            "size": 337,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/71b7de1212d3dff8687be39cc453d87e9b10b07e"
+        },
+        {
+            "path": "aws/microservice-ecommerce/__test__/answers-02.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "0beff4bb40266122a203263976a9b57ae8d1d626",
+            "size": 338,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/0beff4bb40266122a203263976a9b57ae8d1d626"
+        },
+        {
+            "path": "aws/microservice-ecommerce/__test__/test-with-cluster.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "f8f8f08401a7081c6d6482f57dc4e0462624362e",
+            "size": 742,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/f8f8f08401a7081c6d6482f57dc4e0462624362e"
+        },
+        {
+            "path": "aws/microservice-ecommerce/__test__/test-with-out-cluster.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "9dbb642085739842b0697ca967b2c97e1a6f40d8",
+            "size": 762,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/9dbb642085739842b0697ca967b2c97e1a6f40d8"
+        },
+        {
+            "path": "aws/microservice-ecommerce/blueprint.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "9e9f4c27b1fb0674a0c6d6a11b0e99beaac2edcf",
+            "size": 3742,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/9e9f4c27b1fb0674a0c6d6a11b0e99beaac2edcf"
+        },
+        {
+            "path": "aws/microservice-ecommerce/cloudformation",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "13be2248adef1fc7d82917c4d44249571444267d",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/13be2248adef1fc7d82917c4d44249571444267d"
+        },
+        {
+            "path": "aws/microservice-ecommerce/cloudformation/cfn-secret-provider.zip",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "4022922b159c6f37650b84c73c3aaf30231b1637",
+            "size": 12911273,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/4022922b159c6f37650b84c73c3aaf30231b1637"
+        },
+        {
+            "path": "aws/microservice-ecommerce/cloudformation/eks-master.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5fc4661186e8fd8686c729f5793b96607eca1c8a",
+            "size": 2513,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/5fc4661186e8fd8686c729f5793b96607eca1c8a"
+        },
+        {
+            "path": "aws/microservice-ecommerce/cloudformation/eks-user.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ff1c122efeb1edd47f5315f066c91257203d1795",
+            "size": 3636,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/ff1c122efeb1edd47f5315f066c91257203d1795"
+        },
+        {
+            "path": "aws/microservice-ecommerce/cloudformation/eks-vpc.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "eaa21da44077c1c4fd07000ab2f1af4ff7ee6c15",
+            "size": 3214,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/eaa21da44077c1c4fd07000ab2f1af4ff7ee6c15"
+        },
+        {
+            "path": "aws/microservice-ecommerce/cloudformation/eks-workers.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "7326c939097c46a80f43f2ebde4fa59c3ee57b33",
+            "size": 9569,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/7326c939097c46a80f43f2ebde4fa59c3ee57b33"
+        },
+        {
+            "path": "aws/microservice-ecommerce/docker",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "9e5428c367af0f76552079e5265c83ecf660aa29",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/9e5428c367af0f76552079e5265c83ecf660aa29"
+        },
+        {
+            "path": "aws/microservice-ecommerce/docker/data",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "f773b6017750e57a781e842c0f986acc39556b63",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/f773b6017750e57a781e842c0f986acc39556b63"
+        },
+        {
+            "path": "aws/microservice-ecommerce/docker/data/configure-xl-devops-platform.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "3d6553492723dbcf2c28fd7110a30f0894a3859f",
+            "size": 317,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/3d6553492723dbcf2c28fd7110a30f0894a3859f"
+        },
+        {
+            "path": "aws/microservice-ecommerce/docker/docker-compose.yml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "af5ba0bcd1753dc25a2926d7b0b52f6acbb83fed",
+            "size": 1108,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/af5ba0bcd1753dc25a2926d7b0b52f6acbb83fed"
+        },
+        {
+            "path": "aws/microservice-ecommerce/docker/jenkins",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "5740a9177b01f43d40e07c599f66e0f6e2ddb1dd",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/5740a9177b01f43d40e07c599f66e0f6e2ddb1dd"
+        },
+        {
+            "path": "aws/microservice-ecommerce/docker/jenkins/jenkins.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "dbd22777956279d6ea0bc21008aa6378b6d3a6cc",
+            "size": 2504,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/dbd22777956279d6ea0bc21008aa6378b6d3a6cc"
+        },
+        {
+            "path": "aws/microservice-ecommerce/kubernetes",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "6543bce06f44c64eea5f994503eb6776f644de22",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/6543bce06f44c64eea5f994503eb6776f644de22"
+        },
+        {
+            "path": "aws/microservice-ecommerce/kubernetes/aws-auth-cm.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "4d7657235525ef9721a9119d94a32e51592f4f88",
+            "size": 367,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/4d7657235525ef9721a9119d94a32e51592f4f88"
+        },
+        {
+            "path": "aws/microservice-ecommerce/xebialabs.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "1a16077198b9e5dd03201f00138b2657970129e2",
+            "size": 214,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/1a16077198b9e5dd03201f00138b2657970129e2"
+        },
+        {
+            "path": "aws/microservice-ecommerce/xebialabs",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "cc587e6161589b758ab64d1e4393702f978062df",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/cc587e6161589b758ab64d1e4393702f978062df"
+        },
+        {
+            "path": "aws/microservice-ecommerce/xebialabs/USAGE.md.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "00d974f86b117eb65297546a2f67e070f9c55039",
+            "size": 2504,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/00d974f86b117eb65297546a2f67e070f9c55039"
+        },
+        {
+            "path": "aws/microservice-ecommerce/xebialabs/xld-cloudformation-apps.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ce3426772596e3b3076e91345b33a52dc671b663",
+            "size": 5935,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/ce3426772596e3b3076e91345b33a52dc671b663"
+        },
+        {
+            "path": "aws/microservice-ecommerce/xebialabs/xld-infra-env.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "babe1fab55a828823c6e69f7d6b5d858d78c0e85",
+            "size": 1612,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/babe1fab55a828823c6e69f7d6b5d858d78c0e85"
+        },
+        {
+            "path": "aws/microservice-ecommerce/xebialabs/xld-kubernetes-invoice-app.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "04c55dc1eda72fa70a36b4ba753cb5f724314d91",
+            "size": 994,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/04c55dc1eda72fa70a36b4ba753cb5f724314d91"
+        },
+        {
+            "path": "aws/microservice-ecommerce/xebialabs/xld-kubernetes-notification-app.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5074350ca6f8f4f02caa35525d93086d8c802301",
+            "size": 1052,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/5074350ca6f8f4f02caa35525d93086d8c802301"
+        },
+        {
+            "path": "aws/microservice-ecommerce/xebialabs/xld-kubernetes-store-app.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "98e0f8bc40170cdcd95a6db7f0d7857c049ee6a6",
+            "size": 1450,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/98e0f8bc40170cdcd95a6db7f0d7857c049ee6a6"
+        },
+        {
+            "path": "aws/microservice-ecommerce/xebialabs/xlr-pipeline-ci-cd.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d448ed95a9541651527789babecdc45091c2c0b2",
+            "size": 10855,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/d448ed95a9541651527789babecdc45091c2c0b2"
+        },
+        {
+            "path": "aws/microservice-ecommerce/xebialabs/xlr-pipeline-destroy.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d0e63af108c739c093eeae234c0dc829c4ea0223",
+            "size": 4356,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/d0e63af108c739c093eeae234c0dc829c4ea0223"
+        },
+        {
+            "path": "aws/monolith-terraform",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "289f954835cdcdf1c4f525c3f51971c276d2c8e1",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/289f954835cdcdf1c4f525c3f51971c276d2c8e1"
+        },
+        {
+            "path": "aws/monolith-terraform/README.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ab44dbe826e8c776f7c4249922894ee97afe1434",
+            "size": 2799,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/ab44dbe826e8c776f7c4249922894ee97afe1434"
+        },
+        {
+            "path": "aws/monolith-terraform/__test__",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "03e977adc5fccfc5f3e22d39dc1f2b05b02526f7",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/03e977adc5fccfc5f3e22d39dc1f2b05b02526f7"
+        },
+        {
+            "path": "aws/monolith-terraform/__test__/answers-01.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5a63a5228c8ebe6fe30815ad0f77a7037575afbb",
+            "size": 190,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/5a63a5228c8ebe6fe30815ad0f77a7037575afbb"
+        },
+        {
+            "path": "aws/monolith-terraform/__test__/test-01.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "9623f3efad7ae79ca2be76a4ec380de3b9d58e7d",
+            "size": 460,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/9623f3efad7ae79ca2be76a4ec380de3b9d58e7d"
+        },
+        {
+            "path": "aws/monolith-terraform/blueprint.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "4027cb6540ef43417920c6818737b294232ffd05",
+            "size": 2104,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/4027cb6540ef43417920c6818737b294232ffd05"
+        },
+        {
+            "path": "aws/monolith-terraform/docker",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "0962ee60cbb3e2ce10c989cc16085ea89e251600",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/0962ee60cbb3e2ce10c989cc16085ea89e251600"
+        },
+        {
+            "path": "aws/monolith-terraform/docker/data",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "4a614e032b6062e816ca2b3e817af6b24bf9cf60",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/4a614e032b6062e816ca2b3e817af6b24bf9cf60"
+        },
+        {
+            "path": "aws/monolith-terraform/docker/data/configure-xl-devops-platform.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5a797d7ea85623f13371d6ce30d6ab42d2608f8a",
+            "size": 163,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/5a797d7ea85623f13371d6ce30d6ab42d2608f8a"
+        },
+        {
+            "path": "aws/monolith-terraform/docker/docker-compose.yml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "b64dbcd386cd7380a9328045601571349a495976",
+            "size": 633,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/b64dbcd386cd7380a9328045601571349a495976"
+        },
+        {
+            "path": "aws/monolith-terraform/terraform",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "61d1f14aa8f0d88d0a1e9b8347d42db75c60e80e",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/61d1f14aa8f0d88d0a1e9b8347d42db75c60e80e"
+        },
+        {
+            "path": "aws/monolith-terraform/terraform/infrastructure",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "6e9d72770e770f45b54883bd2190af9999a6e010",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/6e9d72770e770f45b54883bd2190af9999a6e010"
+        },
+        {
+            "path": "aws/monolith-terraform/terraform/infrastructure/infrastructure.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "98f6b2d0228231d1a285bfbc36a7339a6ed2a472",
+            "size": 5482,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/98f6b2d0228231d1a285bfbc36a7339a6ed2a472"
+        },
+        {
+            "path": "aws/monolith-terraform/terraform/infrastructure/outputs.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "bdfa0f547e15b5681865da3d664e3c969c4a3db3",
+            "size": 454,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/bdfa0f547e15b5681865da3d664e3c969c4a3db3"
+        },
+        {
+            "path": "aws/monolith-terraform/terraform/infrastructure/variables.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "b12cfc6743568116fbb994f1e70023d977a4eaa4",
+            "size": 164,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/b12cfc6743568116fbb994f1e70023d977a4eaa4"
+        },
+        {
+            "path": "aws/monolith-terraform/terraform/service",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "11698d060d54dd09ac5d5ffc4ce52fd504ecef2f",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/11698d060d54dd09ac5d5ffc4ce52fd504ecef2f"
+        },
+        {
+            "path": "aws/monolith-terraform/terraform/service/service.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "6bad6f37bfad45d19e8e9e3533ff12e533d56701",
+            "size": 3603,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/6bad6f37bfad45d19e8e9e3533ff12e533d56701"
+        },
+        {
+            "path": "aws/monolith-terraform/terraform/service/variables.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "312f419df65751b8fb27cd689801c4728693f625",
+            "size": 191,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/312f419df65751b8fb27cd689801c4728693f625"
+        },
+        {
+            "path": "aws/monolith-terraform/xebialabs.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "e8d8df7d4edaf59eb45989871f84236317a50e31",
+            "size": 195,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/e8d8df7d4edaf59eb45989871f84236317a50e31"
+        },
+        {
+            "path": "aws/monolith-terraform/xebialabs",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "dd73d35d5e0b862675bcadd0d26803dcb4240e94",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/dd73d35d5e0b862675bcadd0d26803dcb4240e94"
+        },
+        {
+            "path": "aws/monolith-terraform/xebialabs/USAGE.md.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ee4cb90a5c24c7519e6d5b7bf8f0853eaa601830",
+            "size": 1399,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/ee4cb90a5c24c7519e6d5b7bf8f0853eaa601830"
+        },
+        {
+            "path": "aws/monolith-terraform/xebialabs/xld-environment.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "1027ee0cbcedbcb89993fa10574304b1d02eedac",
+            "size": 823,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/1027ee0cbcedbcb89993fa10574304b1d02eedac"
+        },
+        {
+            "path": "aws/monolith-terraform/xebialabs/xld-infrastructure.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "32f9eb4d585d0aded42ec07990df27e00debd510",
+            "size": 1294,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/32f9eb4d585d0aded42ec07990df27e00debd510"
+        },
+        {
+            "path": "aws/monolith-terraform/xebialabs/xld-service.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "0eca3c071050c2714f5ceb5e9e961ab84fbf6485",
+            "size": 2481,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/0eca3c071050c2714f5ceb5e9e961ab84fbf6485"
+        },
+        {
+            "path": "aws/monolith-terraform/xebialabs/xlr-pipeline.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "a40908346389785e7b8ee9916ad6c94353adf5e3",
+            "size": 3680,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/a40908346389785e7b8ee9916ad6c94353adf5e3"
+        },
+        {
+            "path": "aws/monolith",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "75f28d308d09477a4e138719c95d2d8c329f2158",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/75f28d308d09477a4e138719c95d2d8c329f2158"
+        },
+        {
+            "path": "aws/monolith/README.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "0c51fd2945550f3736cc1793252a603b1075e749",
+            "size": 2649,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/0c51fd2945550f3736cc1793252a603b1075e749"
+        },
+        {
+            "path": "aws/monolith/__test__",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "d16359d623cb122798bbb67829a95a70509850c2",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/d16359d623cb122798bbb67829a95a70509850c2"
+        },
+        {
+            "path": "aws/monolith/__test__/answers-01.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5a63a5228c8ebe6fe30815ad0f77a7037575afbb",
+            "size": 190,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/5a63a5228c8ebe6fe30815ad0f77a7037575afbb"
+        },
+        {
+            "path": "aws/monolith/__test__/test-01.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "c98ef4af5dbb989513af43318ea10836f95c414c",
+            "size": 331,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/c98ef4af5dbb989513af43318ea10836f95c414c"
+        },
+        {
+            "path": "aws/monolith/blueprint.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5cdde74281c7b4f8f5985f45ee7fd8a0f9977fa5",
+            "size": 1922,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/5cdde74281c7b4f8f5985f45ee7fd8a0f9977fa5"
+        },
+        {
+            "path": "aws/monolith/docker",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "99eac09f3267475b980ba0845333c615a897120b",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/99eac09f3267475b980ba0845333c615a897120b"
+        },
+        {
+            "path": "aws/monolith/docker/data",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "4a614e032b6062e816ca2b3e817af6b24bf9cf60",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/4a614e032b6062e816ca2b3e817af6b24bf9cf60"
+        },
+        {
+            "path": "aws/monolith/docker/data/configure-xl-devops-platform.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5a797d7ea85623f13371d6ce30d6ab42d2608f8a",
+            "size": 163,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/5a797d7ea85623f13371d6ce30d6ab42d2608f8a"
+        },
+        {
+            "path": "aws/monolith/docker/docker-compose.yml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "99cb4a20f961cf91dc86e69e73a9fa85264836d6",
+            "size": 617,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/99cb4a20f961cf91dc86e69e73a9fa85264836d6"
+        },
+        {
+            "path": "aws/monolith/xebialabs.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "e8d8df7d4edaf59eb45989871f84236317a50e31",
+            "size": 195,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/e8d8df7d4edaf59eb45989871f84236317a50e31"
+        },
+        {
+            "path": "aws/monolith/xebialabs",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "4b9a973036cdd1129b5729b8b99516b952b81c2f",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/4b9a973036cdd1129b5729b8b99516b952b81c2f"
+        },
+        {
+            "path": "aws/monolith/xebialabs/USAGE.md.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ee4cb90a5c24c7519e6d5b7bf8f0853eaa601830",
+            "size": 1399,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/ee4cb90a5c24c7519e6d5b7bf8f0853eaa601830"
+        },
+        {
+            "path": "aws/monolith/xebialabs/xld-environment.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "831f559fb25d33694cd2ea2dec676d4b0cd53174",
+            "size": 592,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/831f559fb25d33694cd2ea2dec676d4b0cd53174"
+        },
+        {
+            "path": "aws/monolith/xebialabs/xld-infrastructure.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "88800deffbd9598f22d70175544650edafceec37",
+            "size": 4792,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/88800deffbd9598f22d70175544650edafceec37"
+        },
+        {
+            "path": "aws/monolith/xebialabs/xld-service.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "73ba6f7c1ec0441bcafb25a95ef3dc8565b044a8",
+            "size": 2310,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/73ba6f7c1ec0441bcafb25a95ef3dc8565b044a8"
+        },
+        {
+            "path": "aws/monolith/xebialabs/xlr-pipeline.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "591f4c80c8b2a0a11cefd7e1c25481c253781682",
+            "size": 3610,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/591f4c80c8b2a0a11cefd7e1c25481c253781682"
+        },
+        {
+            "path": "devsecops",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "ca1a7482e2a1ded3f47177e5333331756995b637",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/ca1a7482e2a1ded3f47177e5333331756995b637"
+        },
+        {
+            "path": "devsecops/security-scanning",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "610ccb8912ff61b19a5d0f151d4407c61500a6bd",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/610ccb8912ff61b19a5d0f151d4407c61500a6bd"
+        },
+        {
+            "path": "devsecops/security-scanning/README.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "1ba96aa83d0bfbead719d7241c2f554f45920306",
+            "size": 2192,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/1ba96aa83d0bfbead719d7241c2f554f45920306"
+        },
+        {
+            "path": "devsecops/security-scanning/__test__",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "5d60499d20a1d20283467c0af4f4ed7416a0db79",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/5d60499d20a1d20283467c0af4f4ed7416a0db79"
+        },
+        {
+            "path": "devsecops/security-scanning/__test__/answers-01.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "21adda1d63214c1a4e02b4f452d8f467305bf2f5",
+            "size": 724,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/21adda1d63214c1a4e02b4f452d8f467305bf2f5"
+        },
+        {
+            "path": "devsecops/security-scanning/__test__/test-01.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "bf72c907c02965b54aabf0d58cb59b3d7020efef",
+            "size": 247,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/bf72c907c02965b54aabf0d58cb59b3d7020efef"
+        },
+        {
+            "path": "devsecops/security-scanning/blueprint.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "09a57dcb564fde7d8cb5d132e94efc3e2c1d7ca9",
+            "size": 4711,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/09a57dcb564fde7d8cb5d132e94efc3e2c1d7ca9"
+        },
+        {
+            "path": "devsecops/security-scanning/docker",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "e2549bfa9640dd3d679c4e9f1989c478cf5e6845",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/e2549bfa9640dd3d679c4e9f1989c478cf5e6845"
+        },
+        {
+            "path": "devsecops/security-scanning/docker/docker-compose.yml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "db0c7d5acbee808d18c96d61cb5b1cac1f35e8fe",
+            "size": 169,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/db0c7d5acbee808d18c96d61cb5b1cac1f35e8fe"
+        },
+        {
+            "path": "devsecops/security-scanning/xebialabs.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "8fdab826c48860308c2dda0ac98eb9f9dbb11f3e",
+            "size": 159,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/8fdab826c48860308c2dda0ac98eb9f9dbb11f3e"
+        },
+        {
+            "path": "devsecops/security-scanning/xebialabs",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "1dc3fcc83feeeaf3e639ab0618564b5755f39e07",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/1dc3fcc83feeeaf3e639ab0618564b5755f39e07"
+        },
+        {
+            "path": "devsecops/security-scanning/xebialabs/USAGE.md.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "72dee65f64fe12e229636a7098c3f94783023e38",
+            "size": 3209,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/72dee65f64fe12e229636a7098c3f94783023e38"
+        },
+        {
+            "path": "devsecops/security-scanning/xebialabs/xlr-configuration.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "f6e5c79508613836ad6c289ce45203c67950d044",
+            "size": 1294,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/f6e5c79508613836ad6c289ce45203c67950d044"
+        },
+        {
+            "path": "devsecops/security-scanning/xebialabs/xlr-dashboard.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "c2555bf10f5f70314306f1a7adcd93ad637ba2ee",
+            "size": 6485,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/c2555bf10f5f70314306f1a7adcd93ad637ba2ee"
+        },
+        {
+            "path": "devsecops/security-scanning/xebialabs/xlr-pipeline.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "9ae61c5b7fcebe1b4aaf1839bf813c9e6794ec5e",
+            "size": 3249,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/9ae61c5b7fcebe1b4aaf1839bf813c9e6794ec5e"
+        },
+        {
+            "path": "docker",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "b4532d58498b22fc70bfff3fe584b49c7d9c2884",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/b4532d58498b22fc70bfff3fe584b49c7d9c2884"
+        },
+        {
+            "path": "docker/simple-demo-app",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "e3f9271d840b5d85e84ffb1518e0548465443cac",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/e3f9271d840b5d85e84ffb1518e0548465443cac"
+        },
+        {
+            "path": "docker/simple-demo-app/README.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "a542e06d7bb852892c14178fe4b02035278bd0fc",
+            "size": 2328,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/a542e06d7bb852892c14178fe4b02035278bd0fc"
+        },
+        {
+            "path": "docker/simple-demo-app/__test__",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "7439318cf9458231f9d6f84264a05dc97bdf0bc6",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/7439318cf9458231f9d6f84264a05dc97bdf0bc6"
+        },
+        {
+            "path": "docker/simple-demo-app/__test__/answers-01.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "aba8f78d5b4b0876e2307cc2cd6514cca64dee0e",
+            "size": 169,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/aba8f78d5b4b0876e2307cc2cd6514cca64dee0e"
+        },
+        {
+            "path": "docker/simple-demo-app/__test__/test-01.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "0dc90c83066e39fe4eabf8f3cf57d95e0898f849",
+            "size": 297,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/0dc90c83066e39fe4eabf8f3cf57d95e0898f849"
+        },
+        {
+            "path": "docker/simple-demo-app/blueprint.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "441b168c08e57c937a9dcfeeb67dcdc41b302a92",
+            "size": 1380,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/441b168c08e57c937a9dcfeeb67dcdc41b302a92"
+        },
+        {
+            "path": "docker/simple-demo-app/docker",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "c75fe88b181e7baa478ce938c640f738e167f619",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/c75fe88b181e7baa478ce938c640f738e167f619"
+        },
+        {
+            "path": "docker/simple-demo-app/docker/data",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "4a614e032b6062e816ca2b3e817af6b24bf9cf60",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/4a614e032b6062e816ca2b3e817af6b24bf9cf60"
+        },
+        {
+            "path": "docker/simple-demo-app/docker/data/configure-xl-devops-platform.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5a797d7ea85623f13371d6ce30d6ab42d2608f8a",
+            "size": 163,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/5a797d7ea85623f13371d6ce30d6ab42d2608f8a"
+        },
+        {
+            "path": "docker/simple-demo-app/docker/docker-compose.yml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "010b9c1ffedf7ee42139728e3ab1a2f2a27236c8",
+            "size": 1174,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/010b9c1ffedf7ee42139728e3ab1a2f2a27236c8"
+        },
+        {
+            "path": "docker/simple-demo-app/xebialabs.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "11079e3c0d2895cc909e8673271b2955d2b49c0b",
+            "size": 159,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/11079e3c0d2895cc909e8673271b2955d2b49c0b"
+        },
+        {
+            "path": "docker/simple-demo-app/xebialabs",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "1dd73a2ce32feda04c1ac493b54b5cd9506bb3b5",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/1dd73a2ce32feda04c1ac493b54b5cd9506bb3b5"
+        },
+        {
+            "path": "docker/simple-demo-app/xebialabs/USAGE.md.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "2e5300db5361f79564e78d57ed8a2021cc1c3c30",
+            "size": 1136,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/2e5300db5361f79564e78d57ed8a2021cc1c3c30"
+        },
+        {
+            "path": "docker/simple-demo-app/xebialabs/xld-docker-apps.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "3fd1e039f4b528b419b374dfdec25c4da2d4ee0a",
+            "size": 1395,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/3fd1e039f4b528b419b374dfdec25c4da2d4ee0a"
+        },
+        {
+            "path": "docker/simple-demo-app/xebialabs/xld-environment.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ba943318b750dc56dd5a82b612a699fd9488d5a4",
+            "size": 482,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/ba943318b750dc56dd5a82b612a699fd9488d5a4"
+        },
+        {
+            "path": "docker/simple-demo-app/xebialabs/xlr-pipeline.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "0118d531154d4cf2692b627e84ce815c300f7d26",
+            "size": 2056,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/0118d531154d4cf2692b627e84ce815c300f7d26"
+        },
+        {
+            "path": "gcp",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "34f72da2068dab590c1cf4a709beb7d71ca904b3",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/34f72da2068dab590c1cf4a709beb7d71ca904b3"
+        },
+        {
+            "path": "gcp/microservice-ecommerce",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "aca2b1e577e997d65d7b0332fe2f4582016e4444",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/aca2b1e577e997d65d7b0332fe2f4582016e4444"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/README.md",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "6f3c685fb0b94ae093deaf5cea181ad4aac48203",
+            "size": 4750,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/6f3c685fb0b94ae093deaf5cea181ad4aac48203"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/__test__",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "d9afa16ed0ffd12e0f561cc37b75d4a5725d7548",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/d9afa16ed0ffd12e0f561cc37b75d4a5725d7548"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/__test__/answers-no-cluster-no-cicd.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d57c94ea7ae33379bf5afb4524c4babf3760b605",
+            "size": 353,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/d57c94ea7ae33379bf5afb4524c4babf3760b605"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/__test__/answers-no-cluster-with-cicd.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "2a6747331b20a8483358a9a398957966352a48c2",
+            "size": 352,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/2a6747331b20a8483358a9a398957966352a48c2"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/__test__/answers-with-cluster-no-cicd.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "4cfc80674a344d086ac2ead023b5a04aa790936a",
+            "size": 352,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/4cfc80674a344d086ac2ead023b5a04aa790936a"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/__test__/answers-with-cluster-with-cicd.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ca99b905c15ddfb2e1dbc1e2613cd3fd12ca8b61",
+            "size": 351,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/ca99b905c15ddfb2e1dbc1e2613cd3fd12ca8b61"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/__test__/test-no-cluster-no-cicd.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "faa08c4ada1d927a946d6be3dc8c9812f18ced2a",
+            "size": 926,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/faa08c4ada1d927a946d6be3dc8c9812f18ced2a"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/__test__/test-no-cluster-with-cicd.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "f27337571b148c844fb4fdf87c3ea614516d8131",
+            "size": 923,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/f27337571b148c844fb4fdf87c3ea614516d8131"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/__test__/test-with-cluster-no-cicd.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "648708189bed6ea86a124f488306ea6afc123389",
+            "size": 907,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/648708189bed6ea86a124f488306ea6afc123389"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/__test__/test-with-cluster-with-cicd.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d7c132ffac30c9fb23da6ba292a729fd6a226f0d",
+            "size": 906,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/d7c132ffac30c9fb23da6ba292a729fd6a226f0d"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/blueprint.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "1dfda6451ae3161d8333486fa17ca2c024af928b",
+            "size": 3742,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/1dfda6451ae3161d8333486fa17ca2c024af928b"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/docker",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "8bdc00a1a2c634045d21efc1310cc24d3789fa83",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/8bdc00a1a2c634045d21efc1310cc24d3789fa83"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/docker/data",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "f773b6017750e57a781e842c0f986acc39556b63",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/f773b6017750e57a781e842c0f986acc39556b63"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/docker/data/configure-xl-devops-platform.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "3d6553492723dbcf2c28fd7110a30f0894a3859f",
+            "size": 317,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/3d6553492723dbcf2c28fd7110a30f0894a3859f"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/docker/docker-compose.yml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "e17f2046eb9c4024bca8038c01082d04d47576cf",
+            "size": 1124,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/e17f2046eb9c4024bca8038c01082d04d47576cf"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/docker/jenkins",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "b0a2bde6404bd9dca241502ae8ac0e7414c731f6",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/b0a2bde6404bd9dca241502ae8ac0e7414c731f6"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/docker/jenkins/jenkins.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "e86194e19bf9cfb51b0cb7795e314204ed71d875",
+            "size": 2513,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/e86194e19bf9cfb51b0cb7795e314204ed71d875"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "a7cad5eccc13e1b3873628a87efe085fc6ba5008",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/a7cad5eccc13e1b3873628a87efe085fc6ba5008"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/.gitignore",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "38d2772207bee41efbf9e8dc1ae0fe33ee9fc563",
+            "size": 87,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/38d2772207bee41efbf9e8dc1ae0fe33ee9fc563"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/backend.tf.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "0d037e3d3b748772a40caa9eda03907c0846b66c",
+            "size": 178,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/0d037e3d3b748772a40caa9eda03907c0846b66c"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/gke",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "94f91861d89c21f916073cc39d19aca68c0fc880",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/94f91861d89c21f916073cc39d19aca68c0fc880"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/gke/main.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "d60a7d487940bf4237f199ae2409dc9b03e2f1c2",
+            "size": 1045,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/d60a7d487940bf4237f199ae2409dc9b03e2f1c2"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/gke/outputs.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "caf484a5f0498ba7bf89cc2be188e6293738272d",
+            "size": 157,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/caf484a5f0498ba7bf89cc2be188e6293738272d"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/gke/variables.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "aefde229afef620371549d0f654ee9affa525fcc",
+            "size": 667,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/aefde229afef620371549d0f654ee9affa525fcc"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/main.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "c9198cae3e86f78019289da6e04668850efe4cb5",
+            "size": 826,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/c9198cae3e86f78019289da6e04668850efe4cb5"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/outputs.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "a0556f30e174c5a18a1c08338d38b22f98ee36e7",
+            "size": 412,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/a0556f30e174c5a18a1c08338d38b22f98ee36e7"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/variables.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "2c5f17ab77a4437e8bb381d581bb814063680f43",
+            "size": 944,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/2c5f17ab77a4437e8bb381d581bb814063680f43"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/vpc",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "e73610067b99de8b31e2e6b21c36f8de87e145c6",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/e73610067b99de8b31e2e6b21c36f8de87e145c6"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/vpc/main.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "fb33426f0ef369a87e12b8d6657b8539f79dcfb5",
+            "size": 1261,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/fb33426f0ef369a87e12b8d6657b8539f79dcfb5"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/vpc/outputs.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "b4606d3f382853b341a3fa5f633e3ea3c5e469bb",
+            "size": 572,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/b4606d3f382853b341a3fa5f633e3ea3c5e469bb"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/terraform/vpc/variables.tf",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "05e1dea281a45db75e0c04f2c9e4ad5fe9d3c8ee",
+            "size": 221,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/05e1dea281a45db75e0c04f2c9e4ad5fe9d3c8ee"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/xebialabs.yaml",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "ac8cd163e96801a2672e91d71009b13cefa40318",
+            "size": 356,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/ac8cd163e96801a2672e91d71009b13cefa40318"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/xebialabs",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "67547ee76930ff1d2e9c211638d7a3d4e85addc4",
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/67547ee76930ff1d2e9c211638d7a3d4e85addc4"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/xebialabs/USAGE.md.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "722bddf451f28c275480cf99482513e10a1495bf",
+            "size": 7426,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/722bddf451f28c275480cf99482513e10a1495bf"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/xebialabs/xld-infra-env.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "5816d9cd2f4a06d330cdba3442aae5a5e84b8ebf",
+            "size": 1584,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/5816d9cd2f4a06d330cdba3442aae5a5e84b8ebf"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/xebialabs/xld-kubernetes-invoice-app.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "fef599581ab53045309f7dcca70af883207cd30b",
+            "size": 956,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/fef599581ab53045309f7dcca70af883207cd30b"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/xebialabs/xld-kubernetes-notification-app.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "3ac59cef3ffcfd727ebbb9b87ee39bbdd03ae626",
+            "size": 1014,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/3ac59cef3ffcfd727ebbb9b87ee39bbdd03ae626"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/xebialabs/xld-kubernetes-store-app.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "662a0170c478cca1c771ca0a3f9405495512f271",
+            "size": 1402,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/662a0170c478cca1c771ca0a3f9405495512f271"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/xebialabs/xld-terraform-apps.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "b03bb2a95a7717aeacd509866f4b8c266ee7f6c6",
+            "size": 1958,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/b03bb2a95a7717aeacd509866f4b8c266ee7f6c6"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/xebialabs/xlr-pipeline-ci-cd.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "aa526629758d5f3651d078ac0c318a0061c4c091",
+            "size": 7992,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/aa526629758d5f3651d078ac0c318a0061c4c091"
+        },
+        {
+            "path": "gcp/microservice-ecommerce/xebialabs/xlr-pipeline-destroy.yaml.tmpl",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "9f84ea84a278b2b59d027b368e23b6ec2d38842f",
+            "size": 2812,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/9f84ea84a278b2b59d027b368e23b6ec2d38842f"
+        },
+        {
+            "path": "generate_index.py",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "2da1ac22f7f6357a0a1d11fe950fb48633f39d6d",
+            "size": 815,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/2da1ac22f7f6357a0a1d11fe950fb48633f39d6d"
+        },
+        {
+            "path": "integration_tests.py",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "aac647b348415cb9bed5f3733eb61007485218e7",
+            "size": 10006,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/aac647b348415cb9bed5f3733eb61007485218e7"
+        },
+        {
+            "path": "xl",
+            "mode": "100755",
+            "type": "blob",
+            "sha": "1b4494fd95c86ab8c8128fbb30f318ded3095d5e",
+            "size": 20460379,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/1b4494fd95c86ab8c8128fbb30f318ded3095d5e"
+        },
+        {
+            "path": "xlw",
+            "mode": "100755",
+            "type": "blob",
+            "sha": "2ddf4564aede8671ff6269534335d9e89eb4c13a",
+            "size": 1416,
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/blobs/2ddf4564aede8671ff6269534335d9e89eb4c13a"
+        }
+    ],
+    "truncated": false
+}

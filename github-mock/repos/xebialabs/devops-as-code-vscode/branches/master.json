@@ -1,0 +1,97 @@
+{
+    "name": "master",
+    "commit": {
+        "sha": "39006a0c86b26bdc548636eee8064b2d3ef86f84",
+        "node_id": "MDY6Q29tbWl0MTY0NjIyNjMwOjM5MDA2YTBjODZiMjZiZGM1NDg2MzZlZWU4MDY0YjJkM2VmODZmODQ=",
+        "commit": {
+            "author": {
+                "name": "Paul van der Ende",
+                "email": "pvanderende@xebialabs.com",
+                "date": "2019-03-12T12:10:47Z"
+            },
+            "committer": {
+                "name": "Paul van der Ende",
+                "email": "pvanderende@xebialabs.com",
+                "date": "2019-03-12T12:10:47Z"
+            },
+            "message": "updated package-lock",
+            "tree": {
+                "sha": "503583a0e06837383c854a7ce1c775b7180184e4",
+                "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/trees/503583a0e06837383c854a7ce1c775b7180184e4"
+            },
+            "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/git/commits/39006a0c86b26bdc548636eee8064b2d3ef86f84",
+            "comment_count": 0,
+            "verification": {
+                "verified": false,
+                "reason": "unsigned",
+                "signature": null,
+                "payload": null
+            }
+        },
+        "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/commits/39006a0c86b26bdc548636eee8064b2d3ef86f84",
+        "html_url": "https://github.com/xebialabs/devops-as-code-vscode/commit/39006a0c86b26bdc548636eee8064b2d3ef86f84",
+        "comments_url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/commits/39006a0c86b26bdc548636eee8064b2d3ef86f84/comments",
+        "author": {
+            "login": "paulvanderende",
+            "id": 1903279,
+            "node_id": "MDQ6VXNlcjE5MDMyNzk=",
+            "avatar_url": "https://avatars2.githubusercontent.com/u/1903279?v=4",
+            "gravatar_id": "",
+            "url": "https://mock.github.com/users/paulvanderende",
+            "html_url": "https://github.com/paulvanderende",
+            "followers_url": "https://mock.github.com/users/paulvanderende/followers",
+            "following_url": "https://mock.github.com/users/paulvanderende/following{/other_user}",
+            "gists_url": "https://mock.github.com/users/paulvanderende/gists{/gist_id}",
+            "starred_url": "https://mock.github.com/users/paulvanderende/starred{/owner}{/repo}",
+            "subscriptions_url": "https://mock.github.com/users/paulvanderende/subscriptions",
+            "organizations_url": "https://mock.github.com/users/paulvanderende/orgs",
+            "repos_url": "https://mock.github.com/users/paulvanderende/repos",
+            "events_url": "https://mock.github.com/users/paulvanderende/events{/privacy}",
+            "received_events_url": "https://mock.github.com/users/paulvanderende/received_events",
+            "type": "User",
+            "site_admin": false
+        },
+        "committer": {
+            "login": "paulvanderende",
+            "id": 1903279,
+            "node_id": "MDQ6VXNlcjE5MDMyNzk=",
+            "avatar_url": "https://avatars2.githubusercontent.com/u/1903279?v=4",
+            "gravatar_id": "",
+            "url": "https://mock.github.com/users/paulvanderende",
+            "html_url": "https://github.com/paulvanderende",
+            "followers_url": "https://mock.github.com/users/paulvanderende/followers",
+            "following_url": "https://mock.github.com/users/paulvanderende/following{/other_user}",
+            "gists_url": "https://mock.github.com/users/paulvanderende/gists{/gist_id}",
+            "starred_url": "https://mock.github.com/users/paulvanderende/starred{/owner}{/repo}",
+            "subscriptions_url": "https://mock.github.com/users/paulvanderende/subscriptions",
+            "organizations_url": "https://mock.github.com/users/paulvanderende/orgs",
+            "repos_url": "https://mock.github.com/users/paulvanderende/repos",
+            "events_url": "https://mock.github.com/users/paulvanderende/events{/privacy}",
+            "received_events_url": "https://mock.github.com/users/paulvanderende/received_events",
+            "type": "User",
+            "site_admin": false
+        },
+        "parents": [
+            {
+                "sha": "8558e5532b293805608a52e322ffca9ddd0e449a",
+                "url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/commits/8558e5532b293805608a52e322ffca9ddd0e449a",
+                "html_url": "https://github.com/xebialabs/devops-as-code-vscode/commit/8558e5532b293805608a52e322ffca9ddd0e449a"
+            }
+        ]
+    },
+    "_links": {
+        "self": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/branches/master",
+        "html": "https://github.com/xebialabs/devops-as-code-vscode/tree/master"
+    },
+    "protected": false,
+    "protection": {
+        "enabled": false,
+        "required_status_checks": {
+            "enforcement_level": "off",
+            "contexts": [
+
+            ]
+        }
+    },
+    "protection_url": "https://mock.github.com/repos/xebialabs/devops-as-code-vscode/branches/master/protection"
+}

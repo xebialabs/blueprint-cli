@@ -3,28 +3,24 @@ package github
 import (
 	"bytes"
 	"fmt"
-	"net/http"
 	"net/url"
 	"path"
+    "strconv"
 
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
-
-	"github.com/google/go-github/github"
+    "github.com/google/go-github/github"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 type GitHubBlueprintRepository struct {
-	GithubContext context.Context
-	Client        *github.Client
-
-	Name     string
-	RepoName string
-	Owner    string
-	Branch   string
-	Token    string
+	Client        *GithubClient
+	Name          string
+	RepoName      string
+	Owner         string
+	Branch        string
+	Token         string
+	IsMock        bool
 }
 
 func NewGitHubBlueprintRepository(confMap map[string]string) (*GitHubBlueprintRepository, error) {
@@ -56,18 +52,17 @@ func NewGitHubBlueprintRepository(confMap map[string]string) (*GitHubBlueprintRe
 		repo.Token = confMap["token"]
 	}
 
+	// parse mock switch if available
+    repo.IsMock = false
+    if util.MapContainsKeyWithVal(confMap, "isMock") {
+        repo.IsMock, _ = strconv.ParseBool(confMap["isMock"])
+    }
+
 	return repo, nil
 }
 
 func (repo *GitHubBlueprintRepository) Initialize() error {
-	repo.GithubContext = context.Background()
-	var tc *http.Client
-	var ts oauth2.TokenSource
-	if repo.Token != "" {
-		ts = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: repo.Token})
-	}
-	tc = oauth2.NewClient(repo.GithubContext, ts)
-	repo.Client = github.NewClient(tc)
+	repo.Client = NewGithubClient(repo.Token, repo.IsMock)
 	return nil
 }
 
@@ -95,14 +90,14 @@ func (repo *GitHubBlueprintRepository) ListBlueprintsFromRepo() (map[string]*mod
 	var blueprintDirs []string
 
 	// Get latest SHA of the requested branch
-	branch, _, err := repo.Client.Repositories.GetBranch(repo.GithubContext, repo.Owner, repo.RepoName, repo.Branch)
+	branch, _, err := repo.Client.Repositories.GetBranch(repo.Client.Context, repo.Owner, repo.RepoName, repo.Branch)
 	if err != nil {
 		return nil, nil, err
 	}
 	sha := branch.GetCommit().GetSHA()
 
 	// Get GIT tree
-	tree, _, err := repo.Client.Git.GetTree(repo.GithubContext, repo.Owner, repo.RepoName, sha, true)
+	tree, _, err := repo.Client.Git.GetTree(repo.Client.Context, repo.Owner, repo.RepoName, sha, true)
 	if err != nil {
 		if _, ok := err.(*github.RateLimitError); ok {
 			return nil, nil, fmt.Errorf("GitHub rate limit error: %s", err.Error())
@@ -152,7 +147,7 @@ func (repo *GitHubBlueprintRepository) ListBlueprintsFromRepo() (map[string]*mod
 
 func (repo *GitHubBlueprintRepository) GetFileContents(filePath string) (*[]byte, error) {
 	fileContent, _, _, err := repo.Client.Repositories.GetContents(
-		repo.GithubContext,
+		repo.Client.Context,
 		repo.Owner,
 		repo.RepoName,
 		filePath,
@@ -180,7 +175,7 @@ func (repo *GitHubBlueprintRepository) GetFileContents(filePath string) (*[]byte
 
 func (repo *GitHubBlueprintRepository) GetLargeFileContents(filePath string) ([]byte, int64, error) {
 	reader, err := repo.Client.Repositories.DownloadContents(
-		repo.GithubContext,
+		repo.Client.Context,
 		repo.Owner,
 		repo.RepoName,
 		filePath,

@@ -1,0 +1,102 @@
+{
+    "name": "master",
+    "commit": {
+        "sha": "abaa24bf271a5ad8217aa9c32926f8eaefbafe33",
+        "node_id": "MDY6Q29tbWl0MTU0NjY1NzYxOmFiYWEyNGJmMjcxYTVhZDgyMTdhYTljMzI5MjZmOGVhZWZiYWZlMzM=",
+        "commit": {
+            "author": {
+                "name": "deepu105",
+                "email": "d4udts@gmail.com",
+                "date": "2019-04-05T15:04:34Z"
+            },
+            "committer": {
+                "name": "deepu105",
+                "email": "d4udts@gmail.com",
+                "date": "2019-04-05T15:04:34Z"
+            },
+            "message": "Merge branch 'development'",
+            "tree": {
+                "sha": "ae17ed20d4282411a9a1dba767c6e244f05f2d42",
+                "url": "https://mock.github.com/repos/xebialabs/blueprints/git/trees/ae17ed20d4282411a9a1dba767c6e244f05f2d42"
+            },
+            "url": "https://mock.github.com/repos/xebialabs/blueprints/git/commits/abaa24bf271a5ad8217aa9c32926f8eaefbafe33",
+            "comment_count": 0,
+            "verification": {
+                "verified": false,
+                "reason": "unsigned",
+                "signature": null,
+                "payload": null
+            }
+        },
+        "url": "https://mock.github.com/repos/xebialabs/blueprints/commits/abaa24bf271a5ad8217aa9c32926f8eaefbafe33",
+        "html_url": "https://github.com/xebialabs/blueprints/commit/abaa24bf271a5ad8217aa9c32926f8eaefbafe33",
+        "comments_url": "https://mock.github.com/repos/xebialabs/blueprints/commits/abaa24bf271a5ad8217aa9c32926f8eaefbafe33/comments",
+        "author": {
+            "login": "deepu105",
+            "id": 1107223,
+            "node_id": "MDQ6VXNlcjExMDcyMjM=",
+            "avatar_url": "https://avatars2.githubusercontent.com/u/1107223?v=4",
+            "gravatar_id": "",
+            "url": "https://mock.github.com/users/deepu105",
+            "html_url": "https://github.com/deepu105",
+            "followers_url": "https://mock.github.com/users/deepu105/followers",
+            "following_url": "https://mock.github.com/users/deepu105/following{/other_user}",
+            "gists_url": "https://mock.github.com/users/deepu105/gists{/gist_id}",
+            "starred_url": "https://mock.github.com/users/deepu105/starred{/owner}{/repo}",
+            "subscriptions_url": "https://mock.github.com/users/deepu105/subscriptions",
+            "organizations_url": "https://mock.github.com/users/deepu105/orgs",
+            "repos_url": "https://mock.github.com/users/deepu105/repos",
+            "events_url": "https://mock.github.com/users/deepu105/events{/privacy}",
+            "received_events_url": "https://mock.github.com/users/deepu105/received_events",
+            "type": "User",
+            "site_admin": false
+        },
+        "committer": {
+            "login": "deepu105",
+            "id": 1107223,
+            "node_id": "MDQ6VXNlcjExMDcyMjM=",
+            "avatar_url": "https://avatars2.githubusercontent.com/u/1107223?v=4",
+            "gravatar_id": "",
+            "url": "https://mock.github.com/users/deepu105",
+            "html_url": "https://github.com/deepu105",
+            "followers_url": "https://mock.github.com/users/deepu105/followers",
+            "following_url": "https://mock.github.com/users/deepu105/following{/other_user}",
+            "gists_url": "https://mock.github.com/users/deepu105/gists{/gist_id}",
+            "starred_url": "https://mock.github.com/users/deepu105/starred{/owner}{/repo}",
+            "subscriptions_url": "https://mock.github.com/users/deepu105/subscriptions",
+            "organizations_url": "https://mock.github.com/users/deepu105/orgs",
+            "repos_url": "https://mock.github.com/users/deepu105/repos",
+            "events_url": "https://mock.github.com/users/deepu105/events{/privacy}",
+            "received_events_url": "https://mock.github.com/users/deepu105/received_events",
+            "type": "User",
+            "site_admin": false
+        },
+        "parents": [
+            {
+                "sha": "1b60dc36c39bc38e921e5784aeb974e77548f6a4",
+                "url": "https://mock.github.com/repos/xebialabs/blueprints/commits/1b60dc36c39bc38e921e5784aeb974e77548f6a4",
+                "html_url": "https://github.com/xebialabs/blueprints/commit/1b60dc36c39bc38e921e5784aeb974e77548f6a4"
+            },
+            {
+                "sha": "cd644cf4437bfc0e726b89794baf6a8d209218d5",
+                "url": "https://mock.github.com/repos/xebialabs/blueprints/commits/cd644cf4437bfc0e726b89794baf6a8d209218d5",
+                "html_url": "https://github.com/xebialabs/blueprints/commit/cd644cf4437bfc0e726b89794baf6a8d209218d5"
+            }
+        ]
+    },
+    "_links": {
+        "self": "https://mock.github.com/repos/xebialabs/blueprints/branches/master",
+        "html": "https://github.com/xebialabs/blueprints/tree/master"
+    },
+    "protected": true,
+    "protection": {
+        "enabled": true,
+        "required_status_checks": {
+            "enforcement_level": "off",
+            "contexts": [
+
+            ]
+        }
+    },
+    "protection_url": "https://mock.github.com/repos/xebialabs/blueprints/branches/master/protection"
+}

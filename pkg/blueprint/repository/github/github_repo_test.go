@@ -1,21 +1,11 @@
 package github
 
 import (
-	"fmt"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func getGitHubTokenFromEnvVar(t *testing.T) string {
-	token := os.Getenv("XL_CLI_GITHUB_TOKEN")
-	if token != "" {
-		t.Log(fmt.Sprintf("Found GitHub token in env vars!"))
-	}
-	return token
-}
 
 func getDefaultConfMap(t *testing.T) map[string]string {
 	return map[string]string{
@@ -24,7 +14,8 @@ func getDefaultConfMap(t *testing.T) map[string]string {
 		"repo-name": "blueprints",
 		"owner":     "xebialabs",
 		"branch":    "master",
-		"token":     getGitHubTokenFromEnvVar(t),
+		"token":     "",
+		"isMock":    "true",
 	}
 }
 
@@ -138,7 +129,7 @@ func TestNewGitHubBlueprintRepository(t *testing.T) {
 			"type":      "github",
 			"repo-name": "blueprints",
 			"owner":     "xebialabs",
-			"token":     getGitHubTokenFromEnvVar(t),
+            "isMock":    "true",
 		})
 		require.Nil(t, err)
 		require.NotNil(t, repo)
@@ -154,7 +145,7 @@ func TestNewGitHubBlueprintRepository(t *testing.T) {
 			"repo-name": "blueprints",
 			"owner":     "xebialabs",
 			"branch":    "development",
-			"token":     getGitHubTokenFromEnvVar(t),
+            "isMock":    "true",
 		})
 		require.Nil(t, err)
 		require.NotNil(t, repo)
@@ -199,13 +190,12 @@ func TestGitHubBlueprintRepository_Initialize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &GitHubBlueprintRepository{
-				GithubContext: tt.fields.GithubContext,
-				Client:        tt.fields.Client,
-				Name:          tt.fields.Name,
-				RepoName:      tt.fields.RepoName,
-				Owner:         tt.fields.Owner,
-				Branch:        tt.fields.Branch,
-				Token:         tt.fields.Token,
+				Client:   tt.fields.Client,
+				Name:     tt.fields.Name,
+				RepoName: tt.fields.RepoName,
+				Owner:    tt.fields.Owner,
+				Branch:   tt.fields.Branch,
+				Token:    tt.fields.Token,
 			}
 			repo.Initialize()
 			if repo.Client == nil {
@@ -241,7 +231,6 @@ func TestGitHubBlueprintRepository_ListBlueprintsFromRepo(t *testing.T) {
 		repo.RepoName = "nonexistingname"
 		_, _, err := repo.ListBlueprintsFromRepo()
 		require.NotNil(t, err)
-		assert.Contains(t, err.Error(), "404 Not Found")
 	})
 
 	t.Run("should get empty blueprints map from a non-blueprint containing repo", func(t *testing.T) {
