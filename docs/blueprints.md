@@ -36,7 +36,7 @@ Parameters are defined by the blueprint creator in the `blueprint.yaml` file, it
 | Field Name | Expected value(s) | Examples | Default Value | Required | Explanation |
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **name** | — | AppName | — | ✔ | Variable name, to be used in templates |
-| **type** | `Input`/`Select`/`Confirm`/`Editor`/`File` | | — | ✔ | Type of the prompt input |
+| **type** | `Input`/`Select`/`Confirm`/`Editor`/`FileContent` | | — | ✔ | Type of the prompt input |
 | **value** | — | - eu-west-1<br>-`!fn aws.regions(ecs)[0]`<br>-`!expression "Foo == 'foo' ? 'A' : 'B'"` | — | **x** | If present, user will not be asked a question to provide value. |
 | **default** | — | - eu-west-1<br>-`!fn aws.regions(ecs)[0]`<br>-`!expression "Foo == 'foo' ? 'A' : 'B'"` | — | **x** | Default value, will be present during the question prompt. Also will be the variable value if question is skipped. |
 | **description** | — | Application name, will be used in various AWS resource names | — | **x** | If present, will be used instead of default question text |
