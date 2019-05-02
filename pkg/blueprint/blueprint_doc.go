@@ -102,9 +102,6 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 	if err != nil {
 		return false, err
 	}
-	if varField.InvertBool {
-		return !dependsOnVar.Value.Bool, nil
-	}
 	return dependsOnVar.Value.Bool, nil
 }
 

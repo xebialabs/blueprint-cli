@@ -1,8 +1,8 @@
 package blueprint
 
 import (
-    "fmt"
-    "os"
+	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -64,6 +64,9 @@ func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parame
 		dependsOnVal, err := ParseDependsOnValue(templateConfig.DependsOn, variables, parameters)
 		if err != nil {
 			return false, err
+		}
+		if templateConfig.DependsOn.InvertBool {
+			return dependsOnVal, nil
 		}
 		return !dependsOnVal, nil
 	}
@@ -256,17 +259,17 @@ func prepareMergedTemplateData(
 		}
 	}
 
-    if !SkipFinalPrompt {
-        // Final prompt from user to start generation process
-        toContinue := false
-        err := survey.AskOne(&survey.Confirm{Message: models.BlueprintFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
-        if err != nil {
-            return nil, nil, err
-        }
-        if !toContinue {
-            return nil, nil, fmt.Errorf("blueprint generation cancelled")
-        }
-    }
+	if !SkipFinalPrompt {
+		// Final prompt from user to start generation process
+		toContinue := false
+		err := survey.AskOne(&survey.Confirm{Message: models.BlueprintFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
+		if err != nil {
+			return nil, nil, err
+		}
+		if !toContinue {
+			return nil, nil, fmt.Errorf("blueprint generation cancelled")
+		}
+	}
 
 	return mergedData, mergedBlueprintDoc, nil
 }

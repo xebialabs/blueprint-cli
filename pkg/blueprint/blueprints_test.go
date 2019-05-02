@@ -204,6 +204,51 @@ func TestInstantiateBlueprint(t *testing.T) {
 		}
 	})
 
+	t.Run("should create output files for valid test template with dependsOn on variables", func(t *testing.T) {
+		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
+		defer gb.Cleanup()
+		err := InstantiateBlueprint(
+			false,
+			"dependson-test",
+			getLocalTestBlueprintContext(t),
+			gb,
+			GetTestTemplateDir("answer-input-dependson.yaml"),
+			false,
+			false,
+			false,
+		)
+		require.Nil(t, err)
+
+		// assertions
+		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, secretsFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, gitignoreFile))
+
+		// check __test__ directory is not there
+		_, err = os.Stat("__test__")
+		assert.True(t, os.IsNotExist(err))
+
+		// check values file
+		valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
+		valueMap := map[string]string{
+			"UseAWSCredentialsFromSystem": "true",
+		}
+		for k, v := range valueMap {
+			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+
+		// check secrets file
+		secretsFile := GetFileContent(path.Join(gb.OutputDir, secretsFile))
+		secretsMap := map[string]string{
+			"AWSAccessKey":         "testKey",
+			"AWSAccessSecret":      "testSecret",
+			"AWSAccessSuperSecret": "superSecret",
+		}
+		for k, v := range secretsMap {
+			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+	})
+
 	t.Run("should create output files for valid test template in use defaults as values mode", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
@@ -276,8 +321,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 		// assertions
 		assert.FileExists(t, "xld-environment.yml")
 		assert.FileExists(t, "xld-infrastructure.yml")
+		assert.FileExists(t, "xlr-pipeline-2.yml")
 		assert.False(t, util.PathExists("xlr-pipeline.yml", false))
-		assert.True(t, util.PathExists("xlr-pipeline-2.yml", false))
 		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
 		assert.FileExists(t, path.Join(gb.OutputDir, secretsFile))
 		assert.FileExists(t, path.Join(gb.OutputDir, gitignoreFile))
