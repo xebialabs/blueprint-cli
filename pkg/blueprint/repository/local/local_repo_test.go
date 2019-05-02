@@ -1,16 +1,16 @@
 package local
 
 import (
-    "os"
-    "os/user"
-    "path"
-    "path/filepath"
-    "runtime"
-    "strings"
-    "testing"
+	"os"
+	"os/user"
+	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"testing"
 
-    "github.com/stretchr/testify/assert"
-    "github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -18,8 +18,8 @@ const (
 )
 
 func GetLocalBlueprintTestRepoPath() string {
-    pwd, _ := os.Getwd()
-    return strings.Replace(pwd, path.Join("pkg", "blueprint", "repository", "local"), path.Join("templates", "test"), -1)
+	pwd, _ := os.Getwd()
+	return strings.Replace(pwd, path.Join("pkg", "blueprint", "repository", "local"), path.Join("templates", "test"), -1)
 }
 
 func TestNewGitHubBlueprintRepository(t *testing.T) {
@@ -33,31 +33,31 @@ func TestNewGitHubBlueprintRepository(t *testing.T) {
 		require.NotNil(t, err)
 		require.Nil(t, repo)
 	})
-    t.Run("should error when given path is a file", func(t *testing.T) {
-        repo, err := NewLocalBlueprintRepository(map[string]string{
-            "name": "test",
-            "type": repoType,
-            "path": filepath.Join(blueprintDir, "answer-input.yaml"),
-        })
-        require.NotNil(t, err)
-        require.Nil(t, repo)
-    })
+	t.Run("should error when given path is a file", func(t *testing.T) {
+		repo, err := NewLocalBlueprintRepository(map[string]string{
+			"name": "test",
+			"type": repoType,
+			"path": filepath.Join(blueprintDir, "answer-input.yaml"),
+		})
+		require.NotNil(t, err)
+		require.Nil(t, repo)
+	})
 	if runtime.GOOS != "windows" {
-        t.Run("should expand home dir", func(t *testing.T) {
-            currentUser, _ := user.Current()
-            repo, err := NewLocalBlueprintRepository(map[string]string{
-                "name": "test",
-                "type": repoType,
-                "path": "~/",
-            })
-            require.Nil(t, err)
-            require.NotNil(t, repo)
-            assert.Equal(t, "test", repo.GetName())
-            assert.Equal(t, currentUser.HomeDir, repo.Path)
-            err = repo.Initialize()
-            require.Nil(t, err)
-        })
-    }
+		t.Run("should expand home dir", func(t *testing.T) {
+			currentUser, _ := user.Current()
+			repo, err := NewLocalBlueprintRepository(map[string]string{
+				"name": "test",
+				"type": repoType,
+				"path": "~/",
+			})
+			require.Nil(t, err)
+			require.NotNil(t, repo)
+			assert.Equal(t, "test", repo.GetName())
+			assert.Equal(t, currentUser.HomeDir, repo.Path)
+			err = repo.Initialize()
+			require.Nil(t, err)
+		})
+	}
 	t.Run("should set ignore lists empty when not set", func(t *testing.T) {
 		repo, err := NewLocalBlueprintRepository(map[string]string{
 			"name": "test",
@@ -97,11 +97,11 @@ func TestListBlueprintsFromRepo(t *testing.T) {
 
 	t.Run("should list blueprints from local test repo", func(t *testing.T) {
 		repo, err := NewLocalBlueprintRepository(map[string]string{
-			"name": "test",
-			"type": repoType,
-			"path": blueprintDir,
-            "ignored-dirs":  ".git, __test__",
-            "ignored-files": ".DS_Store",
+			"name":          "test",
+			"type":          repoType,
+			"path":          blueprintDir,
+			"ignored-dirs":  ".git, __test__",
+			"ignored-files": ".DS_Store",
 		})
 		require.Nil(t, err)
 		require.NotNil(t, repo)
@@ -110,34 +110,34 @@ func TestListBlueprintsFromRepo(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, blueprints)
 		assert.NotEmpty(t, blueprints)
-		assert.Len(t, blueprints, 7)
+		assert.Len(t, blueprints, 8)
 		require.NotNil(t, blueprintDirs)
 		assert.NotEmpty(t, blueprintDirs)
-		assert.Len(t, blueprintDirs, 7)
+		assert.Len(t, blueprintDirs, 8)
 
 		answerInputBlueprint := blueprints["answer-input"]
 		assert.Equal(t, "answer-input", answerInputBlueprint.Path)
 		assert.Len(t, answerInputBlueprint.Files, 3)
 
-        validNoPromptBlueprint := blueprints["valid-no-prompt"]
-        assert.Equal(t, "valid-no-prompt", validNoPromptBlueprint.Path)
-        assert.Len(t, validNoPromptBlueprint.Files, 5)
+		validNoPromptBlueprint := blueprints["valid-no-prompt"]
+		assert.Equal(t, "valid-no-prompt", validNoPromptBlueprint.Path)
+		assert.Len(t, validNoPromptBlueprint.Files, 5)
 	})
 
-    t.Run("should list empty blueprints list from local dir", func(t *testing.T) {
-        repo, err := NewLocalBlueprintRepository(map[string]string{
-            "name": "test",
-            "type": repoType,
-            "path": filepath.Join(blueprintDir, "invalid"),
-        })
-        require.Nil(t, err)
-        require.NotNil(t, repo)
-        blueprints, blueprintDirs, err := repo.ListBlueprintsFromRepo()
-        assert.Empty(t, repo.LocalFiles)
-        require.NotNil(t, blueprints)
-        assert.Empty(t, blueprints)
-        require.Nil(t, blueprintDirs)
-    })
+	t.Run("should list empty blueprints list from local dir", func(t *testing.T) {
+		repo, err := NewLocalBlueprintRepository(map[string]string{
+			"name": "test",
+			"type": repoType,
+			"path": filepath.Join(blueprintDir, "invalid"),
+		})
+		require.Nil(t, err)
+		require.NotNil(t, repo)
+		blueprints, blueprintDirs, err := repo.ListBlueprintsFromRepo()
+		assert.Empty(t, repo.LocalFiles)
+		require.NotNil(t, blueprints)
+		assert.Empty(t, blueprints)
+		require.Nil(t, blueprintDirs)
+	})
 }
 
 func TestGetFileContents(t *testing.T) {
