@@ -4,52 +4,48 @@
 apiVersion: xl/v1
 kind: Blueprint
 metadata:
-  name: Test Project
-  description: Is just a test blueprint project used for manual testing of inputs
-  author: XebiaLabs
-  version: 1.0
+  name: Test Project # not used at the moment, serves as documentation
+  # not used at the moment, serves as documentation
+  description: Is just a test blueprint project used for manual testing of inputs 
+  author: XebiaLabs # not used at the moment, serves as documentation
+  version: 1.0 # not used at the moment, serves as documentation
   instructions: This is instructions
 
-# merge !fn functions into expressions
 # rename !expression to !expr
-# get rid of the backward compatibility code for spec->parameters
+# merge !fn functions into expression functions and remove !fn support
+# get rid of the backward compatibility code for spec -> parameters
 spec:
   parameters:
-  - name: AppName # mandatory
-    prompt: What is your application name? # mandatory when there is no value
-    description: this is your fancy description # will be shown as question hint if available
+  # A parameter with question
+  - name: AppName # mandatory field (Need validation)
+    prompt: What is your application name? # mandatory when there is no value field (Need validation)
+    description: this is your fancy description # will be shown as question hint if set
     label: Application Name # defaults to name, not mandatory
-    type: Input # mandatory when there is no value
-    default: Foo # can't be used with value
-    options:
+    type: Input # mandatory when there is no value field (Need validation)
+    default: Foo # should not be set when value is set (Need validation)
+    options: # supports both text and label/value. label/value will be merged as label-value
     - eu-north
     - label: EU West
       value: eu-west1
-    # pattern: move to validate
+    pattern: # remove and move to validate
     validate: !expr "regex('[a-z]', AppName) && AppName != 'admin'"
     saveInXlVals: true
-    # remove dependsOnTrue and dependsOnFalse
-    dependsOn: 
-  - name: Password # mandatory
-    prompt: What is your Password? # mandatory when value is not provided
+    dependsOnTrue: # remove
+    dependsOnFalse: # remove
+    dependsOn: # use expressions for dependsOnFalse (dependsOn: !expr "!Foo" )
+  # A secret parameter with question 
+  - name: Password
+    prompt: What is your Password?
     description: this is your fancy description
-    label: Password # defaults to name, not mandatory
-    type: 
-        name: SecretInput # mandatory when there is no value
-        useRawValue: false
-        revealOnSummary: false
-    default: Foo # can't be used with value
-    secret:
-    pattern:
-    validate:
-    dependsOn:
-  - name: AppName
-    type: Input
-    default: foo
-  - name: TestDepends
-    type: Confirm
-  - name: TestDepends
-    # add validation(If value is specified, you cant have type, defaults & dependsOn)
+    label: Password
+    type: SecretInput # a new type
+    useRawValue: false
+    revealOnSummary: false
+    default: Foo
+    # secret:
+  # A parameter with value 
+  - name: TestDepends # mandatory field (Need validation)
+    # If value is specified, you cant have type, prompt, default, options & dependsOn (Need validation)
     value: FOO
 
   files:
