@@ -684,7 +684,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 	data := NewPreparedData()
 
 	// if exists, get map of answers from file
-	var answerMap map[string]interface{}
+	var answerMap map[string]string
 	var err error
 	usingAnswersFile := false
 	if answersFilePath != "" {
@@ -761,7 +761,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 
 		// check answers file for variable value, if exists
 		if usingAnswersFile {
-			if util.MapContainsKeyWithValInterface(answerMap, variable.Name.Val) {
+			if util.MapContainsKeyWithVal(answerMap, variable.Name.Val) {
 				answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Val], data.TemplateData)
 				if err != nil {
 					return nil, err
@@ -811,7 +811,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 }
 
 // get values from answers file
-func getValuesFromAnswersFile(answersFilePath string) (map[string]interface{}, error) {
+func getValuesFromAnswersFile(answersFilePath string) (map[string]string, error) {
 	if util.PathExists(answersFilePath, false) {
 		// read file contents
 		content, err := ioutil.ReadFile(answersFilePath)
@@ -820,7 +820,7 @@ func getValuesFromAnswersFile(answersFilePath string) (map[string]interface{}, e
 		}
 
 		// parse answers file
-		answers := make(map[string]interface{})
+		answers := make(map[string]string)
 		err = yaml.Unmarshal(content, answers)
 		if err != nil {
 			return nil, err

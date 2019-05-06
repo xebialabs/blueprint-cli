@@ -1483,7 +1483,7 @@ confirm=true
 	tests := []struct {
 		name            string
 		answersFilePath string
-		wantOut         map[string]interface{}
+		wantOut         map[string]string
 		errOut          bool
 	}{
 		{
@@ -1501,7 +1501,7 @@ confirm=true
 		{
 			"answers file: parse map of answers from valid file",
 			validFilePath,
-			map[string]interface{}{"test": "testing", "sample": 5.45, "confirm": true},
+			map[string]string{"test": "testing", "sample": "5.45", "confirm": "true"},
 			false,
 		},
 	}
