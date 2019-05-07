@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/xebialabs/xl-cli/pkg/version"
+
 	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
@@ -23,9 +25,10 @@ import (
 
 // Constants
 const (
-	FnAWS = "aws"
-	FnK8S = "k8s"
-	FnOs  = "os"
+	FnAWS     = "aws"
+	FnK8S     = "k8s"
+	FnOs      = "os"
+	FnVersion = "version"
 
 	tagFn         = "!fn"
 	tagExpression = "!expression"
@@ -690,7 +693,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 	if answersFilePath != "" {
 		// parse answers file
 		util.Verbose("[dataPrep] Using answers file [%s] (strict: %t) instead of asking questions from console\n", answersFilePath, strictAnswers)
-		answerMap, err = getValuesFromAnswersFile(answersFilePath)
+		answerMap, err = GetValuesFromAnswersFile(answersFilePath)
 		if err != nil {
 			return nil, err
 		}
@@ -735,6 +738,28 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 			}
 		}
 
+		// check answers file for variable value, if exists
+		if usingAnswersFile {
+			if util.MapContainsKeyWithVal(answerMap, variable.Name.Val) {
+				answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Val], data.TemplateData)
+				if err != nil {
+					return nil, err
+				}
+
+				// if we have a valid answer, skip user input
+				if variable.Type.Val == TypeConfirm {
+					blueprintDoc.Variables[i] = variable
+				}
+				saveItemToTemplateDataMap(&variable, data, answer)
+				util.Info("[dataPrep] Using answer file value [%v] for variable [%s]\n", answer, variable.Name.Val)
+				continue
+			} else {
+				if strictAnswers {
+					return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Val)
+				} // do not return error when in non-strict answers mode, instead ask user input for the variable value
+			}
+		}
+
 		// skip user input if it is in default mode and default value is present
 		if useDefaultsAsValue && defaultVal != nil && defaultVal != "" {
 			finalVal, err := variable.VerifyVariableValue(defaultVal, data.TemplateData)
@@ -759,28 +784,6 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 			continue
 		}
 
-		// check answers file for variable value, if exists
-		if usingAnswersFile {
-			if util.MapContainsKeyWithVal(answerMap, variable.Name.Val) {
-				answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Val], data.TemplateData)
-				if err != nil {
-					return nil, err
-				}
-
-				// if we have a valid answer, skip user input
-				if variable.Type.Val == TypeConfirm {
-					blueprintDoc.Variables[i] = variable
-				}
-				saveItemToTemplateDataMap(&variable, data, answer)
-				util.Info("[dataPrep] Using answer file value [%v] for variable [%s]\n", answer, variable.Name.Val)
-				continue
-			} else {
-				if strictAnswers {
-					return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Val)
-				} // do not return error when in non-strict answers mode, instead ask user input for the variable value
-			}
-		}
-
 		// ask question based on type to get value - on the following conditions in order
 		// * if dependsOn fields exists, they have boolean result TRUE
 		// * if value field is not present
@@ -800,7 +803,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		saveItemToTemplateDataMap(&variable, data, answer)
 	}
 
-	if useDefaultsAsValue {
+	if useDefaultsAsValue && !usingAnswersFile {
 		// Print summary default values table if in useDefaultsAsValues mode
 		// use util.Print so that this is not skipped in quiet mode
 		util.Print("Using default values:\n")
@@ -811,7 +814,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 }
 
 // get values from answers file
-func getValuesFromAnswersFile(answersFilePath string) (map[string]string, error) {
+func GetValuesFromAnswersFile(answersFilePath string) (map[string]string, error) {
 	if util.PathExists(answersFilePath, false) {
 		// read file contents
 		content, err := ioutil.ReadFile(answersFilePath)
@@ -1047,6 +1050,12 @@ func ProcessCustomFunction(fnStr string) ([]string, error) {
 					return nil, err
 				}
 				return osResult.GetResult(module, attr, index)
+			case FnVersion:
+				versionResult, err := version.CallVersionFuncByName(module, params...)
+				if err != nil {
+					return nil, err
+				}
+				return versionResult.GetResult(module, attr, index)
 			default:
 				return nil, fmt.Errorf("unknown function type: %s", domain)
 			}

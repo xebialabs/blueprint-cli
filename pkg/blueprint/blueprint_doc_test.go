@@ -1507,7 +1507,7 @@ confirm=true
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getValuesFromAnswersFile(tt.answersFilePath)
+			got, err := GetValuesFromAnswersFile(tt.answersFilePath)
 			if tt.errOut {
 				require.NotNil(t, err)
 			} else {

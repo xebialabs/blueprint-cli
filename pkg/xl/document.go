@@ -39,6 +39,7 @@ type unmarshalleddocument struct {
 	ApiVersion string                      `yaml:"apiVersion"`
 	Metadata   map[interface{}]interface{} `yaml:"metadata,omitempty"`
 	Spec       interface{}                 `yaml:"spec,omitempty"`
+	Data interface{} `yaml:"data,omitempty"`
 }
 
 type processingContext struct {

@@ -1,21 +1,28 @@
 package osHelper
 
 import (
-	"fmt"
-	"runtime"
-	"strings"
+    "fmt"
+    "log"
+    "os"
+    "path/filepath"
+    "runtime"
+    "strings"
 
-	"github.com/xebialabs/xl-cli/pkg/models"
+    "github.com/xebialabs/xl-cli/pkg/models"
 )
 
 const (
 	_DefaultApiServerUrl = "_defaultapiserverurl"
 	Os                   = "_operatingsystem"
+    CertFileLocation     = "getcertfilelocation"
+    KeyFileLocation      = "getkeyfilelocation"
 )
 
 type OSFnResult struct {
-	kubeURL []string
-	os      []string
+	kubeURL          []string
+	os               []string
+    certFileLocation []string
+	keyFileLocation  []string
 }
 
 type OperatingSystem struct{}
@@ -34,6 +41,10 @@ func (result *OSFnResult) GetResult(module string, attr string, index int) ([]st
 		return result.kubeURL, nil
 	case Os:
 		return result.os, nil
+    case CertFileLocation:
+        return result.certFileLocation, nil
+    case KeyFileLocation:
+        return result.keyFileLocation, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid OS module", module)
 	}
@@ -61,7 +72,19 @@ func CallOSFuncByName(module string, params ...string) (models.FnResult, error) 
 		return &OSFnResult{kubeURL: url}, nil
 	case Os:
 		return &OSFnResult{os: []string{getOperatingSystem()}}, nil
+    case CertFileLocation:
+        return &OSFnResult{certFileLocation: getLocation("cert.crt")}, nil
+    case KeyFileLocation:
+        return &OSFnResult{keyFileLocation: getLocation("cert.key")}, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid OS module", module)
 	}
+}
+
+func getLocation(file string) []string {
+    dir, err := os.Getwd()
+    if err != nil {
+        log.Fatal(err)
+    }
+    return []string{filepath.Join(dir, file)}
 }

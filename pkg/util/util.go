@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-    "os/user"
-    "path"
+	"os/user"
+	"path"
 	"path/filepath"
 	"sort"
-    "strings"
+	"strconv"
+	"strings"
 
-    "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	funk "github.com/thoas/go-funk"
 )
 
@@ -60,14 +61,14 @@ func PathExists(filename string, mustBeDir bool) bool {
 }
 
 func ExpandHomeDirIfNeeded(path string, currentUser *user.User) string {
-    if path == "~" || path == "~/" {
-        Verbose("[path] path is user home directory [~]\n")
-        return currentUser.HomeDir
-    } else if strings.HasPrefix(path, "~/") {
-        Verbose("[path] expanding local relative path [%s] for user [%s]\n", path, currentUser.Username)
-        return filepath.Join(currentUser.HomeDir, path[2:])
-    }
-    return path
+	if path == "~" || path == "~/" {
+		Verbose("[path] path is user home directory [~]\n")
+		return currentUser.HomeDir
+	} else if strings.HasPrefix(path, "~/") {
+		Verbose("[path] expanding local relative path [%s] for user [%s]\n", path, currentUser.Username)
+		return filepath.Join(currentUser.HomeDir, path[2:])
+	}
+	return path
 }
 
 func PrintableFileName(path string) string {
@@ -172,6 +173,24 @@ func ExtractStringKeysFromMap(m map[string]interface{}) (keys []string) {
 		i += 1
 	}
 	return
+}
+
+func ParseVersion(version string, digits int) int64 {
+	strList := strings.Split(version, ".")
+	format := fmt.Sprintf("%%s%%0%ds", digits)
+	v := ""
+
+	for _, value := range strList {
+		v = fmt.Sprintf(format, v, value)
+	}
+	var result int64
+	var err error
+
+	if result, err = strconv.ParseInt(v, 10, 64); err != nil {
+		return 0
+	}
+
+	return result
 }
 
 func CopyIntoStringInterfaceMap(in map[string]interface{}, out map[string]interface{}) {

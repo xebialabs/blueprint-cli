@@ -37,6 +37,14 @@ func logCapture(w io.Writer, d []byte, s *spinner.Spinner) {
 				start = getIndexPlusLen(eventLog, "* Deploy")
 			}
 
+			if start < 0 {
+                start = getIndexPlusLen(eventLog, "# [Serial] Update")
+            }
+
+            if start < 0 {
+                start = getIndexPlusLen(eventLog, "* Update")
+            }
+
 			if start >= 0 && end >= 0 {
 				s.Stop()
 				ctDesc = eventLog[start:end]

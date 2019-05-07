@@ -63,28 +63,28 @@ func (server *DummyHTTPServer) DownloadSchema(resource string) ([]byte, error) {
 
 func TestServer(t *testing.T) {
 	t.Run(fmt.Sprintf("XL Deploy should accept %s documents", XldApiVersion), func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", XldApiVersion, nil, nil}, 0, 0, "", ToProcess{true, true, true}}
+		doc := Document{unmarshalleddocument{"Applications", XldApiVersion, nil, nil, nil}, 0, 0, "", ToProcess{true, true, true}}
 		xlDeployServer := XLDeployServer{&DummyHTTPServer{}, "", "", "", ""}
 
 		assert.True(t, xlDeployServer.AcceptsDoc(&doc))
 	})
 
 	t.Run(fmt.Sprintf("XL Deploy should not accept %s documents", XlrApiVersion), func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", XlrApiVersion, nil, nil}, 0, 0, "", ToProcess{true, true, true}}
+		doc := Document{unmarshalleddocument{"Applications", XlrApiVersion, nil, nil, nil}, 0, 0, "", ToProcess{true, true, true}}
 		xlDeployServer := XLDeployServer{&DummyHTTPServer{}, "", "", "", ""}
 
 		assert.False(t, xlDeployServer.AcceptsDoc(&doc))
 	})
 
 	t.Run(fmt.Sprintf("XL Release should accept %s documents", XlrApiVersion), func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", XlrApiVersion, nil, nil}, 0, 0, "", ToProcess{true, true, true}}
+		doc := Document{unmarshalleddocument{"Applications", XlrApiVersion, nil, nil, nil}, 0, 0, "", ToProcess{true, true, true}}
 		xlReleaseServer := XLReleaseServer{&DummyHTTPServer{}, ""}
 
 		assert.True(t, xlReleaseServer.AcceptsDoc(&doc))
 	})
 
 	t.Run(fmt.Sprintf("XL Release should not accept %s documents", XldApiVersion), func(t *testing.T) {
-		doc := Document{unmarshalleddocument{"Applications", XldApiVersion, nil, nil}, 0, 0, "", ToProcess{true, true, true}}
+		doc := Document{unmarshalleddocument{"Applications", XldApiVersion, nil, nil, nil}, 0, 0, "", ToProcess{true, true, true}}
 		xlReleaseServer := XLReleaseServer{&DummyHTTPServer{}, ""}
 
 		assert.False(t, xlReleaseServer.AcceptsDoc(&doc))

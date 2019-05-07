@@ -16,3 +16,17 @@ func askSetupMode(surveyOpts ...survey.AskOpt) string {
 	)
 	return answer
 }
+
+func askOverrideAnswerFile(surveyOpts ...survey.AskOpt) bool {
+	answer := true
+	survey.AskOne(
+		&survey.Confirm{
+			Message: "Parameters in the existing answer file will be overridden by the answer file saved in  Kubernetes, Do you want to continue?",
+			Default: true,
+		},
+		&answer,
+		survey.Required,
+		surveyOpts...,
+	)
+	return answer
+}

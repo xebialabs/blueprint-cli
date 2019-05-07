@@ -34,13 +34,13 @@ var cfgOverridden bool
 var noCleanup bool
 
 // DoUp executes the up command
-func DoUp(context *xl.Context, branch_version string) {
+func DoUp(context *xl.Context, branchVersion string) {
 	util.Verbose("Running XL Seed\n")
-	up.InvokeBlueprintAndSeed(context, upLocalMode, upQuickSetup, upAdvancedSetup, upBlueprintTemplate, cfgOverridden, upAnswerFile, noCleanup, branch_version)
+	up.InvokeBlueprintAndSeed(context, upLocalMode, upQuickSetup, upAdvancedSetup, upBlueprintTemplate, cfgOverridden, upAnswerFile, noCleanup, branchVersion)
 }
 
 func init() {
-	//rootCmd.AddCommand(upCmd)
+	rootCmd.AddCommand(upCmd)
 
 	upFlags := upCmd.Flags()
 	upFlags.BoolVarP(&upLocalMode, "local", "l", false, "Enable local file mode, by default remote file mode is used")
