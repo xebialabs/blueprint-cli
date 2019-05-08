@@ -7,6 +7,7 @@ import (
 
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/util"
+    "time"
 )
 
 type ChangedIds struct {
@@ -59,6 +60,7 @@ type Context struct {
 	XLRelease        XLServer
 	BlueprintContext *blueprint.BlueprintContext
 	values           map[string]string
+	vcsInfo          *VCSInfo
 }
 
 type CurrentStep struct {
@@ -70,6 +72,16 @@ type CurrentStep struct {
 type TaskState struct {
 	State        string
 	CurrentSteps []CurrentStep
+}
+
+type VCSInfo struct {
+    filename string
+    vcsType  string
+    remote   string
+    commit   string
+    author   string
+    date     time.Time
+    message  string
 }
 
 func (c *Context) PrintConfiguration() {
@@ -123,7 +135,7 @@ func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Ch
 	if err != nil {
 		return nil, err
 	}
-	return server.SendDoc(doc)
+	return server.SendDoc(doc, c.vcsInfo)
 }
 
 func (c *Context) ProcessSingleDocumentAndGetContents(doc *Document, artifactsDir string, fileName string) ([]byte, error) {

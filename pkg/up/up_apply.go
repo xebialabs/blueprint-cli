@@ -15,7 +15,7 @@ func applyFilesAndSave() {
 
 	files := getYamlFiles()
 
-	docs := xl.ParseDocuments(util.ToAbsolutePaths(files), mapset.NewSet(), nil, xl.ToProcess{false, true, true})
+	docs := xl.ParseDocuments(util.ToAbsolutePaths(files), mapset.NewSet(), nil, xl.ToProcess{false, true, true}, false, false)
 
 	for _, fileWithDocs := range docs {
 		var applyFile = util.PrintableFileName(fileWithDocs.FileName)
@@ -30,7 +30,7 @@ func applyFilesAndSave() {
 
 		allValueFiles := getValueFiles(fileWithDocs.FileName)
 
-		context, err := xl.BuildContext(viper.GetViper(), &applyValues, allValueFiles)
+		context, err := xl.BuildContext(viper.GetViper(), &applyValues, allValueFiles, nil)
 
 		if err != nil {
 			util.Fatal("Error while reading configuration: %s \n", err)

@@ -11,7 +11,14 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
+    "gopkg.in/src-d/go-git.v4"
+    "gopkg.in/src-d/go-git.v4/plumbing/object"
+    "time"
+    "io/ioutil"
+    "gopkg.in/src-d/go-git.v4/config"
 )
+
+var testDate = time.Date(2019, time.April, 17, 0, 0, 0, 0, time.UTC)
 
 func GetMinimalViperConf(t *testing.T) *viper.Viper {
 	v := viper.GetViper()
@@ -28,7 +35,7 @@ func GetMinimalViperConf(t *testing.T) *viper.Viper {
 
 func TestApply(t *testing.T) {
 
-	util.IsVerbose = true
+    util.IsVerbose = true
 
 	t.Run("should apply multiple yaml files in right order with value replacement to both xlr and xld", func(t *testing.T) {
 		tempDir1 := createTempDir("firstDir")
@@ -204,4 +211,96 @@ spec:
 		assert.Equal(t, "ARCHIVE", spec["onSuccessPolicy"])
 		nonInteractive = false
 	})
+
+	t.Run("should send git information to server by default", func(t *testing.T) {
+        repository, filename, infra := basicRepoSetup(t)
+        defer infra.shutdown()
+        defer os.RemoveAll(filepath.Base(filename))
+
+		DoApply([]string{filename})
+
+		assert.Equal(t, 1, len(infra.documents))
+		doc := infra.doc(0)
+		assert.Equal(t, "Template", doc.Kind)
+        headers := infra.headers(0)
+
+        head, err := repository.Head()
+        check(err)
+
+        assert.Equal(t, "git", headers["X-Xebialabs-Vcs-Type"][0])
+        assert.Equal(t, "test commit", headers["X-Xebialabs-Vcs-Message"][0])
+        assert.Equal(t, "John Doe <john@doe.org>", headers["X-Xebialabs-Vcs-Author"][0])
+        assert.Equal(t, testDate.UTC().Format(time.RFC3339), headers["X-Xebialabs-Vcs-Date"][0])
+        assert.Equal(t, "xlr.yaml", headers["X-Xebialabs-Vcs-Filename"][0])
+        assert.Equal(t, head.Hash().String(), headers["X-Xebialabs-Vcs-Commit"][0])
+        assert.Equal(t, "http://github.com/xebialabs/devops-as-code", headers["X-Xebialabs-Vcs-Remote"][0])
+	})
+
+	t.Run("should suppress git info when suppressed", func(t *testing.T) {
+        _, filename, infra := basicRepoSetup(t)
+        defer infra.shutdown()
+        defer os.RemoveAll(filepath.Base(filename))
+
+        // setting suppressed
+        suppressVCSinfo = true
+
+		DoApply([]string{filename})
+
+		assert.Equal(t, 1, len(infra.documents))
+        headers := infra.headers(0)
+
+        assert.Nil(t, headers["X-Xebialabs-Vcs-Type"])
+        assert.Nil(t, headers["X-Xebialabs-Vcs-Message"])
+        assert.Nil(t, headers["X-Xebialabs-Vcs-Author"])
+        assert.Nil(t, headers["X-Xebialabs-Vcs-Date"])
+        assert.Nil(t, headers["X-Xebialabs-Vcs-Filename"])
+        assert.Nil(t, headers["X-Xebialabs-Vcs-Commit"])
+        assert.Nil(t, headers["X-Xebialabs-Vcs-Remote"])
+
+        suppressVCSinfo = false
+	})
+
+}
+
+func basicRepoSetup(t *testing.T) (*git.Repository, string, *TestInfra) {
+    tempDir := createTempDir("git")
+
+    filename := filepath.Join(tempDir, "xlr.yaml")
+    err := ioutil.WriteFile(filename, []byte(fmt.Sprintf(`
+apiVersion: %s
+kind: Template
+spec:
+  - name: Template1
+`, xl.XlrApiVersion)), 0644)
+    check(err)
+
+    repository, err := git.PlainInit(tempDir, false)
+    check(err)
+
+    config := &config.RemoteConfig{Name:"origin", URLs:[]string{"http://github.com/xebialabs/devops-as-code"}}
+    repository.CreateRemote(config)
+
+    w, err := repository.Worktree()
+    check(err)
+
+    _, err = w.Add("xlr.yaml")
+    check(err)
+
+    commit, err := w.Commit("test commit", &git.CommitOptions{
+        Author: &object.Signature{
+            Name:  "John Doe",
+            Email: "john@doe.org",
+            When:  testDate,
+        },
+    })
+    check(err)
+
+    _, err2 := repository.CommitObject(commit)
+    check(err2)
+
+    v := GetMinimalViperConf(t)
+
+    infra := CreateTestInfra(v)
+
+    return repository, filename, infra
 }

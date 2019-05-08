@@ -24,7 +24,7 @@ var generateCmd = &cobra.Command{
 	Short: "Generate configuration",
 	Long:  `Generate configuration`,
 	Run: func(cmd *cobra.Command, args []string) {
-		context, err := xl.BuildContext(viper.GetViper(), nil, []string{})
+		context, err := xl.BuildContext(viper.GetViper(), nil, []string{}, nil)
 		if err != nil {
 			util.Fatal("Error while reading configuration: %s\n", err)
 		}

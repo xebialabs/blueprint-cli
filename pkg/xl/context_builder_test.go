@@ -33,7 +33,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set(models.ViperKeyXLDPassword, "d3ploy1t")
 		v.Set(models.ViperKeyXLDAuthMethod, "http")
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(v, nil, []string{}, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -51,7 +51,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set(models.ViperKeyXLRPassword, "r3l34s3")
 		v.Set(models.ViperKeyXLRAuthMethod, "http")
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(v, nil, []string{}, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -78,7 +78,7 @@ func TestContextBuilder(t *testing.T) {
 		v.Set(models.ViperKeyXLRAuthMethod, "http")
 		v.Set("xl-release.home", "XLR/home/folder")
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(v, nil, []string{}, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -100,7 +100,7 @@ func TestContextBuilder(t *testing.T) {
 	t.Run("build context without values", func(t *testing.T) {
 		v := blueprint.GetDefaultBlueprintViperConfig(viper.New())
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(v, nil, []string{}, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -125,7 +125,7 @@ blueprint:
 		err := v.ReadConfig(bytes.NewBuffer([]byte(yamlConfig)))
 		require.Nil(t, err)
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(v, nil, []string{}, nil)
 
 		require.Nil(t, err)
 		require.NotNil(t, c)
@@ -161,7 +161,7 @@ blueprint:
 		v.ReadInConfig()
 		v.Set("xl-deploy.password", "t3st")
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(v, nil, []string{}, nil)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
@@ -202,7 +202,7 @@ blueprint:
 		v.SetConfigFile(configfile)
 		v.ReadInConfig()
 
-		_, err = BuildContext(v, nil, []string{})
+		_, err = BuildContext(v, nil, []string{}, nil)
 		require.Nil(t, err)
 
 		configbytes, err := ioutil.ReadFile(configfile)
@@ -232,7 +232,7 @@ blueprint:
 		v.SetConfigFile(configfile)
 		v.ReadInConfig()
 
-		c, err := BuildContext(v, nil, []string{})
+		c, err := BuildContext(v, nil, []string{}, nil)
 
 		assert.NotNil(t, err)
 		assert.Nil(t, c)
@@ -314,7 +314,7 @@ blueprint:
 		values := make(map[string]string)
 		values["!incorrectKey"] = "test value"
 
-		_, err := BuildContext(v, &values, []string{})
+		_, err := BuildContext(v, &values, []string{}, nil)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, "the name of the value !incorrectKey is invalid. It must start with an alphabetical character or an underscore and be followed by zero or more alphanumerical characters or underscores", err.Error())
@@ -331,7 +331,7 @@ test2=test2
 
 		valsFiles := []string{propfile1.Name()}
 
-		context, err2 := BuildContext(v, nil, valsFiles)
+		context, err2 := BuildContext(v, nil, valsFiles, nil)
 		assert.Nil(t, err2)
 
 		assert.Equal(t, "test", context.values["test"])
@@ -350,7 +350,7 @@ Test=test3
 
 		valsFiles := []string{propfile1.Name()}
 
-		context, err2 := BuildContext(v, nil, valsFiles)
+		context, err2 := BuildContext(v, nil, valsFiles, nil)
 		assert.Nil(t, err2)
 
 		assert.Equal(t, "test1", context.values["test"])
@@ -376,7 +376,7 @@ test2=override2
 
 		valsFiles := []string{propfile1.Name(), propfile2.Name()}
 
-		context, err2 := BuildContext(v, nil, valsFiles)
+		context, err2 := BuildContext(v, nil, valsFiles, nil)
 		assert.Nil(t, err2)
 
 		assert.Equal(t, 11, len(context.values))
@@ -401,7 +401,7 @@ verifythisfilegetsread=ok
 		values["test"] = "override"
 		values["test2"] = "override2"
 
-		context, err2 := BuildContext(v, &values, valsFiles)
+		context, err2 := BuildContext(v, &values, valsFiles, nil)
 		assert.Nil(t, err2)
 
 		assert.Equal(t, 11, len(context.values))
@@ -425,7 +425,7 @@ verifythisfilegetsread=ok
 		os.Setenv("XL_VALUE_test", "override")
 		os.Setenv("XL_VALUE_test2", "override2")
 
-		context, err2 := BuildContext(v, nil, valsFiles)
+		context, err2 := BuildContext(v, nil, valsFiles, nil)
 		assert.Nil(t, err2)
 
 		assert.Equal(t, 11, len(context.values))
@@ -438,7 +438,7 @@ verifythisfilegetsread=ok
 		v := blueprint.GetDefaultBlueprintViperConfig(viper.GetViper())
 		cfgFile := ""
 		PrepareRootCmdFlags(TestCmd, &cfgFile)
-		context, err2 := BuildContext(v, nil, []string{})
+		context, err2 := BuildContext(v, nil, []string{}, nil)
 		assert.Nil(t, err2)
 
 		assert.Equal(t, "http://localhost:4516/", context.values["XL_DEPLOY_URL"])
@@ -457,7 +457,7 @@ verifythisfilegetsread=ok
 		v.Set("xl-deploy.password", "d3ploy1t")
 		v.Set(models.ViperKeyXLDAuthMethod, "basicAuth")
 
-		context, err2 := BuildContext(v, nil, []string{})
+		context, err2 := BuildContext(v, nil, []string{}, nil)
 		assert.Nil(t, err2)
 
 		assert.Equal(t, "http://testxld:6154", context.values["XL_DEPLOY_URL"])

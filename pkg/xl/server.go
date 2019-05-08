@@ -14,7 +14,7 @@ const XlrApiVersion = models.XlrApiVersion
 type XLServer interface {
 	AcceptsDoc(doc *Document) bool
 	PreprocessDoc(doc *Document)
-	SendDoc(doc *Document) (*Changes, error)
+	SendDoc(doc *Document, vcsInfo *VCSInfo) (*Changes, error)
 	PreviewDoc(doc *Document) (*models.PreviewResponse, error)
 	GetTaskStatus(taskId string) (*TaskState, error)
 	GetSchema() ([]byte, error)
@@ -69,19 +69,19 @@ func (server *XLReleaseServer) GenerateDoc(filename string, path string, overrid
 	return server.Server.GenerateYamlDoc(filename, fullPath, override)
 }
 
-func (server *XLDeployServer) SendDoc(doc *Document) (*Changes, error) {
-	return sendDoc(server.Server, "deployit/devops-as-code/apply", doc)
+func (server *XLDeployServer) SendDoc(doc *Document, vcsInfo *VCSInfo) (*Changes, error) {
+	return sendDoc(server.Server, "deployit/devops-as-code/apply", doc, vcsInfo)
 }
 
 func (server *XLDeployServer) PreviewDoc(doc *Document) (*models.PreviewResponse, error) {
 	return previewDoc(server.Server, "deployit/devops-as-code/preview", doc)
 }
 
-func (server *XLReleaseServer) SendDoc(doc *Document) (*Changes, error) {
+func (server *XLReleaseServer) SendDoc(doc *Document, vcsInfo *VCSInfo) (*Changes, error) {
 	if doc.Zip != "" {
 		return nil, fmt.Errorf("file tags found but XL Release does not support file references")
 	}
-	return sendDoc(server.Server, "devops-as-code/apply", doc)
+	return sendDoc(server.Server, "devops-as-code/apply", doc, vcsInfo)
 }
 
 func (server *XLReleaseServer) PreviewDoc(doc *Document) (*models.PreviewResponse, error) {
@@ -167,16 +167,16 @@ func (server *XLReleaseServer) GetTaskStatus(taskId string) (*TaskState, error) 
 	return &TaskState{State: js["status"].(string), CurrentSteps: steps}, nil
 }
 
-func sendDoc(server HTTPServer, path string, doc *Document) (*Changes, error) {
+func sendDoc(server HTTPServer, path string, doc *Document, vcsInfo *VCSInfo) (*Changes, error) {
 	if doc.Zip != "" {
 		util.Verbose("\tdocument contains !file tags, sending ZIP file with YAML document and artifacts to server\n")
-		return server.ApplyYamlZip(path, doc.Zip)
+		return server.ApplyYamlZip(path, doc.Zip, vcsInfo)
 	} else {
 		documentBytes, err := doc.RenderYamlDocument()
 		if err != nil {
 			return nil, err
 		}
-		return server.ApplyYamlDoc(path, documentBytes)
+		return server.ApplyYamlDoc(path, documentBytes, vcsInfo)
 	}
 }
 

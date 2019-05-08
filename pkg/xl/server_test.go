@@ -23,14 +23,14 @@ func (d *DummyHTTPServer) GenerateYamlDoc(path string, generateFilename string, 
 	return nil
 }
 
-func (d *DummyHTTPServer) ApplyYamlDoc(path string, yamlDocBytes []byte) (*Changes, error) {
+func (d *DummyHTTPServer) ApplyYamlDoc(path string, yamlDocBytes []byte, vcsInfo *VCSInfo) (*Changes, error) {
 	d.capturedPath = path
 	d.capturedBytes = yamlDocBytes
 	d.capturedFilename = ""
 	return nil, nil
 }
 
-func (d *DummyHTTPServer) ApplyYamlZip(path string, zipfilename string) (*Changes, error) {
+func (d *DummyHTTPServer) ApplyYamlZip(path string, zipfilename string, vcsInfo *VCSInfo) (*Changes, error) {
 	d.capturedPath = path
 	d.capturedBytes = nil
 	d.capturedFilename = zipfilename
@@ -124,7 +124,7 @@ spec:
 		_ = doc.Preprocess(context, artifactsDir)
 		defer doc.Cleanup()
 
-		_, err = xlDeployServer.SendDoc(doc)
+		_, err = xlDeployServer.SendDoc(doc, nil)
 
 		assert.Nil(t, err)
 		assert.Equal(t, "deployit/devops-as-code/apply", dummyServer.capturedPath)

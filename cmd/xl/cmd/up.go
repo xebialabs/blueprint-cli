@@ -13,7 +13,7 @@ var upCmd = &cobra.Command{
 	Short: "Install XLR, XLD via XL-Seed",
 	Long:  `Pulls and runs XL-Seed to deploy XLR and XLD`,
 	Run: func(cmd *cobra.Command, args []string) {
-		context, err := xl.BuildContext(viper.GetViper(), nil, nil)
+		context, err := xl.BuildContext(viper.GetViper(), nil, nil, nil)
 		if err != nil {
 			util.Fatal("Error while reading configuration: %s\n", err)
 		}

@@ -10,14 +10,19 @@ import (
 	"os"
 )
 
+type DocumentPair struct {
+    document xl.Document
+    headers map[string][]string
+}
+
 type TestInfra struct {
-	documents []xl.Document
+	documents []DocumentPair
 	xldServer *httptest.Server
 	xlrServer *httptest.Server
 }
 
-func (infra *TestInfra) appendDoc(document xl.Document) {
-	infra.documents = append(infra.documents, document)
+func (infra *TestInfra) appendDoc(document xl.Document, headers map[string][]string) {
+	infra.documents = append(infra.documents, DocumentPair{document, headers})
 }
 
 func (infra *TestInfra) shutdown() {
@@ -26,7 +31,11 @@ func (infra *TestInfra) shutdown() {
 }
 
 func (infra *TestInfra) doc(index int) xl.Document {
-	return infra.documents[index]
+	return infra.documents[index].document
+}
+
+func (infra *TestInfra) headers(index int) map[string][]string {
+	return infra.documents[index].headers
 }
 
 func (infra *TestInfra) spec(index int) []map[interface{}]interface{} {
@@ -38,14 +47,14 @@ func (infra *TestInfra) metadata(index int) map[interface{}]interface{} {
 }
 
 func CreateTestInfra(viper *viper.Viper) *TestInfra {
-	infra := &TestInfra{documents: make([]xl.Document, 0)}
+	infra := &TestInfra{documents: make([]DocumentPair, 0)}
 
 	xldHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
 		body, err := ioutil.ReadAll(request.Body)
 		check(err)
 		doc, err := xl.ParseYamlDocument(string(body))
 		check(err)
-		infra.appendDoc(*doc)
+		infra.appendDoc(*doc, request.Header)
 		_, _ = responseWriter.Write([]byte("{}"))
 	}
 
@@ -54,7 +63,7 @@ func CreateTestInfra(viper *viper.Viper) *TestInfra {
 		check(err)
 		doc, err := xl.ParseYamlDocument(string(body))
 		check(err)
-		infra.appendDoc(*doc)
+		infra.appendDoc(*doc, request.Header)
 		_, _ = responseWriter.Write([]byte("{}"))
 	}
 

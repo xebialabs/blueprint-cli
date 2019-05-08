@@ -21,6 +21,7 @@ type FileWithDocuments struct {
 	Parent    *string
 	Documents []*Document
 	FileName  string
+	VCSInfo   *VCSInfo
 }
 
 func checkForEmptyImport(importedFile string) {
@@ -73,7 +74,7 @@ func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
 	})
 }
 
-func readDocumentsFromFile(fileName string, parent *string, process ToProcess) FileWithDocuments {
+func readDocumentsFromFile(fileName string, parent *string, process ToProcess, info *VCSInfo) FileWithDocuments {
 	reader, err := os.Open(fileName)
 	if err != nil {
 		util.Fatal("Error while opening XL YAML file %s:\n%s\n", fileName, err)
@@ -95,17 +96,19 @@ func readDocumentsFromFile(fileName string, parent *string, process ToProcess) F
 		documents = append(documents, doc)
 	}
 	_ = reader.Close()
-	return FileWithDocuments{imports, parent, documents, fileName}
+	return FileWithDocuments{imports, parent, documents, fileName, info}
 }
 
-func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, process ToProcess) []FileWithDocuments {
+func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, process ToProcess, requireVCSinfo bool, suppressVCSinfo bool) []FileWithDocuments {
+
 	result := make([]FileWithDocuments, 0)
 	for _, fileName := range fileNames {
 		if !seenFiles.Contains(fileName) {
-			fileWithDocuments := readDocumentsFromFile(fileName, parent, process)
+			info := getVCSInfo(fileName, requireVCSinfo, suppressVCSinfo)
+			fileWithDocuments := readDocumentsFromFile(fileName, parent, process, info)
 			result = append(result, fileWithDocuments)
 			seenFiles.Add(fileName)
-			result = append(ParseDocuments(fileWithDocuments.Imports, seenFiles, &fileName, process), result...)
+			result = append(ParseDocuments(fileWithDocuments.Imports, seenFiles, &fileName, process, requireVCSinfo, suppressVCSinfo), result...)
 		}
 	}
 	validateFileWithDocs(result)
@@ -114,14 +117,65 @@ func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, pr
 
 type DocumentCallback func(*Context, FileWithDocuments, *Document)
 
-func ForEachDocument(operationName string, fileNames []string, values map[string]string, fn DocumentCallback) {
+func logOrFail(requireVCSinfo bool, err error, format string, a ...interface{}) {
+	if err != nil {
+		if requireVCSinfo {
+			util.Fatal(format, a...)
+		} else {
+			util.Verbose("Ignoring VCS error: "+format, a...)
+		}
+	}
+}
+
+func getVCSInfo(filename string, requireVCSinfo bool, suppressVCSinfo bool) *VCSInfo {
+
+	var vcsInfo *VCSInfo
+	if !suppressVCSinfo {
+		util.Verbose("getting vsc info for %s \n", filename)
+		repo, err := FindRepo(filename)
+		logOrFail(requireVCSinfo, err, "Error while opening VSC for directory %s: %s.\n", filename, err)
+		if repo != nil {
+			isDirty, err := repo.IsDirty()
+			if err != nil {
+				util.Fatal("Unable to determine if repo is dirty: %s \n", err)
+			}
+			if isDirty {
+				if !requireVCSinfo {
+					util.Info("Repository dirty. Not including VCS info. \n")
+				} else {
+					util.Fatal("Repository dirty and VCS info is required. Please commit your changes before applying. Aborting. \n")
+				}
+			} else {
+				commitInfo, err := repo.LatestCommitInfo()
+
+				logOrFail(requireVCSinfo, err, "Error while getting commit info: %s\n", err)
+
+				runes := []rune(filename)
+				relativeFilename := string(runes[len(repo.LocalPath())+1:])
+
+				remote, err := repo.Remote()
+
+				vcsInfo = &VCSInfo{relativeFilename, repo.Vcs(), remote,
+					commitInfo.Commit, commitInfo.Author, commitInfo.Date, commitInfo.Message}
+
+				util.Verbose("Detected VCS Info: %s - dirty %t - %s - %s - %s - %s - %s - %s \n", repo.Vcs(), isDirty, remote, relativeFilename, commitInfo.Commit, commitInfo.Author, commitInfo.Date, commitInfo.Message)
+			}
+		}
+	}
+	return vcsInfo
+}
+
+func ForEachDocument(operationName string, fileNames []string, values map[string]string, requireVCSinfo bool, suppressVCSinfo bool, fn DocumentCallback) {
 	homeValsFiles, e := ListHomeXlValsFiles()
 
 	if e != nil {
 		util.Fatal("Error while reading value files from home: %s\n", e)
 	}
 
-	docs := ParseDocuments(util.ToAbsolutePaths(fileNames), mapset.NewSet(), nil, ToProcess{true, true, true})
+	absolutePaths := util.ToAbsolutePaths(fileNames)
+
+	// parsing
+	docs := ParseDocuments(absolutePaths, mapset.NewSet(), nil, ToProcess{true, true, true}, requireVCSinfo, suppressVCSinfo)
 	for fileIdx, fileWithDocs := range docs {
 		var currentFile = util.PrintableFileName(fileWithDocs.FileName)
 		progress := fmt.Sprintf("[%d/%d]", fileIdx+1, len(docs))
@@ -140,7 +194,7 @@ func ForEachDocument(operationName string, fileNames []string, values map[string
 
 		allValsFiles := append(homeValsFiles, projectValsFiles...)
 
-		context, err := BuildContext(viper.GetViper(), &values, allValsFiles)
+		context, err := BuildContext(viper.GetViper(), &values, allValsFiles, fileWithDocs.VCSInfo)
 		if err != nil {
 			util.Fatal("Error while reading configuration: %s\n", err)
 		}

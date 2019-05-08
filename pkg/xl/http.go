@@ -17,12 +17,14 @@ import (
 	"github.com/mholt/archiver"
 	"github.com/olekukonko/tablewriter"
 	"github.com/xebialabs/xl-cli/pkg/util"
+    "time"
+    "bufio"
 )
 
 type HTTPServer interface {
 	TaskInfo(path string) (map[string]interface{}, error)
-	ApplyYamlDoc(path string, yamlDocBytes []byte) (*Changes, error)
-	ApplyYamlZip(path string, yamlZipFilename string) (*Changes, error)
+	ApplyYamlDoc(path string, yamlDocBytes []byte, vcsInfo *VCSInfo) (*Changes, error)
+	ApplyYamlZip(path string, yamlZipFilename string, vcsInfo *VCSInfo) (*Changes, error)
 	PreviewYamlDoc(path string, yamlDocBytes []byte) (*models.PreviewResponse, error)
 	DownloadSchema(resource string) ([]byte, error)
 	GenerateYamlDoc(generateFilename string, path string, override bool) error
@@ -40,7 +42,21 @@ type SimpleHTTPServer struct {
 
 var client = &http.Client{}
 
-func buildHeaders(contentType string, acceptType string) map[string]string {
+func firstLine(s string) (string) {
+    if s == "" {
+        return ""
+    }
+    scanner := bufio.NewScanner(strings.NewReader(s))
+    scanner.Scan()
+    line := scanner.Text()
+    if scanner.Err() != nil {
+        return ""
+    } else {
+        return line
+    }
+}
+
+func buildHeaders(contentType string, acceptType string, vcsInfo *VCSInfo) map[string]string {
 	result := make(map[string]string)
 	if contentType != "" {
 		result["Content-Type"] = contentType
@@ -48,6 +64,31 @@ func buildHeaders(contentType string, acceptType string) map[string]string {
 	if acceptType != "" {
 		result["Accept"] = acceptType
 	}
+
+	if vcsInfo != nil {
+	    if vcsInfo.vcsType != "" {
+            result["X-Xebialabs-Vcs-Type"] = string(vcsInfo.vcsType)
+        }
+        if vcsInfo.filename != "" {
+            result["X-Xebialabs-Vcs-Filename"] = vcsInfo.filename
+        }
+        if vcsInfo.commit != "" {
+            result["X-Xebialabs-Vcs-Commit"] = vcsInfo.commit
+        }
+        if vcsInfo.author != "" {
+            result["X-Xebialabs-Vcs-Author"] = vcsInfo.author
+        }
+        if vcsInfo.date != (time.Time{}) {
+            result["X-Xebialabs-Vcs-Date"] = vcsInfo.date.UTC().Format(time.RFC3339)
+        }
+        if vcsInfo.message != "" {
+            result["X-Xebialabs-Vcs-Message"] = firstLine(vcsInfo.message) // Todo sanitize more? base64?
+        }
+        if vcsInfo.remote != "" {
+            result["X-Xebialabs-Vcs-Remote"] = vcsInfo.remote
+        }
+    }
+
 	return result
 }
 
@@ -124,7 +165,7 @@ func processPreviewResponse(response http.Response) (*models.PreviewResponse, er
 }
 
 func (server *SimpleHTTPServer) DownloadSchema(resource string) ([]byte, error) {
-	response, err := server.doRequest("GET", resource, buildHeaders("", "application/json"), nil)
+	response, err := server.doRequest("GET", resource, buildHeaders("", "application/json", nil), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +177,7 @@ func (server *SimpleHTTPServer) DownloadSchema(resource string) ([]byte, error) 
 }
 
 func (server *SimpleHTTPServer) TaskInfo(resource string) (map[string]interface{}, error) {
-	response, err := server.doRequest("GET", resource, buildHeaders("application/json", "application/json"), nil)
+	response, err := server.doRequest("GET", resource, buildHeaders("application/json", "application/json", nil), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -152,8 +193,8 @@ func (server *SimpleHTTPServer) TaskInfo(resource string) (map[string]interface{
 	return js, nil
 }
 
-func (server *SimpleHTTPServer) ApplyYamlDoc(resource string, yamlDocBytes []byte) (*Changes, error) {
-	response, err := server.doRequest("POST", resource, buildHeaders("text/vnd.yaml", ""), bytes.NewReader(yamlDocBytes))
+func (server *SimpleHTTPServer) ApplyYamlDoc(resource string, yamlDocBytes []byte, vcsInfo *VCSInfo) (*Changes, error) {
+	response, err := server.doRequest("POST", resource, buildHeaders("text/vnd.yaml", "", vcsInfo), bytes.NewReader(yamlDocBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +205,7 @@ func (server *SimpleHTTPServer) ApplyYamlDoc(resource string, yamlDocBytes []byt
 	return asCodeResponse.Changes, nil
 }
 
-func (server *SimpleHTTPServer) ApplyYamlZip(resource string, yamlZipFilename string) (*Changes, error) {
+func (server *SimpleHTTPServer) ApplyYamlZip(resource string, yamlZipFilename string, vcsInfo *VCSInfo) (*Changes, error) {
 	f, err := os.Open(yamlZipFilename)
 	if err != nil {
 		return nil, err
@@ -172,7 +213,7 @@ func (server *SimpleHTTPServer) ApplyYamlZip(resource string, yamlZipFilename st
 
 	defer f.Close()
 
-	response, err2 := server.doRequest("POST", resource, buildHeaders("application/zip", ""), f)
+	response, err2 := server.doRequest("POST", resource, buildHeaders("application/zip", "", vcsInfo), f)
 	if err2 != nil {
 		return nil, err2
 	}
@@ -184,7 +225,7 @@ func (server *SimpleHTTPServer) ApplyYamlZip(resource string, yamlZipFilename st
 }
 
 func (server *SimpleHTTPServer) PreviewYamlDoc(resource string, yamlDocBytes []byte) (*models.PreviewResponse, error) {
-	response, err := server.doRequest("POST", resource, buildHeaders("text/vnd.yaml", ""), bytes.NewReader(yamlDocBytes))
+	response, err := server.doRequest("POST", resource, buildHeaders("text/vnd.yaml", "", nil), bytes.NewReader(yamlDocBytes))
 	if err != nil {
 		return nil, err
 	}

@@ -49,7 +49,7 @@ func TestHttp(t *testing.T) {
 			AuthMethod: models.AuthMethodBasic,
 		}
 
-		_, e := server.ApplyYamlDoc("devops-as-code/apply", []byte("document body"))
+		_, e := server.ApplyYamlDoc("devops-as-code/apply", []byte("document body"), nil)
 		assert.Nil(t, e)
 	})
 
@@ -120,7 +120,7 @@ func TestHttp(t *testing.T) {
 			AuthMethod: models.AuthMethodBasic,
 		}
 
-		_, e := server.ApplyYamlZip("apply", zipToUpload.Name())
+		_, e := server.ApplyYamlZip("apply", zipToUpload.Name(), nil)
 		assert.Nil(t, e)
 	})
 
@@ -274,7 +274,7 @@ func TestHttp(t *testing.T) {
 			AuthMethod: models.AuthMethodBasic,
 		}
 
-		response, err := server.ApplyYamlDoc("", []byte(""))
+		response, err := server.ApplyYamlDoc("", []byte(""), nil)
 
 		assert.Nil(t, response)
 		assert.Equal(t, err.Error(), fmt.Sprintf("402 License invalid. Please renew you license at %s/productregistration ", server.Url.String()))
