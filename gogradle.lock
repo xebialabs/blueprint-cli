@@ -5,7 +5,7 @@ dependencies:
   build:
   - vcs: "git"
     name: "cloud.google.com/go"
-    commit: "f76a23c2bf8dfc7154549de13095cf407c86c009"
+    commit: "5bc5bc5e61be9ea7fd7aeb95b6957bf5bc0248e8"
     url: "https://code.googlesource.com/gocloud"
     transitive: false
   - vcs: "git"
@@ -70,7 +70,7 @@ dependencies:
     - "git@github.com:Shopify/sarama.git"
     vcs: "git"
     name: "github.com/Shopify/sarama"
-    commit: "457a8e63133f18a8c625304a79d5d76de2e3fda2"
+    commit: "a5ecebcaa3bd7525884c0da994819656480fafb4"
     transitive: false
   - urls:
     - "https://github.com/alcortesm/tgz.git"
@@ -426,7 +426,7 @@ dependencies:
     - "git@github.com:golang/mock.git"
     vcs: "git"
     name: "github.com/golang/mock"
-    commit: "937870445b8bddd7f05ea90e81c58ebe83681534"
+    commit: "d74b93584564161b2de771089ee697f07d8bd5b5"
     transitive: false
   - urls:
     - "https://github.com/golang/protobuf.git"
@@ -692,7 +692,7 @@ dependencies:
     - "git@github.com:karrick/godirwalk.git"
     vcs: "git"
     name: "github.com/karrick/godirwalk"
-    commit: "5b4bd29b52585295b2ec33137aa32b139843597a"
+    commit: "85eabe409f1cfdfa2e8109b0f874e9030dac3905"
     transitive: false
   - name: "github.com/kballard/go-shellquote"
     host:
@@ -814,7 +814,7 @@ dependencies:
     - "git@github.com:mholt/archiver.git"
     vcs: "git"
     name: "github.com/mholt/archiver"
-    commit: "de0d89e255e17c8d75a40122055763e743ab0593"
+    commit: "d572b2e8b82726cee9476d1b9d63a7fe9b601ff1"
     transitive: false
   - urls:
     - "https://github.com/mitchellh/colorstring.git"
@@ -1036,7 +1036,7 @@ dependencies:
     - "git@github.com:sirupsen/logrus.git"
     vcs: "git"
     name: "github.com/sirupsen/logrus"
-    commit: "5521996833c095f5ac75d99687cef8ad344ded12"
+    commit: "f0375eb5b588893ff556c71dee32d98e57a9b777"
     transitive: false
   - name: "github.com/soheilhy/cmux"
     host:
@@ -1183,6 +1183,13 @@ dependencies:
     name: "github.com/xebialabs/yaml"
     commit: "71f3a23bb41870904ddc1ce1d9f33839528e098e"
     transitive: false
+  - urls:
+    - "https://github.com/xi2/xz.git"
+    - "git@github.com:xi2/xz.git"
+    vcs: "git"
+    name: "github.com/xi2/xz"
+    commit: "48954b6210f8d154cb5f8484d3a3e1f83489309e"
+    transitive: false
   - name: "github.com/xiang90/probing"
     host:
       name: "github.com/coreos/etcd"
@@ -1247,12 +1254,12 @@ dependencies:
     transitive: false
   - vcs: "git"
     name: "golang.org/x/crypto"
-    commit: "e1dfcc566284e143ba8f9afbb3fa563f2a0d212b"
+    commit: "cbcb750295291b33242907a04be40e80801d0cfc"
     url: "https://go.googlesource.com/crypto"
     transitive: false
   - vcs: "git"
     name: "golang.org/x/net"
-    commit: "f4e77d36d62c17c2336347bb2670ddbd02d092b7"
+    commit: "a4d6f7feada510cc50e69a37b484cb0fdc6b7876"
     url: "https://go.googlesource.com/net"
     transitive: false
   - vcs: "git"
@@ -1267,7 +1274,7 @@ dependencies:
     transitive: false
   - vcs: "git"
     name: "golang.org/x/sys"
-    commit: "12bbe5a7a5209180b72cc7e3ed9da40442fe3246"
+    commit: "a5b02f93d862f065920dd6a40dddc66b60d0dec4"
     url: "https://go.googlesource.com/sys"
     transitive: false
   - vcs: "git"
@@ -1282,12 +1289,12 @@ dependencies:
     transitive: false
   - vcs: "git"
     name: "golang.org/x/tools"
-    commit: "5658f888b308fcf8b34b296b5434c71e003ef5b0"
+    commit: "73554e0f78058c37e5421bc48273a72400172221"
     url: "https://go.googlesource.com/tools"
     transitive: false
   - vcs: "git"
     name: "google.golang.org/api"
-    commit: "612f6f6a5fdac9e861d1779dffe63a1e105fb55c"
+    commit: "bbbc0e98e3cc6ddcebca23f9ac35acda33bd5b38"
     url: "https://code.googlesource.com/google-api-go-client"
     transitive: false
   - vcs: "git"
@@ -1297,12 +1304,12 @@ dependencies:
     transitive: false
   - vcs: "git"
     name: "google.golang.org/genproto"
-    commit: "54afdca5d873f7b529e2ce3def1a99df16feda90"
+    commit: "b515fa19cec88c32f305a962f34ae60068947aea"
     url: "https://github.com/google/go-genproto"
     transitive: false
   - vcs: "git"
     name: "google.golang.org/grpc"
-    commit: "39ed87fce251c682fa52b9fb2ddfb75bb7d34a89"
+    commit: "4748a040c895a974ae1820670e90205252fbafc3"
     url: "https://github.com/grpc/grpc-go"
     transitive: false
   - vcs: "git"

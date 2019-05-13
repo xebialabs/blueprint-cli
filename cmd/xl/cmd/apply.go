@@ -18,7 +18,6 @@ var applyValues map[string]string
 var applyDetach bool
 var nonInteractive bool
 var requireVCSinfo bool
-var suppressVCSinfo bool
 
 var kindToLabel = map[string]string{
 	"CI":         "CI",
@@ -189,10 +188,7 @@ func applyDocument(context *xl.Context, fileWithDocs xl.FileWithDocuments, doc *
 }
 
 func DoApply(applyFilenames []string) {
-    if requireVCSinfo && suppressVCSinfo {
-        util.Fatal("Error: Can not suppress and require VCS info at the same time. Please use only one of the options. \n")
-    }
-	xl.ForEachDocument("Applying", applyFilenames, applyValues, requireVCSinfo, suppressVCSinfo, applyDocument)
+	xl.ForEachDocument("Applying", applyFilenames, applyValues, requireVCSinfo, applyDocument)
 }
 
 func init() {
@@ -204,6 +200,5 @@ func init() {
 	applyFlags.StringToStringVar(&applyValues, "values", map[string]string{}, "Values")
 	applyFlags.BoolVarP(&applyDetach, "detach", "d", false, "Detach the client at the moment of starting a deploy or release")
 	applyFlags.BoolVar(&nonInteractive, "non-interactive", false, "Automatically archive finished deployment tasks")
-    applyFlags.BoolVar(&requireVCSinfo, "require-version-control-info", false, "Fail if version control information can not be applied")
-    applyFlags.BoolVar(&suppressVCSinfo, "suppress-version-control-info", false, "Do not send version control information")
+	applyFlags.BoolVar(&requireVCSinfo, "require-version-control-info", false, "Send version control info. Fails if version control info can not be found or is dirty")
 }

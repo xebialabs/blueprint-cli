@@ -1,6 +1,7 @@
 package xl
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -14,11 +15,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"bufio"
 	"github.com/mholt/archiver"
 	"github.com/olekukonko/tablewriter"
 	"github.com/xebialabs/xl-cli/pkg/util"
-    "time"
-    "bufio"
+	"time"
 )
 
 type HTTPServer interface {
@@ -42,18 +43,18 @@ type SimpleHTTPServer struct {
 
 var client = &http.Client{}
 
-func firstLine(s string) (string) {
-    if s == "" {
-        return ""
-    }
-    scanner := bufio.NewScanner(strings.NewReader(s))
-    scanner.Scan()
-    line := scanner.Text()
-    if scanner.Err() != nil {
-        return ""
-    } else {
-        return line
-    }
+func firstLine(s string) string {
+	if s == "" {
+		return ""
+	}
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	scanner.Scan()
+	line := scanner.Text()
+	if scanner.Err() != nil {
+		return ""
+	} else {
+		return line
+	}
 }
 
 func buildHeaders(contentType string, acceptType string, vcsInfo *VCSInfo) map[string]string {
@@ -66,36 +67,45 @@ func buildHeaders(contentType string, acceptType string, vcsInfo *VCSInfo) map[s
 	}
 
 	if vcsInfo != nil {
-	    if vcsInfo.vcsType != "" {
-            result["X-Xebialabs-Vcs-Type"] = string(vcsInfo.vcsType)
-        }
-        if vcsInfo.filename != "" {
-            result["X-Xebialabs-Vcs-Filename"] = vcsInfo.filename
-        }
-        if vcsInfo.commit != "" {
-            result["X-Xebialabs-Vcs-Commit"] = vcsInfo.commit
-        }
-        if vcsInfo.author != "" {
-            result["X-Xebialabs-Vcs-Author"] = vcsInfo.author
-        }
-        if vcsInfo.date != (time.Time{}) {
-            result["X-Xebialabs-Vcs-Date"] = vcsInfo.date.UTC().Format(time.RFC3339)
-        }
-        if vcsInfo.message != "" {
-            result["X-Xebialabs-Vcs-Message"] = firstLine(vcsInfo.message) // Todo sanitize more? base64?
-        }
-        if vcsInfo.remote != "" {
-            result["X-Xebialabs-Vcs-Remote"] = vcsInfo.remote
-        }
-    }
+		if vcsInfo.vcsType != "" {
+			result["X-Xebialabs-Vcs-Type"] = string(vcsInfo.vcsType)
+		}
+		if vcsInfo.filename != "" {
+			result["X-Xebialabs-Vcs-Filename"] = vcsInfo.filename
+		}
+		if vcsInfo.commit != "" {
+			result["X-Xebialabs-Vcs-Commit"] = vcsInfo.commit
+		}
+		if vcsInfo.author != "" {
+			result["X-Xebialabs-Vcs-Author"] = vcsInfo.author
+		}
+		if vcsInfo.date != (time.Time{}) {
+			result["X-Xebialabs-Vcs-Date"] = vcsInfo.date.UTC().Format(time.RFC3339)
+		}
+		if vcsInfo.message != "" {
+			result["X-Xebialabs-Vcs-Message"] = firstLine(vcsInfo.message) // Todo sanitize more? base64?
+		}
+		if vcsInfo.remote != "" {
+			result["X-Xebialabs-Vcs-Remote"] = vcsInfo.remote
+		}
+	}
 
 	return result
 }
 
+func checkForEmptyFile(filePath string) error {
+	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
+		return fmt.Errorf("file `%s` already exists. Use -o flag to overwrite it.", filePath)
+	}
+
+	return nil
+}
+
 func (server *SimpleHTTPServer) GenerateYamlDoc(generateFilename string, requestUrl string, override bool) error {
 	if override == false {
-		if _, err := os.Stat(generateFilename); !os.IsNotExist(err) {
-			return fmt.Errorf("file `%s` already exists. Use -o flag to overwrite it.", generateFilename)
+		err := checkForEmptyFile(generateFilename)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -127,7 +137,21 @@ func (server *SimpleHTTPServer) GenerateYamlDoc(generateFilename string, request
 	}
 
 	destinationDir := filepath.Dir(indexFilePath)
-	err = archiver.Zip.Open(tempArchivePath, destinationDir)
+	if override == false {
+		err := archiver.DefaultZip.Walk(tempArchivePath, func(f archiver.File) error {
+			header := f.Header.(zip.FileHeader)
+			return checkForEmptyFile(filepath.Join(destinationDir, header.Name))
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+	archiver.DefaultZip.OverwriteExisting = override
+	err = archiver.DefaultZip.Unarchive(tempArchivePath, destinationDir)
+    if err != nil {
+        return err
+    }
 	err = os.Rename(filepath.Join(destinationDir, "index.yaml"), filepath.Join(destinationDir, filepath.Base(generateFilename)))
 	if err != nil {
 		return err

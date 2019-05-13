@@ -71,7 +71,7 @@ func TestVCS(t *testing.T) {
 
         repo, err := FindRepo(filepath.Join(artifactsDir))
 
-        assert.Equal(t, err.Error(), fmt.Sprintf("cannot determine VCS for folder: %s", artifactsDir))
+        assert.Equal(t, err.Error(), fmt.Sprintf("cannot determine VCS for: %s", artifactsDir))
         assert.Nil(t, repo)
     })
 

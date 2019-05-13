@@ -15,7 +15,7 @@ func applyFilesAndSave() {
 
 	files := getYamlFiles()
 
-	docs := xl.ParseDocuments(util.ToAbsolutePaths(files), mapset.NewSet(), nil, xl.ToProcess{false, true, true}, false, false)
+	docs := xl.ParseDocuments(util.ToAbsolutePaths(files), mapset.NewSet(), nil, xl.ToProcess{false, true, true}, false)
 
 	for _, fileWithDocs := range docs {
 		var applyFile = util.PrintableFileName(fileWithDocs.FileName)

@@ -99,16 +99,16 @@ func readDocumentsFromFile(fileName string, parent *string, process ToProcess, i
 	return FileWithDocuments{imports, parent, documents, fileName, info}
 }
 
-func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, process ToProcess, requireVCSinfo bool, suppressVCSinfo bool) []FileWithDocuments {
+func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, process ToProcess, requireVCSinfo bool) []FileWithDocuments {
 
 	result := make([]FileWithDocuments, 0)
 	for _, fileName := range fileNames {
 		if !seenFiles.Contains(fileName) {
-			info := getVCSInfo(fileName, requireVCSinfo, suppressVCSinfo)
+			info := getVCSInfo(fileName, requireVCSinfo)
 			fileWithDocuments := readDocumentsFromFile(fileName, parent, process, info)
 			result = append(result, fileWithDocuments)
 			seenFiles.Add(fileName)
-			result = append(ParseDocuments(fileWithDocuments.Imports, seenFiles, &fileName, process, requireVCSinfo, suppressVCSinfo), result...)
+			result = append(ParseDocuments(fileWithDocuments.Imports, seenFiles, &fileName, process, requireVCSinfo), result...)
 		}
 	}
 	validateFileWithDocs(result)
@@ -127,24 +127,20 @@ func logOrFail(requireVCSinfo bool, err error, format string, a ...interface{}) 
 	}
 }
 
-func getVCSInfo(filename string, requireVCSinfo bool, suppressVCSinfo bool) *VCSInfo {
+func getVCSInfo(filename string, requireVCSinfo bool) *VCSInfo {
 
 	var vcsInfo *VCSInfo
-	if !suppressVCSinfo {
-		util.Verbose("getting vsc info for %s \n", filename)
+	if requireVCSinfo {
+		util.Verbose("getting vcs info for %s \n", filename)
 		repo, err := FindRepo(filename)
-		logOrFail(requireVCSinfo, err, "Error while opening VSC for directory %s: %s.\n", filename, err)
+		logOrFail(requireVCSinfo, err, "Error while opening VCS for directory %s: %s.\n", filename, err)
 		if repo != nil {
 			isDirty, err := repo.IsDirty()
 			if err != nil {
 				util.Fatal("Unable to determine if repo is dirty: %s \n", err)
 			}
 			if isDirty {
-				if !requireVCSinfo {
-					util.Info("Repository dirty. Not including VCS info. \n")
-				} else {
-					util.Fatal("Repository dirty and VCS info is required. Please commit your changes before applying. Aborting. \n")
-				}
+				util.Fatal("Repository dirty and VCS info is required. Please commit all untracked and modified files before applying. Aborting. \n")
 			} else {
 				commitInfo, err := repo.LatestCommitInfo()
 
@@ -165,7 +161,7 @@ func getVCSInfo(filename string, requireVCSinfo bool, suppressVCSinfo bool) *VCS
 	return vcsInfo
 }
 
-func ForEachDocument(operationName string, fileNames []string, values map[string]string, requireVCSinfo bool, suppressVCSinfo bool, fn DocumentCallback) {
+func ForEachDocument(operationName string, fileNames []string, values map[string]string, requireVCSinfo bool, fn DocumentCallback) {
 	homeValsFiles, e := ListHomeXlValsFiles()
 
 	if e != nil {
@@ -175,7 +171,7 @@ func ForEachDocument(operationName string, fileNames []string, values map[string
 	absolutePaths := util.ToAbsolutePaths(fileNames)
 
 	// parsing
-	docs := ParseDocuments(absolutePaths, mapset.NewSet(), nil, ToProcess{true, true, true}, requireVCSinfo, suppressVCSinfo)
+	docs := ParseDocuments(absolutePaths, mapset.NewSet(), nil, ToProcess{true, true, true}, requireVCSinfo)
 	for fileIdx, fileWithDocs := range docs {
 		var currentFile = util.PrintableFileName(fileWithDocs.FileName)
 		progress := fmt.Sprintf("[%d/%d]", fileIdx+1, len(docs))

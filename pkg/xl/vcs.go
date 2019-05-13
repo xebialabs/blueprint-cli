@@ -43,10 +43,10 @@ func FindRepo(file string) (Repo, error) {
             return repo, nil
         } else if base == filepath.Dir(base) {
             // break because we are at the root
-            return nil, fmt.Errorf("cannot determine VCS for folder: %s", file)
+            return nil, fmt.Errorf("cannot determine VCS for: %s", file)
         }
     }
-    return nil, fmt.Errorf("cannot determine VCS for folder: %s", file)
+    return nil, fmt.Errorf("cannot determine VCS for: %s", file)
 }
 
 //////// Git implementation ////////////////////////////////////////////////////////////////////////////////////////////
