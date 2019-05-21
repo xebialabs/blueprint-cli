@@ -564,7 +564,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project"},
+						Metadata:   Metadata{Name: "Test Project"},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
 							{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl"},
@@ -594,7 +594,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project"},
+						Metadata:   Metadata{Name: "Test Project"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
 							{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlVals: VarField{Val: "true", Bool: true}},
@@ -610,7 +610,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project"},
+						Metadata:   Metadata{Name: "Test Project"},
 						Include: []IncludedBlueprintProcessed{
 							IncludedBlueprintProcessed{
 								Blueprint: "aws/monolith",
@@ -668,7 +668,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project 2"},
+						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
 							{Name: VarField{Val: "Foo"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}},
@@ -705,7 +705,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 			}
 			assert.Equal(t, tt.wantArray, gotArray)
 			if !tt.wantErr {
-				assert.Equal(t, tt.wantProjectName, got.Metadata.ProjectName)
+				assert.Equal(t, tt.wantProjectName, got.Metadata.Name)
 			}
 		})
 	}
@@ -758,7 +758,7 @@ func Test_composeBlueprints(t *testing.T) {
 				&BlueprintConfig{
 					ApiVersion: "xl/v1",
 					Kind:       "Blueprint",
-					Metadata:   Metadata{ProjectName: "Test Project"},
+					Metadata:   Metadata{Name: "Test Project"},
 					Include: []IncludedBlueprintProcessed{
 						IncludedBlueprintProcessed{
 							Blueprint: "aws/emptyfiles",
@@ -786,7 +786,7 @@ func Test_composeBlueprints(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project"},
+						Metadata:   Metadata{Name: "Test Project"},
 						Include: []IncludedBlueprintProcessed{
 							IncludedBlueprintProcessed{
 								Blueprint: "aws/emptyfiles",
@@ -809,7 +809,7 @@ func Test_composeBlueprints(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project 3"},
+						Metadata:   Metadata{Name: "Test Project 3"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
 							{Name: VarField{Val: "Foo"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
@@ -821,7 +821,7 @@ func Test_composeBlueprints(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project 4"},
+						Metadata:   Metadata{Name: "Test Project 4"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables:  []Variable{},
 						TemplateConfigs: []TemplateConfig{
@@ -839,7 +839,7 @@ func Test_composeBlueprints(t *testing.T) {
 				&BlueprintConfig{
 					ApiVersion: "xl/v1",
 					Kind:       "Blueprint",
-					Metadata:   Metadata{ProjectName: "Test Project"},
+					Metadata:   Metadata{Name: "Test Project"},
 					Include: []IncludedBlueprintProcessed{
 						IncludedBlueprintProcessed{
 							Blueprint: "aws/datalake",
@@ -879,7 +879,7 @@ func Test_composeBlueprints(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project"},
+						Metadata:   Metadata{Name: "Test Project"},
 						Include: []IncludedBlueprintProcessed{
 							IncludedBlueprintProcessed{
 								Blueprint: "aws/datalake",
@@ -914,7 +914,7 @@ func Test_composeBlueprints(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project 2"},
+						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
 							{Name: VarField{Val: "Foo"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}},
@@ -935,7 +935,7 @@ func Test_composeBlueprints(t *testing.T) {
 				&BlueprintConfig{
 					ApiVersion: "xl/v1",
 					Kind:       "Blueprint",
-					Metadata:   Metadata{ProjectName: "Test Project"},
+					Metadata:   Metadata{Name: "Test Project"},
 					Include: []IncludedBlueprintProcessed{
 						IncludedBlueprintProcessed{
 							Blueprint: "aws/monolith",
@@ -998,7 +998,7 @@ func Test_composeBlueprints(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project"},
+						Metadata:   Metadata{Name: "Test Project"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
 							{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlVals: VarField{Val: "true", Bool: true}},
@@ -1014,7 +1014,7 @@ func Test_composeBlueprints(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project"},
+						Metadata:   Metadata{Name: "Test Project"},
 						Include: []IncludedBlueprintProcessed{
 							IncludedBlueprintProcessed{
 								Blueprint: "aws/monolith",
@@ -1072,7 +1072,7 @@ func Test_composeBlueprints(t *testing.T) {
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v1",
 						Kind:       "Blueprint",
-						Metadata:   Metadata{ProjectName: "Test Project 2"},
+						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
 							{Name: VarField{Val: "Foo"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}},
@@ -1258,7 +1258,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			&BlueprintConfig{
 				ApiVersion: "xl/v1",
 				Kind:       "Blueprint",
-				Metadata:   Metadata{ProjectName: "Test Project"},
+				Metadata:   Metadata{Name: "Test Project"},
 				Include:    []IncludedBlueprintProcessed{},
 				Variables: []Variable{
 					{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}, SaveInXlVals: VarField{Val: "true", Bool: true}},
@@ -1292,7 +1292,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			&BlueprintConfig{
 				ApiVersion: "xl/v1",
 				Kind:       "Blueprint",
-				Metadata:   Metadata{ProjectName: "Test Project"},
+				Metadata:   Metadata{Name: "Test Project"},
 				Include: []IncludedBlueprintProcessed{
 					IncludedBlueprintProcessed{
 						Blueprint: "aws/monolith",
@@ -1375,7 +1375,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			&BlueprintConfig{
 				ApiVersion: "xl/v1",
 				Kind:       "Blueprint",
-				Metadata:   Metadata{ProjectName: "Test Project"},
+				Metadata:   Metadata{Name: "Test Project"},
 				Include: []IncludedBlueprintProcessed{
 					IncludedBlueprintProcessed{
 						Blueprint: "aws/monolith",

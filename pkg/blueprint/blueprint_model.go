@@ -10,14 +10,6 @@ type BlueprintYaml struct {
 	Spec       Spec
 }
 
-type Metadata struct {
-	ProjectName  string `yaml:"projectName"`
-	Description  string `yaml:"description"`
-	Author       string `yaml:"author"`
-	Version      string `yaml:"version"`
-	Instructions string `yaml:"instructions"`
-}
-
 type Spec struct {
 	Parameters []Parameter
 	Files      []File
@@ -81,6 +73,14 @@ type BlueprintConfig struct {
 	Include         []IncludedBlueprintProcessed
 	TemplateConfigs []TemplateConfig
 	Variables       []Variable
+}
+
+type Metadata struct {
+	Name         string `yaml:"projectName"`
+	Description  string `yaml:"description"`
+	Author       string `yaml:"author"`
+	Version      string `yaml:"version"`
+	Instructions string `yaml:"instructions"`
 }
 
 type Variable struct {

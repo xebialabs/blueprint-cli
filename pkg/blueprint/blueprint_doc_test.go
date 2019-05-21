@@ -863,7 +863,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 	t.Run("should parse metadata fields", func(t *testing.T) {
 		doc, err := getValidTestBlueprintMetadata("templatePath/test", blueprintRepository)
 		require.Nil(t, err)
-		assert.Equal(t, "Test Project", doc.Metadata.ProjectName)
+		assert.Equal(t, "Test Project", doc.Metadata.Name)
 		assert.Equal(t,
 			"Is just a test blueprint project used for manual testing of inputs",
 			doc.Metadata.Description)
@@ -1144,63 +1144,63 @@ func TestProcessCustomFunction_K8S_noconfig(t *testing.T) {
 }
 
 func TestGetValidateExpr(t *testing.T) {
-    tests := []struct {
-        name      string
-        variable  *Variable
-        wantStr   string
-        wantErr   error
-    }{
-        {
-            "should error on empty tag for validate attribute",
-            &Variable{Validate: VarField{Val: "test"}},
-            "",
-            fmt.Errorf("only '!expression' tag is supported for validate attribute"),
-        },
-        {
-            "should error on non-expression tag for validate attribute",
-            &Variable{Validate: VarField{Val: "test", Tag: "!fn"}},
-            "",
-            fmt.Errorf("only '!expression' tag is supported for validate attribute"),
-        },
-        {
-            "should return empty string for empty expression value with tag value",
-            &Variable{Validate: VarField{Val: "", Tag: "!expression"}},
-            "",
-            nil,
-        },
-        {
-            "should return empty string for empty expression value without tag value",
-            &Variable{Validate: VarField{Val: ""}},
-            "",
-            nil,
-        },
-        {
-            "should return expression string for valid expression tag",
-            &Variable{Validate: VarField{Val: "regex('*', TestVar)", Tag: "!expression"}},
-            "regex('*', TestVar)",
-            nil,
-        },
-    }
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got, err := tt.variable.GetValidateExpr()
-            if tt.wantErr == nil || err == nil {
-                assert.Equal(t, tt.wantStr, got)
-            } else {
-                assert.Equal(t, tt.wantErr.Error(), err.Error())
-            }
-        })
-    }
+	tests := []struct {
+		name     string
+		variable *Variable
+		wantStr  string
+		wantErr  error
+	}{
+		{
+			"should error on empty tag for validate attribute",
+			&Variable{Validate: VarField{Val: "test"}},
+			"",
+			fmt.Errorf("only '!expression' tag is supported for validate attribute"),
+		},
+		{
+			"should error on non-expression tag for validate attribute",
+			&Variable{Validate: VarField{Val: "test", Tag: "!fn"}},
+			"",
+			fmt.Errorf("only '!expression' tag is supported for validate attribute"),
+		},
+		{
+			"should return empty string for empty expression value with tag value",
+			&Variable{Validate: VarField{Val: "", Tag: "!expression"}},
+			"",
+			nil,
+		},
+		{
+			"should return empty string for empty expression value without tag value",
+			&Variable{Validate: VarField{Val: ""}},
+			"",
+			nil,
+		},
+		{
+			"should return expression string for valid expression tag",
+			&Variable{Validate: VarField{Val: "regex('*', TestVar)", Tag: "!expression"}},
+			"regex('*', TestVar)",
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.variable.GetValidateExpr()
+			if tt.wantErr == nil || err == nil {
+				assert.Equal(t, tt.wantStr, got)
+			} else {
+				assert.Equal(t, tt.wantErr.Error(), err.Error())
+			}
+		})
+	}
 }
 
 func TestValidatePrompt(t *testing.T) {
 	type args struct {
-	    varName      string
-	    validateExpr string
+		varName      string
+		validateExpr string
 		pattern      string
 		value        string
 		emtpyAllowed bool
-	    params       map[string]interface{}
+		params       map[string]interface{}
 	}
 	tests := []struct {
 		name string
@@ -1208,53 +1208,53 @@ func TestValidatePrompt(t *testing.T) {
 		want error
 	}{
 		{
-		    "should pass on empty value since empty values are allowed in secret fields",
-		    args{"test", "", "", "", true, nil},
-		    nil,
+			"should pass on empty value since empty values are allowed in secret fields",
+			args{"test", "", "", "", true, nil},
+			nil,
 		},
 		{
-		    "should fail required validation on empty value",
-		    args{"test", "", "", "", false, nil},
-		    fmt.Errorf("Value is required"),
+			"should fail required validation on empty value",
+			args{"test", "", "", "", false, nil},
+			fmt.Errorf("Value is required"),
 		},
 		{
-		    "should fail required validation on empty value with pattern",
-		    args{"test", "", ".", "", false, nil},
-		    fmt.Errorf("Value is required"),
+			"should fail required validation on empty value with pattern",
+			args{"test", "", ".", "", false, nil},
+			fmt.Errorf("Value is required"),
 		},
 		{
-		    "should pass required validation on valid value",
-		    args{"test", "", "", "test", false, nil},
-		    nil,
+			"should pass required validation on valid value",
+			args{"test", "", "", "test", false, nil},
+			nil,
 		},
 		{
-		    "should fail pattern validation on invalid value",
-		    args{"test", "", "[a-z]*", "123", false, nil},
-		    fmt.Errorf("Value should match pattern [a-z]*"),
+			"should fail pattern validation on invalid value",
+			args{"test", "", "[a-z]*", "123", false, nil},
+			fmt.Errorf("Value should match pattern [a-z]*"),
 		},
 		{
-		    "should pass pattern validation on valid value",
-		    args{"test", "", "[a-z]*", "abc", false, nil},
-		    nil,
+			"should pass pattern validation on valid value",
+			args{"test", "", "[a-z]*", "abc", false, nil},
+			nil,
 		},
 		{
-		    "should pass pattern validation on valid value with extra start/end tag on pattern",
-		    args{"test", "", "^[a-z]*$", "abc", false, nil},
-		    nil,
+			"should pass pattern validation on valid value with extra start/end tag on pattern",
+			args{"test", "", "^[a-z]*$", "abc", false, nil},
+			nil,
 		},
 		{
-		    "should pass pattern validation on valid value with fixed pattern",
-		    args{"test", "", "test", "test", false, nil},
-		    nil,
+			"should pass pattern validation on valid value with fixed pattern",
+			args{"test", "", "test", "test", false, nil},
+			nil,
 		},
 		{
-		    "should fail pattern validation on invalid value with fixed pattern",
-		    args{"test", "", "test", "abcd", false, nil},
-		    fmt.Errorf("Value should match pattern test"),
+			"should fail pattern validation on invalid value with fixed pattern",
+			args{"test", "", "test", "abcd", false, nil},
+			fmt.Errorf("Value should match pattern test"),
 		},
 		{
-		    "should fail pattern validation on valid value with complex pattern",
-		    args{"test", "", `\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`, "123.123.123.256", false, nil},
+			"should fail pattern validation on valid value with complex pattern",
+			args{"test", "", `\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`, "123.123.123.256", false, nil},
 			fmt.Errorf(`Value should match pattern \b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`),
 		},
 		{
@@ -1263,9 +1263,9 @@ func TestValidatePrompt(t *testing.T) {
 			nil,
 		},
 		{
-		    "should fail pattern validation on invalid pattern",
-		    args{"test", "", "[[", "abcd", false, nil},
-		    fmt.Errorf("error parsing regexp: missing closing ]: `[[$`"),
+			"should fail pattern validation on invalid pattern",
+			args{"test", "", "[[", "abcd", false, nil},
+			fmt.Errorf("error parsing regexp: missing closing ]: `[[$`"),
 		},
 	}
 	for _, tt := range tests {

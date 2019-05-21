@@ -19,8 +19,8 @@ type MetadataV2 struct {
 type SpecV2 struct {
 	Parameters    []ParameterV2
 	Files         []FileV2
-	IncludeBefore []IncludedBlueprint
-	IncludeAfter  []IncludedBlueprint
+	IncludeBefore []IncludedBlueprintV2
+	IncludeAfter  []IncludedBlueprintV2
 }
 
 type ParameterV2 struct {
@@ -46,7 +46,7 @@ type FileV2 struct {
 	WriteIf  interface{} `yaml:"writeIf"`
 }
 
-type IncludedBlueprint struct {
+type IncludedBlueprintV2 struct {
 	Blueprint          string        `yaml:"blueprint"`
 	ParameterOverrides []ParameterV2 `yaml:"parameterOverrides"`
 	FileOverrides      []FileV2      `yaml:"fileOverrides"`
