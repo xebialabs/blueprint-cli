@@ -580,7 +580,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 		metadata := []byte("test: blueprint")
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
-		assert.Equal(t, fmt.Sprintf("yaml: unmarshal errors:\n  line 1: field test not found in type blueprint.BlueprintYaml"), err.Error())
+		assert.Equal(t, fmt.Sprintf("yaml: unmarshal errors:\n  line 1: field test not found in type blueprint.BlueprintYamlV1"), err.Error())
 	})
 
 	t.Run("should error on missing api version", func(t *testing.T) {
@@ -1321,15 +1321,15 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 	templatePath := "aws/monolith"
 	tests := []struct {
 		name    string
-		fields  BlueprintYaml
+		fields  BlueprintYamlV1
 		want    []TemplateConfig
 		wantErr error
 	}{
 		{
 			"parse a valid file declaration",
-			BlueprintYaml{
-				Spec: Spec{
-					Files: []File{
+			BlueprintYamlV1{
+				Spec: SpecV1{
+					Files: []FileV1{
 						{Path: "test.yaml"},
 						{Path: "test2.yaml"},
 					},
@@ -1343,13 +1343,13 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 		},
 		{
 			"parse a valid file declaration with dependsOn that refers to existing variables",
-			BlueprintYaml{
-				Spec: Spec{
-					Parameters: []Parameter{
+			BlueprintYamlV1{
+				Spec: SpecV1{
+					Parameters: []ParameterV1{
 						{Name: "foo", Type: "Confirm", Value: "true"},
 						{Name: "bar", Type: "Confirm", Value: "false"},
 					},
-					Files: []File{
+					Files: []FileV1{
 						{Path: "test.yaml"},
 						{Path: "test2.yaml", DependsOn: "foo"},
 						{Path: "test3.yaml", DependsOnFalse: "bar"},
@@ -1370,7 +1370,7 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			blueprintDoc := &BlueprintYaml{
+			blueprintDoc := &BlueprintYamlV1{
 				ApiVersion: tt.fields.ApiVersion,
 				Kind:       tt.fields.Kind,
 				Metadata:   tt.fields.Metadata,
@@ -1390,19 +1390,19 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 func TestParseFile(t *testing.T) {
 	tests := []struct {
 		name    string
-		args    *File
+		args    *FileV1
 		want    TemplateConfig
 		wantErr error
 	}{
 		{
 			"return empty for empty map",
-			&File{},
+			&FileV1{},
 			TemplateConfig{},
 			nil,
 		},
 		{
 			"parse a file declaration with only path",
-			&File{
+			&FileV1{
 				Path: "test.yaml",
 			},
 			TemplateConfig{Path: "test.yaml"},
@@ -1410,7 +1410,7 @@ func TestParseFile(t *testing.T) {
 		},
 		{
 			"parse a file declaration with only path and nil for dependsOn",
-			&File{
+			&FileV1{
 				Path: "test.yaml", DependsOn: "",
 			},
 			TemplateConfig{Path: "test.yaml"},
@@ -1418,7 +1418,7 @@ func TestParseFile(t *testing.T) {
 		},
 		{
 			"parse a file declaration with path and dependsOnTrue",
-			&File{
+			&FileV1{
 				Path: "test.yaml", DependsOnTrue: "foo",
 			},
 			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "foo"}},
@@ -1426,7 +1426,7 @@ func TestParseFile(t *testing.T) {
 		},
 		{
 			"parse a file declaration with path dependsOnFalse and dependsOn",
-			&File{
+			&FileV1{
 				Path: "test.yaml", DependsOn: "foo", DependsOnFalse: "bar",
 			},
 			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "bar", InvertBool: true}},
@@ -1434,7 +1434,7 @@ func TestParseFile(t *testing.T) {
 		},
 		{
 			"parse a file declaration with path and dependsOn as !fn tag",
-			&File{
+			&FileV1{
 				Path: "test.yaml", DependsOn: yaml.CustomTag{Tag: "!fn", Value: "aws.credentials().IsAvailable"},
 			},
 			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "aws.credentials().IsAvailable", Tag: "!fn"}},
@@ -1442,7 +1442,7 @@ func TestParseFile(t *testing.T) {
 		},
 		{
 			"parse a file declaration with path and dependsOn as !expression tag",
-			&File{
+			&FileV1{
 				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 			},
 			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "1 > 2", Tag: "!expression"}},
@@ -1621,16 +1621,16 @@ func TestVerifyVariableValue(t *testing.T) {
 func TestBlueprintYaml_parseParameters(t *testing.T) {
 	tests := []struct {
 		name    string
-		params  []Parameter
-		spec    Spec
+		params  []ParameterV1
+		spec    SpecV1
 		want    []Variable
 		wantErr bool
 	}{
 		{
 			"should error on invalid tag in dependsOn ",
 			nil,
-			Spec{
-				Parameters: []Parameter{
+			SpecV1{
+				Parameters: []ParameterV1{
 					{
 						Name:           "test",
 						Type:           "Input",
@@ -1655,8 +1655,8 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 		{
 			"should error on invalid type in list ",
 			nil,
-			Spec{
-				Parameters: []Parameter{
+			SpecV1{
+				Parameters: []ParameterV1{
 					{
 						Name:           "test",
 						Type:           "Input",
@@ -1680,8 +1680,8 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 		{
 			"should parse parameters under spec",
 			nil,
-			Spec{
-				Parameters: []Parameter{
+			SpecV1{
+				Parameters: []ParameterV1{
 					{
 						Name:           "test",
 						Type:           "Input",
@@ -1752,7 +1752,7 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 		},
 		{
 			"should parse parameters",
-			[]Parameter{
+			[]ParameterV1{
 				{
 					Name:           "test",
 					Type:           "Input",
@@ -1786,7 +1786,7 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 					ReplaceAsIs:  false,
 				},
 			},
-			Spec{},
+			SpecV1{},
 			[]Variable{
 				{
 					Name:        VarField{Val: "test"},
@@ -1824,7 +1824,7 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			blueprintDoc := &BlueprintYaml{
+			blueprintDoc := &BlueprintYamlV1{
 				ApiVersion: "",
 				Kind:       "",
 				Parameters: tt.params,
@@ -1914,15 +1914,15 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 func TestBlueprintYaml_parseIncludes(t *testing.T) {
 	tests := []struct {
 		name    string
-		fields  BlueprintYaml
+		fields  BlueprintYamlV1
 		want    []IncludedBlueprintProcessed
 		wantErr error
 	}{
 		{
 			"parse a valid include declaration with dependsOn that is an expression",
-			BlueprintYaml{
-				Spec: Spec{
-					Include: []IncludedBlueprint{
+			BlueprintYamlV1{
+				Spec: SpecV1{
+					Include: []IncludedBlueprintV1{
 						{
 							Blueprint:      "bar",
 							Stage:          "after",
@@ -1932,7 +1932,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 						{
 							Blueprint: "foo",
 							Stage:     "before",
-							ParameterOverrides: []ParameterOverride{
+							ParameterOverrides: []ParameterOverrideV1{
 								{
 									Name:      "foo",
 									Value:     "bar",
@@ -1949,7 +1949,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 							},
-							FileOverrides: []File{
+							FileOverrides: []FileV1{
 								{
 									Path:      "foo/bar.md",
 									Operation: "skip",
@@ -2038,7 +2038,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
-			blueprintDoc := &BlueprintYaml{
+			blueprintDoc := &BlueprintYamlV1{
 				ApiVersion: tt.fields.ApiVersion,
 				Kind:       tt.fields.Kind,
 				Metadata:   tt.fields.Metadata,

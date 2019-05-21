@@ -412,7 +412,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(*blueprintVars))
 	decoder.SetStrict(true)
-	yamlDoc := BlueprintYaml{}
+	yamlDoc := BlueprintYamlV1{}
 	err := decoder.Decode(&yamlDoc)
 	if err != nil {
 		return nil, err
@@ -434,7 +434,7 @@ func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprint
 	blueprintConfig := BlueprintConfig{
 		ApiVersion:      yamlDoc.ApiVersion,
 		Kind:            yamlDoc.Kind,
-		Metadata:        yamlDoc.Metadata,
+		Metadata:        ParseToMetadata(yamlDoc.Metadata),
 		Include:         included,
 		TemplateConfigs: templateConfigs,
 		Variables:       variables,
@@ -443,9 +443,19 @@ func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprint
 	return &blueprintConfig, err
 }
 
+func ParseToMetadata(metadata MetadataV1) Metadata {
+	return Metadata{
+		Name:         metadata.Name,
+		Description:  metadata.Description,
+		Author:       metadata.Author,
+		Version:      metadata.Version,
+		Instructions: metadata.Instructions,
+	}
+}
+
 // parse doc parameters into list of variables
-func (blueprintDoc *BlueprintYaml) parseParameters() ([]Variable, error) {
-	parameters := []Parameter{}
+func (blueprintDoc *BlueprintYamlV1) parseParameters() ([]Variable, error) {
+	parameters := []ParameterV1{}
 	variables := []Variable{}
 	if blueprintDoc.Spec.Parameters != nil {
 		parameters = blueprintDoc.Spec.Parameters
@@ -464,8 +474,8 @@ func (blueprintDoc *BlueprintYaml) parseParameters() ([]Variable, error) {
 }
 
 // parse doc files into list of TemplateConfig
-func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, isLocal bool) ([]TemplateConfig, error) {
-	files := []File{}
+func (blueprintDoc *BlueprintYamlV1) parseFiles(templatePath string, isLocal bool) ([]TemplateConfig, error) {
+	files := []FileV1{}
 	templateConfigs := []TemplateConfig{}
 	if blueprintDoc.Spec.Files != nil {
 		files = blueprintDoc.Spec.Files
@@ -490,7 +500,7 @@ func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, isLocal bool)
 }
 
 // parse doc files into list of TemplateConfig
-func (blueprintDoc *BlueprintYaml) parseIncludes() ([]IncludedBlueprintProcessed, error) {
+func (blueprintDoc *BlueprintYamlV1) parseIncludes() ([]IncludedBlueprintProcessed, error) {
 	processedIncludes := []IncludedBlueprintProcessed{}
 	for _, m := range blueprintDoc.Spec.Include {
 		include, err := parseInclude(&m)
@@ -502,7 +512,7 @@ func (blueprintDoc *BlueprintYaml) parseIncludes() ([]IncludedBlueprintProcessed
 	return processedIncludes, nil
 }
 
-func parseParameter(m *Parameter) (Variable, error) {
+func parseParameter(m *ParameterV1) (Variable, error) {
 	parsedVar := Variable{}
 	err := parseFieldsFromStruct(m, func() reflect.Value {
 		return reflect.ValueOf(&parsedVar).Elem()
@@ -510,7 +520,7 @@ func parseParameter(m *Parameter) (Variable, error) {
 	return parsedVar, err
 }
 
-func parseFile(m *File) (TemplateConfig, error) {
+func parseFile(m *FileV1) (TemplateConfig, error) {
 	parsedConfig := TemplateConfig{}
 	err := parseFieldsFromStruct(m, func() reflect.Value {
 		return reflect.ValueOf(&parsedConfig).Elem()
@@ -518,7 +528,7 @@ func parseFile(m *File) (TemplateConfig, error) {
 	return parsedConfig, err
 }
 
-func parseInclude(m *IncludedBlueprint) (IncludedBlueprintProcessed, error) {
+func parseInclude(m *IncludedBlueprintV1) (IncludedBlueprintProcessed, error) {
 	parsedInclude := IncludedBlueprintProcessed{}
 	err := parseFieldsFromStruct(m, func() reflect.Value {
 		return reflect.ValueOf(&parsedInclude).Elem()
@@ -573,7 +583,7 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 					}
 				}
 			}
-		case []ParameterOverride:
+		case []ParameterOverrideV1:
 			// Set ParameterOverride array field for Include
 			if len(val) > 0 {
 				field.Set(reflect.MakeSlice(reflect.TypeOf([]ParameterOverridesProcessed{}), len(val), len(val)))
@@ -588,7 +598,7 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 					field.Index(i).Set(reflect.ValueOf(parsed))
 				}
 			}
-		case []File:
+		case []FileV1:
 			// Set File array field for Include
 			if len(val) > 0 {
 				field.Set(reflect.MakeSlice(reflect.TypeOf([]TemplateConfig{}), len(val), len(val)))
