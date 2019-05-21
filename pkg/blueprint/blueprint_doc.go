@@ -776,7 +776,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 				blueprintDoc.Variables[i] = variable
 			}
 			saveItemToTemplateDataMap(&variable, data, finalVal)
-			if variable.Secret.Bool && !variable.ShowValueOnSummary.Bool {
+			if variable.Secret.Bool && !variable.RevealOnSummary.Bool {
 				data.DefaultData[variable.Name.Val] = "*****"
 			} else {
 				data.DefaultData[variable.Name.Val] = finalVal

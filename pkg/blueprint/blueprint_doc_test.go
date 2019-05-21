@@ -729,12 +729,12 @@ func TestParseTemplateMetadata(t *testing.T) {
 			ReplaceAsIs: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
-			Name:               VarField{Val: "test"},
-			Type:               VarField{Val: TypeInput},
-			Default:            VarField{Val: "lala"},
-			Description:        VarField{Val: "help text"},
-			SaveInXlvals:       VarField{Bool: true, Val: "true"},
-			ShowValueOnSummary: VarField{Bool: true, Val: "true"},
+			Name:            VarField{Val: "test"},
+			Type:            VarField{Val: TypeInput},
+			Default:         VarField{Val: "lala"},
+			Description:     VarField{Val: "help text"},
+			SaveInXlvals:    VarField{Bool: true, Val: "true"},
+			RevealOnSummary: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[1])
 		assert.Equal(t, TemplateConfig{
 			Path:     "xebialabs/foo.yaml",
@@ -1873,12 +1873,12 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 						Secret:  VarField{Bool: true, Val: "true"},
 					},
 					{
-						Name:               VarField{Val: "input3"},
-						Type:               VarField{Val: "Input"},
-						Value:              VarField{Bool: false, Val: ""},
-						Default:            VarField{Bool: false, Val: "default3"},
-						Secret:             VarField{Bool: true, Val: "true"},
-						ShowValueOnSummary: VarField{Bool: true, Val: "true"},
+						Name:            VarField{Val: "input3"},
+						Type:            VarField{Val: "Input"},
+						Value:           VarField{Bool: false, Val: ""},
+						Default:         VarField{Bool: false, Val: "default3"},
+						Secret:          VarField{Bool: true, Val: "true"},
+						RevealOnSummary: VarField{Bool: true, Val: "true"},
 					},
 				},
 			},

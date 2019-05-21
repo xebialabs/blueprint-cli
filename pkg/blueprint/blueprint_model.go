@@ -17,30 +17,28 @@ type Spec struct {
 }
 
 type Parameter struct {
-	Name        interface{} `yaml:"name"`
-	Type        interface{} `yaml:"type"`
-	Secret      interface{} `yaml:"secret"`
-	Value       interface{} `yaml:"value"`
-	Description interface{} `yaml:"description"`
-	Default     interface{} `yaml:"default"`
-	DependsOn   interface{} `yaml:"dependsOn"`
-	// for backward compatibility
-	DependsOnTrue      interface{}   `yaml:"dependsOnTrue"`
-	DependsOnFalse     interface{}   `yaml:"dependsOnFalse"`
-	Options            []interface{} `yaml:"options"`
-	Pattern            interface{}   `yaml:"pattern"` // TODO: to be removed after v9.0
-	SaveInXlvals       interface{}   `yaml:"saveInXlVals"`
-	ReplaceAsIs        interface{}   `yaml:"useRawValue"`
-	ShowValueOnSummary interface{}   `yaml:"showValueOnSummary"`
-	Validate           interface{}   `yaml:"validate"`
+	Name            interface{}   `yaml:"name"`
+	Type            interface{}   `yaml:"type"`
+	Secret          interface{}   `yaml:"secret"`
+	Value           interface{}   `yaml:"value"`
+	Description     interface{}   `yaml:"description"`
+	Default         interface{}   `yaml:"default"`
+	DependsOn       interface{}   `yaml:"dependsOn"`
+	DependsOnTrue   interface{}   `yaml:"dependsOnTrue"`
+	DependsOnFalse  interface{}   `yaml:"dependsOnFalse"`
+	Options         []interface{} `yaml:"options"`
+	Pattern         interface{}   `yaml:"pattern"`
+	SaveInXlvals    interface{}   `yaml:"saveInXlVals"`
+	ReplaceAsIs     interface{}   `yaml:"useRawValue"`
+	RevealOnSummary interface{}   `yaml:"showValueOnSummary"`
+	Validate        interface{}   `yaml:"validate"`
 }
 
 type File struct {
-	Path        interface{} `yaml:"path"`
-	Operation   interface{} `yaml:"operation"`
-	RenamedPath interface{} `yaml:"renamedPath"`
-	DependsOn   interface{} `yaml:"dependsOn"`
-	// for backward compatibility
+	Path           interface{} `yaml:"path"`
+	Operation      interface{} `yaml:"operation"`
+	RenamedPath    interface{} `yaml:"renamedPath"`
+	DependsOn      interface{} `yaml:"dependsOn"`
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
 	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
 }
@@ -51,16 +49,14 @@ type IncludedBlueprint struct {
 	ParameterOverrides []ParameterOverride `yaml:"parameterOverrides"`
 	FileOverrides      []File              `yaml:"fileOverrides"`
 	DependsOn          interface{}         `yaml:"dependsOn"`
-	// for backward compatibility
-	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
-	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
+	DependsOnTrue      interface{}         `yaml:"dependsOnTrue"`
+	DependsOnFalse     interface{}         `yaml:"dependsOnFalse"`
 }
 
 type ParameterOverride struct {
-	Name      string      `yaml:"name"`
-	Value     interface{} `yaml:"value"`
-	DependsOn interface{} `yaml:"dependsOn"`
-	// for backward compatibility
+	Name           string      `yaml:"name"`
+	Value          interface{} `yaml:"value"`
+	DependsOn      interface{} `yaml:"dependsOn"`
 	DependsOnTrue  interface{} `yaml:"dependsOnTrue"`
 	DependsOnFalse interface{} `yaml:"dependsOnFalse"`
 }
@@ -84,19 +80,19 @@ type Metadata struct {
 }
 
 type Variable struct {
-	Name               VarField
-	Type               VarField
-	Secret             VarField
-	Value              VarField
-	Description        VarField
-	Default            VarField
-	DependsOn          VarField
-	Options            []VarField
-	Pattern            VarField // TODO: to be removed after v9.0
-	SaveInXlvals       VarField
-	ReplaceAsIs        VarField
-	ShowValueOnSummary VarField
-	Validate           VarField
+	Name            VarField
+	Type            VarField
+	Secret          VarField
+	Value           VarField
+	Description     VarField
+	Default         VarField
+	DependsOn       VarField
+	Options         []VarField
+	Pattern         VarField
+	SaveInXlvals    VarField
+	ReplaceAsIs     VarField
+	RevealOnSummary VarField
+	Validate        VarField
 }
 
 // TemplateConfig holds the merged template file definitions with repository info

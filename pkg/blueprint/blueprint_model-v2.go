@@ -33,7 +33,6 @@ type ParameterV2 struct {
 	Value           interface{}   `yaml:"value"`
 	PromptIf        interface{}   `yaml:"promptIf"`
 	Options         []interface{} `yaml:"options"`
-	Secret          interface{}   `yaml:"secret"`
 	SaveInXlvals    interface{}   `yaml:"saveInXlvals"`
 	ReplaceAsIs     interface{}   `yaml:"replaceAsIs"`
 	RevealOnSummary interface{}   `yaml:"revealOnSummary"`
