@@ -572,7 +572,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 						},
 						Include: []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}, SaveInXlVals: VarField{Val: "true", Bool: true}},
+							{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}, SaveInXlvals: VarField{Val: "true", Bool: true}},
 						},
 					},
 				},
@@ -597,7 +597,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlVals: VarField{Val: "true", Bool: true}},
+							{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlvals: VarField{Val: "true", Bool: true}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
@@ -1001,7 +1001,7 @@ func Test_composeBlueprints(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlVals: VarField{Val: "true", Bool: true}},
+							{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlvals: VarField{Val: "true", Bool: true}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
@@ -1261,7 +1261,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 				Metadata:   Metadata{Name: "Test Project"},
 				Include:    []IncludedBlueprintProcessed{},
 				Variables: []Variable{
-					{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}, SaveInXlVals: VarField{Val: "true", Bool: true}},
+					{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}, SaveInXlvals: VarField{Val: "true", Bool: true}},
 				},
 				TemplateConfigs: []TemplateConfig{
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
@@ -1337,7 +1337,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 					},
 				},
 				Variables: []Variable{
-					{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlVals: VarField{Val: "true", Bool: true}},
+					{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlvals: VarField{Val: "true", Bool: true}},
 					{Name: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
 					{Name: VarField{Val: "Foo"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}},
 				},

@@ -29,7 +29,7 @@ type Parameter struct {
 	DependsOnFalse     interface{}   `yaml:"dependsOnFalse"`
 	Options            []interface{} `yaml:"options"`
 	Pattern            interface{}   `yaml:"pattern"` // TODO: to be removed after v9.0
-	SaveInXlVals       interface{}   `yaml:"saveInXlVals"`
+	SaveInXlvals       interface{}   `yaml:"saveInXlVals"`
 	UseRawValue        interface{}   `yaml:"useRawValue"`
 	ShowValueOnSummary interface{}   `yaml:"showValueOnSummary"`
 	Validate           interface{}   `yaml:"validate"`
@@ -93,7 +93,7 @@ type Variable struct {
 	DependsOn          VarField
 	Options            []VarField
 	Pattern            VarField // TODO: to be removed after v9.0
-	SaveInXlVals       VarField
+	SaveInXlvals       VarField
 	UseRawValue        VarField
 	ShowValueOnSummary VarField
 	Validate           VarField

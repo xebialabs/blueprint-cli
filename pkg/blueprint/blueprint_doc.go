@@ -995,7 +995,7 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 		}
 	} else {
 		// Save to values file if switch is ON
-		if variable.SaveInXlVals.Bool {
+		if variable.SaveInXlvals.Bool {
 			preparedData.Values[variable.Name.Val] = data
 		}
 		preparedData.TemplateData[variable.Name.Val] = data
