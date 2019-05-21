@@ -988,7 +988,7 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 	if variable.Secret.Bool {
 		preparedData.Secrets[variable.Name.Val] = data
 		// Use raw value of secret field if flag is set
-		if variable.UseRawValue.Bool {
+		if variable.ReplaceAsIs.Bool {
 			preparedData.TemplateData[variable.Name.Val] = data
 		} else {
 			preparedData.TemplateData[variable.Name.Val] = fmt.Sprintf(fmtTagValue, variable.Name.Val)

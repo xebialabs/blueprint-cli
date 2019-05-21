@@ -30,7 +30,7 @@ type Parameter struct {
 	Options            []interface{} `yaml:"options"`
 	Pattern            interface{}   `yaml:"pattern"` // TODO: to be removed after v9.0
 	SaveInXlvals       interface{}   `yaml:"saveInXlVals"`
-	UseRawValue        interface{}   `yaml:"useRawValue"`
+	ReplaceAsIs        interface{}   `yaml:"useRawValue"`
 	ShowValueOnSummary interface{}   `yaml:"showValueOnSummary"`
 	Validate           interface{}   `yaml:"validate"`
 }
@@ -94,7 +94,7 @@ type Variable struct {
 	Options            []VarField
 	Pattern            VarField // TODO: to be removed after v9.0
 	SaveInXlvals       VarField
-	UseRawValue        VarField
+	ReplaceAsIs        VarField
 	ShowValueOnSummary VarField
 	Validate           VarField
 }
