@@ -1,14 +1,13 @@
 package auth
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"net/http"
-	"net/http/httptest"
-	"testing"
+    "bytes"
+    "fmt"
+    "github.com/stretchr/testify/assert"
+    "github.com/xebialabs/xl-cli/pkg/models"
+    "net/http"
+    "net/http/httptest"
+    "testing"
 )
 
 func TestAuthHandler(t *testing.T) {
@@ -73,18 +72,13 @@ func TestAuthHandler(t *testing.T) {
 		xlrHandler := func(responseWriter http.ResponseWriter, request *http.Request) {
 			assert.Equal(t, "POST", request.Method)
 			assert.Equal(t, "/login", request.URL.Path)
-			buf := new(bytes.Buffer)
-			_, _ = buf.ReadFrom(request.Body)
-			var auth authModel
-			err := json.Unmarshal(buf.Bytes(), &auth)
-			assert.Nil(t, err)
+            buf := new(bytes.Buffer)
+            _, _ = buf.ReadFrom(request.Body)
+            assert.Equal(t, "password=qwerty&username=admin", buf.String())
 
-			assert.Equal(t, "application/json", request.Header.Get("Content-Type"))
-			assert.Equal(t, "admin", auth.Username)
-			assert.Equal(t, "qwerty", auth.Password)
-
-			responseWriter.Header().Add("Set-Cookie", fmt.Sprintf("%s=%s", models.XLR_LOGIN_TOKEN, XlrToken))
-			_, _ = responseWriter.Write([]byte("{}"))
+            assert.Equal(t, "application/x-www-form-urlencoded", request.Header.Get("Content-Type"))
+            responseWriter.Header().Add("Set-Cookie", fmt.Sprintf("%s=%s", models.XLR_LOGIN_TOKEN, XlrToken))
+            _, _ = responseWriter.Write([]byte("{}"))
 		}
 
 		testServerXlr := httptest.NewServer(http.HandlerFunc(xlrHandler))

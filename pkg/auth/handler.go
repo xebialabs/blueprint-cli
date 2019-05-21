@@ -1,13 +1,11 @@
 package auth
 
 import (
-	"bytes"
-	"encoding/json"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"gopkg.in/errgo.v2/fmt/errors"
-	"net/http"
-	"net/url"
-	"strings"
+    "github.com/xebialabs/xl-cli/pkg/models"
+    "gopkg.in/errgo.v2/fmt/errors"
+    "net/http"
+    "net/url"
+    "strings"
 )
 
 type session struct {
@@ -33,7 +31,12 @@ type authModel struct {
 	Password string `json:"password"`
 }
 
-var client = &http.Client{}
+// disable redirects because when using oidc the client gets lost following links
+var client = &http.Client{
+    CheckRedirect: func(req *http.Request, via []*http.Request) error {
+        return http.ErrUseLastResponse
+    },
+}
 
 func doLogin(request *http.Request, cookieName string) (*string, error) {
 	resp, err := client.Do(request)
@@ -93,23 +96,7 @@ func getProductCookieName(product models.Product) string {
 	}
 }
 
-func createXLRLoginRequest(loginPath string, username string, password string) (*http.Request, error) {
-	loginBody := &authModel{
-		Username: username,
-		Password: password,
-	}
-	var marshalledBody, _ = json.Marshal(loginBody)
-	loginReq, loginReqErr := http.NewRequest("POST", loginPath, bytes.NewReader(marshalledBody))
-
-	if loginReqErr != nil {
-		return nil, loginReqErr
-	}
-
-	loginReq.Header.Add("Content-Type", "application/json")
-	return loginReq, nil
-}
-
-func createXLDLoginRequest(loginPath string, username string, password string) (*http.Request, error) {
+func createLoginRequest(loginPath string, username string, password string) (*http.Request, error) {
 	request, err := http.NewRequest("POST", loginPath, strings.NewReader(
 		url.Values{"username": {username}, "password": {password}}.Encode()),
 	)
@@ -130,11 +117,10 @@ func login(product models.Product, serverUrl string, username string, password s
 	err := (error)(nil)
 	loginToken := ""
 
-	if product == models.XLR {
-		loginRequest, err = createXLRLoginRequest(loginPath, username, password)
+    loginRequest, err = createLoginRequest(loginPath, username, password)
+    if product == models.XLR {
 		loginToken = models.XLR_LOGIN_TOKEN
 	} else {
-		loginRequest, err = createXLDLoginRequest(loginPath, username, password)
 		loginToken = models.XLD_LOGIN_TOKEN
 	}
 	if err != nil {
