@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-    "os/user"
-    "path/filepath"
+	"os/user"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/thoas/go-funk"
@@ -35,11 +36,11 @@ func NewLocalBlueprintRepository(confMap map[string]string) (*LocalBlueprintRepo
 	if !util.MapContainsKeyWithVal(confMap, "path") {
 		return nil, fmt.Errorf("'path' config field must be set for Local repository type")
 	}
-    currentUser, err := user.Current()
-    if err != nil {
-        return nil, fmt.Errorf("cannot get current user: %s", err.Error())
-    }
-    repoDir := util.ExpandHomeDirIfNeeded(confMap["path"], currentUser)
+	currentUser, err := user.Current()
+	if err != nil {
+		return nil, fmt.Errorf("cannot get current user: %s", err.Error())
+	}
+	repoDir := util.ExpandHomeDirIfNeeded(confMap["path"], currentUser)
 
 	// parse & check local blueprint repo path
 	dirInfo, err := os.Stat(repoDir)
@@ -174,7 +175,7 @@ func (repo *LocalBlueprintRepository) GetFileContents(filePath string) (*[]byte,
 // utility functions
 func findRelatedBlueprintDir(blueprintDirs []string, fullPath string) string {
 	for _, blueprintDir := range blueprintDirs {
-		if strings.Contains(fullPath, blueprintDir) {
+		if match, _ := regexp.MatchString("[/\\\\]?"+blueprintDir+"[/\\\\]", fullPath); match {
 			return blueprintDir
 		}
 	}
