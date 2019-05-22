@@ -401,8 +401,8 @@ func (blueprintDoc *BlueprintConfig) verifyTemplateDirAndPaths(templatePath stri
 
 // validate blueprint yaml document based on required fields
 func (blueprintDoc *BlueprintConfig) validate() error {
-	if blueprintDoc.ApiVersion != models.YamlFormatCurrentVersion {
-		return fmt.Errorf("api version needs to be %s", models.YamlFormatCurrentVersion)
+	if blueprintDoc.ApiVersion != models.BlueprintYamlFormatCurrentVersion {
+		return fmt.Errorf("api version needs to be %s", models.BlueprintYamlFormatCurrentVersion)
 	}
 	if blueprintDoc.Kind != models.BlueprintSpecKind {
 		return fmt.Errorf("yaml document kind needs to be %s", models.BlueprintSpecKind)

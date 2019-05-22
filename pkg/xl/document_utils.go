@@ -67,7 +67,7 @@ func ReportFatalDocumentError(applyFilename string, doc *Document, err error) {
 func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
 	funk.ForEach(filesWithDocs, func(file FileWithDocuments) {
 		funk.ForEach(file.Documents, func(doc *Document) {
-			if doc.Kind == models.ImportSpecKind && doc.ApiVersion != models.YamlFormatCurrentVersion {
+			if doc.Kind == models.ImportSpecKind && doc.ApiVersion != models.YamlFormatVersion {
 				util.Fatal("unknown apiVersion for %s spec kind: %s\n", models.ImportSpecKind, doc.ApiVersion)
 			}
 		})

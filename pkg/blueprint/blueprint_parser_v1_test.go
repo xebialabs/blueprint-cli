@@ -78,7 +78,7 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
              parameterOverrides:
              - name: Foo
                value: hello
-`, models.YamlFormatPreviousVersion))
+`, models.BlueprintYamlFormatPreviousVersion))
 	return parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
 }
 
