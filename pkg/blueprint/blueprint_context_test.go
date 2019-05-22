@@ -95,7 +95,7 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
           type: Input
           value: testing
           saveInXlvals: true
-  
+
         files:
         - path: xld-environment.yml.tmpl
         - path: xld-infrastructure.yml.tmpl
@@ -125,7 +125,7 @@ with a new line`),
       - name: Foo
         type: Input
         value: testing
-  
+
       files:
       - path: xld-app.yml.tmpl
       - path: xlr-pipeline.yml`
@@ -159,9 +159,10 @@ with a new line`),
     kind: Blueprint
     metadata:
       name: Test Project 4
-    files:
-    - path: xld-app.yml.tmpl
-    - path: xlr-pipeline.yml`
+    spec:
+      files:
+      - path: xld-app.yml.tmpl
+      - path: xlr-pipeline.yml`
 
 	httpmock.RegisterResponder(
 		"GET",
@@ -185,12 +186,10 @@ with a new line`),
           parameterOverrides:
           - name: Test
             value: hello
-            promptIf: !expression "Bar == 'testing'"
-          - name: bar
-            value: true
+            promptIf: !expression "2 > 1"
           fileOverrides:
           - path: xld-infrastructure.yml.tmpl
-            writeIf: false
+            writeIf: !expression "false"
         includeAfter:
         - blueprint: aws/datalake
           includeIf: !expression "Bar == 'testing'"
@@ -235,7 +234,7 @@ with a new line`),
             value: true
           fileOverrides:
           - path: xld-infrastructure.yml.tmpl
-            writeIf: false
+            writeIf: !expression "2 < 1"
         includeAfter:
         - blueprint: aws/datalake
           includeIf: !expression "Bar != 'testing'"
@@ -417,7 +416,7 @@ func TestBlueprintContext_fetchLocalFile(t *testing.T) {
         - name: Test
           type: Input
           value: testing
-  
+
         files:
         - path: xld-environment.yml.tmpl
         - path: xld-infrastructure.yml.tmpl
@@ -544,7 +543,7 @@ func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
         - name: Test
           type: Input
           value: testing
-  
+
         files:
         - path: xld-environment.yml.tmpl
         - path: xld-infrastructure.yml.tmpl

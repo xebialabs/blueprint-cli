@@ -562,7 +562,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 			ComposedBlueprintPtr{
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project"},
 						TemplateConfigs: []TemplateConfig{
@@ -592,23 +592,29 @@ func Test_getBlueprintConfig(t *testing.T) {
 			ComposedBlueprintPtr{
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlvals: VarField{Val: "true", Bool: true}},
+							{
+								Name:         VarField{Val: "Test"},
+								Type:         VarField{Val: "Input"},
+								Value:        VarField{Val: "hello"},
+								SaveInXlvals: VarField{Val: "true", Bool: true},
+								DependsOn:    VarField{Tag: "!expression", Val: "2 > 1"},
+							},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
-							{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl" /* Operation: skipOperation */},
+							{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Tag: "!expression", Val: "false"}},
 							{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
 						},
 					},
 				},
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project"},
 						Include: []IncludedBlueprintProcessed{
@@ -619,18 +625,13 @@ func Test_getBlueprintConfig(t *testing.T) {
 									{
 										Name:      VarField{Val: "Test"},
 										Value:     VarField{Val: "hello"},
-										DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
-									},
-									{
-										Name:  VarField{Val: "bar"},
-										Value: VarField{Val: "true", Bool: true},
+										DependsOn: VarField{Tag: "!expression", Val: "2 > 1"},
 									},
 								},
 								FileOverrides: []TemplateConfig{
 									{
-										Path: "xld-infrastructure.yml.tmpl",
-										// Operation: skipOperation,
-										DependsOn: VarField{Val: "TestDepends"},
+										Path:      "xld-infrastructure.yml.tmpl",
+										DependsOn: VarField{Tag: "!expression", Val: "false"},
 									},
 								},
 							},
@@ -646,8 +647,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 								DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
 								FileOverrides: []TemplateConfig{
 									{
-										Path: "xlr-pipeline.yml",
-										// Operation:   renameOperation,
+										Path:      "xlr-pipeline.yml",
 										RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
 										DependsOn: VarField{Val: "TestDepends"},
 									},
@@ -666,7 +666,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 				},
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
@@ -675,7 +675,11 @@ func Test_getBlueprintConfig(t *testing.T) {
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
-							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml" /* Operation: renameOperation, */, RenameTo: VarField{Val: "xlr-pipeline2-new.yml"}},
+							{
+								Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml",
+								RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
+								DependsOn: VarField{Val: "TestDepends"},
+							},
 						},
 					},
 					DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
@@ -683,18 +687,6 @@ func Test_getBlueprintConfig(t *testing.T) {
 			},
 			false,
 		},
-		// TODO add test
-		// {
-		// 	"should get blueprint config for a nested blueprint compose scenario",
-		// 	args{
-		// 		repo,
-		// 		false,
-		// 		blueprints,
-		// 		"aws/composenested",
-		// 	},
-		// 	&BlueprintConfig{},
-		// 	false,
-		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -756,7 +748,7 @@ func Test_composeBlueprints(t *testing.T) {
 			"should not fail when blueprints with empty param or files are passed",
 			args{
 				&BlueprintConfig{
-					ApiVersion: "xl/v1",
+					ApiVersion: "xl/v2",
 					Kind:       "Blueprint",
 					Metadata:   Metadata{Name: "Test Project"},
 					Include: []IncludedBlueprintProcessed{
@@ -784,7 +776,7 @@ func Test_composeBlueprints(t *testing.T) {
 			ComposedBlueprintPtr{
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project"},
 						Include: []IncludedBlueprintProcessed{
@@ -807,7 +799,7 @@ func Test_composeBlueprints(t *testing.T) {
 				},
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project 3"},
 						Include:    []IncludedBlueprintProcessed{},
@@ -819,7 +811,7 @@ func Test_composeBlueprints(t *testing.T) {
 				},
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project 4"},
 						Include:    []IncludedBlueprintProcessed{},
@@ -837,7 +829,7 @@ func Test_composeBlueprints(t *testing.T) {
 			"should compose the given blueprints together in after stage by default",
 			args{
 				&BlueprintConfig{
-					ApiVersion: "xl/v1",
+					ApiVersion: "xl/v2",
 					Kind:       "Blueprint",
 					Metadata:   Metadata{Name: "Test Project"},
 					Include: []IncludedBlueprintProcessed{
@@ -852,8 +844,7 @@ func Test_composeBlueprints(t *testing.T) {
 							DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
 							FileOverrides: []TemplateConfig{
 								{
-									Path: "xlr-pipeline.yml",
-									// Operation:   renameOperation,
+									Path:      "xlr-pipeline.yml",
 									RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
 									DependsOn: VarField{Val: "TestDepends"},
 								},
@@ -877,7 +868,7 @@ func Test_composeBlueprints(t *testing.T) {
 			ComposedBlueprintPtr{
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project"},
 						Include: []IncludedBlueprintProcessed{
@@ -892,8 +883,7 @@ func Test_composeBlueprints(t *testing.T) {
 								DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
 								FileOverrides: []TemplateConfig{
 									{
-										Path: "xlr-pipeline.yml",
-										// Operation:   renameOperation,
+										Path:      "xlr-pipeline.yml",
 										RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
 										DependsOn: VarField{Val: "TestDepends"},
 									},
@@ -912,7 +902,7 @@ func Test_composeBlueprints(t *testing.T) {
 				},
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
@@ -921,7 +911,7 @@ func Test_composeBlueprints(t *testing.T) {
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
-							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml" /* Operation: renameOperation, */, RenameTo: VarField{Val: "xlr-pipeline2-new.yml"}},
+							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Val: "TestDepends"}, RenameTo: VarField{Val: "xlr-pipeline2-new.yml"}},
 						},
 					},
 					DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
@@ -933,7 +923,7 @@ func Test_composeBlueprints(t *testing.T) {
 			"should compose the given blueprints together in before and after stage accordingly",
 			args{
 				&BlueprintConfig{
-					ApiVersion: "xl/v1",
+					ApiVersion: "xl/v2",
 					Kind:       "Blueprint",
 					Metadata:   Metadata{Name: "Test Project"},
 					Include: []IncludedBlueprintProcessed{
@@ -953,8 +943,7 @@ func Test_composeBlueprints(t *testing.T) {
 							},
 							FileOverrides: []TemplateConfig{
 								{
-									Path: "xld-infrastructure.yml.tmpl",
-									// Operation: skipOperation,
+									Path:      "xld-infrastructure.yml.tmpl",
 									DependsOn: VarField{Val: "TestDepends"},
 								},
 							},
@@ -971,8 +960,7 @@ func Test_composeBlueprints(t *testing.T) {
 							DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
 							FileOverrides: []TemplateConfig{
 								{
-									Path: "xlr-pipeline.yml",
-									// Operation:   renameOperation,
+									Path:      "xlr-pipeline.yml",
 									RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
 									DependsOn: VarField{Val: "TestDepends"},
 								},
@@ -996,23 +984,23 @@ func Test_composeBlueprints(t *testing.T) {
 			ComposedBlueprintPtr{
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlvals: VarField{Val: "true", Bool: true}},
+							{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlvals: VarField{Val: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
-							{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl" /* Operation: skipOperation */},
+							{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Val: "TestDepends"}},
 							{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
 						},
 					},
 				},
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project"},
 						Include: []IncludedBlueprintProcessed{
@@ -1032,8 +1020,7 @@ func Test_composeBlueprints(t *testing.T) {
 								},
 								FileOverrides: []TemplateConfig{
 									{
-										Path: "xld-infrastructure.yml.tmpl",
-										// Operation: skipOperation,
+										Path:      "xld-infrastructure.yml.tmpl",
 										DependsOn: VarField{Val: "TestDepends"},
 									},
 								},
@@ -1050,8 +1037,7 @@ func Test_composeBlueprints(t *testing.T) {
 								DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
 								FileOverrides: []TemplateConfig{
 									{
-										Path: "xlr-pipeline.yml",
-										// Operation:   renameOperation,
+										Path:      "xlr-pipeline.yml",
 										RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
 										DependsOn: VarField{Val: "TestDepends"},
 									},
@@ -1070,7 +1056,7 @@ func Test_composeBlueprints(t *testing.T) {
 				},
 				{
 					BlueprintConfig: &BlueprintConfig{
-						ApiVersion: "xl/v1",
+						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
@@ -1079,7 +1065,7 @@ func Test_composeBlueprints(t *testing.T) {
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
-							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml" /* Operation: renameOperation,  */, RenameTo: VarField{Val: "xlr-pipeline2-new.yml"}},
+							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Val: "TestDepends"}, RenameTo: VarField{Val: "xlr-pipeline2-new.yml"}},
 						},
 					},
 					DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
@@ -1256,7 +1242,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 				Values:       map[string]interface{}{"Test": "testing"},
 			},
 			&BlueprintConfig{
-				ApiVersion: "xl/v1",
+				ApiVersion: "xl/v2",
 				Kind:       "Blueprint",
 				Metadata:   Metadata{Name: "Test Project"},
 				Include:    []IncludedBlueprintProcessed{},
@@ -1290,7 +1276,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 				Values:       map[string]interface{}{"Test": "hello"},
 			},
 			&BlueprintConfig{
-				ApiVersion: "xl/v1",
+				ApiVersion: "xl/v2",
 				Kind:       "Blueprint",
 				Metadata:   Metadata{Name: "Test Project"},
 				Include: []IncludedBlueprintProcessed{
@@ -1301,18 +1287,13 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 							{
 								Name:      VarField{Val: "Test"},
 								Value:     VarField{Val: "hello"},
-								DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
-							},
-							{
-								Name:  VarField{Val: "bar"},
-								Value: VarField{Val: "true", Bool: true},
+								DependsOn: VarField{Tag: "!expression", Val: "2 > 1"},
 							},
 						},
 						FileOverrides: []TemplateConfig{
 							{
-								Path: "xld-infrastructure.yml.tmpl",
-								// Operation: skipOperation,
-								DependsOn: VarField{Val: "TestDepends"},
+								Path:      "xld-infrastructure.yml.tmpl",
+								DependsOn: VarField{Val: "false", Tag: "!expression"},
 							},
 						},
 					},
@@ -1328,8 +1309,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 						DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
 						FileOverrides: []TemplateConfig{
 							{
-								Path: "xlr-pipeline.yml",
-								// Operation:   renameOperation,
+								Path:      "xlr-pipeline.yml",
 								RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
 								DependsOn: VarField{Val: "TestDepends"},
 							},
@@ -1337,19 +1317,19 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 					},
 				},
 				Variables: []Variable{
-					{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlvals: VarField{Val: "true", Bool: true}},
+					{Name: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlvals: VarField{Val: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Val: "2 > 1"}},
 					{Name: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
 					{Name: VarField{Val: "Foo"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}},
 				},
 				TemplateConfigs: []TemplateConfig{
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
-					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl" /* Operation: skipOperation */},
+					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Val: "false", Tag: "!expression"}},
 					{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
 					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/compose/xld-infrastructure.yml.tmpl"},
 					{Path: "xlr-pipeline.yml", FullPath: "aws/compose/xlr-pipeline.yml"},
 					{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
-					{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml" /* Operation: renameOperation, */, RenameTo: VarField{Val: "xlr-pipeline2-new.yml"}},
+					{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Val: "TestDepends"}, RenameTo: VarField{Val: "xlr-pipeline2-new.yml"}},
 				},
 			},
 			false,
@@ -1373,7 +1353,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 				Values:       map[string]interface{}{},
 			},
 			&BlueprintConfig{
-				ApiVersion: "xl/v1",
+				ApiVersion: "xl/v2",
 				Kind:       "Blueprint",
 				Metadata:   Metadata{Name: "Test Project"},
 				Include: []IncludedBlueprintProcessed{
@@ -1391,12 +1371,11 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 								Value: VarField{Val: "true", Bool: true},
 							},
 						},
-						DependsOn: VarField{Tag: "!expression", Val: "2 > 1", InvertBool: true},
+						DependsOn: VarField{Tag: "!expression", Val: "2 < 1"},
 						FileOverrides: []TemplateConfig{
 							{
-								Path: "xld-infrastructure.yml.tmpl",
-								// Operation: skipOperation,
-								DependsOn: VarField{Val: "TestDepends"},
+								Path:      "xld-infrastructure.yml.tmpl",
+								DependsOn: VarField{Tag: "!expression", Val: "2 < 1"},
 							},
 						},
 					},
@@ -1412,8 +1391,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 						DependsOn: VarField{Tag: "!expression", Val: "Bar != 'testing'"},
 						FileOverrides: []TemplateConfig{
 							{
-								Path: "xlr-pipeline.yml",
-								// Operation:   renameOperation,
+								Path:      "xlr-pipeline.yml",
 								RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
 								DependsOn: VarField{Val: "TestDepends"},
 							},
