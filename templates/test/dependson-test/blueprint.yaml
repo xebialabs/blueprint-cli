@@ -1,7 +1,7 @@
-apiVersion: xl/v1
+apiVersion: xl/v2
 kind: Blueprint
 metadata:
-  projectName: AWS-Datalake
+  name: AWS-Datalake
   description: |
     The blueprint deploys a data lake architecture to AWS using CloudFormation.
     XL Deploy does the provisioning and deployment, while XL Release orchestrates everything.
@@ -14,22 +14,22 @@ spec:
   - name: UseAWSCredentialsFromSystem
     type: Confirm
     description: Do you want to use AWS credentials from ~/.aws/credentials file?
-    saveInXlVals: true
+    saveInXlvals: true
   - name: AWSAccessKey
     type: Input
     secret: true
     description: What is the AWS Access Key ID?
-    dependsOnFalse: UseAWSCredentialsFromSystem
+    promptIf: !expression "!UseAWSCredentialsFromSystem"
     default: testKey
   - name: AWSAccessSecret
     type: Input
     secret: true
     description: What is the AWS Secret Access Key?
-    dependsOnFalse: UseAWSCredentialsFromSystem
+    promptIf: !expression "!UseAWSCredentialsFromSystem"
     default: testSecret
   - name: AWSAccessSuperSecret
     type: Input
     secret: true
     description: What is the AWS Secret Access Key?
-    dependsOn: UseAWSCredentialsFromSystem
+    promptIf: UseAWSCredentialsFromSystem
     default: testSecret

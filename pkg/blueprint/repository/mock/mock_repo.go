@@ -79,7 +79,7 @@ func (repo *MockBlueprintRepository) GetFileContents(filePath string) (*[]byte, 
 		contents = []byte(`apiVersion: xl/v1
 kind: Blueprint
 metadata:
-  projectName: Test Project
+  name: Test Project
   description: Is just a test blueprint project
   author: XebiaLabs
   version: 1.0

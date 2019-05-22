@@ -1,7 +1,7 @@
-apiVersion: xl/v2
+apiVersion: xl/v1
 kind: Blueprint
 metadata:
-  name: Test Project
+  projectName: Test Project
   description: Is just a test blueprint project
   author: XebiaLabs
   version: 1.0
@@ -10,10 +10,10 @@ spec:
   - name: TestFoo
     type: Input
     value: testing
-    saveInXlvals: true
+    saveInXlVals: true
   - name: ClientCert
     type: Editor
-    saveInXlvals: true
+    saveInXlVals: true
     value: |
       FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5
       QJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ
@@ -67,15 +67,15 @@ spec:
     value: 100.0
   - name: DiskSizeWithBuffer
     type: Input
-    saveInXlvals: true
+    saveInXlVals: true
     value: !expression "DiskSize * 1.251"
 
   files:
   - path: xld-environment.yml.tmpl
   - path: xld-infrastructure.yml.tmpl
   - path: xlr-pipeline-2.yml
-    writeIf: !expression "AWSRegion == 'us-west' && AppName != 'foo' && TestDepends && !TestDepends2"
+    dependsOnTrue: !expression "AWSRegion == 'us-west' && AppName != 'foo' && TestDepends && !TestDepends2"
   - path: xlr-pipeline.yml
-    writeIf: !expression "!TestDepends"
+    dependsOnFalse: TestDepends
   - path: xlr-pipeline-3.yml
-    writeIf: !expression "!TestDepends3"
+    dependsOnFalse: TestDepends3

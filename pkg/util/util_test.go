@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-    "os/user"
-    "path"
-    "path/filepath"
-    "runtime"
-    "testing"
+	"os/user"
+	"path"
+	"path/filepath"
+	"runtime"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -53,52 +53,52 @@ func TestPathExists(t *testing.T) {
 }
 
 func TestExpandHomeDirIfNeeded(t *testing.T) {
-    // not to be tested on windows
-    if runtime.GOOS != "windows" {
-        currentUser, _ := user.Current()
-        tests := []struct {
-            name     string
-            testPath string
-            expected string
-        }{
-            {
-                "should expand home path when given ~",
-                "~",
-                currentUser.HomeDir,
-            },
-            {
-                "should expand home path when given ~/",
-                "~",
-                currentUser.HomeDir,
-            },
-            {
-                "should expand home path when given relative path to ~",
-                "~/some/dir",
-                filepath.Join(currentUser.HomeDir, "some/dir"),
-            },
-            {
-                "should not expand home path when given a path including ~ in between",
-                "/tmp/~/some/dir",
-                "/tmp/~/some/dir",
-            },
-            {
-                "should return original path when a full path is given",
-                "/tmp/path/to/some/local/dir/",
-                "/tmp/path/to/some/local/dir/",
-            },
-            {
-                "should return original path when a root path is given",
-                "/",
-                "/",
-            },
-        }
-        for _, tt := range tests {
-            t.Run(tt.name, func(t *testing.T) {
-                got := ExpandHomeDirIfNeeded(tt.testPath, currentUser)
-                assert.Equal(t, tt.expected, got)
-            })
-        }
-    }
+	// not to be tested on windows
+	if runtime.GOOS != "windows" {
+		currentUser, _ := user.Current()
+		tests := []struct {
+			name     string
+			testPath string
+			expected string
+		}{
+			{
+				"should expand home path when given ~",
+				"~",
+				currentUser.HomeDir,
+			},
+			{
+				"should expand home path when given ~/",
+				"~",
+				currentUser.HomeDir,
+			},
+			{
+				"should expand home path when given relative path to ~",
+				"~/some/dir",
+				filepath.Join(currentUser.HomeDir, "some/dir"),
+			},
+			{
+				"should not expand home path when given a path including ~ in between",
+				"/tmp/~/some/dir",
+				"/tmp/~/some/dir",
+			},
+			{
+				"should return original path when a full path is given",
+				"/tmp/path/to/some/local/dir/",
+				"/tmp/path/to/some/local/dir/",
+			},
+			{
+				"should return original path when a root path is given",
+				"/",
+				"/",
+			},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got := ExpandHomeDirIfNeeded(tt.testPath, currentUser)
+				assert.Equal(t, tt.expected, got)
+			})
+		}
+	}
 }
 
 func TestMapContainsKeyWithVal(t *testing.T) {
@@ -362,4 +362,74 @@ func TestParseVersion(t *testing.T) {
 
 		assert.Equal(t, actual, expected)
 	})
+}
+
+func TestMergeStructFields(t *testing.T) {
+	type SampleSub struct {
+		A string
+		B interface{}
+	}
+	type Sample struct {
+		A string
+		B int
+		C []string
+		D SampleSub
+		E []SampleSub
+	}
+	tests := []struct {
+		name   string
+		target interface{}
+		source interface{}
+		skip   []string
+		want   interface{}
+	}{
+		{
+			"should merge struct fields",
+			&Sample{A: "test"},
+			&Sample{B: 10},
+			nil,
+			&Sample{A: "test", B: 10},
+		},
+		{
+			"should merge struct fields by overwrite",
+			&Sample{A: "test", C: []string{"A"}},
+			&Sample{B: 10, C: []string{"B", "C"}},
+			nil,
+			&Sample{A: "test", B: 10, C: []string{"B", "C"}},
+		},
+		{
+			"should merge struct fields with struct as a field",
+			&Sample{A: "test", C: []string{"B", "C"}},
+			&Sample{B: 10, D: SampleSub{A: "test"}},
+			nil,
+			&Sample{A: "test", B: 10, C: []string{"B", "C"}, D: SampleSub{A: "test"}},
+		},
+		{
+			"should merge struct fields with struct array as a field",
+			&Sample{A: "test", C: []string{"A"}},
+			&Sample{E: []SampleSub{{A: "test"}}},
+			nil,
+			&Sample{A: "test", C: []string{"A"}, E: []SampleSub{{A: "test"}}},
+		},
+		{
+			"should merge struct fields but skip zero values",
+			&Sample{A: "test", C: []string{"A"}, E: []SampleSub{{A: "test"}}},
+			&Sample{A: "", B: 0, C: nil, D: SampleSub{}, E: nil},
+			nil,
+			&Sample{A: "test", C: []string{"A"}, E: []SampleSub{{A: "test"}}},
+		},
+		{
+			"should merge struct fields after skipping provided fields",
+			&Sample{A: "test", C: []string{"A"}},
+			&Sample{B: 10, C: []string{"B", "C"}, D: SampleSub{A: "test"}},
+			[]string{"C", "D"},
+			&Sample{A: "test", B: 10, C: []string{"A"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			MergeStructFields(tt.target, tt.source, tt.skip)
+			assert.Equal(t, tt.want, tt.target)
+		})
+	}
 }

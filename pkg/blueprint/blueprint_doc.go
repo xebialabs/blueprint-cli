@@ -401,8 +401,8 @@ func (blueprintDoc *BlueprintConfig) verifyTemplateDirAndPaths(templatePath stri
 
 // validate blueprint yaml document based on required fields
 func (blueprintDoc *BlueprintConfig) validate() error {
-	if blueprintDoc.ApiVersion != models.YamlFormatVersion {
-		return fmt.Errorf("api version needs to be %s", models.YamlFormatVersion)
+	if blueprintDoc.ApiVersion != models.YamlFormatCurrentVersion {
+		return fmt.Errorf("api version needs to be %s", models.YamlFormatCurrentVersion)
 	}
 	if blueprintDoc.Kind != models.BlueprintSpecKind {
 		return fmt.Errorf("yaml document kind needs to be %s", models.BlueprintSpecKind)
@@ -694,7 +694,7 @@ func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsO
 		}
 
 		saveItemToTemplateDataMap(currentVar, dataMap, defaultVal)
-		util.Verbose("[dataPrep] Skipping question for parameter [%s] because DependsOn [%s] value is %t\n", currentVar.Name.Val, dependsOnVal, condition)
+		util.Verbose("[dataPrep] Skipping question for parameter [%s] because PromptIf [%s] value is %t\n", currentVar.Name.Val, dependsOnVal, condition)
 		return true
 	}
 	return false

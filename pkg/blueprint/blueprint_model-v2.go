@@ -19,15 +19,13 @@ type MetadataV2 struct {
 type SpecV2 struct {
 	Parameters    []ParameterV2
 	Files         []FileV2
-	IncludeBefore []IncludedBlueprintV2
-	IncludeAfter  []IncludedBlueprintV2
+	IncludeBefore []IncludedBlueprintV2 `yaml:"includeBefore"`
+	IncludeAfter  []IncludedBlueprintV2 `yaml:"includeAfter"`
 }
 
 type ParameterV2 struct {
 	Name            interface{}   `yaml:"name"`
-	Prompt          interface{}   `yaml:"prompt"`
 	Description     interface{}   `yaml:"description"`
-	Label           interface{}   `yaml:"label"`
 	Type            interface{}   `yaml:"type"`
 	Default         interface{}   `yaml:"default"`
 	Value           interface{}   `yaml:"value"`
@@ -37,17 +35,21 @@ type ParameterV2 struct {
 	ReplaceAsIs     interface{}   `yaml:"replaceAsIs"`
 	RevealOnSummary interface{}   `yaml:"revealOnSummary"`
 	Validate        interface{}   `yaml:"validate"`
+	Secret          interface{}   `yaml:"secret"`  // TODO remove
+	Pattern         interface{}   `yaml:"pattern"` // TODO remove
+	// Prompt          interface{}   `yaml:"prompt"`
+	// Label           interface{}   `yaml:"label"`
 }
 
 type FileV2 struct {
 	Path     interface{} `yaml:"path"`
-	RenameTo interface{} `yaml:"renameTo"`
 	WriteIf  interface{} `yaml:"writeIf"`
+	RenameTo interface{} `yaml:"renameTo"`
 }
 
 type IncludedBlueprintV2 struct {
 	Blueprint          string        `yaml:"blueprint"`
+	IncludeIf          interface{}   `yaml:"includeIf"`
 	ParameterOverrides []ParameterV2 `yaml:"parameterOverrides"`
 	FileOverrides      []FileV2      `yaml:"fileOverrides"`
-	IncludeIf          interface{}   `yaml:"includeIf"`
 }

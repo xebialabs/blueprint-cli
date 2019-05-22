@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
-	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
 var sampleKubeConfig = `apiVersion: v1
@@ -90,82 +89,6 @@ func Setupk8sConfig() {
 	d1 := []byte(sampleKubeConfig)
 	ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
 	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
-}
-
-func getValidTestBlueprintMetadata(templatePath string, blueprintRepository BlueprintContext) (*BlueprintConfig, error) {
-	metadata := []byte(
-		fmt.Sprintf(`
-         apiVersion: %s
-         kind: Blueprint
-         metadata:
-           projectName: Test Project
-           description: Is just a test blueprint project used for manual testing of inputs
-           author: XebiaLabs
-           version: 1.0
-           instructions: These are the instructions for executing this blueprint
-         spec:
-           parameters:
-           - name: pass
-             type: Input
-             description: password?
-             secret: true
-           - name: test
-             type: Input
-             default: lala
-             saveInXlVals: true
-             description: help text
-           - name: fn
-             type: Input
-             value: !fn aws.regions(ecs)[0]
-           - name: select
-             type: Select
-             description: select region
-             options:
-             - !fn aws.regions(ecs)[0]
-             - b
-             - c
-             default: b
-           - name: isit
-             description: is it?
-             type: Confirm
-             value: true
-           - name: isitnot
-             description: negative question?
-             type: Confirm
-           - name: dep
-             description: depends on others
-             type: Input
-             dependsOn: !expression "isit && true"
-             dependsOnFalse: isitnot
-           files:
-           - path: xebialabs/foo.yaml
-           - path: readme.md
-             dependsOnTrue: isit
-           - path: bar.md
-             dependsOn: isitnot
-           - path: foo.md
-             dependsOnFalse: !expression "!!isitnot"
-           include:
-           - blueprint: kubernetes/gke-cluster
-             stage: before
-             parameterOverrides:
-             - name: Foo
-               value: hello
-               dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
-             - name: bar
-               value: true
-             fileOverrides:
-             - path: xld-infrastructure.yml.tmpl
-               operation: skip
-               dependsOnTrue: TestDepends
-           - blueprint: kubernetes/namespace
-             dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
-             stage: after
-             parameterOverrides:
-             - name: Foo
-               value: hello
-`, models.YamlFormatVersion))
-	return parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 }
 
 var dummyData = make(map[string]interface{})
@@ -432,7 +355,7 @@ func TestGetOptions(t *testing.T) {
 }
 
 func TestSkipQuestionOnCondition(t *testing.T) {
-	t.Run("should skip question (dependsOnFalse)", func(t *testing.T) {
+	t.Run("should skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
 			Name:  VarField{Val: "confirm"},
@@ -446,7 +369,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 		}
 		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
-	t.Run("should skip question (dependsOn)", func(t *testing.T) {
+	t.Run("should skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
 			Name:  VarField{Val: "confirm"},
@@ -460,7 +383,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 		}
 		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
-	t.Run("should skip question and default value should be false (dependsOn)", func(t *testing.T) {
+	t.Run("should skip question and default value should be false (promptIf)", func(t *testing.T) {
 		data := NewPreparedData()
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
@@ -477,7 +400,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 		assert.False(t, data.TemplateData[variables[1].Name.Val].(bool))
 	})
 
-	t.Run("should not skip question (dependsOnFalse)", func(t *testing.T) {
+	t.Run("should not skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
 			Name:  VarField{Val: "confirm"},
@@ -491,7 +414,7 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 		}
 		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
-	t.Run("should not skip question (dependsOn)", func(t *testing.T) {
+	t.Run("should not skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
 			Name:  VarField{Val: "confirm"},

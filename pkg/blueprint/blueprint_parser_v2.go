@@ -16,7 +16,7 @@ import (
 func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(*blueprintVars))
 	decoder.SetStrict(true)
-	yamlDoc := BlueprintYamlV1{}
+	yamlDoc := BlueprintYamlV2{}
 	err := decoder.Decode(&yamlDoc)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprint
 	blueprintConfig := BlueprintConfig{
 		ApiVersion:      yamlDoc.ApiVersion,
 		Kind:            yamlDoc.Kind,
-		Metadata:        ParseToMetadata(yamlDoc.Metadata),
+		Metadata:        yamlDoc.parseToMetadata(),
 		Include:         included,
 		TemplateConfigs: templateConfigs,
 		Variables:       variables,
@@ -47,26 +47,21 @@ func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprint
 	return &blueprintConfig, err
 }
 
-func ParseToMetadata(metadata MetadataV1) Metadata {
+func (yamlDoc *BlueprintYamlV2) parseToMetadata() Metadata {
 	return Metadata{
-		Name:         metadata.Name,
-		Description:  metadata.Description,
-		Author:       metadata.Author,
-		Version:      metadata.Version,
-		Instructions: metadata.Instructions,
+		Name:         yamlDoc.Metadata.Name,
+		Description:  yamlDoc.Metadata.Description,
+		Author:       yamlDoc.Metadata.Author,
+		Version:      yamlDoc.Metadata.Version,
+		Instructions: yamlDoc.Metadata.Instructions,
 	}
 }
 
 // parse doc parameters into list of variables
-func (blueprintDoc *BlueprintYamlV1) parseParameters() ([]Variable, error) {
-	parameters := []ParameterV1{}
+func (yamlDoc *BlueprintYamlV2) parseParameters() ([]Variable, error) {
+	parameters := []ParameterV2{}
 	variables := []Variable{}
-	if blueprintDoc.Spec.Parameters != nil {
-		parameters = blueprintDoc.Spec.Parameters
-	} else {
-		// for backward compatibility with v8.5
-		parameters = blueprintDoc.Parameters
-	}
+	parameters = yamlDoc.Spec.Parameters
 	for _, m := range parameters {
 		parsedVar, err := parseParameter(&m)
 		if err != nil {
@@ -78,15 +73,10 @@ func (blueprintDoc *BlueprintYamlV1) parseParameters() ([]Variable, error) {
 }
 
 // parse doc files into list of TemplateConfig
-func (blueprintDoc *BlueprintYamlV1) parseFiles(templatePath string, isLocal bool) ([]TemplateConfig, error) {
-	files := []FileV1{}
+func (yamlDoc *BlueprintYamlV2) parseFiles(templatePath string, isLocal bool) ([]TemplateConfig, error) {
+	files := []FileV2{}
 	templateConfigs := []TemplateConfig{}
-	if blueprintDoc.Spec.Files != nil {
-		files = blueprintDoc.Spec.Files
-	} else {
-		// for backward compatibility with v8.5
-		files = blueprintDoc.Files
-	}
+	files = yamlDoc.Spec.Files
 	for _, m := range files {
 		templateConfig, err := parseFile(&m)
 		if err != nil {
@@ -104,43 +94,46 @@ func (blueprintDoc *BlueprintYamlV1) parseFiles(templatePath string, isLocal boo
 }
 
 // parse doc files into list of TemplateConfig
-func (blueprintDoc *BlueprintYamlV1) parseIncludes() ([]IncludedBlueprintProcessed, error) {
+func (yamlDoc *BlueprintYamlV2) parseIncludes() ([]IncludedBlueprintProcessed, error) {
 	processedIncludes := []IncludedBlueprintProcessed{}
-	for _, m := range blueprintDoc.Spec.Include {
+	for _, m := range yamlDoc.Spec.IncludeBefore {
 		include, err := parseInclude(&m)
 		if err != nil {
 			return nil, err
 		}
+		include.Stage = "before"
+		processedIncludes = append(processedIncludes, include)
+	}
+	for _, m := range yamlDoc.Spec.IncludeAfter {
+		include, err := parseInclude(&m)
+		if err != nil {
+			return nil, err
+		}
+		include.Stage = "after"
 		processedIncludes = append(processedIncludes, include)
 	}
 	return processedIncludes, nil
 }
 
-func parseParameter(m *ParameterV1) (Variable, error) {
+func parseParameter(m *ParameterV2) (Variable, error) {
 	parsedVar := Variable{}
-	err := parseFieldsFromStruct(m, func() reflect.Value {
-		return reflect.ValueOf(&parsedVar).Elem()
-	})
+	err := parseFieldsFromStruct(m, &parsedVar)
 	return parsedVar, err
 }
 
-func parseFile(m *FileV1) (TemplateConfig, error) {
+func parseFile(m *FileV2) (TemplateConfig, error) {
 	parsedConfig := TemplateConfig{}
-	err := parseFieldsFromStruct(m, func() reflect.Value {
-		return reflect.ValueOf(&parsedConfig).Elem()
-	})
+	err := parseFieldsFromStruct(m, &parsedConfig)
 	return parsedConfig, err
 }
 
-func parseInclude(m *IncludedBlueprintV1) (IncludedBlueprintProcessed, error) {
+func parseInclude(m *IncludedBlueprintV2) (IncludedBlueprintProcessed, error) {
 	parsedInclude := IncludedBlueprintProcessed{}
-	err := parseFieldsFromStruct(m, func() reflect.Value {
-		return reflect.ValueOf(&parsedInclude).Elem()
-	})
+	err := parseFieldsFromStruct(m, &parsedInclude)
 	return parsedInclude, err
 }
 
-func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflect.Value) error {
+func parseFieldsFromStruct(original interface{}, target interface{}) error {
 	parameterR := reflect.ValueOf(original).Elem()
 	typeOfT := parameterR.Type()
 	// iterate over the struct fields and map them
@@ -148,26 +141,24 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 		fieldR := parameterR.Field(i)
 		fieldName := typeOfT.Field(i).Name
 		value := fieldR.Interface()
-		// for backward compatibility
-		invertBool := false
-		if (strings.ToLower(fieldName) == "dependsontrue" || strings.ToLower(fieldName) == "dependsonfalse") && value != nil {
-			invertBool = strings.ToLower(fieldName) == "dependsonfalse"
+		fieldNameLower := strings.ToLower(fieldName)
+		if (fieldNameLower == "promptif" || fieldNameLower == "writeif" || fieldNameLower == "includeif") && value != nil {
 			fieldName = "DependsOn"
 		}
-		field := getFieldByReflect().FieldByName(strings.Title(fieldName))
+		field := reflect.ValueOf(target).Elem().FieldByName(strings.Title(fieldName))
 		switch val := value.(type) {
 		case string:
 			// Set string field
-			setVariableField(&field, val, VarField{Val: val, InvertBool: invertBool})
+			setVariableField(&field, val, VarField{Val: val})
 		case int, uint, uint8, uint16, uint32, uint64:
 			// Set integer field
-			setVariableField(&field, fmt.Sprint(val), VarField{Val: fmt.Sprint(val), InvertBool: invertBool})
+			setVariableField(&field, fmt.Sprint(val), VarField{Val: fmt.Sprint(val)})
 		case float32, float64:
 			// Set float field
-			setVariableField(&field, fmt.Sprintf("%f", val), VarField{Val: fmt.Sprintf("%f", val), InvertBool: invertBool})
+			setVariableField(&field, fmt.Sprintf("%f", val), VarField{Val: fmt.Sprintf("%f", val)})
 		case bool:
 			// Set boolean field
-			setVariableField(&field, strconv.FormatBool(val), VarField{Val: strconv.FormatBool(val), Bool: val, InvertBool: invertBool})
+			setVariableField(&field, strconv.FormatBool(val), VarField{Val: strconv.FormatBool(val), Bool: val})
 		case []interface{}:
 			// Set options array field for Parameters
 			if len(val) > 0 {
@@ -187,30 +178,26 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 					}
 				}
 			}
-		case []ParameterOverrideV1:
+		case []ParameterV2:
 			// Set ParameterOverride array field for Include
 			if len(val) > 0 {
-				field.Set(reflect.MakeSlice(reflect.TypeOf([]ParameterOverridesProcessed{}), len(val), len(val)))
+				field.Set(reflect.MakeSlice(reflect.TypeOf([]Variable{}), len(val), len(val)))
 				for i, it := range val {
-					parsed := ParameterOverridesProcessed{}
-					err := parseFieldsFromStruct(&it, func() reflect.Value {
-						return reflect.ValueOf(&parsed).Elem()
-					})
+					parsed := Variable{}
+					err := parseFieldsFromStruct(&it, &parsed)
 					if err != nil {
 						return err
 					}
 					field.Index(i).Set(reflect.ValueOf(parsed))
 				}
 			}
-		case []FileV1:
-			// Set File array field for Include
+		case []FileV2:
+			// Set FileOverride array field for Include
 			if len(val) > 0 {
 				field.Set(reflect.MakeSlice(reflect.TypeOf([]TemplateConfig{}), len(val), len(val)))
 				for i, it := range val {
 					parsed := TemplateConfig{}
-					err := parseFieldsFromStruct(&it, func() reflect.Value {
-						return reflect.ValueOf(&parsed).Elem()
-					})
+					err := parseFieldsFromStruct(&it, &parsed)
 					if err != nil {
 						return err
 					}
@@ -221,7 +208,7 @@ func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflec
 			// Set string field with YAML tag
 			switch val.Tag {
 			case tagFn, tagExpression:
-				setVariableField(&field, val.Value, VarField{Val: val.Value, Tag: val.Tag, InvertBool: invertBool})
+				setVariableField(&field, val.Value, VarField{Val: val.Value, Tag: val.Tag})
 			default:
 				return fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
 			}
@@ -245,6 +232,7 @@ func setVariableField(field *reflect.Value, val interface{}, varField VarField) 
 	}
 }
 
+// ParseDependsOnValue parse the functions and expressions set on the dependsOn fields
 func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
 	tagVal := varField.Tag
 	fieldVal := varField.Val

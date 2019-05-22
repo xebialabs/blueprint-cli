@@ -13,6 +13,79 @@ import (
 	"github.com/xebialabs/yaml"
 )
 
+func getValidTestBlueprintMetadata(templatePath string, blueprintRepository BlueprintContext) (*BlueprintConfig, error) {
+	metadata := []byte(
+		fmt.Sprintf(`
+         apiVersion: %s
+         kind: Blueprint
+         metadata:
+           name: Test Project
+           description: Is just a test blueprint project used for manual testing of inputs
+           author: XebiaLabs
+           version: 1.0
+           instructions: These are the instructions for executing this blueprint
+         spec:
+           parameters:
+           - name: pass
+             type: Input
+             description: password?
+             secret: true
+           - name: test
+             type: Input
+             default: lala
+             saveInXlvals: true
+             description: help text
+           - name: fn
+             type: Input
+             value: !fn aws.regions(ecs)[0]
+           - name: select
+             type: Select
+             description: select region
+             options:
+             - !fn aws.regions(ecs)[0]
+             - b
+             - c
+             default: b
+           - name: isit
+             description: is it?
+             type: Confirm
+             value: true
+           - name: isitnot
+             description: negative question?
+             type: Confirm
+           - name: dep
+             description: depends on others
+             type: Input
+             promptIf: !expression "isit && true"
+           files:
+           - path: xebialabs/foo.yaml
+           - path: readme.md
+             writeIf: isit
+           - path: bar.md
+             writeIf: isitnot
+           - path: foo.md
+             writeIf: !expression "!isitnot"
+           includeBefore:
+           - blueprint: kubernetes/gke-cluster
+             parameterOverrides:
+             - name: Foo
+               value: hello
+               promptIf: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
+             - name: bar
+               value: true
+             fileOverrides:
+             - path: xld-infrastructure.yml.tmpl
+               writeIf: false
+           includeAfter:
+           - blueprint: kubernetes/namespace
+             includeIf: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
+             parameterOverrides:
+             - name: Foo
+               value: hello
+`, models.YamlFormatCurrentVersion))
+	return parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
+}
+
 func TestParseTemplateMetadata(t *testing.T) {
 	templatePath := "test/blueprints"
 	blueprintRepository := BlueprintContext{}
@@ -26,18 +99,18 @@ func TestParseTemplateMetadata(t *testing.T) {
 		metadata := []byte("test: blueprint")
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
-		assert.Equal(t, fmt.Sprintf("yaml: unmarshal errors:\n  line 1: field test not found in type blueprint.BlueprintYamlV1"), err.Error())
+		assert.Equal(t, fmt.Sprintf("yaml: unmarshal errors:\n  line 1: field test not found in type blueprint.BlueprintYamlV2"), err.Error())
 	})
 
 	t.Run("should error on missing api version", func(t *testing.T) {
 		metadata := []byte("kind: blueprint")
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
-		assert.Equal(t, fmt.Sprintf("api version needs to be %s", models.YamlFormatVersion), err.Error())
+		assert.Equal(t, fmt.Sprintf("api version needs to be %s", models.YamlFormatCurrentVersion), err.Error())
 	})
 
 	t.Run("should error on missing doc kind", func(t *testing.T) {
-		metadata := []byte("apiVersion: " + models.YamlFormatVersion)
+		metadata := []byte("apiVersion: " + models.YamlFormatCurrentVersion)
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "yaml document kind needs to be Blueprint", err.Error())
@@ -54,7 +127,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                   - name: Test
                     type: Invalid
                     value: testing`,
-				models.YamlFormatVersion))
+				models.YamlFormatCurrentVersion))
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "type [Invalid] is not valid for parameter [Test]", err.Error())
@@ -69,7 +142,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                spec:
                  parameters:
                  - name: Test
-                   value: testing`, models.YamlFormatVersion))
+                   value: testing`, models.YamlFormatCurrentVersion))
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
@@ -85,7 +158,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                   parameters:
                   - name: Test
                     type: Select
-                    options:`, models.YamlFormatVersion))
+                    options:`, models.YamlFormatCurrentVersion))
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "at least one option field is need to be set for parameter [Test]", err.Error())
@@ -101,8 +174,8 @@ func TestParseTemplateMetadata(t *testing.T) {
                   - name: Test
                     type: Confirm
                   files:
-                  - dependsOnFalse: Test
-                  - path: xbc.yaml`, models.YamlFormatVersion))
+                  - writeIf: Test
+                  - path: xbc.yaml`, models.YamlFormatCurrentVersion))
 		_, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "path is missing for file specification in files", err.Error())
@@ -118,7 +191,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                  - name: Test
                    type: Confirm
                  files:
-                 - path: ../xbc.yaml`, models.YamlFormatVersion))
+                 - path: ../xbc.yaml`, models.YamlFormatCurrentVersion))
 		_, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "path for file specification cannot start with /, .. or ./", err.Error())
@@ -137,60 +210,10 @@ func TestParseTemplateMetadata(t *testing.T) {
                  - name: Test
                    type: Input
                    default: 2
-                 files:`, models.YamlFormatVersion))
+                 files:`, models.YamlFormatCurrentVersion))
 		_, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "variable names must be unique within blueprint 'parameters' definition", err.Error())
-	})
-	t.Run("should parse nested variables and files from valid legacy metadata", func(t *testing.T) {
-		metadata := []byte(
-			fmt.Sprintf(`
-               apiVersion: %s
-               kind: Blueprint
-               metadata:
-               parameters:
-               - name: pass
-                 type: Input
-                 description: password?
-                 secret: true
-                 useRawValue: true
-               - name: test
-                 type: Input
-                 default: lala
-                 saveInXlVals: true
-                 description: help text
-                 showValueOnSummary: true
-
-               files:
-               - path: xebialabs/foo.yaml
-               - path: readme.md
-                 dependsOn: isit`, models.YamlFormatVersion))
-		doc, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
-		require.Nil(t, err)
-		assert.Equal(t, Variable{
-			Name:        VarField{Val: "pass"},
-			Type:        VarField{Val: TypeInput},
-			Description: VarField{Val: "password?"},
-			Secret:      VarField{Bool: true, Val: "true"},
-			ReplaceAsIs: VarField{Bool: true, Val: "true"},
-		}, doc.Variables[0])
-		assert.Equal(t, Variable{
-			Name:            VarField{Val: "test"},
-			Type:            VarField{Val: TypeInput},
-			Default:         VarField{Val: "lala"},
-			Description:     VarField{Val: "help text"},
-			SaveInXlvals:    VarField{Bool: true, Val: "true"},
-			RevealOnSummary: VarField{Bool: true, Val: "true"},
-		}, doc.Variables[1])
-		assert.Equal(t, TemplateConfig{
-			Path:     "xebialabs/foo.yaml",
-			FullPath: filepath.Join("aws/test", "xebialabs/foo.yaml"),
-		}, doc.TemplateConfigs[0])
-		assert.Equal(t, TemplateConfig{
-			Path:      "readme.md",
-			FullPath:  filepath.Join("aws/test", "readme.md"),
-			DependsOn: VarField{Val: "isit"},
-		}, doc.TemplateConfigs[1])
 	})
 
 	t.Run("should parse nested variables from valid metadata", func(t *testing.T) {
@@ -241,7 +264,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 			Name:        VarField{Val: "dep"},
 			Type:        VarField{Val: TypeInput},
 			Description: VarField{Val: "depends on others"},
-			DependsOn:   VarField{Val: "isitnot", InvertBool: true},
+			DependsOn:   VarField{Val: "isit && true", Tag: "!expression"},
 		}, doc.Variables[6])
 	})
 	t.Run("should parse files from valid metadata", func(t *testing.T) {
@@ -265,7 +288,7 @@ func TestParseTemplateMetadata(t *testing.T) {
 		assert.Equal(t, TemplateConfig{
 			Path:      "foo.md",
 			FullPath:  "templatePath/test/foo.md",
-			DependsOn: VarField{Val: "!!isitnot", Tag: tagExpression, InvertBool: true},
+			DependsOn: VarField{Val: "!isitnot", Tag: tagExpression},
 		}, doc.TemplateConfigs[3])
 	})
 	t.Run("should parse includes from valid metadata", func(t *testing.T) {
@@ -275,31 +298,30 @@ func TestParseTemplateMetadata(t *testing.T) {
 		assert.Equal(t, IncludedBlueprintProcessed{
 			Blueprint: "kubernetes/gke-cluster",
 			Stage:     "before",
-			ParameterOverrides: []ParameterOverridesProcessed{
+			ParameterOverrides: []Variable{
 				{
-					Name:      "Foo",
+					Name:      VarField{Val: "Foo"},
 					Value:     VarField{Val: "hello"},
 					DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
 				},
 				{
-					Name:  "bar",
+					Name:  VarField{Val: "bar"},
 					Value: VarField{Val: "true", Bool: true},
 				},
 			},
 			FileOverrides: []TemplateConfig{
 				{
 					Path:      "xld-infrastructure.yml.tmpl",
-					Operation: "skip",
-					DependsOn: VarField{Val: "TestDepends"},
+					DependsOn: VarField{Val: "false", Bool: false},
 				},
 			},
 		}, doc.Include[0])
 		assert.Equal(t, IncludedBlueprintProcessed{
 			Blueprint: "kubernetes/namespace",
 			Stage:     "after",
-			ParameterOverrides: []ParameterOverridesProcessed{
+			ParameterOverrides: []Variable{
 				{
-					Name:  "Foo",
+					Name:  VarField{Val: "Foo"},
 					Value: VarField{Val: "hello"},
 				},
 			},
@@ -329,14 +351,14 @@ func TestParseTemplateMetadata(t *testing.T) {
                 apiVersion: %s
                 kind: Blueprint
                 metadata:
-                  projectName: allala
+                  name: allala
                   instructions: |
                     This is a multiline instruction:
 
                     The instructions continue here:
                       1. First step
                       2. Second step
-                spec:`, models.YamlFormatVersion))
+                spec:`, models.YamlFormatCurrentVersion))
 		doc, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
 		require.Nil(t, err)
 		assert.Equal(t,
@@ -347,30 +369,27 @@ func TestParseTemplateMetadata(t *testing.T) {
 
 func TestBlueprintYaml_parseParameters(t *testing.T) {
 	tests := []struct {
-		name    string
-		params  []ParameterV1
-		spec    SpecV1
+		name string
+		spec    SpecV2
 		want    []Variable
 		wantErr bool
 	}{
 		{
-			"should error on invalid tag in dependsOn ",
-			nil,
-			SpecV1{
-				Parameters: []ParameterV1{
+			"should error on invalid tag in promptIf ",
+			SpecV2{
+				Parameters: []ParameterV2{
 					{
-						Name:           "test",
-						Type:           "Input",
-						Secret:         true,
-						Value:          "string",
-						Description:    "desc",
-						Default:        "string2",
-						DependsOn:      yaml.CustomTag{Tag: "!foo", Value: "1 > 2"},
-						DependsOnFalse: "Var",
+						Name:        "test",
+						Type:        "Input",
+						Secret:      true, //TODO
+						Value:       "string",
+						Description: "desc",
+						Default:     "string2",
+						PromptIf:    yaml.CustomTag{Tag: "!foo", Value: "1 > 2"},
 						Options: []interface{}{
 							"test", "foo", 10, 13.4,
 						},
-						Pattern:      "pat",
+						Pattern:      "pat", //TODO
 						SaveInXlvals: true,
 						ReplaceAsIs:  false,
 					},
@@ -381,21 +400,19 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 		},
 		{
 			"should error on invalid type in list ",
-			nil,
-			SpecV1{
-				Parameters: []ParameterV1{
+			SpecV2{
+				Parameters: []ParameterV2{
 					{
-						Name:           "test",
-						Type:           "Input",
-						Secret:         true,
-						Value:          "string",
-						Description:    "desc",
-						Default:        "string2",
-						DependsOnFalse: "Var",
+						Name:        "test",
+						Type:        "Input",
+						Secret:      true, //TODO
+						Value:       "string",
+						Description: "desc",
+						Default:     "string2",
 						Options: []interface{}{
 							"test", "foo", true,
 						},
-						Pattern:      "pat",
+						Pattern:      "pat", //TODO
 						SaveInXlvals: true,
 						ReplaceAsIs:  false,
 					},
@@ -406,38 +423,35 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 		},
 		{
 			"should parse parameters under spec",
-			nil,
-			SpecV1{
-				Parameters: []ParameterV1{
+			SpecV2{
+				Parameters: []ParameterV2{
 					{
-						Name:           "test",
-						Type:           "Input",
-						Secret:         true,
-						Value:          "string",
-						Description:    "desc",
-						Default:        "string2",
-						DependsOn:      yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-						DependsOnFalse: "Var",
+						Name:        "test",
+						Type:        "Input",
+						Secret:      true, //TODO
+						Value:       "string",
+						Description: "desc",
+						Default:     "string2",
+						PromptIf:    yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 						Options: []interface{}{
 							"test", "foo", 10, 13.4,
 						},
-						Pattern:      "pat",
+						Pattern:      "pat", //TODO
 						SaveInXlvals: true,
 						ReplaceAsIs:  false,
 					},
 					{
-						Name:           "test",
-						Type:           "Confirm",
-						Secret:         false,
-						Value:          true,
-						Description:    "desc",
-						Default:        false,
-						DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-						DependsOnFalse: "Var",
+						Name:        "test",
+						Type:        "Confirm",
+						Secret:      false, //TODO
+						Value:       true,
+						Description: "desc",
+						Default:     false,
+						PromptIf:    yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 						Options: []interface{}{
 							"test", yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 						},
-						Pattern:      "pat",
+						Pattern:      "pat", //TODO
 						SaveInXlvals: true,
 						ReplaceAsIs:  false,
 					},
@@ -451,7 +465,7 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 					Value:       VarField{Val: "string"},
 					Description: VarField{Val: "desc"},
 					Default:     VarField{Val: "string2"},
-					DependsOn:   VarField{Val: "Var", InvertBool: true},
+					DependsOn:   VarField{Tag: "!expression", Val: "1 > 2"},
 					Options: []VarField{
 						VarField{Val: "test"}, VarField{Val: "foo"}, VarField{Val: "10"}, VarField{Val: "13.400000"},
 					},
@@ -466,78 +480,7 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 					Value:       VarField{Bool: true, Val: "true"},
 					Description: VarField{Val: "desc"},
 					Default:     VarField{Bool: false, Val: "false"},
-					DependsOn:   VarField{Val: "Var", InvertBool: true},
-					Options: []VarField{
-						VarField{Val: "test"}, VarField{Tag: "!expression", Val: "1 > 2"},
-					},
-					Pattern:      VarField{Val: "pat"},
-					SaveInXlvals: VarField{Bool: true, Val: "true"},
-					ReplaceAsIs:  VarField{Bool: false, Val: "false"},
-				},
-			},
-			false,
-		},
-		{
-			"should parse parameters",
-			[]ParameterV1{
-				{
-					Name:           "test",
-					Type:           "Input",
-					Secret:         true,
-					Value:          "string",
-					Description:    "desc",
-					Default:        "string2",
-					DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-					DependsOnFalse: "Var",
-					Options: []interface{}{
-						"test", "foo", 10, 13.4,
-					},
-					Pattern:      "pat",
-					SaveInXlvals: true,
-					ReplaceAsIs:  false,
-				},
-				{
-					Name:           "test",
-					Type:           "Confirm",
-					Secret:         false,
-					Value:          true,
-					Description:    "desc",
-					Default:        false,
-					DependsOn:      yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-					DependsOnFalse: "Var",
-					Options: []interface{}{
-						"test", yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-					},
-					Pattern:      "pat",
-					SaveInXlvals: true,
-					ReplaceAsIs:  false,
-				},
-			},
-			SpecV1{},
-			[]Variable{
-				{
-					Name:        VarField{Val: "test"},
-					Type:        VarField{Val: "Input"},
-					Secret:      VarField{Bool: true, Val: "true"},
-					Value:       VarField{Val: "string"},
-					Description: VarField{Val: "desc"},
-					Default:     VarField{Val: "string2"},
-					DependsOn:   VarField{Val: "Var", InvertBool: true},
-					Options: []VarField{
-						VarField{Val: "test"}, VarField{Val: "foo"}, VarField{Val: "10"}, VarField{Val: "13.400000"},
-					},
-					Pattern:      VarField{Val: "pat"},
-					SaveInXlvals: VarField{Bool: true, Val: "true"},
-					ReplaceAsIs:  VarField{Bool: false, Val: "false"},
-				},
-				{
-					Name:        VarField{Val: "test"},
-					Type:        VarField{Val: "Confirm"},
-					Secret:      VarField{Bool: false, Val: "false"},
-					Value:       VarField{Bool: true, Val: "true"},
-					Description: VarField{Val: "desc"},
-					Default:     VarField{Bool: false, Val: "false"},
-					DependsOn:   VarField{Val: "Var", InvertBool: true},
+					DependsOn:   VarField{Tag: "!expression", Val: "1 > 2"},
 					Options: []VarField{
 						VarField{Val: "test"}, VarField{Tag: "!expression", Val: "1 > 2"},
 					},
@@ -551,10 +494,9 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			blueprintDoc := &BlueprintYamlV1{
+			blueprintDoc := &BlueprintYamlV2{
 				ApiVersion: "",
 				Kind:       "",
-				Parameters: tt.params,
 				Spec:       tt.spec,
 			}
 			got, err := blueprintDoc.parseParameters()
@@ -571,15 +513,15 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 	templatePath := "aws/monolith"
 	tests := []struct {
 		name    string
-		fields  BlueprintYamlV1
+		fields  BlueprintYamlV2
 		want    []TemplateConfig
 		wantErr error
 	}{
 		{
 			"parse a valid file declaration",
-			BlueprintYamlV1{
-				Spec: SpecV1{
-					Files: []FileV1{
+			BlueprintYamlV2{
+				Spec: SpecV2{
+					Files: []FileV2{
 						{Path: "test.yaml"},
 						{Path: "test2.yaml"},
 					},
@@ -592,35 +534,35 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 			nil,
 		},
 		{
-			"parse a valid file declaration with dependsOn that refers to existing variables",
-			BlueprintYamlV1{
-				Spec: SpecV1{
-					Parameters: []ParameterV1{
+			"parse a valid file declaration with WriteIf that refers to existing variables",
+			BlueprintYamlV2{
+				Spec: SpecV2{
+					Parameters: []ParameterV2{
 						{Name: "foo", Type: "Confirm", Value: "true"},
 						{Name: "bar", Type: "Confirm", Value: "false"},
 					},
-					Files: []FileV1{
+					Files: []FileV2{
 						{Path: "test.yaml"},
-						{Path: "test2.yaml", DependsOn: "foo"},
-						{Path: "test3.yaml", DependsOnFalse: "bar"},
-						{Path: "test4.yaml", DependsOn: "bar"},
-						{Path: "test5.yaml", DependsOnFalse: "foo"},
+						{Path: "test2.yaml", WriteIf: "foo"},
+						{Path: "test3.yaml", WriteIf: yaml.CustomTag{Tag: "!expression", Value: "!bar"}},
+						{Path: "test4.yaml", WriteIf: "bar"},
+						{Path: "test5.yaml", WriteIf: yaml.CustomTag{Tag: "!expression", Value: "!foo"}},
 					},
 				},
 			},
 			[]TemplateConfig{
 				{Path: "test.yaml", FullPath: filepath.Join(templatePath, "test.yaml")},
 				{Path: "test2.yaml", FullPath: filepath.Join(templatePath, "test2.yaml"), DependsOn: VarField{Val: "foo", Tag: ""}},
-				{Path: "test3.yaml", FullPath: filepath.Join(templatePath, "test3.yaml"), DependsOn: VarField{Val: "bar", Tag: "", InvertBool: true}},
+				{Path: "test3.yaml", FullPath: filepath.Join(templatePath, "test3.yaml"), DependsOn: VarField{Val: "!bar", Tag: "!expression"}},
 				{Path: "test4.yaml", FullPath: filepath.Join(templatePath, "test4.yaml"), DependsOn: VarField{Val: "bar", Tag: ""}},
-				{Path: "test5.yaml", FullPath: filepath.Join(templatePath, "test5.yaml"), DependsOn: VarField{Val: "foo", Tag: "", InvertBool: true}},
+				{Path: "test5.yaml", FullPath: filepath.Join(templatePath, "test5.yaml"), DependsOn: VarField{Val: "!foo", Tag: "!expression"}},
 			},
 			nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			blueprintDoc := &BlueprintYamlV1{
+			blueprintDoc := &BlueprintYamlV2{
 				ApiVersion: tt.fields.ApiVersion,
 				Kind:       tt.fields.Kind,
 				Metadata:   tt.fields.Metadata,
@@ -640,122 +582,110 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 func TestBlueprintYaml_parseIncludes(t *testing.T) {
 	tests := []struct {
 		name    string
-		fields  BlueprintYamlV1
+		fields  BlueprintYamlV2
 		want    []IncludedBlueprintProcessed
 		wantErr error
 	}{
 		{
-			"parse a valid include declaration with dependsOn that is an expression",
-			BlueprintYamlV1{
-				Spec: SpecV1{
-					Include: []IncludedBlueprintV1{
+			"parse a valid include declaration with IncludeIf that is an expression",
+			BlueprintYamlV2{
+				Spec: SpecV2{
+					IncludeAfter: []IncludedBlueprintV2{
 						{
-							Blueprint:      "bar",
-							Stage:          "after",
-							DependsOn:      yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-							DependsOnFalse: "Var",
+							Blueprint: "bar",
+							IncludeIf: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 						},
+					},
+					IncludeBefore: []IncludedBlueprintV2{
 						{
 							Blueprint: "foo",
-							Stage:     "before",
-							ParameterOverrides: []ParameterOverrideV1{
+							ParameterOverrides: []ParameterV2{
 								{
-									Name:      "foo",
-									Value:     "bar",
-									DependsOn: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+									Name:     "foo",
+									Value:    "bar",
+									PromptIf: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 								},
 								{
-									Name:          "bar",
-									Value:         true,
-									DependsOnTrue: yaml.CustomTag{Tag: "!fn", Value: "foo"},
+									Name:     "bar",
+									Value:    true,
+									PromptIf: yaml.CustomTag{Tag: "!fn", Value: "foo"},
 								},
 								{
-									Name:           "barr",
-									Value:          10.5,
-									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
-								},
-							},
-							FileOverrides: []FileV1{
-								{
-									Path:      "foo/bar.md",
-									Operation: "skip",
-									DependsOn: yaml.CustomTag{Tag: "!fn", Value: "foo"},
-								},
-								{
-									Path:           "foo/bar2.md",
-									Operation:      "skip",
-									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
-								},
-								{
-									Path:        "foo/bar.md",
-									Operation:   "rename",
-									RenamedPath: "foo/baar.md",
-									DependsOn:   yaml.CustomTag{Tag: "!fn", Value: "foo"},
-								},
-								{
-									Path:           "foo/bar2.md",
-									Operation:      "rename",
-									RenamedPath:    yaml.CustomTag{Tag: "!expression", Value: "1 > 2 ? 'foo' : 'bar'"},
-									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
+									Name:     "barr",
+									Value:    10.5,
+									PromptIf: yaml.CustomTag{Tag: "!fn", Value: "!foo"},
 								},
 							},
-							DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-							DependsOnFalse: "Var",
+							FileOverrides: []FileV2{
+								{
+									Path:    "foo/bar.md",
+									WriteIf: false,
+								},
+								{
+									Path:    "foo/bar2.md",
+									WriteIf: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+								},
+								{
+									Path:     "foo/baar.md",
+									RenameTo: "foo/baaar.md",
+								},
+								{
+									Path:     "foo/baar2.md",
+									RenameTo: yaml.CustomTag{Tag: "!expression", Value: "1 > 2 ? 'foo' : 'bar'"},
+									WriteIf:  yaml.CustomTag{Tag: "!fn", Value: "foo"},
+								},
+							},
+							IncludeIf: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 						},
 					},
 				},
 			},
 			[]IncludedBlueprintProcessed{
 				{
-					Blueprint: "bar",
-					Stage:     "after",
-					DependsOn: VarField{Val: "Var", InvertBool: true},
-				},
-				{
 					Blueprint: "foo",
 					Stage:     "before",
-					ParameterOverrides: []ParameterOverridesProcessed{
+					ParameterOverrides: []Variable{
 						{
-							Name:      "foo",
+							Name:      VarField{Val: "foo"},
 							Value:     VarField{Val: "bar"},
 							DependsOn: VarField{Val: "1 > 2", Tag: "!expression"},
 						},
 						{
-							Name:      "bar",
+							Name:      VarField{Val: "bar"},
 							Value:     VarField{Val: "true", Bool: true},
 							DependsOn: VarField{Tag: "!fn", Val: "foo"},
 						},
 						{
-							Name:      "barr",
+							Name:      VarField{Val: "barr"},
 							Value:     VarField{Val: "10.500000"},
-							DependsOn: VarField{Tag: "!fn", Val: "foo", InvertBool: true},
+							DependsOn: VarField{Tag: "!fn", Val: "!foo"},
 						},
 					},
 					FileOverrides: []TemplateConfig{
 						{
 							Path:      "foo/bar.md",
-							Operation: "skip",
-							DependsOn: VarField{Tag: "!fn", Val: "foo"},
+							DependsOn: VarField{Bool: false, Val: "false"},
 						},
 						{
 							Path:      "foo/bar2.md",
-							Operation: "skip",
-							DependsOn: VarField{Tag: "!fn", Val: "foo", InvertBool: true},
+							DependsOn: VarField{Tag: "!expression", Val: "1 > 2"},
 						},
 						{
-							Path:        "foo/bar.md",
-							Operation:   "rename",
-							RenamedPath: VarField{Val: "foo/baar.md"},
-							DependsOn:   VarField{Tag: "!fn", Val: "foo"},
+							Path:     "foo/baar.md",
+							RenameTo: VarField{Val: "foo/baaar.md"},
 						},
 						{
-							Path:        "foo/bar2.md",
-							Operation:   "rename",
-							RenamedPath: VarField{Tag: "!expression", Val: "1 > 2 ? 'foo' : 'bar'"},
-							DependsOn:   VarField{Tag: "!fn", Val: "foo", InvertBool: true},
+							Path:      "foo/baar2.md",
+							RenameTo:  VarField{Tag: "!expression", Val: "1 > 2 ? 'foo' : 'bar'"},
+							DependsOn: VarField{Tag: "!fn", Val: "foo"},
 						},
 					},
-					DependsOn: VarField{Val: "Var", InvertBool: true},
+					DependsOn: VarField{Tag: "!expression", Val: "1 > 2"},
+				},
+				{
+					Blueprint: "bar",
+					Stage:     "after",
+					DependsOn: VarField{Tag: "!expression", Val: "1 > 2"},
 				},
 			},
 			nil,
@@ -764,7 +694,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
-			blueprintDoc := &BlueprintYamlV1{
+			blueprintDoc := &BlueprintYamlV2{
 				ApiVersion: tt.fields.ApiVersion,
 				Kind:       tt.fields.Kind,
 				Metadata:   tt.fields.Metadata,
@@ -784,60 +714,60 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 func TestParseFile(t *testing.T) {
 	tests := []struct {
 		name    string
-		args    *FileV1
+		args    *FileV2
 		want    TemplateConfig
 		wantErr error
 	}{
 		{
 			"return empty for empty map",
-			&FileV1{},
+			&FileV2{},
 			TemplateConfig{},
 			nil,
 		},
 		{
 			"parse a file declaration with only path",
-			&FileV1{
+			&FileV2{
 				Path: "test.yaml",
 			},
 			TemplateConfig{Path: "test.yaml"},
 			nil,
 		},
 		{
-			"parse a file declaration with only path and nil for dependsOn",
-			&FileV1{
-				Path: "test.yaml", DependsOn: "",
+			"parse a file declaration with only path and nil for WriteIf",
+			&FileV2{
+				Path: "test.yaml", WriteIf: "",
 			},
 			TemplateConfig{Path: "test.yaml"},
 			nil,
 		},
 		{
-			"parse a file declaration with path and dependsOnTrue",
-			&FileV1{
-				Path: "test.yaml", DependsOnTrue: "foo",
+			"parse a file declaration with path and WriteIf",
+			&FileV2{
+				Path: "test.yaml", WriteIf: "foo",
 			},
 			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "foo"}},
 			nil,
 		},
 		{
-			"parse a file declaration with path dependsOnFalse and dependsOn",
-			&FileV1{
-				Path: "test.yaml", DependsOn: "foo", DependsOnFalse: "bar",
+			"parse a file declaration with path and dependsOn",
+			&FileV2{
+				Path: "test.yaml", WriteIf: "foo",
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "bar", InvertBool: true}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "foo"}},
 			nil,
 		},
 		{
 			"parse a file declaration with path and dependsOn as !fn tag",
-			&FileV1{
-				Path: "test.yaml", DependsOn: yaml.CustomTag{Tag: "!fn", Value: "aws.credentials().IsAvailable"},
+			&FileV2{
+				Path: "test.yaml", WriteIf: yaml.CustomTag{Tag: "!fn", Value: "aws.credentials().IsAvailable"},
 			},
 			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "aws.credentials().IsAvailable", Tag: "!fn"}},
 			nil,
 		},
 		{
 			"parse a file declaration with path and dependsOn as !expression tag",
-			&FileV1{
-				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+			&FileV2{
+				Path: "test.yaml", WriteIf: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 			},
 			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "1 > 2", Tag: "!expression"}},
 			nil,

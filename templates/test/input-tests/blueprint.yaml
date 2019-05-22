@@ -1,4 +1,4 @@
-apiVersion: xl/v1
+apiVersion: xl/v
 kind: Blueprint
 metadata:
   projectName: Test Project
@@ -13,10 +13,10 @@ spec:
   - name: Test
     type: Input
     value: testing
-    saveInXlVals: true
+    saveInXlvals: true
   - name: ClientCert
     type: Editor
-    saveInXlVals: true
+    saveInXlvals: true
     value: |
       FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5
       QJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ

@@ -36,11 +36,10 @@ type Variable struct {
 
 // TemplateConfig holds the merged template file definitions with repository info
 type TemplateConfig struct {
-	Path        string
-	FullPath    string
-	Operation   string
-	RenamedPath VarField
-	DependsOn   VarField
+	Path      string
+	FullPath  string
+	RenameTo  VarField
+	DependsOn VarField
 }
 
 type VarField struct {
@@ -53,18 +52,7 @@ type VarField struct {
 type IncludedBlueprintProcessed struct {
 	Blueprint          string
 	Stage              string
-	ParameterOverrides []ParameterOverridesProcessed
+	ParameterOverrides []Variable
 	FileOverrides      []TemplateConfig
 	DependsOn          VarField
-}
-
-type ParameterOverridesProcessed struct {
-	Name      string
-	Value     VarField
-	DependsOn VarField
-}
-
-type FileOverridesProcessed struct {
-	Path      string
-	DependsOn VarField
 }

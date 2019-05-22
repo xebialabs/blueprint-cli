@@ -85,21 +85,21 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 	)
 
 	yaml := `
-      apiVersion: xl/v1
+      apiVersion: xl/v2
       kind: Blueprint
       metadata:
-        projectName: Test Project
-
-      parameters:
-      - name: Test
-        type: Input
-        value: testing
-        saveInXlVals: true
-
-      files:
-      - path: xld-environment.yml.tmpl
-      - path: xld-infrastructure.yml.tmpl
-      - path: xlr-pipeline.yml`
+        name: Test Project
+      spec:
+        parameters:
+        - name: Test
+          type: Input
+          value: testing
+          saveInXlvals: true
+  
+        files:
+        - path: xld-environment.yml.tmpl
+        - path: xld-infrastructure.yml.tmpl
+        - path: xlr-pipeline.yml`
 
 	httpmock.RegisterResponder(
 		"GET",
@@ -115,19 +115,20 @@ with a new line`),
 	)
 
 	yaml = `
-    apiVersion: xl/v1
+    apiVersion: xl/v2
     kind: Blueprint
     metadata:
-      projectName: Test Project 2
+      name: Test Project 2
 
-    parameters:
-    - name: Foo
-      type: Input
-      value: testing
-
-    files:
-    - path: xld-app.yml.tmpl
-    - path: xlr-pipeline.yml`
+    spec:
+      parameters:
+      - name: Foo
+        type: Input
+        value: testing
+  
+      files:
+      - path: xld-app.yml.tmpl
+      - path: xlr-pipeline.yml`
 
 	httpmock.RegisterResponder(
 		"GET",
@@ -136,15 +137,16 @@ with a new line`),
 	)
 
 	yaml = `
-    apiVersion: xl/v1
+    apiVersion: xl/v2
     kind: Blueprint
     metadata:
-      projectName: Test Project 3
+      name: Test Project 3
 
-    parameters:
-    - name: Foo
-      type: Input
-      value: testing`
+    spec:
+      parameters:
+      - name: Foo
+        type: Input
+        value: testing`
 
 	httpmock.RegisterResponder(
 		"GET",
@@ -153,10 +155,10 @@ with a new line`),
 	)
 
 	yaml = `
-    apiVersion: xl/v1
+    apiVersion: xl/v2
     kind: Blueprint
     metadata:
-      projectName: Test Project 4
+      name: Test Project 4
     files:
     - path: xld-app.yml.tmpl
     - path: xlr-pipeline.yml`
@@ -168,40 +170,37 @@ with a new line`),
 	)
 
 	yaml = `
-      apiVersion: xl/v1
+      apiVersion: xl/v2
       kind: Blueprint
       metadata:
-        projectName: Test Project
+        name: Test Project
 
       spec:
         parameters:
         - name: Bar
           type: Input
           value: testing
-        include:
+        includeBefore:
         - blueprint: aws/monolith
-          stage: before
           parameterOverrides:
           - name: Test
             value: hello
-            dependsOn: !expression "Bar == 'testing'"
+            promptIf: !expression "Bar == 'testing'"
           - name: bar
             value: true
           fileOverrides:
           - path: xld-infrastructure.yml.tmpl
-            operation: skip
-            dependsOnTrue: TestDepends
+            writeIf: false
+        includeAfter:
         - blueprint: aws/datalake
-          dependsOnTrue: !expression "Bar == 'testing'"
-          stage: after
+          includeIf: !expression "Bar == 'testing'"
           parameterOverrides:
           - name: Foo
             value: hello
           fileOverrides:
           - path: xlr-pipeline.yml
-            operation: rename
-            renamedPath: xlr-pipeline2-new.yml
-            dependsOnTrue: TestDepends
+            renameTo: xlr-pipeline2-new.yml
+            writeIf: TestDepends
 
         files:
         - path: xld-environment.yml.tmpl
@@ -215,41 +214,38 @@ with a new line`),
 	)
 
 	yaml = `
-      apiVersion: xl/v1
+      apiVersion: xl/v2
       kind: Blueprint
       metadata:
-        projectName: Test Project
+        name: Test Project
 
       spec:
         parameters:
         - name: Bar
           type: Input
           value: testing
-        include:
+        includeBefore:
         - blueprint: aws/monolith
-          stage: before
-          dependsOnFalse: !expression "2 > 1"
+          includeIf: !expression "2 < 1"
           parameterOverrides:
           - name: Test
             value: hello
-            dependsOn: !expression "2 > 1"
+            promptIf: !expression "2 > 1"
           - name: bar
             value: true
           fileOverrides:
           - path: xld-infrastructure.yml.tmpl
-            operation: skip
-            dependsOnTrue: TestDepends
+            writeIf: false
+        includeAfter:
         - blueprint: aws/datalake
-          dependsOnTrue: !expression "Bar != 'testing'"
-          stage: after
+          includeIf: !expression "Bar != 'testing'"
           parameterOverrides:
           - name: Foo
             value: hello
           fileOverrides:
           - path: xlr-pipeline.yml
-            operation: rename
-            renamedPath: xlr-pipeline2-new.yml
-            dependsOnTrue: TestDepends
+            renameTo: xlr-pipeline2-new.yml
+            writeIf: TestDepends
 
         files:
         - path: xld-environment.yml.tmpl
@@ -411,20 +407,21 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 
 func TestBlueprintContext_fetchLocalFile(t *testing.T) {
 	yaml := `
-      apiVersion: xl/v1
+      apiVersion: xl/v2
       kind: Blueprint
       metadata:
-        projectName: Test Project
+        name: Test Project
 
-      parameters:
-      - name: Test
-        type: Input
-        value: testing
-
-      files:
-      - path: xld-environment.yml.tmpl
-      - path: xld-infrastructure.yml.tmpl
-      - path: xlr-pipeline.yml`
+      spec:
+        parameters:
+        - name: Test
+          type: Input
+          value: testing
+  
+        files:
+        - path: xld-environment.yml.tmpl
+        - path: xld-infrastructure.yml.tmpl
+        - path: xlr-pipeline.yml`
 
 	tmpDir := path.Join("test", "blueprints")
 	os.MkdirAll(tmpDir, os.ModePerm)
@@ -538,20 +535,20 @@ func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
 	require.NotNil(t, blueprints)
 
 	yaml := `
-      apiVersion: xl/v1
+      apiVersion: xl/v2
       kind: Blueprint
       metadata:
-        projectName: Test Project
-
-      parameters:
-      - name: Test
-        type: Input
-        value: testing
-
-      files:
-      - path: xld-environment.yml.tmpl
-      - path: xld-infrastructure.yml.tmpl
-      - path: xlr-pipeline.yml`
+        name: Test Project
+      spec:
+        parameters:
+        - name: Test
+          type: Input
+          value: testing
+  
+        files:
+        - path: xld-environment.yml.tmpl
+        - path: xld-infrastructure.yml.tmpl
+        - path: xlr-pipeline.yml`
 
 	tmpDir := path.Join("test", "blueprints")
 	os.MkdirAll(tmpDir, os.ModePerm)
