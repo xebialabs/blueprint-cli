@@ -2,8 +2,15 @@ package blueprint
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/yaml"
 )
 
 func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository BlueprintContext) (*BlueprintConfig, error) {
@@ -78,11 +85,11 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
              parameterOverrides:
              - name: Foo
                value: hello
-`, models.BlueprintYamlFormatPreviousVersion))
+`, models.BlueprintYamlFormatV1))
 	return parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
 }
 
-/* func TestParseTemplateMetadataV1(t *testing.T) {
+func TestParseTemplateMetadataV1(t *testing.T) {
 	templatePath := "test/blueprints"
 	blueprintRepository := BlueprintContext{}
 	tmpDir := filepath.Join("test", "blueprints")
@@ -102,11 +109,11 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
 		metadata := []byte("kind: blueprint")
 		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
-		assert.Equal(t, fmt.Sprintf("api version needs to be %s", models.YamlFormatPreviousVersion), err.Error())
+		assert.Equal(t, fmt.Sprintf("api version needs to be %s or %s", models.BlueprintYamlFormatV2, models.BlueprintYamlFormatV1), err.Error())
 	})
 
 	t.Run("should error on missing doc kind", func(t *testing.T) {
-		metadata := []byte("apiVersion: " + models.YamlFormatPreviousVersion)
+		metadata := []byte("apiVersion: " + models.BlueprintYamlFormatV1)
 		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "yaml document kind needs to be Blueprint", err.Error())
@@ -123,7 +130,7 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
                   - name: Test
                     type: Invalid
                     value: testing`,
-				models.YamlFormatPreviousVersion))
+				models.BlueprintYamlFormatV1))
 		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "type [Invalid] is not valid for parameter [Test]", err.Error())
@@ -138,7 +145,7 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
                spec:
                  parameters:
                  - name: Test
-                   value: testing`, models.YamlFormatPreviousVersion))
+                   value: testing`, models.BlueprintYamlFormatV1))
 		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
@@ -154,7 +161,7 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
                   parameters:
                   - name: Test
                     type: Select
-                    options:`, models.YamlFormatPreviousVersion))
+                    options:`, models.BlueprintYamlFormatV1))
 		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "at least one option field is need to be set for parameter [Test]", err.Error())
@@ -171,7 +178,7 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
                     type: Confirm
                   files:
                   - dependsOnFalse: Test
-                  - path: xbc.yaml`, models.YamlFormatPreviousVersion))
+                  - path: xbc.yaml`, models.BlueprintYamlFormatV1))
 		_, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "path is missing for file specification in files", err.Error())
@@ -187,7 +194,7 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
                  - name: Test
                    type: Confirm
                  files:
-                 - path: ../xbc.yaml`, models.YamlFormatPreviousVersion))
+                 - path: ../xbc.yaml`, models.BlueprintYamlFormatV1))
 		_, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "path for file specification cannot start with /, .. or ./", err.Error())
@@ -206,7 +213,7 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
                  - name: Test
                    type: Input
                    default: 2
-                 files:`, models.YamlFormatPreviousVersion))
+                 files:`, models.BlueprintYamlFormatV1))
 		_, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "variable names must be unique within blueprint 'parameters' definition", err.Error())
@@ -233,7 +240,7 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
                files:
                - path: xebialabs/foo.yaml
                - path: readme.md
-                 dependsOn: isit`, models.YamlFormatPreviousVersion))
+                 dependsOn: isit`, models.BlueprintYamlFormatV1))
 		doc, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository, true)
 		require.Nil(t, err)
 		assert.Equal(t, Variable{
@@ -367,7 +374,7 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
                     The instructions continue here:
                       1. First step
                       2. Second step
-                spec:`, models.YamlFormatPreviousVersion))
+                spec:`, models.BlueprintYamlFormatV1))
 		doc, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository, true)
 		require.Nil(t, err)
 		assert.Equal(t,
@@ -741,7 +748,7 @@ func TestParseFileV1(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
-} */
+}
 
 // func TestParseDependsOnValue(t *testing.T) {
 // 	t.Run("should error when unknown function in DependsOn", func(t *testing.T) {

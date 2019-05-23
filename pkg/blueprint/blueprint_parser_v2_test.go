@@ -82,7 +82,7 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
              parameterOverrides:
              - name: Foo
                value: hello
-`, models.BlueprintYamlFormatCurrentVersion))
+`, models.BlueprintYamlFormatV2))
 	return parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 }
 
@@ -106,11 +106,11 @@ func TestParseTemplateMetadata(t *testing.T) {
 		metadata := []byte("kind: blueprint")
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
-		assert.Equal(t, fmt.Sprintf("api version needs to be %s", models.BlueprintYamlFormatCurrentVersion), err.Error())
+		assert.Equal(t, fmt.Sprintf("api version needs to be %s or %s", models.BlueprintYamlFormatV2, models.BlueprintYamlFormatV1), err.Error())
 	})
 
 	t.Run("should error on missing doc kind", func(t *testing.T) {
-		metadata := []byte("apiVersion: " + models.BlueprintYamlFormatCurrentVersion)
+		metadata := []byte("apiVersion: " + models.BlueprintYamlFormatV2)
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "yaml document kind needs to be Blueprint", err.Error())
@@ -127,7 +127,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                   - name: Test
                     type: Invalid
                     value: testing`,
-				models.BlueprintYamlFormatCurrentVersion))
+				models.BlueprintYamlFormatV2))
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "type [Invalid] is not valid for parameter [Test]", err.Error())
@@ -142,7 +142,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                spec:
                  parameters:
                  - name: Test
-                   value: testing`, models.BlueprintYamlFormatCurrentVersion))
+                   value: testing`, models.BlueprintYamlFormatV2))
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
@@ -158,7 +158,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                   parameters:
                   - name: Test
                     type: Select
-                    options:`, models.BlueprintYamlFormatCurrentVersion))
+                    options:`, models.BlueprintYamlFormatV2))
 		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "at least one option field is need to be set for parameter [Test]", err.Error())
@@ -175,7 +175,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                     type: Confirm
                   files:
                   - writeIf: Test
-                  - path: xbc.yaml`, models.BlueprintYamlFormatCurrentVersion))
+                  - path: xbc.yaml`, models.BlueprintYamlFormatV2))
 		_, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "path is missing for file specification in files", err.Error())
@@ -191,7 +191,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                  - name: Test
                    type: Confirm
                  files:
-                 - path: ../xbc.yaml`, models.BlueprintYamlFormatCurrentVersion))
+                 - path: ../xbc.yaml`, models.BlueprintYamlFormatV2))
 		_, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "path for file specification cannot start with /, .. or ./", err.Error())
@@ -210,7 +210,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                  - name: Test
                    type: Input
                    default: 2
-                 files:`, models.BlueprintYamlFormatCurrentVersion))
+                 files:`, models.BlueprintYamlFormatV2))
 		_, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
 		require.NotNil(t, err)
 		assert.Equal(t, "variable names must be unique within blueprint 'parameters' definition", err.Error())
@@ -358,7 +358,7 @@ func TestParseTemplateMetadata(t *testing.T) {
                     The instructions continue here:
                       1. First step
                       2. Second step
-                spec:`, models.BlueprintYamlFormatCurrentVersion))
+                spec:`, models.BlueprintYamlFormatV2))
 		doc, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
 		require.Nil(t, err)
 		assert.Equal(t,
