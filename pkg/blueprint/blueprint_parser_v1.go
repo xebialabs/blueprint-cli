@@ -120,6 +120,15 @@ func transformToV2(parsedVar Variable, m *ParameterV1) Variable {
 			}
 		}
 	}
+	if m.Pattern != nil {
+		switch val := m.Pattern.(type) {
+		case string:
+			if val != "" {
+				parsedVar.Validate.Value = "regexMatch('" + val + "', " + parsedVar.Name.Value + ")"
+				parsedVar.Validate.Tag = tagExpression
+			}
+		}
+	}
 	return parsedVar
 }
 

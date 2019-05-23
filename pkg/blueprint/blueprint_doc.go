@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -242,13 +241,13 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		}
 		return string(data), nil
 	default:
-		// do pattern validation if needed
-		if variable.Pattern.Value != "" {
+		// do validation if needed
+		if validateExpr != "" {
 			allowEmpty := false
 			if variable.Type.Value == TypeSecret {
 				allowEmpty = true
 			}
-			validationErr := validatePrompt(variable.Name.Value, validateExpr, variable.Pattern.Value, allowEmpty, parameters)(value)
+			validationErr := validatePrompt(variable.Name.Value, validateExpr, allowEmpty, parameters)(value)
 			if validationErr != nil {
 				return nil, fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", value, variable.Name.Value, validationErr.Error())
 			}
@@ -284,7 +283,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, variable.Pattern.Value, false, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
 			surveyOpts...,
 		)
 	case TypeSecret:
@@ -298,7 +297,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, variable.Pattern.Value, true, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, true, parameters),
 			surveyOpts...,
 		)
 
@@ -317,7 +316,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:          variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, variable.Pattern.Value, false, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
 			surveyOpts...,
 		)
 	case TypeFile:
@@ -351,7 +350,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:     variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, variable.Pattern.Value, false, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
 			surveyOpts...,
 		)
 	case TypeConfirm:
@@ -363,7 +362,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&confirm,
-			validatePrompt(variable.Name.Value, validateExpr, variable.Pattern.Value, false, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
 			surveyOpts...,
 		)
 		if err != nil {
@@ -637,27 +636,13 @@ func validateFiles(configs *[]TemplateConfig) error {
 	return nil
 }
 
-func validatePrompt(varName string, validateExpr string, pattern string, allowEmpty bool, parameters map[string]interface{}) func(val interface{}) error {
+func validatePrompt(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}) func(val interface{}) error {
 	return func(val interface{}) error {
 		// if empty value is not allowed, check for any value
 		if !allowEmpty {
 			err := survey.Required(val)
 			if err != nil {
 				return err
-			}
-		}
-
-		// do pattern validation - TODO: to be removed after v9.0
-		if pattern != "" {
-			// the reflect value of the result
-			value := reflect.ValueOf(val)
-
-			match, err := regexp.MatchString("^"+pattern+"$", value.String())
-			if err != nil {
-				return err
-			}
-			if !match {
-				return fmt.Errorf("Value should match pattern %s", pattern)
 			}
 		}
 

@@ -728,7 +728,6 @@ func TestValidatePrompt(t *testing.T) {
 	type args struct {
 		varName      string
 		validateExpr string
-		pattern      string
 		value        string
 		emtpyAllowed bool
 		params       map[string]interface{}
@@ -740,68 +739,68 @@ func TestValidatePrompt(t *testing.T) {
 	}{
 		{
 			"should pass on empty value since empty values are allowed in secret fields",
-			args{"test", "", "", "", true, nil},
+			args{"test", "", "", true, nil},
 			nil,
 		},
 		{
 			"should fail required validation on empty value",
-			args{"test", "", "", "", false, nil},
+			args{"test", "", "", false, nil},
 			fmt.Errorf("Value is required"),
 		},
 		{
 			"should fail required validation on empty value with pattern",
-			args{"test", "", ".", "", false, nil},
+			args{"test", "regexMatch('.', test)", "", false, make(map[string]interface{})},
 			fmt.Errorf("Value is required"),
 		},
 		{
 			"should pass required validation on valid value",
-			args{"test", "", "", "test", false, nil},
+			args{"test", "", "test", false, nil},
 			nil,
 		},
 		{
 			"should fail pattern validation on invalid value",
-			args{"test", "", "[a-z]*", "123", false, nil},
-			fmt.Errorf("Value should match pattern [a-z]*"),
+			args{"test", "regexMatch('[a-z]*', test)", "123", false, make(map[string]interface{})},
+			fmt.Errorf("validation [regexMatch('[a-z]*', test)] failed with value [123]"),
 		},
 		{
 			"should pass pattern validation on valid value",
-			args{"test", "", "[a-z]*", "abc", false, nil},
+			args{"test", "regexMatch('[a-z]*', test)", "abc", false, make(map[string]interface{})},
 			nil,
 		},
 		{
 			"should pass pattern validation on valid value with extra start/end tag on pattern",
-			args{"test", "", "^[a-z]*$", "abc", false, nil},
+			args{"test", "regexMatch('^[a-z]*$', test)", "abc", false, make(map[string]interface{})},
 			nil,
 		},
 		{
 			"should pass pattern validation on valid value with fixed pattern",
-			args{"test", "", "test", "test", false, nil},
+			args{"test", "regexMatch('test', test)", "test", false, make(map[string]interface{})},
 			nil,
 		},
 		{
 			"should fail pattern validation on invalid value with fixed pattern",
-			args{"test", "", "test", "abcd", false, nil},
-			fmt.Errorf("Value should match pattern test"),
+			args{"test", "regexMatch('test', test)", "abcd", false, make(map[string]interface{})},
+			fmt.Errorf("validation [regexMatch('test', test)] failed with value [abcd]"),
 		},
 		{
 			"should fail pattern validation on valid value with complex pattern",
-			args{"test", "", `\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`, "123.123.123.256", false, nil},
-			fmt.Errorf(`Value should match pattern \b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`),
+			args{"test", `regexMatch('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)`, "123.123.123.256", false, make(map[string]interface{})},
+			fmt.Errorf(`validation [regexMatch('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)] failed with value [123.123.123.256]`),
 		},
 		{
 			"should pass pattern validation on valid value with complex pattern",
-			args{"test", "", `\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`, "255.255.255.255", false, nil},
+			args{"test", `regexMatch('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)`, "255.255.255.255", false, make(map[string]interface{})},
 			nil,
 		},
 		{
 			"should fail pattern validation on invalid pattern",
-			args{"test", "", "[[", "abcd", false, nil},
+			args{"test", "regexMatch('[[', test)", "abcd", false, make(map[string]interface{})},
 			fmt.Errorf("error parsing regexp: missing closing ]: `[[$`"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := validatePrompt(tt.args.varName, tt.args.validateExpr, tt.args.pattern, tt.args.emtpyAllowed, tt.args.params)(tt.args.value)
+			got := validatePrompt(tt.args.varName, tt.args.validateExpr, tt.args.emtpyAllowed, tt.args.params)(tt.args.value)
 			if tt.want == nil || got == nil {
 				assert.Equal(t, tt.want, got)
 			} else {

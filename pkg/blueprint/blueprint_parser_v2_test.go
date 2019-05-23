@@ -459,7 +459,6 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 						Options: []interface{}{
 							"test", "foo", 10, 13.4,
 						},
-						Pattern:      "pat", //TODO
 						SaveInXlvals: true,
 						ReplaceAsIs:  false,
 					},
@@ -481,7 +480,6 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 						Options: []interface{}{
 							"test", "foo", true,
 						},
-						Pattern:      "pat", //TODO
 						SaveInXlvals: true,
 						ReplaceAsIs:  false,
 					},
@@ -506,7 +504,6 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 						Options: []interface{}{
 							"test", "foo", 10, 13.4,
 						},
-						Pattern:      "pat", //TODO
 						SaveInXlvals: true,
 						ReplaceAsIs:  false,
 					},
@@ -520,7 +517,6 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 						Options: []interface{}{
 							"test", yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 						},
-						Pattern:      "pat", //TODO
 						SaveInXlvals: true,
 						ReplaceAsIs:  false,
 					},
@@ -539,7 +535,6 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 					Options: []VarField{
 						VarField{Value: "test"}, VarField{Value: "foo"}, VarField{Value: "10"}, VarField{Value: "13.400000"},
 					},
-					Pattern:      VarField{Value: "pat"},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
 					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},
@@ -554,7 +549,6 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 					Options: []VarField{
 						VarField{Value: "test"}, VarField{Tag: "!expression", Value: "1 > 2"},
 					},
-					Pattern:      VarField{Value: "pat"},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
 					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},

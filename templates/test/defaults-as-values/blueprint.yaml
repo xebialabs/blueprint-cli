@@ -29,7 +29,7 @@ spec:
     default: true
   - name: AppName
     type: Input
-    pattern: "[a-zA-Z-]*"
+    validate: !expression "regexMatch('[a-zA-Z-]*', AppName)"
     saveInXlvals: true
     description: Application name, will be used in various AWS resource names
     default: TestApp

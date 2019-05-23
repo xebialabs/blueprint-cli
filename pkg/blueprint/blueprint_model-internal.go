@@ -26,7 +26,6 @@ type Variable struct {
 	Default         VarField
 	DependsOn       VarField
 	Options         []VarField
-	Pattern         VarField
 	SaveInXlvals    VarField
 	ReplaceAsIs     VarField
 	RevealOnSummary VarField

@@ -490,7 +490,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Options: []VarField{
 						VarField{Value: "test"}, VarField{Value: "foo"}, VarField{Value: "10"}, VarField{Value: "13.400000"},
 					},
-					Pattern:      VarField{Value: "pat"},
+					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpression},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
 					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},
@@ -506,7 +506,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Options: []VarField{
 						VarField{Value: "test"}, VarField{Tag: "!expression", Value: "1 > 2"},
 					},
-					Pattern:      VarField{Value: "pat"},
+					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpression},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
 					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},
@@ -563,7 +563,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Options: []VarField{
 						VarField{Value: "test"}, VarField{Value: "foo"}, VarField{Value: "10"}, VarField{Value: "13.400000"},
 					},
-					Pattern:      VarField{Value: "pat"},
+					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpression},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
 					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},
@@ -579,7 +579,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Options: []VarField{
 						VarField{Value: "test"}, VarField{Tag: "!expression", Value: "1 > 2"},
 					},
-					Pattern:      VarField{Value: "pat"},
+					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpression},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
 					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},
