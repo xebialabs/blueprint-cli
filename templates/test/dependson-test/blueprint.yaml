@@ -16,20 +16,17 @@ spec:
     description: Do you want to use AWS credentials from ~/.aws/credentials file?
     saveInXlvals: true
   - name: AWSAccessKey
-    type: Input
-    secret: true
+    type: SecretInput
     description: What is the AWS Access Key ID?
     promptIf: !expression "!UseAWSCredentialsFromSystem"
     default: testKey
   - name: AWSAccessSecret
-    type: Input
-    secret: true
+    type: SecretInput
     description: What is the AWS Secret Access Key?
     promptIf: !expression "!UseAWSCredentialsFromSystem"
     default: testSecret
   - name: AWSAccessSuperSecret
-    type: Input
-    secret: true
+    type: SecretInput
     description: What is the AWS Secret Access Key?
     promptIf: UseAWSCredentialsFromSystem
     default: testSecret

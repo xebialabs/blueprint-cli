@@ -29,15 +29,12 @@ spec:
     saveInXlvals: true
     promptIf: TestDepends2
   - name: AWSAccessKey
-    type: Input
-    secret: true
+    type: SecretInput
   - name: AWSAccessSecret
-    type: Input
-    secret: true
+    type: SecretInput
     replaceAsIs: true
   - name: SuperSecret
     type: Input
-    secret: false
     saveInXlvals: true
   - name: AWSRegion
     type: Select

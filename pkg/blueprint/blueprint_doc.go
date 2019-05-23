@@ -37,13 +37,14 @@ const (
 // InputType constants
 const (
 	TypeInput   = "Input"
+	TypeSecret  = "SecretInput"
 	TypeEditor  = "Editor"
 	TypeFile    = "File"
 	TypeSelect  = "Select"
 	TypeConfirm = "Confirm"
 )
 
-var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfirm}
+var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfirm, TypeSecret}
 
 type PreparedData struct {
 	TemplateData map[string]interface{}
@@ -244,7 +245,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		// do pattern validation if needed
 		if variable.Pattern.Val != "" {
 			allowEmpty := false
-			if variable.Type.Val == TypeInput && variable.Secret.Bool {
+			if variable.Type.Val == TypeSecret {
 				allowEmpty = true
 			}
 			validationErr := validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, allowEmpty, parameters)(value)
@@ -269,33 +270,31 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 
 	switch variable.Type.Val {
 	case TypeInput:
-		if variable.Secret.Bool {
-			questionMsg := prepareQuestionText(variable.Prompt.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))
-			if defaultVal != "" {
-				questionMsg += fmt.Sprintf(" (%s)", defaultVal)
-			}
-			err = survey.AskOne(
-				&survey.Password{Message: questionMsg},
-				&answer,
-				validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, true, parameters),
-				surveyOpts...,
-			)
+		err = survey.AskOne(
+			&survey.Input{
+				Message: prepareQuestionText(variable.Prompt.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
+				Default: defaultValStr,
+			},
+			&answer,
+			validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
+			surveyOpts...,
+		)
+	case TypeSecret:
+		questionMsg := prepareQuestionText(variable.Prompt.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))
+		if defaultVal != "" {
+			questionMsg += fmt.Sprintf(" (%s)", defaultVal)
+		}
+		err = survey.AskOne(
+			&survey.Password{Message: questionMsg},
+			&answer,
+			validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, true, parameters),
+			surveyOpts...,
+		)
 
-			// if user bypassed question, replace with default value
-			if answer == "" {
-				util.Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Val, defaultVal)
-				answer = defaultValStr
-			}
-		} else {
-			err = survey.AskOne(
-				&survey.Input{
-					Message: prepareQuestionText(variable.Prompt.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
-					Default: defaultValStr,
-				},
-				&answer,
-				validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
-				surveyOpts...,
-			)
+		// if user bypassed question, replace with default value
+		if answer == "" {
+			util.Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Val, defaultVal)
+			answer = defaultValStr
 		}
 	case TypeEditor:
 		err = survey.AskOne(
@@ -511,7 +510,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 				blueprintDoc.Variables[i] = variable
 			}
 			saveItemToTemplateDataMap(&variable, data, finalVal)
-			if variable.Secret.Bool && !variable.RevealOnSummary.Bool {
+			if variable.Type.Val == TypeSecret && !variable.RevealOnSummary.Bool {
 				data.DefaultData[variable.Name.Val] = "*****"
 			} else {
 				data.DefaultData[variable.Name.Val] = finalVal
@@ -720,7 +719,7 @@ func findVariableByName(variables *[]Variable, name string) (*Variable, error) {
 }
 
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
-	if variable.Secret.Bool {
+	if variable.Type.Val == TypeSecret {
 		preparedData.Secrets[variable.Name.Val] = data
 		// Use raw value of secret field if flag is set
 		if variable.ReplaceAsIs.Bool {

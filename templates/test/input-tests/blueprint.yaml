@@ -51,12 +51,10 @@ spec:
     description: Application name, will be used in various AWS resource names
     default: testApp
   - name: AWSAccessKey
-    type: Input
-    secret: true
+    type: SecretInput
     value: accesskey
   - name: AWSAccessSecret
-    type: Input
-    secret: true
+    type: SecretInput
     default: accesssecret
   - name: AWSRegion
     type: Select

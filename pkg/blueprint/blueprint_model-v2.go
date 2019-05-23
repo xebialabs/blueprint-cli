@@ -34,7 +34,6 @@ type ParameterV2 struct {
 	ReplaceAsIs     interface{}   `yaml:"replaceAsIs"`
 	RevealOnSummary interface{}   `yaml:"revealOnSummary"`
 	Validate        interface{}   `yaml:"validate"`
-	Secret          interface{}   `yaml:"secret"`  // TODO remove
 	Pattern         interface{}   `yaml:"pattern"` // TODO remove
 	Prompt          interface{}   `yaml:"prompt"`
 	Description     interface{}   `yaml:"description"`

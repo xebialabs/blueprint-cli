@@ -39,16 +39,13 @@ spec:
     promptIf: TestDepends2
     default: shouldnotbehere
   - name: AWSAccessKey
-    type: Input
-    secret: true
+    type: SecretInput
     default: accesskey
   - name: AWSAccessSecret
-    type: Input
-    secret: true
+    type: SecretInput
     default: accesssecret
   - name: SuperSecret
     type: Input
-    secret: false
     saveInXlvals: true
     default: supersecret
   - name: AWSRegion

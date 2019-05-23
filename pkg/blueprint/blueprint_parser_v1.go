@@ -101,13 +101,25 @@ func parseParameterV1(m *ParameterV1) (Variable, error) {
 	parsedVar := Variable{}
 	err := parseFieldsFromStructV1(m, &parsedVar)
 
-	return transformToV2(parsedVar), err
+	return transformToV2(parsedVar, m), err
 }
 
-func transformToV2(parsedVar Variable) Variable {
+func transformToV2(parsedVar Variable, m *ParameterV1) Variable {
 	// compatibility hacks for v1 -> v2
 	parsedVar.Prompt = parsedVar.Description
 	parsedVar.Label = parsedVar.Name
+	if m.Secret != nil {
+		switch val := m.Secret.(type) {
+		case string:
+			if val == "true" {
+				parsedVar.Type.Val = TypeSecret
+			}
+		case bool:
+			if val {
+				parsedVar.Type.Val = TypeSecret
+			}
+		}
+	}
 	return parsedVar
 }
 

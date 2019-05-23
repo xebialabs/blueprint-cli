@@ -12,12 +12,10 @@ spec:
   - name: AppName
     type: Input
   - name: AWSAccessKey
-    type: Input
-    secret: true
+    type: SecretInput
     value: !fn aws.credentials().AccessKeyID
   - name: AWSAccessSecret
-    type: Input
-    secret: true
+    type: SecretInput
     value: !fn aws.credentials().SecretAccessKey
   - name: AWSRegion
     type: Select

@@ -21,7 +21,6 @@ type Metadata struct {
 type Variable struct {
 	Name            VarField
 	Type            VarField
-	Secret          VarField
 	Value           VarField
 	Prompt          VarField
 	Default         VarField

@@ -227,10 +227,9 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 		assert.Equal(t, Variable{
 			Name:        VarField{Val: "pass"},
 			Label:       VarField{Val: "pass"},
-			Type:        VarField{Val: TypeInput},
+			Type:        VarField{Val: TypeSecret},
 			Prompt:      VarField{Val: "password?"},
 			Description: VarField{Val: "password?"},
-			Secret:      VarField{Bool: true, Val: "true"},
 			ReplaceAsIs: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
@@ -261,10 +260,9 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 		assert.Equal(t, Variable{
 			Name:        VarField{Val: "pass"},
 			Label:       VarField{Val: "pass"},
-			Type:        VarField{Val: TypeInput},
+			Type:        VarField{Val: TypeSecret},
 			Prompt:      VarField{Val: "password?"},
 			Description: VarField{Val: "password?"},
-			Secret:      VarField{Bool: true, Val: "true"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
 			Name:         VarField{Val: "test"},
@@ -483,8 +481,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 				{
 					Name:        VarField{Val: "test"},
 					Label:       VarField{Val: "test"},
-					Type:        VarField{Val: "Input"},
-					Secret:      VarField{Bool: true, Val: "true"},
+					Type:        VarField{Val: TypeSecret},
 					Value:       VarField{Val: "string"},
 					Prompt:      VarField{Val: "desc"},
 					Description: VarField{Val: "desc"},
@@ -501,7 +498,6 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Name:        VarField{Val: "test"},
 					Label:       VarField{Val: "test"},
 					Type:        VarField{Val: "Confirm"},
-					Secret:      VarField{Bool: false, Val: "false"},
 					Value:       VarField{Bool: true, Val: "true"},
 					Prompt:      VarField{Val: "desc"},
 					Description: VarField{Val: "desc"},
@@ -558,8 +554,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 				{
 					Name:        VarField{Val: "test"},
 					Label:       VarField{Val: "test"},
-					Type:        VarField{Val: "Input"},
-					Secret:      VarField{Bool: true, Val: "true"},
+					Type:        VarField{Val: TypeSecret},
 					Value:       VarField{Val: "string"},
 					Prompt:      VarField{Val: "desc"},
 					Description: VarField{Val: "desc"},
@@ -576,7 +571,6 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Name:        VarField{Val: "test"},
 					Label:       VarField{Val: "test"},
 					Type:        VarField{Val: "Confirm"},
-					Secret:      VarField{Bool: false, Val: "false"},
 					Value:       VarField{Bool: true, Val: "true"},
 					Prompt:      VarField{Val: "desc"},
 					Description: VarField{Val: "desc"},
