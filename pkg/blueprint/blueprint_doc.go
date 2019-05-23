@@ -257,6 +257,13 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 	}
 }
 
+func (variable *Variable) GetHelpText() string {
+	if variable.Description.Value != "" && variable.Description.Value != variable.Prompt.Value {
+		return variable.Description.Value
+	}
+	return ""
+}
+
 func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (interface{}, error) {
 	var answer string
 	var err error
@@ -274,6 +281,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			&survey.Input{
 				Message: prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the value of %s?", variable.Name.Value)),
 				Default: defaultValStr,
+				Help:    variable.GetHelpText(),
 			},
 			&answer,
 			validatePrompt(variable.Name.Value, validateExpr, variable.Pattern.Value, false, parameters),
@@ -285,7 +293,10 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			questionMsg += fmt.Sprintf(" (%s)", defaultVal)
 		}
 		err = survey.AskOne(
-			&survey.Password{Message: questionMsg},
+			&survey.Password{
+				Message: questionMsg,
+				Help:    variable.GetHelpText(),
+			},
 			&answer,
 			validatePrompt(variable.Name.Value, validateExpr, variable.Pattern.Value, true, parameters),
 			surveyOpts...,
@@ -303,6 +314,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Default:       defaultValStr,
 				HideDefault:   true,
 				AppendDefault: true,
+				Help:          variable.GetHelpText(),
 			},
 			&answer,
 			validatePrompt(variable.Name.Value, validateExpr, variable.Pattern.Value, false, parameters),
@@ -314,6 +326,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			&survey.Input{
 				Message: prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the file path (relative/absolute) for %s?", variable.Name.Value)),
 				Default: defaultValStr,
+				Help:    variable.GetHelpText(),
 			},
 			&filePath,
 			validateFilePath(),
@@ -335,6 +348,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Options:  options,
 				Default:  defaultValStr,
 				PageSize: 10,
+				Help:     variable.GetHelpText(),
 			},
 			&answer,
 			validatePrompt(variable.Name.Value, validateExpr, variable.Pattern.Value, false, parameters),
@@ -346,6 +360,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			&survey.Confirm{
 				Message: prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("%s?", variable.Name.Value)),
 				Default: variable.Default.Bool,
+				Help:    variable.GetHelpText(),
 			},
 			&confirm,
 			validatePrompt(variable.Name.Value, validateExpr, variable.Pattern.Value, false, parameters),
