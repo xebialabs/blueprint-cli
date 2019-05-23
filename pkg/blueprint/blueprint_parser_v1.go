@@ -12,8 +12,8 @@ import (
 )
 
 // parse blueprint definition doc
-func parseTemplateMetadataV1(blueprintVars *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
-	decoder := yaml.NewDecoder(bytes.NewReader(*blueprintVars))
+func parseTemplateMetadataV1(ymlContent *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
+	decoder := yaml.NewDecoder(bytes.NewReader(*ymlContent))
 	decoder.SetStrict(true)
 	yamlDoc := BlueprintYamlV1{}
 	err := decoder.Decode(&yamlDoc)

@@ -76,7 +76,7 @@ func (repo *MockBlueprintRepository) GetFileContents(filePath string) (*[]byte, 
 	var contents []byte
 	switch filePath {
 	case "xl/test/blueprint.yaml":
-		contents = []byte(`apiVersion: xl/v1
+		contents = []byte(`apiVersion: xl/v2
 kind: Blueprint
 metadata:
   name: Test Project

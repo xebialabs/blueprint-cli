@@ -86,7 +86,7 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
 	return parseTemplateMetadataV2(&metadata, templatePath, &blueprintRepository, true)
 }
 
-func TestParseTemplateMetadata(t *testing.T) {
+func TestParseTemplateMetadataV2(t *testing.T) {
 	templatePath := "test/blueprints"
 	blueprintRepository := BlueprintContext{}
 	tmpDir := filepath.Join("test", "blueprints")
@@ -711,7 +711,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 	}
 }
 
-func TestParseFile(t *testing.T) {
+func TestParseFileV2(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    *FileV2

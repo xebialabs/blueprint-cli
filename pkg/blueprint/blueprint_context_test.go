@@ -1097,3 +1097,116 @@ func Test_doesDefaultExist(t *testing.T) {
 		})
 	}
 }
+
+func Test_parseTemplateMetadata(t *testing.T) {
+	templatePath := "test/blueprints"
+	blueprintRepository := BlueprintContext{}
+
+	type args struct {
+		ymlContent          string
+		templatePath        string
+		blueprintRepository *BlueprintContext
+		isLocal             bool
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *BlueprintConfig
+		wantErr bool
+	}{
+		{
+			"should error when invalid apiVersion is used",
+			args{
+				`
+                  apiVersion: xl/v3
+                  kind: Blueprint
+                  metadata:
+                    name: Test Project
+                `,
+				templatePath,
+				&blueprintRepository,
+				false,
+			},
+			nil,
+			true,
+		},
+		{
+			"should error when invalid fields are used for apiVersion",
+			args{
+				`
+                  apiVersion: xl/v1
+                  kind: Blueprint
+                  metadata:
+                    name: Test Project
+                `,
+				templatePath,
+				&blueprintRepository,
+				false,
+			},
+			nil,
+			true,
+		},
+		{
+			"should parse v1 when apiversion is xl/v1",
+			args{
+				`
+                  apiVersion: xl/v1
+                  kind: Blueprint
+                  metadata:
+                    projectName: Test Project
+                `,
+				templatePath,
+				&blueprintRepository,
+				false,
+			},
+			&BlueprintConfig{
+				ApiVersion: "xl/v1",
+				Kind:       "Blueprint",
+				Metadata: Metadata{
+					Name: "Test Project",
+				},
+				TemplateConfigs: []TemplateConfig{},
+				Variables:       []Variable{},
+			},
+			false,
+		},
+		{
+			"should parse v2 when apiversion is xl/v2",
+			args{
+				`
+                  apiVersion: xl/v2
+                  kind: Blueprint
+                  metadata:
+                    name: Test Project
+                `,
+				templatePath,
+				&blueprintRepository,
+				false,
+			},
+			&BlueprintConfig{
+				ApiVersion: "xl/v2",
+				Kind:       "Blueprint",
+				Metadata: Metadata{
+					Name: "Test Project",
+				},
+				TemplateConfigs: []TemplateConfig{},
+				Variables:       []Variable{},
+				Include:         []IncludedBlueprintProcessed{},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			yml := []byte(tt.args.ymlContent)
+			got, err := parseTemplateMetadata(&yml, tt.args.templatePath, tt.args.blueprintRepository, tt.args.isLocal)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseTemplateMetadata() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
