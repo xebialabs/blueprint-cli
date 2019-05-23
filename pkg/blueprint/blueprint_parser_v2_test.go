@@ -221,56 +221,56 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 		require.Nil(t, err)
 		assert.Len(t, doc.Variables, 7)
 		assert.Equal(t, Variable{
-			Name:   VarField{Val: "pass"},
-			Label:  VarField{Val: "testLabel"},
-			Type:   VarField{Val: TypeSecret},
-			Prompt: VarField{Val: "password?"},
+			Name:   VarField{Value: "pass"},
+			Label:  VarField{Value: "testLabel"},
+			Type:   VarField{Value: TypeSecret},
+			Prompt: VarField{Value: "password?"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
-			Name:         VarField{Val: "test"},
-			Label:        VarField{Val: "test"},
-			Type:         VarField{Val: TypeInput},
-			Default:      VarField{Val: "lala"},
-			Prompt:       VarField{Val: "help text"},
-			SaveInXlvals: VarField{Bool: true, Val: "true"},
+			Name:         VarField{Value: "test"},
+			Label:        VarField{Value: "test"},
+			Type:         VarField{Value: TypeInput},
+			Default:      VarField{Value: "lala"},
+			Prompt:       VarField{Value: "help text"},
+			SaveInXlvals: VarField{Bool: true, Value: "true"},
 		}, doc.Variables[1])
 		assert.Equal(t, Variable{
-			Name:  VarField{Val: "fn"},
-			Label: VarField{Val: "fn"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "aws.regions(ecs)[0]", Tag: tagFn},
+			Name:  VarField{Value: "fn"},
+			Label: VarField{Value: "fn"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFn},
 		}, doc.Variables[2])
 		assert.Equal(t, Variable{
-			Name:   VarField{Val: "select"},
-			Label:  VarField{Val: "select"},
-			Type:   VarField{Val: TypeSelect},
-			Prompt: VarField{Val: "select region"},
+			Name:   VarField{Value: "select"},
+			Label:  VarField{Value: "select"},
+			Type:   VarField{Value: TypeSelect},
+			Prompt: VarField{Value: "select region"},
 			Options: []VarField{
-				{Val: "aws.regions(ecs)[0]", Tag: tagFn},
-				{Val: "b"},
-				{Val: "c"},
+				{Value: "aws.regions(ecs)[0]", Tag: tagFn},
+				{Value: "b"},
+				{Value: "c"},
 			},
-			Default: VarField{Val: "b"},
+			Default: VarField{Value: "b"},
 		}, doc.Variables[3])
 		assert.Equal(t, Variable{
-			Name:        VarField{Val: "isit"},
-			Label:       VarField{Val: "isit"},
-			Type:        VarField{Val: TypeConfirm},
-			Description: VarField{Val: "is it?"},
-			Value:       VarField{Bool: true, Val: "true"},
+			Name:        VarField{Value: "isit"},
+			Label:       VarField{Value: "isit"},
+			Type:        VarField{Value: TypeConfirm},
+			Description: VarField{Value: "is it?"},
+			Value:       VarField{Bool: true, Value: "true"},
 		}, doc.Variables[4])
 		assert.Equal(t, Variable{
-			Name:   VarField{Val: "isitnot"},
-			Label:  VarField{Val: "isitnot"},
-			Type:   VarField{Val: TypeConfirm},
-			Prompt: VarField{Val: "negative question?"},
+			Name:   VarField{Value: "isitnot"},
+			Label:  VarField{Value: "isitnot"},
+			Type:   VarField{Value: TypeConfirm},
+			Prompt: VarField{Value: "negative question?"},
 		}, doc.Variables[5])
 		assert.Equal(t, Variable{
-			Name:      VarField{Val: "dep"},
-			Label:     VarField{Val: "dep"},
-			Type:      VarField{Val: TypeInput},
-			Prompt:    VarField{Val: "depends on others"},
-			DependsOn: VarField{Val: "isit && true", Tag: "!expression"},
+			Name:      VarField{Value: "dep"},
+			Label:     VarField{Value: "dep"},
+			Type:      VarField{Value: TypeInput},
+			Prompt:    VarField{Value: "depends on others"},
+			DependsOn: VarField{Value: "isit && true", Tag: "!expression"},
 		}, doc.Variables[6])
 	})
 	t.Run("should parse files from valid metadata", func(t *testing.T) {
@@ -284,17 +284,17 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 		assert.Equal(t, TemplateConfig{
 			Path:      "readme.md",
 			FullPath:  "templatePath/test/readme.md",
-			DependsOn: VarField{Val: "isit"},
+			DependsOn: VarField{Value: "isit"},
 		}, doc.TemplateConfigs[1])
 		assert.Equal(t, TemplateConfig{
 			Path:      "bar.md",
 			FullPath:  "templatePath/test/bar.md",
-			DependsOn: VarField{Val: "isitnot"},
+			DependsOn: VarField{Value: "isitnot"},
 		}, doc.TemplateConfigs[2])
 		assert.Equal(t, TemplateConfig{
 			Path:      "foo.md",
 			FullPath:  "templatePath/test/foo.md",
-			DependsOn: VarField{Val: "!isitnot", Tag: tagExpression},
+			DependsOn: VarField{Value: "!isitnot", Tag: tagExpression},
 		}, doc.TemplateConfigs[3])
 	})
 	t.Run("should parse includes from valid metadata", func(t *testing.T) {
@@ -306,19 +306,19 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 			Stage:     "before",
 			ParameterOverrides: []Variable{
 				{
-					Name:      VarField{Val: "Foo"},
-					Value:     VarField{Val: "hello"},
-					DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
+					Name:      VarField{Value: "Foo"},
+					Value:     VarField{Value: "hello"},
+					DependsOn: VarField{Tag: "!expression", Value: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
 				},
 				{
-					Name:  VarField{Val: "bar"},
-					Value: VarField{Val: "true", Bool: true},
+					Name:  VarField{Value: "bar"},
+					Value: VarField{Value: "true", Bool: true},
 				},
 			},
 			FileOverrides: []TemplateConfig{
 				{
 					Path:      "xld-infrastructure.yml.tmpl",
-					DependsOn: VarField{Val: "false", Bool: false},
+					DependsOn: VarField{Value: "false", Bool: false},
 				},
 			},
 		}, doc.Include[0])
@@ -327,11 +327,11 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 			Stage:     "after",
 			ParameterOverrides: []Variable{
 				{
-					Name:  VarField{Val: "Foo"},
-					Value: VarField{Val: "hello"},
+					Name:  VarField{Value: "Foo"},
+					Value: VarField{Value: "hello"},
 				},
 			},
-			DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
+			DependsOn: VarField{Tag: "!expression", Value: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
 		}, doc.Include[1])
 	})
 	t.Run("should parse metadata fields", func(t *testing.T) {
@@ -463,35 +463,35 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 			},
 			[]Variable{
 				{
-					Name:        VarField{Val: "test"},
-					Label:       VarField{Val: "testLabel"},
-					Type:        VarField{Val: TypeSecret},
-					Value:       VarField{Val: "string"},
-					Prompt:      VarField{Val: "desc?"},
-					Description: VarField{Val: "desc"},
-					Default:     VarField{Val: "string2"},
-					DependsOn:   VarField{Tag: "!expression", Val: "1 > 2"},
+					Name:        VarField{Value: "test"},
+					Label:       VarField{Value: "testLabel"},
+					Type:        VarField{Value: TypeSecret},
+					Value:       VarField{Value: "string"},
+					Prompt:      VarField{Value: "desc?"},
+					Description: VarField{Value: "desc"},
+					Default:     VarField{Value: "string2"},
+					DependsOn:   VarField{Tag: "!expression", Value: "1 > 2"},
 					Options: []VarField{
-						VarField{Val: "test"}, VarField{Val: "foo"}, VarField{Val: "10"}, VarField{Val: "13.400000"},
+						VarField{Value: "test"}, VarField{Value: "foo"}, VarField{Value: "10"}, VarField{Value: "13.400000"},
 					},
-					Pattern:      VarField{Val: "pat"},
-					SaveInXlvals: VarField{Bool: true, Val: "true"},
-					ReplaceAsIs:  VarField{Bool: false, Val: "false"},
+					Pattern:      VarField{Value: "pat"},
+					SaveInXlvals: VarField{Bool: true, Value: "true"},
+					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},
 				{
-					Name:      VarField{Val: "test"},
-					Label:     VarField{Val: "test"},
-					Type:      VarField{Val: "Confirm"},
-					Value:     VarField{Bool: true, Val: "true"},
-					Prompt:    VarField{Val: "desc"},
-					Default:   VarField{Bool: false, Val: "false"},
-					DependsOn: VarField{Tag: "!expression", Val: "1 > 2"},
+					Name:      VarField{Value: "test"},
+					Label:     VarField{Value: "test"},
+					Type:      VarField{Value: "Confirm"},
+					Value:     VarField{Bool: true, Value: "true"},
+					Prompt:    VarField{Value: "desc"},
+					Default:   VarField{Bool: false, Value: "false"},
+					DependsOn: VarField{Tag: "!expression", Value: "1 > 2"},
 					Options: []VarField{
-						VarField{Val: "test"}, VarField{Tag: "!expression", Val: "1 > 2"},
+						VarField{Value: "test"}, VarField{Tag: "!expression", Value: "1 > 2"},
 					},
-					Pattern:      VarField{Val: "pat"},
-					SaveInXlvals: VarField{Bool: true, Val: "true"},
-					ReplaceAsIs:  VarField{Bool: false, Val: "false"},
+					Pattern:      VarField{Value: "pat"},
+					SaveInXlvals: VarField{Bool: true, Value: "true"},
+					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},
 			},
 			false,
@@ -557,10 +557,10 @@ func TestBlueprintYaml_parseFiles(t *testing.T) {
 			},
 			[]TemplateConfig{
 				{Path: "test.yaml", FullPath: filepath.Join(templatePath, "test.yaml")},
-				{Path: "test2.yaml", FullPath: filepath.Join(templatePath, "test2.yaml"), DependsOn: VarField{Val: "foo", Tag: ""}},
-				{Path: "test3.yaml", FullPath: filepath.Join(templatePath, "test3.yaml"), DependsOn: VarField{Val: "!bar", Tag: "!expression"}},
-				{Path: "test4.yaml", FullPath: filepath.Join(templatePath, "test4.yaml"), DependsOn: VarField{Val: "bar", Tag: ""}},
-				{Path: "test5.yaml", FullPath: filepath.Join(templatePath, "test5.yaml"), DependsOn: VarField{Val: "!foo", Tag: "!expression"}},
+				{Path: "test2.yaml", FullPath: filepath.Join(templatePath, "test2.yaml"), DependsOn: VarField{Value: "foo", Tag: ""}},
+				{Path: "test3.yaml", FullPath: filepath.Join(templatePath, "test3.yaml"), DependsOn: VarField{Value: "!bar", Tag: "!expression"}},
+				{Path: "test4.yaml", FullPath: filepath.Join(templatePath, "test4.yaml"), DependsOn: VarField{Value: "bar", Tag: ""}},
+				{Path: "test5.yaml", FullPath: filepath.Join(templatePath, "test5.yaml"), DependsOn: VarField{Value: "!foo", Tag: "!expression"}},
 			},
 			nil,
 		},
@@ -651,46 +651,46 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 					Stage:     "before",
 					ParameterOverrides: []Variable{
 						{
-							Name:      VarField{Val: "foo"},
-							Value:     VarField{Val: "bar"},
-							DependsOn: VarField{Val: "1 > 2", Tag: "!expression"},
+							Name:      VarField{Value: "foo"},
+							Value:     VarField{Value: "bar"},
+							DependsOn: VarField{Value: "1 > 2", Tag: "!expression"},
 						},
 						{
-							Name:      VarField{Val: "bar"},
-							Value:     VarField{Val: "true", Bool: true},
-							DependsOn: VarField{Tag: "!fn", Val: "foo"},
+							Name:      VarField{Value: "bar"},
+							Value:     VarField{Value: "true", Bool: true},
+							DependsOn: VarField{Tag: "!fn", Value: "foo"},
 						},
 						{
-							Name:      VarField{Val: "barr"},
-							Value:     VarField{Val: "10.500000"},
-							DependsOn: VarField{Tag: "!fn", Val: "!foo"},
+							Name:      VarField{Value: "barr"},
+							Value:     VarField{Value: "10.500000"},
+							DependsOn: VarField{Tag: "!fn", Value: "!foo"},
 						},
 					},
 					FileOverrides: []TemplateConfig{
 						{
 							Path:      "foo/bar.md",
-							DependsOn: VarField{Bool: false, Val: "false"},
+							DependsOn: VarField{Bool: false, Value: "false"},
 						},
 						{
 							Path:      "foo/bar2.md",
-							DependsOn: VarField{Tag: "!expression", Val: "1 > 2"},
+							DependsOn: VarField{Tag: "!expression", Value: "1 > 2"},
 						},
 						{
 							Path:     "foo/baar.md",
-							RenameTo: VarField{Val: "foo/baaar.md"},
+							RenameTo: VarField{Value: "foo/baaar.md"},
 						},
 						{
 							Path:      "foo/baar2.md",
-							RenameTo:  VarField{Tag: "!expression", Val: "1 > 2 ? 'foo' : 'bar'"},
-							DependsOn: VarField{Tag: "!fn", Val: "foo"},
+							RenameTo:  VarField{Tag: "!expression", Value: "1 > 2 ? 'foo' : 'bar'"},
+							DependsOn: VarField{Tag: "!fn", Value: "foo"},
 						},
 					},
-					DependsOn: VarField{Tag: "!expression", Val: "1 > 2"},
+					DependsOn: VarField{Tag: "!expression", Value: "1 > 2"},
 				},
 				{
 					Blueprint: "bar",
 					Stage:     "after",
-					DependsOn: VarField{Tag: "!expression", Val: "1 > 2"},
+					DependsOn: VarField{Tag: "!expression", Value: "1 > 2"},
 				},
 			},
 			nil,
@@ -750,7 +750,7 @@ func TestParseFileV2(t *testing.T) {
 			&FileV2{
 				Path: "test.yaml", WriteIf: "foo",
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "foo"}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "foo"}},
 			nil,
 		},
 		{
@@ -758,7 +758,7 @@ func TestParseFileV2(t *testing.T) {
 			&FileV2{
 				Path: "test.yaml", WriteIf: "foo",
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "foo"}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "foo"}},
 			nil,
 		},
 		{
@@ -766,7 +766,7 @@ func TestParseFileV2(t *testing.T) {
 			&FileV2{
 				Path: "test.yaml", WriteIf: yaml.CustomTag{Tag: "!fn", Value: "aws.credentials().IsAvailable"},
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "aws.credentials().IsAvailable", Tag: "!fn"}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: "!fn"}},
 			nil,
 		},
 		{
@@ -774,7 +774,7 @@ func TestParseFileV2(t *testing.T) {
 			&FileV2{
 				Path: "test.yaml", WriteIf: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "1 > 2", Tag: "!expression"}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "1 > 2", Tag: "!expression"}},
 			nil,
 		},
 	}
@@ -794,20 +794,20 @@ func TestParseFileV2(t *testing.T) {
 func TestParseDependsOnValue(t *testing.T) {
 	t.Run("should error when unknown function in DependsOn", func(t *testing.T) {
 		v := Variable{
-			Name:      VarField{Val: "test"},
-			Label:     VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "aws.creds", Tag: "!fn"},
+			Name:      VarField{Value: "test"},
+			Label:     VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "aws.creds", Tag: "!fn"},
 		}
 		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
 		require.NotNil(t, err)
 	})
 	t.Run("should return parsed bool value for DependsOn field from function", func(t *testing.T) {
 		v := Variable{
-			Name:      VarField{Val: "test"},
-			Label:     VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "aws.credentials().IsAvailable", Tag: "!fn"},
+			Name:      VarField{Value: "test"},
+			Label:     VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: "!fn"},
 		}
 		out, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
 		require.Nil(t, err)
@@ -815,20 +815,20 @@ func TestParseDependsOnValue(t *testing.T) {
 	})
 	t.Run("should error when invalid expression in DependsOn", func(t *testing.T) {
 		v := Variable{
-			Name:      VarField{Val: "test"},
-			Label:     VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "aws.creds", Tag: tagExpression},
+			Name:      VarField{Value: "test"},
+			Label:     VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "aws.creds", Tag: tagExpression},
 		}
 		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
 		require.NotNil(t, err)
 	})
 	t.Run("should return parsed bool value for DependsOn field from expression", func(t *testing.T) {
 		v := Variable{
-			Name:      VarField{Val: "test"},
-			Label:     VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "Foo > 10", Tag: tagExpression},
+			Name:      VarField{Value: "test"},
+			Label:     VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "Foo > 10", Tag: tagExpression},
 		}
 
 		val, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, map[string]interface{}{
@@ -840,16 +840,16 @@ func TestParseDependsOnValue(t *testing.T) {
 	t.Run("should return bool value from referenced var for dependsOn field", func(t *testing.T) {
 		vars := make([]Variable, 2)
 		vars[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Label: VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: true, Val: "true"},
+			Name:  VarField{Value: "confirm"},
+			Label: VarField{Value: "confirm"},
+			Type:  VarField{Value: TypeConfirm},
+			Value: VarField{Bool: true, Value: "true"},
 		}
 		vars[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Label:     VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "confirm"},
+			Name:      VarField{Value: "test"},
+			Label:     VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "confirm"},
 		}
 		val, err := ParseDependsOnValue(vars[1].DependsOn, &vars, dummyData)
 		require.Nil(t, err)

@@ -528,9 +528,9 @@ func TestShouldSkipFile(t *testing.T) {
 		{
 			"should return true if dependsOn is defined and its value is false",
 			args{
-				TemplateConfig{Path: "foo.yaml", DependsOn: VarField{Val: "foo"}},
+				TemplateConfig{Path: "foo.yaml", DependsOn: VarField{Value: "foo"}},
 				&[]Variable{
-					{Name: VarField{Val: "foo"}, Value: VarField{Bool: false}},
+					{Name: VarField{Value: "foo"}, Value: VarField{Bool: false}},
 				},
 			},
 			true,
@@ -539,9 +539,9 @@ func TestShouldSkipFile(t *testing.T) {
 		{
 			"should return true if dependsOnFalse is defined and its value is true",
 			args{
-				TemplateConfig{Path: "foo.yaml", DependsOn: VarField{Val: "foo", InvertBool: true}},
+				TemplateConfig{Path: "foo.yaml", DependsOn: VarField{Value: "foo", InvertBool: true}},
 				&[]Variable{
-					{Name: VarField{Val: "foo"}, Value: VarField{Bool: true}},
+					{Name: VarField{Value: "foo"}, Value: VarField{Bool: true}},
 				},
 			},
 			true,
@@ -550,7 +550,7 @@ func TestShouldSkipFile(t *testing.T) {
 		{
 			"should return error if dependsOn value cannot be processed",
 			args{
-				TemplateConfig{Path: "foo.yaml", DependsOn: VarField{Val: "foo", InvertBool: true}},
+				TemplateConfig{Path: "foo.yaml", DependsOn: VarField{Value: "foo", InvertBool: true}},
 				&[]Variable{},
 			},
 			false,
@@ -629,7 +629,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 						},
 						Include: []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Val: "Test"}, Label: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}, SaveInXlvals: VarField{Val: "true", Bool: true}},
+							{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}, SaveInXlvals: VarField{Value: "true", Bool: true}},
 						},
 					},
 				},
@@ -655,17 +655,17 @@ func Test_getBlueprintConfig(t *testing.T) {
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
 							{
-								Name:         VarField{Val: "Test"},
-								Label:        VarField{Val: "Test"},
-								Type:         VarField{Val: "Input"},
-								Value:        VarField{Val: "hello"},
-								SaveInXlvals: VarField{Val: "true", Bool: true},
-								DependsOn:    VarField{Tag: "!expression", Val: "2 > 1"},
+								Name:         VarField{Value: "Test"},
+								Label:        VarField{Value: "Test"},
+								Type:         VarField{Value: "Input"},
+								Value:        VarField{Value: "hello"},
+								SaveInXlvals: VarField{Value: "true", Bool: true},
+								DependsOn:    VarField{Tag: "!expression", Value: "2 > 1"},
 							},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
-							{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Tag: "!expression", Val: "false"}},
+							{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Tag: "!expression", Value: "false"}},
 							{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
 						},
 					},
@@ -681,15 +681,15 @@ func Test_getBlueprintConfig(t *testing.T) {
 								Stage:     "before",
 								ParameterOverrides: []Variable{
 									{
-										Name:      VarField{Val: "Test"},
-										Value:     VarField{Val: "hello"},
-										DependsOn: VarField{Tag: "!expression", Val: "2 > 1"},
+										Name:      VarField{Value: "Test"},
+										Value:     VarField{Value: "hello"},
+										DependsOn: VarField{Tag: "!expression", Value: "2 > 1"},
 									},
 								},
 								FileOverrides: []TemplateConfig{
 									{
 										Path:      "xld-infrastructure.yml.tmpl",
-										DependsOn: VarField{Tag: "!expression", Val: "false"},
+										DependsOn: VarField{Tag: "!expression", Value: "false"},
 									},
 								},
 							},
@@ -698,22 +698,22 @@ func Test_getBlueprintConfig(t *testing.T) {
 								Stage:     "after",
 								ParameterOverrides: []Variable{
 									{
-										Name:  VarField{Val: "Foo"},
-										Value: VarField{Val: "hello"},
+										Name:  VarField{Value: "Foo"},
+										Value: VarField{Value: "hello"},
 									},
 								},
-								DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
+								DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
 								FileOverrides: []TemplateConfig{
 									{
 										Path:      "xlr-pipeline.yml",
-										RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
-										DependsOn: VarField{Val: "TestDepends"},
+										RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
+										DependsOn: VarField{Value: "TestDepends"},
 									},
 								},
 							},
 						},
 						Variables: []Variable{
-							{Name: VarField{Val: "Bar"}, Label: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -729,18 +729,18 @@ func Test_getBlueprintConfig(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Val: "Foo"}, Label: VarField{Val: "Foo"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}},
+							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
 							{
 								Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml",
-								RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
-								DependsOn: VarField{Val: "TestDepends"},
+								RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
+								DependsOn: VarField{Value: "TestDepends"},
 							},
 						},
 					},
-					DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
+					DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
 				},
 			},
 			false,
@@ -818,7 +818,7 @@ func Test_composeBlueprints(t *testing.T) {
 						},
 					},
 					Variables: []Variable{
-						{Name: VarField{Val: "Bar"}, Label: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+						{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
 					},
 					TemplateConfigs: []TemplateConfig{
 						{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -846,7 +846,7 @@ func Test_composeBlueprints(t *testing.T) {
 							},
 						},
 						Variables: []Variable{
-							{Name: VarField{Val: "Bar"}, Label: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -862,7 +862,7 @@ func Test_composeBlueprints(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project 3"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Val: "Foo"}, Label: VarField{Val: "Foo"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
 						},
 						TemplateConfigs: []TemplateConfig{},
 					},
@@ -895,22 +895,22 @@ func Test_composeBlueprints(t *testing.T) {
 							Blueprint: "aws/datalake",
 							ParameterOverrides: []Variable{
 								{
-									Name:  VarField{Val: "Foo"},
-									Value: VarField{Val: "hello"},
+									Name:  VarField{Value: "Foo"},
+									Value: VarField{Value: "hello"},
 								},
 							},
-							DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
+							DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
 							FileOverrides: []TemplateConfig{
 								{
 									Path:      "xlr-pipeline.yml",
-									RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
-									DependsOn: VarField{Val: "TestDepends"},
+									RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
+									DependsOn: VarField{Value: "TestDepends"},
 								},
 							},
 						},
 					},
 					Variables: []Variable{
-						{Name: VarField{Val: "Bar"}, Label: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+						{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
 					},
 					TemplateConfigs: []TemplateConfig{
 						{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -934,22 +934,22 @@ func Test_composeBlueprints(t *testing.T) {
 								Blueprint: "aws/datalake",
 								ParameterOverrides: []Variable{
 									{
-										Name:  VarField{Val: "Foo"},
-										Value: VarField{Val: "hello"},
+										Name:  VarField{Value: "Foo"},
+										Value: VarField{Value: "hello"},
 									},
 								},
-								DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
+								DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
 								FileOverrides: []TemplateConfig{
 									{
 										Path:      "xlr-pipeline.yml",
-										RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
-										DependsOn: VarField{Val: "TestDepends"},
+										RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
+										DependsOn: VarField{Value: "TestDepends"},
 									},
 								},
 							},
 						},
 						Variables: []Variable{
-							{Name: VarField{Val: "Bar"}, Label: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -965,14 +965,14 @@ func Test_composeBlueprints(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Val: "Foo"}, Label: VarField{Val: "Foo"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}},
+							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
-							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Val: "TestDepends"}, RenameTo: VarField{Val: "xlr-pipeline2-new.yml"}},
+							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Value: "TestDepends"}, RenameTo: VarField{Value: "xlr-pipeline2-new.yml"}},
 						},
 					},
-					DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
+					DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
 				},
 			},
 			false,
@@ -990,19 +990,19 @@ func Test_composeBlueprints(t *testing.T) {
 							Stage:     "before",
 							ParameterOverrides: []Variable{
 								{
-									Name:      VarField{Val: "Test"},
-									Value:     VarField{Val: "hello"},
-									DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
+									Name:      VarField{Value: "Test"},
+									Value:     VarField{Value: "hello"},
+									DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
 								},
 								{
-									Name:  VarField{Val: "bar"},
-									Value: VarField{Val: "true", Bool: true},
+									Name:  VarField{Value: "bar"},
+									Value: VarField{Value: "true", Bool: true},
 								},
 							},
 							FileOverrides: []TemplateConfig{
 								{
 									Path:      "xld-infrastructure.yml.tmpl",
-									DependsOn: VarField{Val: "TestDepends"},
+									DependsOn: VarField{Value: "TestDepends"},
 								},
 							},
 						},
@@ -1011,22 +1011,22 @@ func Test_composeBlueprints(t *testing.T) {
 							Stage:     "after",
 							ParameterOverrides: []Variable{
 								{
-									Name:  VarField{Val: "Foo"},
-									Value: VarField{Val: "hello"},
+									Name:  VarField{Value: "Foo"},
+									Value: VarField{Value: "hello"},
 								},
 							},
-							DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
+							DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
 							FileOverrides: []TemplateConfig{
 								{
 									Path:      "xlr-pipeline.yml",
-									RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
-									DependsOn: VarField{Val: "TestDepends"},
+									RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
+									DependsOn: VarField{Value: "TestDepends"},
 								},
 							},
 						},
 					},
 					Variables: []Variable{
-						{Name: VarField{Val: "Bar"}, Label: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+						{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
 					},
 					TemplateConfigs: []TemplateConfig{
 						{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -1047,11 +1047,11 @@ func Test_composeBlueprints(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Val: "Test"}, Label: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlvals: VarField{Val: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"}},
+							{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
-							{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Val: "TestDepends"}},
+							{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Value: "TestDepends"}},
 							{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
 						},
 					},
@@ -1067,19 +1067,19 @@ func Test_composeBlueprints(t *testing.T) {
 								Stage:     "before",
 								ParameterOverrides: []Variable{
 									{
-										Name:      VarField{Val: "Test"},
-										Value:     VarField{Val: "hello"},
-										DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
+										Name:      VarField{Value: "Test"},
+										Value:     VarField{Value: "hello"},
+										DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
 									},
 									{
-										Name:  VarField{Val: "bar"},
-										Value: VarField{Val: "true", Bool: true},
+										Name:  VarField{Value: "bar"},
+										Value: VarField{Value: "true", Bool: true},
 									},
 								},
 								FileOverrides: []TemplateConfig{
 									{
 										Path:      "xld-infrastructure.yml.tmpl",
-										DependsOn: VarField{Val: "TestDepends"},
+										DependsOn: VarField{Value: "TestDepends"},
 									},
 								},
 							},
@@ -1088,22 +1088,22 @@ func Test_composeBlueprints(t *testing.T) {
 								Stage:     "after",
 								ParameterOverrides: []Variable{
 									{
-										Name:  VarField{Val: "Foo"},
-										Value: VarField{Val: "hello"},
+										Name:  VarField{Value: "Foo"},
+										Value: VarField{Value: "hello"},
 									},
 								},
-								DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
+								DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
 								FileOverrides: []TemplateConfig{
 									{
 										Path:      "xlr-pipeline.yml",
-										RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
-										DependsOn: VarField{Val: "TestDepends"},
+										RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
+										DependsOn: VarField{Value: "TestDepends"},
 									},
 								},
 							},
 						},
 						Variables: []Variable{
-							{Name: VarField{Val: "Bar"}, Label: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -1119,14 +1119,14 @@ func Test_composeBlueprints(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Val: "Foo"}, Label: VarField{Val: "Foo"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}},
+							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
-							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Val: "TestDepends"}, RenameTo: VarField{Val: "xlr-pipeline2-new.yml"}},
+							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Value: "TestDepends"}, RenameTo: VarField{Value: "xlr-pipeline2-new.yml"}},
 						},
 					},
-					DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
+					DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
 				},
 			},
 			false,
@@ -1169,7 +1169,7 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 		{
 			"should return false when there is error",
 			args{
-				VarField{Val: "Foo"},
+				VarField{Value: "Foo"},
 				&[]Variable{},
 				&PreparedData{},
 			},
@@ -1179,7 +1179,7 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 		{
 			"should return true when VarField evaluates to true",
 			args{
-				VarField{Val: "1 > 0", Tag: "!expression"},
+				VarField{Value: "1 > 0", Tag: "!expression"},
 				&[]Variable{},
 				&PreparedData{},
 			},
@@ -1189,7 +1189,7 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 		{
 			"should return false when VarField evaluates to false",
 			args{
-				VarField{Val: "1 > 2", Tag: "!expression"},
+				VarField{Value: "1 > 2", Tag: "!expression"},
 				&[]Variable{},
 				&PreparedData{},
 			},
@@ -1199,12 +1199,12 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 		{
 			"should return true when VarField evaluates to true based on variable lookup",
 			args{
-				VarField{Val: "Foo"},
+				VarField{Value: "Foo"},
 				&[]Variable{
 					Variable{
-						Name:  VarField{Val: "Foo"},
-						Label: VarField{Val: "Foo"},
-						Value: VarField{Val: "true", Bool: true},
+						Name:  VarField{Value: "Foo"},
+						Label: VarField{Value: "Foo"},
+						Value: VarField{Value: "true", Bool: true},
 					},
 				},
 				&PreparedData{},
@@ -1215,7 +1215,7 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 		{
 			"should return true when VarField evaluates to true based on variable lookup in expression",
 			args{
-				VarField{Val: "Foo > 2", Tag: "!expression"},
+				VarField{Value: "Foo > 2", Tag: "!expression"},
 				&[]Variable{},
 				&PreparedData{
 					TemplateData: map[string]interface{}{
@@ -1306,7 +1306,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 				Metadata:   Metadata{Name: "Test Project"},
 				Include:    []IncludedBlueprintProcessed{},
 				Variables: []Variable{
-					{Name: VarField{Val: "Test"}, Label: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}, SaveInXlvals: VarField{Val: "true", Bool: true}},
+					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}, SaveInXlvals: VarField{Value: "true", Bool: true}},
 				},
 				TemplateConfigs: []TemplateConfig{
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
@@ -1344,15 +1344,15 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 						Stage:     "before",
 						ParameterOverrides: []Variable{
 							{
-								Name:      VarField{Val: "Test"},
-								Value:     VarField{Val: "hello"},
-								DependsOn: VarField{Tag: "!expression", Val: "2 > 1"},
+								Name:      VarField{Value: "Test"},
+								Value:     VarField{Value: "hello"},
+								DependsOn: VarField{Tag: "!expression", Value: "2 > 1"},
 							},
 						},
 						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xld-infrastructure.yml.tmpl",
-								DependsOn: VarField{Val: "false", Tag: "!expression"},
+								DependsOn: VarField{Value: "false", Tag: "!expression"},
 							},
 						},
 					},
@@ -1361,34 +1361,34 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 						Stage:     "after",
 						ParameterOverrides: []Variable{
 							{
-								Name:  VarField{Val: "Foo"},
-								Value: VarField{Val: "hello"},
+								Name:  VarField{Value: "Foo"},
+								Value: VarField{Value: "hello"},
 							},
 						},
-						DependsOn: VarField{Tag: "!expression", Val: "Bar == 'testing'"},
+						DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
 						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xlr-pipeline.yml",
-								RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
-								DependsOn: VarField{Val: "TestDepends"},
+								RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
+								DependsOn: VarField{Value: "TestDepends"},
 							},
 						},
 					},
 				},
 				Variables: []Variable{
-					{Name: VarField{Val: "Test"}, Label: VarField{Val: "Test"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}, SaveInXlvals: VarField{Val: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Val: "2 > 1"}},
-					{Name: VarField{Val: "Bar"}, Label: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
-					{Name: VarField{Val: "Foo"}, Label: VarField{Val: "Foo"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "hello"}},
+					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Value: "2 > 1"}},
+					{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
+					{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}},
 				},
 				TemplateConfigs: []TemplateConfig{
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
-					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Val: "false", Tag: "!expression"}},
+					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Value: "false", Tag: "!expression"}},
 					{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
 					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/compose/xld-infrastructure.yml.tmpl"},
 					{Path: "xlr-pipeline.yml", FullPath: "aws/compose/xlr-pipeline.yml"},
 					{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
-					{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Val: "TestDepends"}, RenameTo: VarField{Val: "xlr-pipeline2-new.yml"}},
+					{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Value: "TestDepends"}, RenameTo: VarField{Value: "xlr-pipeline2-new.yml"}},
 				},
 			},
 			false,
@@ -1421,20 +1421,20 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 						Stage:     "before",
 						ParameterOverrides: []Variable{
 							{
-								Name:      VarField{Val: "Test"},
-								Value:     VarField{Val: "hello"},
-								DependsOn: VarField{Tag: "!expression", Val: "2 > 1"},
+								Name:      VarField{Value: "Test"},
+								Value:     VarField{Value: "hello"},
+								DependsOn: VarField{Tag: "!expression", Value: "2 > 1"},
 							},
 							{
-								Name:  VarField{Val: "bar"},
-								Value: VarField{Val: "true", Bool: true},
+								Name:  VarField{Value: "bar"},
+								Value: VarField{Value: "true", Bool: true},
 							},
 						},
-						DependsOn: VarField{Tag: "!expression", Val: "2 < 1"},
+						DependsOn: VarField{Tag: "!expression", Value: "2 < 1"},
 						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xld-infrastructure.yml.tmpl",
-								DependsOn: VarField{Tag: "!expression", Val: "2 < 1"},
+								DependsOn: VarField{Tag: "!expression", Value: "2 < 1"},
 							},
 						},
 					},
@@ -1443,22 +1443,22 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 						Stage:     "after",
 						ParameterOverrides: []Variable{
 							{
-								Name:  VarField{Val: "Foo"},
-								Value: VarField{Val: "hello"},
+								Name:  VarField{Value: "Foo"},
+								Value: VarField{Value: "hello"},
 							},
 						},
-						DependsOn: VarField{Tag: "!expression", Val: "Bar != 'testing'"},
+						DependsOn: VarField{Tag: "!expression", Value: "Bar != 'testing'"},
 						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xlr-pipeline.yml",
-								RenameTo:  VarField{Val: "xlr-pipeline2-new.yml"},
-								DependsOn: VarField{Val: "TestDepends"},
+								RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
+								DependsOn: VarField{Value: "TestDepends"},
 							},
 						},
 					},
 				},
 				Variables: []Variable{
-					{Name: VarField{Val: "Bar"}, Label: VarField{Val: "Bar"}, Type: VarField{Val: "Input"}, Value: VarField{Val: "testing"}},
+					{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
 				},
 				TemplateConfigs: []TemplateConfig{
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose-2/xld-environment.yml.tmpl"},

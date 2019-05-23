@@ -96,8 +96,8 @@ var dummyData = make(map[string]interface{})
 func TestGetVariableDefaultVal(t *testing.T) {
 	t.Run("should return empty string when default is not defined", func(t *testing.T) {
 		v := Variable{
-			Name: VarField{Val: "test"},
-			Type: VarField{Val: TypeInput},
+			Name: VarField{Value: "test"},
+			Type: VarField{Value: TypeInput},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
@@ -105,9 +105,9 @@ func TestGetVariableDefaultVal(t *testing.T) {
 
 	t.Run("should return default value string when default is defined", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "default_val"},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "default_val"},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "default_val", defaultVal)
@@ -115,9 +115,9 @@ func TestGetVariableDefaultVal(t *testing.T) {
 
 	t.Run("should return empty string when invalid function tag in default field", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "aws.regs", Tag: tagFn},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "aws.regs", Tag: tagFn},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
@@ -125,9 +125,9 @@ func TestGetVariableDefaultVal(t *testing.T) {
 
 	t.Run("should return function output on valid function tag in default field", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "aws.regions(ecs)[0]", Tag: tagFn},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFn},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
@@ -137,9 +137,9 @@ func TestGetVariableDefaultVal(t *testing.T) {
 
 	t.Run("should return empty string when invalid expression tag in default field", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "aws.regs", Tag: tagExpression},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "aws.regs", Tag: tagExpression},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
@@ -147,16 +147,16 @@ func TestGetVariableDefaultVal(t *testing.T) {
 
 	t.Run("should return output on valid expression tag in default field", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "'foo' + 'bar'", Tag: tagExpression},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "'foo' + 'bar'", Tag: tagExpression},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "Foo > 10", Tag: tagExpression},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "Foo > 10", Tag: tagExpression},
 		}
 		defaultVal = v.GetDefaultVal(map[string]interface{}{
 			"Foo": 100,
@@ -168,9 +168,9 @@ func TestGetVariableDefaultVal(t *testing.T) {
 func TestGetValueFieldVal(t *testing.T) {
 	t.Run("should return value field string value when defined", func(t *testing.T) {
 		v := Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "testing"},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "testing"},
 		}
 		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "testing", val)
@@ -178,9 +178,9 @@ func TestGetValueFieldVal(t *testing.T) {
 
 	t.Run("should return empty on invalid function tag in value field", func(t *testing.T) {
 		v := Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "aws.regs", Tag: tagFn},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "aws.regs", Tag: tagFn},
 		}
 		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "", val)
@@ -188,9 +188,9 @@ func TestGetValueFieldVal(t *testing.T) {
 
 	t.Run("should return function output on valid function tag in value field", func(t *testing.T) {
 		v := Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "aws.regions(ecs)[0]", Tag: tagFn},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFn},
 		}
 		val := v.GetValueFieldVal(dummyData)
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
@@ -200,9 +200,9 @@ func TestGetValueFieldVal(t *testing.T) {
 
 	t.Run("should return empty on invalid expression tag in value field", func(t *testing.T) {
 		v := Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "aws.regs()", Tag: tagExpression},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "aws.regs()", Tag: tagExpression},
 		}
 		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "", val)
@@ -210,16 +210,16 @@ func TestGetValueFieldVal(t *testing.T) {
 
 	t.Run("should return expression output on valid expression tag in value field", func(t *testing.T) {
 		v := Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "'foo' + 'bar'", Tag: tagExpression},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "'foo' + 'bar'", Tag: tagExpression},
 		}
 		defaultVal := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "Foo > 10", Tag: tagExpression},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "Foo > 10", Tag: tagExpression},
 		}
 		defaultVal = v.GetValueFieldVal(map[string]interface{}{
 			"Foo": 100,
@@ -231,9 +231,9 @@ func TestGetValueFieldVal(t *testing.T) {
 func TestGetOptions(t *testing.T) {
 	t.Run("should return string values of options", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "a"}, {Val: "b"}, {Val: "c"}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "a"}, {Value: "b"}, {Value: "c"}},
 		}
 		values := v.GetOptions(dummyData)
 		assert.Len(t, values, 3)
@@ -242,9 +242,9 @@ func TestGetOptions(t *testing.T) {
 
 	t.Run("should return generated values for fn options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "aws.regions(ecs)", Tag: "!fn"}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "aws.regions(ecs)", Tag: "!fn"}},
 		}
 		values := v.GetOptions(dummyData)
 		assert.True(t, len(values) > 1)
@@ -252,9 +252,9 @@ func TestGetOptions(t *testing.T) {
 
 	t.Run("should return nil on invalid function tag for options", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "aws.regs", Tag: "!fn"}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "aws.regs", Tag: "!fn"}},
 		}
 		out := v.GetOptions(dummyData)
 		require.Nil(t, out)
@@ -262,9 +262,9 @@ func TestGetOptions(t *testing.T) {
 
 	t.Run("should return generated values for expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (1, 2, 3)", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Foo ? Bar : (1, 2, 3)", Tag: tagExpression}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": true,
@@ -275,9 +275,9 @@ func TestGetOptions(t *testing.T) {
 
 	t.Run("should return generated string array values for expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Provider == 'GCP' ? ('GKE', 'CloudSore') : ('test')", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Provider == 'GCP' ? ('GKE', 'CloudSore') : ('test')", Tag: tagExpression}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Provider": "GCP",
@@ -288,9 +288,9 @@ func TestGetOptions(t *testing.T) {
 
 	t.Run("should return string values for param reference in expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (Foo1, Foo2)", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Foo ? Bar : (Foo1, Foo2)", Tag: tagExpression}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo":  false,
@@ -304,9 +304,9 @@ func TestGetOptions(t *testing.T) {
 
 	t.Run("should return string values for numeric type in expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (1, 2, 3)", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Foo ? Bar : (1, 2, 3)", Tag: tagExpression}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
@@ -318,9 +318,9 @@ func TestGetOptions(t *testing.T) {
 
 	t.Run("should return string values for boolean type in expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (true, false)", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Foo ? Bar : (true, false)", Tag: tagExpression}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
@@ -332,9 +332,9 @@ func TestGetOptions(t *testing.T) {
 
 	t.Run("should return nil values for invalid return type in expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (Fooo, Foo)", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Foo ? Bar : (Fooo, Foo)", Tag: tagExpression}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
@@ -345,9 +345,9 @@ func TestGetOptions(t *testing.T) {
 
 	t.Run("should return nil on invalid expression tag for options", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "aws.regs()", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "aws.regs()", Tag: tagExpression}},
 		}
 		out := v.GetOptions(dummyData)
 		require.Nil(t, out)
@@ -358,75 +358,75 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 	t.Run("should skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: true, Val: "true"},
+			Name:  VarField{Value: "confirm"},
+			Type:  VarField{Value: TypeConfirm},
+			Value: VarField{Bool: true, Value: "true"},
 		}
 		variables[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "confirm", InvertBool: true},
+			Name:      VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "confirm", InvertBool: true},
 		}
-		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Value, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
 	t.Run("should skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: false, Val: "false"},
+			Name:  VarField{Value: "confirm"},
+			Type:  VarField{Value: TypeConfirm},
+			Value: VarField{Bool: false, Value: "false"},
 		}
 		variables[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "confirm"},
+			Name:      VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "confirm"},
 		}
-		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Value, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
 	t.Run("should skip question and default value should be false (promptIf)", func(t *testing.T) {
 		data := NewPreparedData()
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: false, Val: "false"},
+			Name:  VarField{Value: "confirm"},
+			Type:  VarField{Value: TypeConfirm},
+			Value: VarField{Bool: false, Value: "false"},
 		}
 		variables[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeConfirm},
-			DependsOn: VarField{Val: "confirm"},
+			Name:      VarField{Value: "test"},
+			Type:      VarField{Value: TypeConfirm},
+			DependsOn: VarField{Value: "confirm"},
 		}
-		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, data, "", variables[1].DependsOn.InvertBool))
-		assert.False(t, data.TemplateData[variables[1].Name.Val].(bool))
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Value, variables[0].Value.Bool, data, "", variables[1].DependsOn.InvertBool))
+		assert.False(t, data.TemplateData[variables[1].Name.Value].(bool))
 	})
 
 	t.Run("should not skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: false, Val: "false"},
+			Name:  VarField{Value: "confirm"},
+			Type:  VarField{Value: TypeConfirm},
+			Value: VarField{Bool: false, Value: "false"},
 		}
 		variables[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "confirm", InvertBool: true},
+			Name:      VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "confirm", InvertBool: true},
 		}
-		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
+		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Value, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
 	t.Run("should not skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: true, Val: "true"},
+			Name:  VarField{Value: "confirm"},
+			Type:  VarField{Value: TypeConfirm},
+			Value: VarField{Bool: true, Value: "true"},
 		}
 		variables[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "confirm"},
+			Name:      VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "confirm"},
 		}
-		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
+		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Value, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
 }
 
@@ -683,31 +683,31 @@ func TestGetValidateExpr(t *testing.T) {
 	}{
 		{
 			"should error on empty tag for validate attribute",
-			&Variable{Validate: VarField{Val: "test"}},
+			&Variable{Validate: VarField{Value: "test"}},
 			"",
 			fmt.Errorf("only '!expression' tag is supported for validate attribute"),
 		},
 		{
 			"should error on non-expression tag for validate attribute",
-			&Variable{Validate: VarField{Val: "test", Tag: "!fn"}},
+			&Variable{Validate: VarField{Value: "test", Tag: "!fn"}},
 			"",
 			fmt.Errorf("only '!expression' tag is supported for validate attribute"),
 		},
 		{
 			"should return empty string for empty expression value with tag value",
-			&Variable{Validate: VarField{Val: "", Tag: "!expression"}},
+			&Variable{Validate: VarField{Value: "", Tag: "!expression"}},
 			"",
 			nil,
 		},
 		{
 			"should return empty string for empty expression value without tag value",
-			&Variable{Validate: VarField{Val: ""}},
+			&Variable{Validate: VarField{Value: ""}},
 			"",
 			nil,
 		},
 		{
 			"should return expression string for valid expression tag",
-			&Variable{Validate: VarField{Val: "regex('*', TestVar)", Tag: "!expression"}},
+			&Variable{Validate: VarField{Value: "regex('*', TestVar)", Tag: "!expression"}},
 			"regex('*', TestVar)",
 			nil,
 		},
@@ -920,7 +920,7 @@ func TestVerifyVariableValue(t *testing.T) {
 	}{
 		{
 			"answers from map: save string answer value to variable value with type Input",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeInput}},
 			"sample answer",
 			map[string]interface{}{},
 			"sample answer",
@@ -928,7 +928,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save float answer value to variable value with type Input",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeInput}},
 			5.45,
 			map[string]interface{}{},
 			5.45,
@@ -936,7 +936,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save boolean answer value to variable value with type Confirm",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeConfirm}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeConfirm}},
 			true,
 			map[string]interface{}{},
 			true,
@@ -944,7 +944,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save boolean answer value (convert from string) to variable value with type Confirm",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeConfirm}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeConfirm}},
 			"true",
 			map[string]interface{}{},
 			true,
@@ -952,7 +952,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save long text answer value to variable value with type Editor",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeEditor}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeEditor}},
 			"long text for testing..\nand the rest of it\n",
 			map[string]interface{}{},
 			"long text for testing..\nand the rest of it\n",
@@ -960,7 +960,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save long text answer value to variable value with type File",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeFile}},
 			filepath.Join("test", "sample.txt"),
 			map[string]interface{}{},
 			"hello\ngo\n",
@@ -968,7 +968,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: give error on file not found (input type: File)",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeFile}},
 			filepath.Join("test", "error.txt"),
 			map[string]interface{}{},
 			"",
@@ -980,7 +980,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save string answer value to variable value with type Select",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeSelect}, Options: []VarField{{Value: "a"}, {Value: "b"}}},
 			"b",
 			map[string]interface{}{},
 			"b",
@@ -988,7 +988,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: give error on unknown select option value",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeSelect}, Options: []VarField{{Value: "a"}, {Value: "b"}}},
 			"c",
 			map[string]interface{}{},
 			"",
@@ -1024,23 +1024,23 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 			BlueprintConfig{
 				Variables: []Variable{
 					{
-						Name:    VarField{Val: "input1"},
-						Type:    VarField{Val: "Input"},
-						Value:   VarField{Bool: false, Val: ""},
-						Default: VarField{Bool: false, Val: "default1"},
+						Name:    VarField{Value: "input1"},
+						Type:    VarField{Value: "Input"},
+						Value:   VarField{Bool: false, Value: ""},
+						Default: VarField{Bool: false, Value: "default1"},
 					},
 					{
-						Name:    VarField{Val: "input2"},
-						Type:    VarField{Val: "SecretInput"},
-						Value:   VarField{Bool: false, Val: ""},
-						Default: VarField{Bool: false, Val: "default2"},
+						Name:    VarField{Value: "input2"},
+						Type:    VarField{Value: "SecretInput"},
+						Value:   VarField{Bool: false, Value: ""},
+						Default: VarField{Bool: false, Value: "default2"},
 					},
 					{
-						Name:            VarField{Val: "input3"},
-						Type:            VarField{Val: "SecretInput"},
-						Value:           VarField{Bool: false, Val: ""},
-						Default:         VarField{Bool: false, Val: "default3"},
-						RevealOnSummary: VarField{Bool: true, Val: "true"},
+						Name:            VarField{Value: "input3"},
+						Type:            VarField{Value: "SecretInput"},
+						Value:           VarField{Bool: false, Value: ""},
+						Default:         VarField{Bool: false, Value: "default3"},
+						RevealOnSummary: VarField{Bool: true, Value: "true"},
 					},
 				},
 			},

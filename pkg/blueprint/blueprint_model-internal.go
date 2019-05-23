@@ -44,7 +44,8 @@ type TemplateConfig struct {
 }
 
 type VarField struct {
-	Val        string
+	Label      string // used only for options
+	Value      string
 	Bool       bool
 	Tag        string
 	InvertBool bool

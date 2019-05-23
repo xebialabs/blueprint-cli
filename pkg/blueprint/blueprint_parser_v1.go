@@ -112,11 +112,11 @@ func transformToV2(parsedVar Variable, m *ParameterV1) Variable {
 		switch val := m.Secret.(type) {
 		case string:
 			if val == "true" {
-				parsedVar.Type.Val = TypeSecret
+				parsedVar.Type.Value = TypeSecret
 			}
 		case bool:
 			if val {
-				parsedVar.Type.Val = TypeSecret
+				parsedVar.Type.Value = TypeSecret
 			}
 		}
 	}
@@ -148,16 +148,16 @@ func parseFieldsFromStructV1(original interface{}, target interface{}) error {
 		switch val := value.(type) {
 		case string:
 			// Set string field
-			setVariableField(&field, val, VarField{Val: val, InvertBool: invertBool})
+			setVariableField(&field, val, VarField{Value: val, InvertBool: invertBool})
 		case int, uint, uint8, uint16, uint32, uint64:
 			// Set integer field
-			setVariableField(&field, fmt.Sprint(val), VarField{Val: fmt.Sprint(val), InvertBool: invertBool})
+			setVariableField(&field, fmt.Sprint(val), VarField{Value: fmt.Sprint(val), InvertBool: invertBool})
 		case float32, float64:
 			// Set float field
-			setVariableField(&field, fmt.Sprintf("%f", val), VarField{Val: fmt.Sprintf("%f", val), InvertBool: invertBool})
+			setVariableField(&field, fmt.Sprintf("%f", val), VarField{Value: fmt.Sprintf("%f", val), InvertBool: invertBool})
 		case bool:
 			// Set boolean field
-			setVariableField(&field, strconv.FormatBool(val), VarField{Val: strconv.FormatBool(val), Bool: val, InvertBool: invertBool})
+			setVariableField(&field, strconv.FormatBool(val), VarField{Value: strconv.FormatBool(val), Bool: val, InvertBool: invertBool})
 		case []interface{}:
 			// Set options array field for Parameters
 			if len(val) > 0 {
@@ -165,13 +165,13 @@ func parseFieldsFromStructV1(original interface{}, target interface{}) error {
 				for i, it := range val {
 					switch wVal := it.(type) {
 					case int, uint, uint8, uint16, uint32, uint64:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprint(wVal)}))
+						field.Index(i).Set(reflect.ValueOf(VarField{Value: fmt.Sprint(wVal)}))
 					case float32, float64:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprintf("%f", wVal)}))
+						field.Index(i).Set(reflect.ValueOf(VarField{Value: fmt.Sprintf("%f", wVal)}))
 					case string:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: wVal}))
+						field.Index(i).Set(reflect.ValueOf(VarField{Value: wVal}))
 					case yaml.CustomTag:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: wVal.Value, Tag: wVal.Tag}))
+						field.Index(i).Set(reflect.ValueOf(VarField{Value: wVal.Value, Tag: wVal.Tag}))
 					default:
 						return fmt.Errorf("unknown list item type %s", wVal)
 					}
@@ -181,7 +181,7 @@ func parseFieldsFromStructV1(original interface{}, target interface{}) error {
 			// Set string field with YAML tag
 			switch val.Tag {
 			case tagFn, tagExpression:
-				setVariableField(&field, val.Value, VarField{Val: val.Value, Tag: val.Tag, InvertBool: invertBool})
+				setVariableField(&field, val.Value, VarField{Value: val.Value, Tag: val.Tag, InvertBool: invertBool})
 			default:
 				return fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
 			}
