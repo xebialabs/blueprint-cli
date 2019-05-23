@@ -226,15 +226,19 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 		require.Nil(t, err)
 		assert.Equal(t, Variable{
 			Name:        VarField{Val: "pass"},
+			Label:       VarField{Val: "pass"},
 			Type:        VarField{Val: TypeInput},
+			Prompt:      VarField{Val: "password?"},
 			Description: VarField{Val: "password?"},
 			Secret:      VarField{Bool: true, Val: "true"},
 			ReplaceAsIs: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
 			Name:            VarField{Val: "test"},
+			Label:           VarField{Val: "test"},
 			Type:            VarField{Val: TypeInput},
 			Default:         VarField{Val: "lala"},
+			Prompt:          VarField{Val: "help text"},
 			Description:     VarField{Val: "help text"},
 			SaveInXlvals:    VarField{Bool: true, Val: "true"},
 			RevealOnSummary: VarField{Bool: true, Val: "true"},
@@ -256,25 +260,32 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 		assert.Len(t, doc.Variables, 7)
 		assert.Equal(t, Variable{
 			Name:        VarField{Val: "pass"},
+			Label:       VarField{Val: "pass"},
 			Type:        VarField{Val: TypeInput},
+			Prompt:      VarField{Val: "password?"},
 			Description: VarField{Val: "password?"},
 			Secret:      VarField{Bool: true, Val: "true"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
 			Name:         VarField{Val: "test"},
+			Label:        VarField{Val: "test"},
 			Type:         VarField{Val: TypeInput},
 			Default:      VarField{Val: "lala"},
+			Prompt:       VarField{Val: "help text"},
 			Description:  VarField{Val: "help text"},
 			SaveInXlvals: VarField{Bool: true, Val: "true"},
 		}, doc.Variables[1])
 		assert.Equal(t, Variable{
 			Name:  VarField{Val: "fn"},
+			Label: VarField{Val: "fn"},
 			Type:  VarField{Val: TypeInput},
 			Value: VarField{Val: "aws.regions(ecs)[0]", Tag: tagFn},
 		}, doc.Variables[2])
 		assert.Equal(t, Variable{
 			Name:        VarField{Val: "select"},
+			Label:       VarField{Val: "select"},
 			Type:        VarField{Val: TypeSelect},
+			Prompt:      VarField{Val: "select region"},
 			Description: VarField{Val: "select region"},
 			Options: []VarField{
 				{Val: "aws.regions(ecs)[0]", Tag: tagFn},
@@ -285,18 +296,24 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 		}, doc.Variables[3])
 		assert.Equal(t, Variable{
 			Name:        VarField{Val: "isit"},
+			Label:       VarField{Val: "isit"},
 			Type:        VarField{Val: TypeConfirm},
+			Prompt:      VarField{Val: "is it?"},
 			Description: VarField{Val: "is it?"},
 			Value:       VarField{Bool: true, Val: "true"},
 		}, doc.Variables[4])
 		assert.Equal(t, Variable{
 			Name:        VarField{Val: "isitnot"},
+			Label:       VarField{Val: "isitnot"},
 			Type:        VarField{Val: TypeConfirm},
+			Prompt:      VarField{Val: "negative question?"},
 			Description: VarField{Val: "negative question?"},
 		}, doc.Variables[5])
 		assert.Equal(t, Variable{
 			Name:        VarField{Val: "dep"},
+			Label:       VarField{Val: "dep"},
 			Type:        VarField{Val: TypeInput},
+			Prompt:      VarField{Val: "depends on others"},
 			Description: VarField{Val: "depends on others"},
 			DependsOn:   VarField{Val: "isitnot", InvertBool: true},
 		}, doc.Variables[6])
@@ -465,9 +482,11 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 			[]Variable{
 				{
 					Name:        VarField{Val: "test"},
+					Label:       VarField{Val: "test"},
 					Type:        VarField{Val: "Input"},
 					Secret:      VarField{Bool: true, Val: "true"},
 					Value:       VarField{Val: "string"},
+					Prompt:      VarField{Val: "desc"},
 					Description: VarField{Val: "desc"},
 					Default:     VarField{Val: "string2"},
 					DependsOn:   VarField{Val: "Var", InvertBool: true},
@@ -480,9 +499,11 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 				},
 				{
 					Name:        VarField{Val: "test"},
+					Label:       VarField{Val: "test"},
 					Type:        VarField{Val: "Confirm"},
 					Secret:      VarField{Bool: false, Val: "false"},
 					Value:       VarField{Bool: true, Val: "true"},
+					Prompt:      VarField{Val: "desc"},
 					Description: VarField{Val: "desc"},
 					Default:     VarField{Bool: false, Val: "false"},
 					DependsOn:   VarField{Val: "Var", InvertBool: true},
@@ -522,7 +543,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Value:          true,
 					Description:    "desc",
 					Default:        false,
-					DependsOnTrue:      yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+					DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 					DependsOnFalse: "Var",
 					Options: []interface{}{
 						"test", yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
@@ -536,9 +557,11 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 			[]Variable{
 				{
 					Name:        VarField{Val: "test"},
+					Label:       VarField{Val: "test"},
 					Type:        VarField{Val: "Input"},
 					Secret:      VarField{Bool: true, Val: "true"},
 					Value:       VarField{Val: "string"},
+					Prompt:      VarField{Val: "desc"},
 					Description: VarField{Val: "desc"},
 					Default:     VarField{Val: "string2"},
 					DependsOn:   VarField{Val: "Var", InvertBool: true},
@@ -551,9 +574,11 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 				},
 				{
 					Name:        VarField{Val: "test"},
+					Label:       VarField{Val: "test"},
 					Type:        VarField{Val: "Confirm"},
 					Secret:      VarField{Bool: false, Val: "false"},
 					Value:       VarField{Bool: true, Val: "true"},
+					Prompt:      VarField{Val: "desc"},
 					Description: VarField{Val: "desc"},
 					Default:     VarField{Bool: false, Val: "false"},
 					DependsOn:   VarField{Val: "Var", InvertBool: true},

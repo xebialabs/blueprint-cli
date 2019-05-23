@@ -270,7 +270,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	switch variable.Type.Val {
 	case TypeInput:
 		if variable.Secret.Bool {
-			questionMsg := prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))
+			questionMsg := prepareQuestionText(variable.Prompt.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))
 			if defaultVal != "" {
 				questionMsg += fmt.Sprintf(" (%s)", defaultVal)
 			}
@@ -289,7 +289,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		} else {
 			err = survey.AskOne(
 				&survey.Input{
-					Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
+					Message: prepareQuestionText(variable.Prompt.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
 					Default: defaultValStr,
 				},
 				&answer,
@@ -300,7 +300,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	case TypeEditor:
 		err = survey.AskOne(
 			&survey.Editor{
-				Message:       prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
+				Message:       prepareQuestionText(variable.Prompt.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
 				Default:       defaultValStr,
 				HideDefault:   true,
 				AppendDefault: true,
@@ -313,7 +313,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		var filePath string
 		err = survey.AskOne(
 			&survey.Input{
-				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the file path (relative/absolute) for %s?", variable.Name.Val)),
+				Message: prepareQuestionText(variable.Prompt.Val, fmt.Sprintf("What is the file path (relative/absolute) for %s?", variable.Name.Val)),
 				Default: defaultValStr,
 			},
 			&filePath,
@@ -332,7 +332,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		options := variable.GetOptions(parameters)
 		err = survey.AskOne(
 			&survey.Select{
-				Message:  prepareQuestionText(variable.Description.Val, fmt.Sprintf("Select value for %s?", variable.Name.Val)),
+				Message:  prepareQuestionText(variable.Prompt.Val, fmt.Sprintf("Select value for %s?", variable.Name.Val)),
 				Options:  options,
 				Default:  defaultValStr,
 				PageSize: 10,
@@ -345,7 +345,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		var confirm bool
 		err = survey.AskOne(
 			&survey.Confirm{
-				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("%s?", variable.Name.Val)),
+				Message: prepareQuestionText(variable.Prompt.Val, fmt.Sprintf("%s?", variable.Name.Val)),
 				Default: variable.Default.Bool,
 			},
 			&confirm,

@@ -25,7 +25,6 @@ type SpecV2 struct {
 
 type ParameterV2 struct {
 	Name            interface{}   `yaml:"name"`
-	Description     interface{}   `yaml:"description"`
 	Type            interface{}   `yaml:"type"`
 	Default         interface{}   `yaml:"default"`
 	Value           interface{}   `yaml:"value"`
@@ -37,8 +36,9 @@ type ParameterV2 struct {
 	Validate        interface{}   `yaml:"validate"`
 	Secret          interface{}   `yaml:"secret"`  // TODO remove
 	Pattern         interface{}   `yaml:"pattern"` // TODO remove
-	// Prompt          interface{}   `yaml:"prompt"`
-	// Label           interface{}   `yaml:"label"`
+	Prompt          interface{}   `yaml:"prompt"`
+	Description     interface{}   `yaml:"description"`
+	Label           interface{}   `yaml:"label"`
 }
 
 type FileV2 struct {

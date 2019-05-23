@@ -100,7 +100,15 @@ func (blueprintDoc *BlueprintYamlV1) parseFiles(templatePath string, isLocal boo
 func parseParameterV1(m *ParameterV1) (Variable, error) {
 	parsedVar := Variable{}
 	err := parseFieldsFromStructV1(m, &parsedVar)
-	return parsedVar, err
+
+	return transformToV2(parsedVar), err
+}
+
+func transformToV2(parsedVar Variable) Variable {
+	// compatibility hacks for v1 -> v2
+	parsedVar.Prompt = parsedVar.Description
+	parsedVar.Label = parsedVar.Name
+	return parsedVar
 }
 
 func parseFileV1(m *FileV1) (TemplateConfig, error) {

@@ -23,7 +23,7 @@ type Variable struct {
 	Type            VarField
 	Secret          VarField
 	Value           VarField
-	Description     VarField
+	Prompt          VarField
 	Default         VarField
 	DependsOn       VarField
 	Options         []VarField
@@ -32,6 +32,8 @@ type Variable struct {
 	ReplaceAsIs     VarField
 	RevealOnSummary VarField
 	Validate        VarField
+	Description     VarField
+	Label           VarField
 }
 
 // TemplateConfig holds the merged template file definitions with repository info

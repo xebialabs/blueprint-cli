@@ -118,6 +118,9 @@ func (yamlDoc *BlueprintYamlV2) parseIncludes() ([]IncludedBlueprintProcessed, e
 func parseParameterV2(m *ParameterV2) (Variable, error) {
 	parsedVar := Variable{}
 	err := parseFieldsFromStructV2(m, &parsedVar)
+	if parsedVar.Label == (VarField{}) {
+		parsedVar.Label = parsedVar.Name
+	}
 	return parsedVar, err
 }
 
