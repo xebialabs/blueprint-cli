@@ -13,7 +13,7 @@ import (
 )
 
 // parse blueprint definition doc
-func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
+func parseTemplateMetadataV2(blueprintVars *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(*blueprintVars))
 	decoder.SetStrict(true)
 	yamlDoc := BlueprintYamlV2{}
@@ -63,7 +63,7 @@ func (yamlDoc *BlueprintYamlV2) parseParameters() ([]Variable, error) {
 	variables := []Variable{}
 	parameters = yamlDoc.Spec.Parameters
 	for _, m := range parameters {
-		parsedVar, err := parseParameter(&m)
+		parsedVar, err := parseParameterV2(&m)
 		if err != nil {
 			return variables, err
 		}
@@ -78,7 +78,7 @@ func (yamlDoc *BlueprintYamlV2) parseFiles(templatePath string, isLocal bool) ([
 	templateConfigs := []TemplateConfig{}
 	files = yamlDoc.Spec.Files
 	for _, m := range files {
-		templateConfig, err := parseFile(&m)
+		templateConfig, err := parseFileV2(&m)
 		if err != nil {
 			return nil, err
 		}
@@ -97,7 +97,7 @@ func (yamlDoc *BlueprintYamlV2) parseFiles(templatePath string, isLocal bool) ([
 func (yamlDoc *BlueprintYamlV2) parseIncludes() ([]IncludedBlueprintProcessed, error) {
 	processedIncludes := []IncludedBlueprintProcessed{}
 	for _, m := range yamlDoc.Spec.IncludeBefore {
-		include, err := parseInclude(&m)
+		include, err := parseIncludeV2(&m)
 		if err != nil {
 			return nil, err
 		}
@@ -105,7 +105,7 @@ func (yamlDoc *BlueprintYamlV2) parseIncludes() ([]IncludedBlueprintProcessed, e
 		processedIncludes = append(processedIncludes, include)
 	}
 	for _, m := range yamlDoc.Spec.IncludeAfter {
-		include, err := parseInclude(&m)
+		include, err := parseIncludeV2(&m)
 		if err != nil {
 			return nil, err
 		}
@@ -115,25 +115,25 @@ func (yamlDoc *BlueprintYamlV2) parseIncludes() ([]IncludedBlueprintProcessed, e
 	return processedIncludes, nil
 }
 
-func parseParameter(m *ParameterV2) (Variable, error) {
+func parseParameterV2(m *ParameterV2) (Variable, error) {
 	parsedVar := Variable{}
-	err := parseFieldsFromStruct(m, &parsedVar)
+	err := parseFieldsFromStructV2(m, &parsedVar)
 	return parsedVar, err
 }
 
-func parseFile(m *FileV2) (TemplateConfig, error) {
+func parseFileV2(m *FileV2) (TemplateConfig, error) {
 	parsedConfig := TemplateConfig{}
-	err := parseFieldsFromStruct(m, &parsedConfig)
+	err := parseFieldsFromStructV2(m, &parsedConfig)
 	return parsedConfig, err
 }
 
-func parseInclude(m *IncludedBlueprintV2) (IncludedBlueprintProcessed, error) {
+func parseIncludeV2(m *IncludedBlueprintV2) (IncludedBlueprintProcessed, error) {
 	parsedInclude := IncludedBlueprintProcessed{}
-	err := parseFieldsFromStruct(m, &parsedInclude)
+	err := parseFieldsFromStructV2(m, &parsedInclude)
 	return parsedInclude, err
 }
 
-func parseFieldsFromStruct(original interface{}, target interface{}) error {
+func parseFieldsFromStructV2(original interface{}, target interface{}) error {
 	parameterR := reflect.ValueOf(original).Elem()
 	typeOfT := parameterR.Type()
 	// iterate over the struct fields and map them
@@ -184,7 +184,7 @@ func parseFieldsFromStruct(original interface{}, target interface{}) error {
 				field.Set(reflect.MakeSlice(reflect.TypeOf([]Variable{}), len(val), len(val)))
 				for i, it := range val {
 					parsed := Variable{}
-					err := parseFieldsFromStruct(&it, &parsed)
+					err := parseFieldsFromStructV2(&it, &parsed)
 					if err != nil {
 						return err
 					}
@@ -197,7 +197,7 @@ func parseFieldsFromStruct(original interface{}, target interface{}) error {
 				field.Set(reflect.MakeSlice(reflect.TypeOf([]TemplateConfig{}), len(val), len(val)))
 				for i, it := range val {
 					parsed := TemplateConfig{}
-					err := parseFieldsFromStruct(&it, &parsed)
+					err := parseFieldsFromStructV2(&it, &parsed)
 					if err != nil {
 						return err
 					}

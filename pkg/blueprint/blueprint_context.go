@@ -316,6 +316,10 @@ func (blueprintContext *BlueprintContext) parseLocalDefinitionFile(templatePath 
 	return blueprintDoc, err
 }
 
+func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
+	return parseTemplateMetadataV2(blueprintVars, templatePath, blueprintRepository, isLocal)
+}
+
 /*
  * -----------------
  * Utility Functions
