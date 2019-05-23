@@ -44,7 +44,8 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
              options:
              - !fn aws.regions(ecs)[0]
              - b
-             - c
+             - label: test
+               value: testVal
              default: b
            - name: isit
              description: is it?
@@ -216,6 +217,70 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 		assert.Equal(t, "variable names must be unique within blueprint 'parameters' definition", err.Error())
 	})
 
+	t.Run("should parse different option types", func(t *testing.T) {
+		metadata := []byte(
+			fmt.Sprintf(`
+               apiVersion: %s
+               kind: Blueprint
+               metadata:
+               spec:
+                 parameters:
+                 - name: select
+                   type: Select
+                   prompt: select region
+                   default: testVal
+                   options:
+                   - !fn aws.regions(ecs)[0]
+                   - b
+                   - label: test1
+                     value: teeee
+                   - label: test2
+                     value: 10
+                   - label: test3
+                     value: 10.5
+                   - label: test4
+                     value: testVal`, models.BlueprintYamlFormatV2))
+		doc, err := parseTemplateMetadataV2(&metadata, "aws/test", &blueprintRepository, true)
+		require.Nil(t, err)
+		assert.Equal(t, Variable{
+			Name:   VarField{Value: "select"},
+			Label:  VarField{Value: "select"},
+			Type:   VarField{Value: TypeSelect},
+			Prompt: VarField{Value: "select region"},
+			Options: []VarField{
+				{Value: "aws.regions(ecs)[0]", Tag: tagFn},
+				{Value: "b"},
+				{Value: "teeee", Label: "test1"},
+				{Value: "10", Label: "test2"},
+				{Value: "10.500000", Label: "test3"},
+				{Value: "testVal", Label: "test4"},
+			},
+			Default: VarField{Value: "testVal"},
+		}, doc.Variables[0])
+	})
+
+	t.Run("should error on invalid option types", func(t *testing.T) {
+		metadata := []byte(
+			fmt.Sprintf(`
+               apiVersion: %s
+               kind: Blueprint
+               metadata:
+               spec:
+                 parameters:
+                 - name: select
+                   type: Select
+                   prompt: select region
+                   options:
+                   - !fn aws.regions(ecs)[0]
+                   - b
+                   - key: test1
+                     value: test
+                   - label: test4
+                     value: testVal`, models.BlueprintYamlFormatV2))
+		_, err := parseTemplateMetadataV2(&metadata, "aws/test", &blueprintRepository, true)
+		require.NotNil(t, err)
+	})
+
 	t.Run("should parse nested variables from valid metadata", func(t *testing.T) {
 		doc, err := getValidTestBlueprintMetadata(templatePath, blueprintRepository)
 		require.Nil(t, err)
@@ -248,7 +313,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 			Options: []VarField{
 				{Value: "aws.regions(ecs)[0]", Tag: tagFn},
 				{Value: "b"},
-				{Value: "c"},
+				{Value: "testVal", Label: "test"},
 			},
 			Default: VarField{Value: "b"},
 		}, doc.Variables[3])

@@ -176,6 +176,27 @@ func parseFieldsFromStructV2(original interface{}, target interface{}) error {
 						field.Index(i).Set(reflect.ValueOf(VarField{Value: wVal}))
 					case yaml.CustomTag:
 						field.Index(i).Set(reflect.ValueOf(VarField{Value: wVal.Value, Tag: wVal.Tag}))
+					case map[interface{}]interface{}:
+						var label, value string
+						switch l := wVal["label"].(type) {
+						case string:
+							label = l
+						default:
+							return fmt.Errorf("unknown list item type %s", l)
+						}
+
+						switch v := wVal["value"].(type) {
+						case string:
+							value = v
+						case int, uint, uint8, uint16, uint32, uint64:
+							value = fmt.Sprint(v)
+						case float32, float64:
+							value = fmt.Sprintf("%f", v)
+						default:
+							return fmt.Errorf("unknown list item type %s", v)
+						}
+
+						field.Index(i).Set(reflect.ValueOf(VarField{Value: value, Label: label}))
 					default:
 						return fmt.Errorf("unknown list item type %s", wVal)
 					}
