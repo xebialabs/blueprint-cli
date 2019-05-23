@@ -1025,18 +1025,21 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 				Variables: []Variable{
 					{
 						Name:    VarField{Value: "input1"},
+						Label:   VarField{Value: "input1"},
 						Type:    VarField{Value: "Input"},
 						Value:   VarField{Bool: false, Value: ""},
 						Default: VarField{Bool: false, Value: "default1"},
 					},
 					{
 						Name:    VarField{Value: "input2"},
+						Label:   VarField{Value: "input 2"},
 						Type:    VarField{Value: "SecretInput"},
 						Value:   VarField{Bool: false, Value: ""},
 						Default: VarField{Bool: false, Value: "default2"},
 					},
 					{
 						Name:            VarField{Value: "input3"},
+						Label:           VarField{Value: "input 3"},
 						Type:            VarField{Value: "SecretInput"},
 						Value:           VarField{Bool: false, Value: ""},
 						Default:         VarField{Bool: false, Value: "default3"},
@@ -1047,7 +1050,7 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 			args{"", false, true},
 			&PreparedData{
 				TemplateData: map[string]interface{}{"input1": "default1", "input2": "!value input2", "input3": "!value input3"},
-				DefaultData:  map[string]interface{}{"input1": "default1", "input2": "*****", "input3": "default3"},
+				DefaultData:  map[string]interface{}{"input1": "default1", "input 2": "*****", "input 3": "default3"},
 				Secrets:      map[string]interface{}{"input2": "default2", "input3": "default3"},
 				Values:       map[string]interface{}{},
 			},

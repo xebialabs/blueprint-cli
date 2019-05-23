@@ -526,9 +526,9 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 			}
 			saveItemToTemplateDataMap(&variable, data, finalVal)
 			if variable.Type.Value == TypeSecret && !variable.RevealOnSummary.Bool {
-				data.DefaultData[variable.Name.Value] = "*****"
+				data.DefaultData[variable.Label.Value] = "*****"
 			} else {
-				data.DefaultData[variable.Name.Value] = finalVal
+				data.DefaultData[variable.Label.Value] = finalVal
 			}
 			continue
 		}
