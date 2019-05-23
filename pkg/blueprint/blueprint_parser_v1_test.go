@@ -56,35 +56,16 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
            - name: dep
              description: depends on others
              type: Input
-             dependsOn: !expression "isit && true"
+             dependsOnTrue: !expression "isit && true"
              dependsOnFalse: isitnot
            files:
            - path: xebialabs/foo.yaml
            - path: readme.md
              dependsOnTrue: isit
            - path: bar.md
-             dependsOn: isitnot
+             dependsOnTrue: isitnot
            - path: foo.md
              dependsOnFalse: !expression "!!isitnot"
-           include:
-           - blueprint: kubernetes/gke-cluster
-             stage: before
-             parameterOverrides:
-             - name: Foo
-               value: hello
-               dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
-             - name: bar
-               value: true
-             fileOverrides:
-             - path: xld-infrastructure.yml.tmpl
-               operation: skip
-               dependsOnTrue: TestDepends
-           - blueprint: kubernetes/namespace
-             dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
-             stage: after
-             parameterOverrides:
-             - name: Foo
-               value: hello
 `, models.BlueprintYamlFormatV1))
 	return parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
 }
@@ -240,7 +221,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
                files:
                - path: xebialabs/foo.yaml
                - path: readme.md
-                 dependsOn: isit`, models.BlueprintYamlFormatV1))
+                 dependsOnTrue: isit`, models.BlueprintYamlFormatV1))
 		doc, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository, true)
 		require.Nil(t, err)
 		assert.Equal(t, Variable{
@@ -403,7 +384,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 						Value:          "string",
 						Description:    "desc",
 						Default:        "string2",
-						DependsOn:      yaml.CustomTag{Tag: "!foo", Value: "1 > 2"},
+						DependsOnTrue:  yaml.CustomTag{Tag: "!foo", Value: "1 > 2"},
 						DependsOnFalse: "Var",
 						Options: []interface{}{
 							"test", "foo", 10, 13.4,
@@ -454,7 +435,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 						Value:          "string",
 						Description:    "desc",
 						Default:        "string2",
-						DependsOn:      yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+						DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 						DependsOnFalse: "Var",
 						Options: []interface{}{
 							"test", "foo", 10, 13.4,
@@ -541,7 +522,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Value:          true,
 					Description:    "desc",
 					Default:        false,
-					DependsOn:      yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+					DependsOnTrue:      yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 					DependsOnFalse: "Var",
 					Options: []interface{}{
 						"test", yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
@@ -639,9 +620,9 @@ func TestBlueprintYaml_parseFilesV1(t *testing.T) {
 					},
 					Files: []FileV1{
 						{Path: "test.yaml"},
-						{Path: "test2.yaml", DependsOn: "foo"},
+						{Path: "test2.yaml", DependsOnTrue: "foo"},
 						{Path: "test3.yaml", DependsOnFalse: "bar"},
-						{Path: "test4.yaml", DependsOn: "bar"},
+						{Path: "test4.yaml", DependsOnTrue: "bar"},
 						{Path: "test5.yaml", DependsOnFalse: "foo"},
 					},
 				},
@@ -699,7 +680,7 @@ func TestParseFileV1(t *testing.T) {
 		{
 			"parse a file declaration with only path and nil for dependsOn",
 			&FileV1{
-				Path: "test.yaml", DependsOn: "",
+				Path: "test.yaml", DependsOnTrue: "",
 			},
 			TemplateConfig{Path: "test.yaml"},
 			nil,
@@ -715,7 +696,7 @@ func TestParseFileV1(t *testing.T) {
 		{
 			"parse a file declaration with path dependsOnFalse and dependsOn",
 			&FileV1{
-				Path: "test.yaml", DependsOn: "foo", DependsOnFalse: "bar",
+				Path: "test.yaml", DependsOnTrue: "foo", DependsOnFalse: "bar",
 			},
 			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "bar", InvertBool: true}},
 			nil,
@@ -723,7 +704,7 @@ func TestParseFileV1(t *testing.T) {
 		{
 			"parse a file declaration with path and dependsOn as !fn tag",
 			&FileV1{
-				Path: "test.yaml", DependsOn: yaml.CustomTag{Tag: "!fn", Value: "aws.credentials().IsAvailable"},
+				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: "!fn", Value: "aws.credentials().IsAvailable"},
 			},
 			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "aws.credentials().IsAvailable", Tag: "!fn"}},
 			nil,
