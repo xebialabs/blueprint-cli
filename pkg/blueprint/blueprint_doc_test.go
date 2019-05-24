@@ -240,6 +240,17 @@ func TestGetOptions(t *testing.T) {
 		assert.Equal(t, []string{"a", "b", "c"}, values)
 	})
 
+	t.Run("should return string values of map options", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "aVal"}, {Label: "bLabel", Value: "bVal"}, {Label: "cLabel", Value: "cVal"}},
+		}
+		values := v.GetOptions(dummyData)
+		assert.Len(t, values, 3)
+		assert.Equal(t, []string{"aVal", "bLabel (bVal)", "cLabel (cVal)"}, values)
+	})
+
 	t.Run("should return generated values for fn options tag", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},

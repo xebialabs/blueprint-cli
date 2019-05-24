@@ -124,7 +124,7 @@ func transformToV2(parsedVar Variable, m *ParameterV1) Variable {
 		switch val := m.Pattern.(type) {
 		case string:
 			if val != "" {
-				parsedVar.Validate.Value = "regexMatch('" + val + "', " + parsedVar.Name.Value + ")"
+				parsedVar.Validate.Value = fmt.Sprintf("regexMatch('%s', %s)", val, parsedVar.Name.Value)
 				parsedVar.Validate.Tag = tagExpression
 			}
 		}
@@ -202,48 +202,3 @@ func parseFieldsFromStructV1(original interface{}, target interface{}) error {
 	}
 	return nil
 }
-
-// TODO
-// func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
-// 	tagVal := varField.Tag
-// 	fieldVal := varField.Val
-// 	switch tagVal {
-// 	case tagFn:
-// 		values, err := ProcessCustomFunction(fieldVal)
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		if len(values) == 0 {
-// 			return false, fmt.Errorf("function [%s] results is empty", fieldVal)
-// 		}
-// 		util.Verbose("[fn] Processed value of function [%s] is: %s\n", fieldVal, values[0])
-
-// 		dependsOnVal, err := strconv.ParseBool(values[0])
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		if varField.InvertBool {
-// 			return !dependsOnVal, nil
-// 		}
-// 		return dependsOnVal, nil
-// 	case tagExpression:
-// 		value, err := ProcessCustomExpression(fieldVal, parameters)
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		dependsOnVal, ok := value.(bool)
-// 		if ok {
-// 			util.Verbose("[expression] Processed value of expression [%s] is: %v\n", fieldVal, dependsOnVal)
-// 			if varField.InvertBool {
-// 				return !dependsOnVal, nil
-// 			}
-// 			return dependsOnVal, nil
-// 		}
-// 		return false, fmt.Errorf("Expression [%s] result is invalid for a boolean field", fieldVal)
-// 	}
-// 	dependsOnVar, err := findVariableByName(variables, fieldVal)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	return dependsOnVar.Value.Bool, nil
-// }

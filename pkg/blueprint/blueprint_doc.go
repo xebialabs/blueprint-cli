@@ -176,7 +176,11 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 				return nil
 			}
 		default:
-			options = append(options, option.Value)
+			optionText := option.Value
+			if option.Label != "" {
+				optionText = fmt.Sprintf("%s (%s)", option.Label, optionText)
+			}
+			options = append(options, optionText)
 		}
 	}
 	return options
