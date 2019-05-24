@@ -100,10 +100,10 @@ func (blueprintDoc *BlueprintYamlV1) parseFiles(templatePath string, isLocal boo
 
 func parseParameterV1(m *ParameterV1) (Variable, error) {
 	parsedVar := Variable{}
-    err := parseFieldsFromStructV1(m, &parsedVar)
-    if err != nil {
-        return parsedVar, err
-    }
+	err := parseFieldsFromStructV1(m, &parsedVar)
+	if err != nil {
+		return parsedVar, err
+	}
 	transformedVar := transformToV2(parsedVar, m)
 	err = transformedVar.validateV1()
 	return transformedVar, err
@@ -142,7 +142,7 @@ func transformToV2(parsedVar Variable, m *ParameterV1) Variable {
 		case string:
 			if val != "" {
 				parsedVar.Validate.Value = fmt.Sprintf("regexMatch('%s', %s)", val, parsedVar.Name.Value)
-				parsedVar.Validate.Tag = tagExpression
+				parsedVar.Validate.Tag = tagExpressionV1
 			}
 		}
 	}
@@ -206,7 +206,7 @@ func parseFieldsFromStructV1(original interface{}, target interface{}) error {
 		case yaml.CustomTag:
 			// Set string field with YAML tag
 			switch val.Tag {
-			case tagFn, tagExpression:
+			case tagFnV1, tagExpressionV1:
 				setVariableField(&field, val.Value, VarField{Value: val.Value, Tag: val.Tag, InvertBool: invertBool})
 			default:
 				return fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)

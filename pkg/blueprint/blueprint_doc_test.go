@@ -117,7 +117,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeInput},
-			Default: VarField{Value: "aws.regs", Tag: tagFn},
+			Default: VarField{Value: "aws.regs", Tag: tagFnV1},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
@@ -127,7 +127,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeInput},
-			Default: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFn},
+			Default: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
@@ -180,7 +180,7 @@ func TestGetValueFieldVal(t *testing.T) {
 		v := Variable{
 			Name:  VarField{Value: "test"},
 			Type:  VarField{Value: TypeInput},
-			Value: VarField{Value: "aws.regs", Tag: tagFn},
+			Value: VarField{Value: "aws.regs", Tag: tagFnV1},
 		}
 		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "", val)
@@ -190,7 +190,7 @@ func TestGetValueFieldVal(t *testing.T) {
 		v := Variable{
 			Name:  VarField{Value: "test"},
 			Type:  VarField{Value: TypeInput},
-			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFn},
+			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
 		val := v.GetValueFieldVal(dummyData)
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
@@ -255,7 +255,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "aws.regions(ecs)", Tag: tagFn}},
+			Options: []VarField{{Value: "aws.regions(ecs)", Tag: tagFnV1}},
 		}
 		values := v.GetOptions(dummyData)
 		assert.True(t, len(values) > 1)
@@ -265,7 +265,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "aws.regs", Tag: tagFn}},
+			Options: []VarField{{Value: "aws.regs", Tag: tagFnV1}},
 		}
 		out := v.GetOptions(dummyData)
 		require.Nil(t, out)
@@ -700,7 +700,7 @@ func TestGetValidateExpr(t *testing.T) {
 		},
 		{
 			"should error on non-expression tag for validate attribute",
-			&Variable{Validate: VarField{Value: "test", Tag: tagFn}},
+			&Variable{Validate: VarField{Value: "test", Tag: tagFnV1}},
 			"",
 			fmt.Errorf("only '!expr' tag is supported for validate attribute"),
 		},

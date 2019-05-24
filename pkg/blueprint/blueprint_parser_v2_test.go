@@ -252,7 +252,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 			Type:   VarField{Value: TypeSelect},
 			Prompt: VarField{Value: "select region"},
 			Options: []VarField{
-				{Value: "aws.regions(ecs)[0]", Tag: tagFn},
+				{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 				{Value: "b"},
 				{Value: "teeee", Label: "test1"},
 				{Value: "10", Label: "test2"},
@@ -306,7 +306,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 		assert.Equal(t, Variable{
 			Name:  VarField{Value: "fn"},
 			Label: VarField{Value: "fn"},
-			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFn},
+			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}, doc.Variables[2])
 		assert.Equal(t, Variable{
 			Name:   VarField{Value: "select"},
@@ -314,7 +314,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 			Type:   VarField{Value: TypeSelect},
 			Prompt: VarField{Value: "select region"},
 			Options: []VarField{
-				{Value: "aws.regions(ecs)[0]", Tag: tagFn},
+				{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 				{Value: "b"},
 				{Value: "testVal", Label: "test"},
 			},
@@ -675,12 +675,12 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 								{
 									Name:     "bar",
 									Value:    true,
-									PromptIf: yaml.CustomTag{Tag: tagFn, Value: "foo"},
+									PromptIf: yaml.CustomTag{Tag: tagFnV1, Value: "foo"},
 								},
 								{
 									Name:     "barr",
 									Value:    10.5,
-									PromptIf: yaml.CustomTag{Tag: tagFn, Value: "!foo"},
+									PromptIf: yaml.CustomTag{Tag: tagFnV1, Value: "!foo"},
 								},
 							},
 							FileOverrides: []FileV2{
@@ -699,7 +699,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 								{
 									Path:     "foo/baar2.md",
 									RenameTo: yaml.CustomTag{Tag: tagExpressionV2, Value: "1 > 2 ? 'foo' : 'bar'"},
-									WriteIf:  yaml.CustomTag{Tag: tagFn, Value: "foo"},
+									WriteIf:  yaml.CustomTag{Tag: tagFnV1, Value: "foo"},
 								},
 							},
 							IncludeIf: yaml.CustomTag{Tag: tagExpressionV2, Value: "1 > 2"},
@@ -720,12 +720,12 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 						{
 							Name:      VarField{Value: "bar"},
 							Value:     VarField{Value: "true", Bool: true},
-							DependsOn: VarField{Tag: tagFn, Value: "foo"},
+							DependsOn: VarField{Tag: tagFnV1, Value: "foo"},
 						},
 						{
 							Name:      VarField{Value: "barr"},
 							Value:     VarField{Value: "10.500000"},
-							DependsOn: VarField{Tag: tagFn, Value: "!foo"},
+							DependsOn: VarField{Tag: tagFnV1, Value: "!foo"},
 						},
 					},
 					FileOverrides: []TemplateConfig{
@@ -744,7 +744,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 						{
 							Path:      "foo/baar2.md",
 							RenameTo:  VarField{Tag: tagExpressionV2, Value: "1 > 2 ? 'foo' : 'bar'"},
-							DependsOn: VarField{Tag: tagFn, Value: "foo"},
+							DependsOn: VarField{Tag: tagFnV1, Value: "foo"},
 						},
 					},
 					DependsOn: VarField{Tag: tagExpressionV2, Value: "1 > 2"},
@@ -826,9 +826,9 @@ func TestParseFileV2(t *testing.T) {
 		{
 			"parse a file declaration with path and dependsOn as !fn tag",
 			&FileV2{
-				Path: "test.yaml", WriteIf: yaml.CustomTag{Tag: tagFn, Value: "aws.credentials().IsAvailable"},
+				Path: "test.yaml", WriteIf: yaml.CustomTag{Tag: tagFnV1, Value: "aws.credentials().IsAvailable"},
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: tagFn}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: tagFnV1}},
 			nil,
 		},
 		{
@@ -859,7 +859,7 @@ func TestParseDependsOnValue(t *testing.T) {
 			Name:      VarField{Value: "test"},
 			Label:     VarField{Value: "test"},
 			Type:      VarField{Value: TypeInput},
-			DependsOn: VarField{Value: "aws.creds", Tag: tagFn},
+			DependsOn: VarField{Value: "aws.creds", Tag: tagFnV1},
 		}
 		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
 		require.NotNil(t, err)
@@ -869,7 +869,7 @@ func TestParseDependsOnValue(t *testing.T) {
 			Name:      VarField{Value: "test"},
 			Label:     VarField{Value: "test"},
 			Type:      VarField{Value: TypeInput},
-			DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: tagFn},
+			DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: tagFnV1},
 		}
 		out, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
 		require.Nil(t, err)

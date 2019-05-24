@@ -290,7 +290,7 @@ func parseFieldsFromStructV2(original interface{}, target interface{}) error {
 		case yaml.CustomTag:
 			// Set string field with YAML tag
 			switch val.Tag {
-			case tagFn, tagExpressionV2:
+			case tagFnV1, tagExpressionV2:
 				setVariableField(&field, val.Value, VarField{Value: val.Value, Tag: val.Tag})
 			default:
 				return fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
@@ -320,7 +320,7 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 	tagVal := varField.Tag
 	fieldVal := varField.Value
 	switch tagVal {
-	case tagFn:
+	case tagFnV1:
 		values, err := ProcessCustomFunction(fieldVal)
 		if err != nil {
 			return false, err
@@ -338,7 +338,7 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 			return !dependsOnVal, nil
 		}
 		return dependsOnVal, nil
-	case tagExpression, tagExpressionV2:
+	case tagExpressionV1, tagExpressionV2:
 		value, err := ProcessCustomExpression(fieldVal, parameters)
 		if err != nil {
 			return false, err

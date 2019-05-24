@@ -28,8 +28,8 @@ const (
 	FnOs      = "os"
 	FnVersion = "version"
 
-	tagFn           = "!fn"
-	tagExpression   = "!expression"
+	tagFnV1         = "!fn"
+	tagExpressionV1 = "!expression"
 	tagExpressionV2 = "!expr"
 	fmtTagValue     = "!value %s"
 )
@@ -68,7 +68,7 @@ var regExFn = regexp.MustCompile(`([\w\d]+).([\w\d]+)\(([,/\-:\s\w\d]*)\)(?:\.([
 func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interface{} {
 	defaultVal := variable.Default.Value
 	switch variable.Default.Tag {
-	case tagFn:
+	case tagFnV1:
 		values, err := ProcessCustomFunction(defaultVal)
 		if err != nil {
 			util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Value, err.Error())
@@ -86,7 +86,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 			}
 			return values[0]
 		}
-	case tagExpression, tagExpressionV2:
+	case tagExpressionV1, tagExpressionV2:
 		value, err := ProcessCustomExpression(defaultVal, variables)
 		if err != nil {
 			util.Info("Error while processing default value !expr [%s] for [%s]. %s", defaultVal, variable.Name.Value, err.Error())
@@ -108,7 +108,7 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 
 func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) interface{} {
 	switch variable.Value.Tag {
-	case tagFn:
+	case tagFnV1:
 		values, err := ProcessCustomFunction(variable.Value.Value)
 		if err != nil {
 			util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", variable.Value.Value, variable.Name.Value, err.Error())
@@ -125,7 +125,7 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) in
 			return values[0]
 		}
 		return values[0]
-	case tagExpression, tagExpressionV2:
+	case tagExpressionV1, tagExpressionV2:
 		value, err := ProcessCustomExpression(variable.Value.Value, parameters)
 		if err != nil {
 			util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", variable.Value.Value, variable.Name.Value, err.Error())
@@ -149,7 +149,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 	var options []string
 	for _, option := range variable.Options {
 		switch option.Tag {
-		case tagFn:
+		case tagFnV1:
 			opts, err := ProcessCustomFunction(option.Value)
 			if err != nil {
 				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
@@ -157,7 +157,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 			}
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Value, opts)
 			options = append(options, opts...)
-		case tagExpression, tagExpressionV2:
+		case tagExpressionV1, tagExpressionV2:
 			opts, err := ProcessCustomExpression(option.Value, parameters)
 			if err != nil {
 				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
@@ -194,7 +194,7 @@ func (variable *Variable) GetValidateExpr() (string, error) {
 	}
 
 	switch variable.Validate.Tag {
-	case tagExpression, tagExpressionV2:
+	case tagExpressionV1, tagExpressionV2:
 		return variable.Validate.Value, nil
 	}
 	return "", fmt.Errorf("only '!expr' tag is supported for validate attribute")

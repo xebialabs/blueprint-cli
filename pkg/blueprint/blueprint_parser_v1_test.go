@@ -277,7 +277,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 			Name:  VarField{Value: "fn"},
 			Label: VarField{Value: "fn"},
 			Type:  VarField{Value: TypeInput},
-			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFn},
+			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}, doc.Variables[2])
 		assert.Equal(t, Variable{
 			Name:        VarField{Value: "select"},
@@ -286,7 +286,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 			Prompt:      VarField{Value: "select region"},
 			Description: VarField{Value: "select region"},
 			Options: []VarField{
-				{Value: "aws.regions(ecs)[0]", Tag: tagFn},
+				{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 				{Value: "b"},
 				{Value: "c"},
 			},
@@ -337,7 +337,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 		assert.Equal(t, TemplateConfig{
 			Path:      "foo.md",
 			FullPath:  "templatePath/test/foo.md",
-			DependsOn: VarField{Value: "!!isitnot", Tag: tagExpression, InvertBool: true},
+			DependsOn: VarField{Value: "!!isitnot", Tag: tagExpressionV1, InvertBool: true},
 		}, doc.TemplateConfigs[3])
 	})
 	t.Run("should parse metadata fields", func(t *testing.T) {
@@ -450,7 +450,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 						Value:          "string",
 						Description:    "desc",
 						Default:        "string2",
-						DependsOnTrue:  yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
+						DependsOnTrue:  yaml.CustomTag{Tag: tagExpressionV1, Value: "1 > 2"},
 						DependsOnFalse: "Var",
 						Options: []interface{}{
 							"test", "foo", 10, 13.4,
@@ -466,10 +466,10 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 						Value:          true,
 						Description:    "desc",
 						Default:        false,
-						DependsOnTrue:  yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
+						DependsOnTrue:  yaml.CustomTag{Tag: tagExpressionV1, Value: "1 > 2"},
 						DependsOnFalse: "Var",
 						Options: []interface{}{
-							"test", yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
+							"test", yaml.CustomTag{Tag: tagExpressionV1, Value: "1 > 2"},
 						},
 						Pattern:      "pat",
 						SaveInXlvals: true,
@@ -490,7 +490,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Options: []VarField{
 						VarField{Value: "test"}, VarField{Value: "foo"}, VarField{Value: "10"}, VarField{Value: "13.400000"},
 					},
-					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpression},
+					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpressionV1},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
 					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},
@@ -504,9 +504,9 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Default:     VarField{Bool: false, Value: "false"},
 					DependsOn:   VarField{Value: "Var", InvertBool: true},
 					Options: []VarField{
-						VarField{Value: "test"}, VarField{Tag: tagExpression, Value: "1 > 2"},
+						VarField{Value: "test"}, VarField{Tag: tagExpressionV1, Value: "1 > 2"},
 					},
-					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpression},
+					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpressionV1},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
 					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},
@@ -523,7 +523,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Value:          "string",
 					Description:    "desc",
 					Default:        "string2",
-					DependsOnTrue:  yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
+					DependsOnTrue:  yaml.CustomTag{Tag: tagExpressionV1, Value: "1 > 2"},
 					DependsOnFalse: "Var",
 					Options: []interface{}{
 						"test", "foo", 10, 13.4,
@@ -539,10 +539,10 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Value:          true,
 					Description:    "desc",
 					Default:        false,
-					DependsOnTrue:  yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
+					DependsOnTrue:  yaml.CustomTag{Tag: tagExpressionV1, Value: "1 > 2"},
 					DependsOnFalse: "Var",
 					Options: []interface{}{
-						"test", yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
+						"test", yaml.CustomTag{Tag: tagExpressionV1, Value: "1 > 2"},
 					},
 					Pattern:      "pat",
 					SaveInXlvals: true,
@@ -563,7 +563,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Options: []VarField{
 						VarField{Value: "test"}, VarField{Value: "foo"}, VarField{Value: "10"}, VarField{Value: "13.400000"},
 					},
-					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpression},
+					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpressionV1},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
 					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},
@@ -577,9 +577,9 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Default:     VarField{Bool: false, Value: "false"},
 					DependsOn:   VarField{Value: "Var", InvertBool: true},
 					Options: []VarField{
-						VarField{Value: "test"}, VarField{Tag: tagExpression, Value: "1 > 2"},
+						VarField{Value: "test"}, VarField{Tag: tagExpressionV1, Value: "1 > 2"},
 					},
-					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpression},
+					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpressionV1},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
 					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
 				},
@@ -723,17 +723,17 @@ func TestParseFileV1(t *testing.T) {
 		{
 			"parse a file declaration with path and dependsOn as !fn tag",
 			&FileV1{
-				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: tagFn, Value: "aws.credentials().IsAvailable"},
+				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: tagFnV1, Value: "aws.credentials().IsAvailable"},
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: tagFn}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: tagFnV1}},
 			nil,
 		},
 		{
 			"parse a file declaration with path and dependsOn as !expression tag",
 			&FileV1{
-				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
+				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: tagExpressionV1, Value: "1 > 2"},
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "1 > 2", Tag: tagExpression}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "1 > 2", Tag: tagExpressionV1}},
 			nil,
 		},
 	}
