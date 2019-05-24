@@ -30,11 +30,8 @@ spec:
     - eu-north
     - label: EU West # no !expr support
       value: eu-west1 # no !expr support
-    pattern: # removed and moved to validate for v2
     validate: !expr "regex('[a-z]', AppName) && AppName != 'admin'"
     saveInXlvals: true # case changed for v2
-    dependsOnTrue: # removed for v2
-    dependsOnFalse: # removed for v2
     promptIf: # renamed from dependsOn, use expressions for dependsOnFalse use case (promptIf: !expr "!Foo" ) (Validated)
   # A secret parameter with question 
   - name: Password
@@ -42,7 +39,6 @@ spec:
     description: this is your fancy description
     label: Password
     type: SecretInput # a new type
-    # secret: removed in favor of SecretInput type
     replaceAsIs: false # renamed from useRawValue, can be used only with SecretInput (Validated)
     revealOnSummary: false # renamed from showValueOnSummary, can be used only with SecretInput (Validated)
     default: Foo
