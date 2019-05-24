@@ -20,13 +20,13 @@ spec:
     type: SecretInput
     prompt: AWSAccessKey?
     description: What is the AWS Access Key ID?
-    promptIf: !expression "!UseAWSCredentialsFromSystem"
+    promptIf: !expr "!UseAWSCredentialsFromSystem"
     default: testKey
   - name: AWSAccessSecret
     type: SecretInput
     prompt: AWSAccessSecret?
     description: What is the AWS Secret Access Key?
-    promptIf: !expression "!UseAWSCredentialsFromSystem"
+    promptIf: !expr "!UseAWSCredentialsFromSystem"
     default: testSecret
   - name: AWSAccessSuperSecret
     type: SecretInput

@@ -182,13 +182,13 @@ with a new line`),
           parameterOverrides:
           - name: Test
             value: hello
-            promptIf: !expression "2 > 1"
+            promptIf: !expr "2 > 1"
           fileOverrides:
           - path: xld-infrastructure.yml.tmpl
-            writeIf: !expression "false"
+            writeIf: !expr "false"
         includeAfter:
         - blueprint: aws/datalake
-          includeIf: !expression "Bar == 'testing'"
+          includeIf: !expr "Bar == 'testing'"
           parameterOverrides:
           - name: Foo
             value: hello
@@ -220,19 +220,19 @@ with a new line`),
           value: testing
         includeBefore:
         - blueprint: aws/monolith
-          includeIf: !expression "2 < 1"
+          includeIf: !expr "2 < 1"
           parameterOverrides:
           - name: Test
             value: hello
-            promptIf: !expression "2 > 1"
+            promptIf: !expr "2 > 1"
           - name: bar
             value: true
           fileOverrides:
           - path: xld-infrastructure.yml.tmpl
-            writeIf: !expression "2 < 1"
+            writeIf: !expr "2 < 1"
         includeAfter:
         - blueprint: aws/datalake
-          includeIf: !expression "Bar != 'testing'"
+          includeIf: !expr "Bar != 'testing'"
           parameterOverrides:
           - name: Foo
             value: hello

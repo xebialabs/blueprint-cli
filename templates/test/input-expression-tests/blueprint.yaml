@@ -17,8 +17,8 @@ spec:
   - name: ExpTest3
     type: Input
     prompt: ExpTest3?
-    default: !expression "max(ExpTest2, 20) - 1"
+    default: !expr "max(ExpTest2, 20) - 1"
   - name: ExpTest4
     type: Input
-    default: !expression "k8sConfig('ClusterServer')"
+    default: !expr "k8sConfig('ClusterServer')"
 

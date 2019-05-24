@@ -659,12 +659,12 @@ func Test_getBlueprintConfig(t *testing.T) {
 								Label:        VarField{Value: "Test"},
 								Value:        VarField{Value: "hello"},
 								SaveInXlvals: VarField{Value: "true", Bool: true},
-								DependsOn:    VarField{Tag: "!expression", Value: "2 > 1"},
+								DependsOn:    VarField{Tag: tagExpressionV2, Value: "2 > 1"},
 							},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
-							{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Tag: "!expression", Value: "false"}},
+							{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Tag: tagExpressionV2, Value: "false"}},
 							{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
 						},
 					},
@@ -682,13 +682,13 @@ func Test_getBlueprintConfig(t *testing.T) {
 									{
 										Name:      VarField{Value: "Test"},
 										Value:     VarField{Value: "hello"},
-										DependsOn: VarField{Tag: "!expression", Value: "2 > 1"},
+										DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"},
 									},
 								},
 								FileOverrides: []TemplateConfig{
 									{
 										Path:      "xld-infrastructure.yml.tmpl",
-										DependsOn: VarField{Tag: "!expression", Value: "false"},
+										DependsOn: VarField{Tag: tagExpressionV2, Value: "false"},
 									},
 								},
 							},
@@ -701,7 +701,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 										Value: VarField{Value: "hello"},
 									},
 								},
-								DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
+								DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
 								FileOverrides: []TemplateConfig{
 									{
 										Path:      "xlr-pipeline.yml",
@@ -739,7 +739,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 							},
 						},
 					},
-					DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
+					DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
 				},
 			},
 			false,
@@ -898,7 +898,7 @@ func Test_composeBlueprints(t *testing.T) {
 									Value: VarField{Value: "hello"},
 								},
 							},
-							DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
+							DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
 							FileOverrides: []TemplateConfig{
 								{
 									Path:      "xlr-pipeline.yml",
@@ -937,7 +937,7 @@ func Test_composeBlueprints(t *testing.T) {
 										Value: VarField{Value: "hello"},
 									},
 								},
-								DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
+								DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
 								FileOverrides: []TemplateConfig{
 									{
 										Path:      "xlr-pipeline.yml",
@@ -971,7 +971,7 @@ func Test_composeBlueprints(t *testing.T) {
 							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Value: "TestDepends"}, RenameTo: VarField{Value: "xlr-pipeline2-new.yml"}},
 						},
 					},
-					DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
+					DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
 				},
 			},
 			false,
@@ -991,7 +991,7 @@ func Test_composeBlueprints(t *testing.T) {
 								{
 									Name:      VarField{Value: "Test"},
 									Value:     VarField{Value: "hello"},
-									DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
+									DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
 								},
 								{
 									Name:  VarField{Value: "bar"},
@@ -1014,7 +1014,7 @@ func Test_composeBlueprints(t *testing.T) {
 									Value: VarField{Value: "hello"},
 								},
 							},
-							DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
+							DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
 							FileOverrides: []TemplateConfig{
 								{
 									Path:      "xlr-pipeline.yml",
@@ -1046,7 +1046,7 @@ func Test_composeBlueprints(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"}},
+							{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
@@ -1068,7 +1068,7 @@ func Test_composeBlueprints(t *testing.T) {
 									{
 										Name:      VarField{Value: "Test"},
 										Value:     VarField{Value: "hello"},
-										DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
+										DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
 									},
 									{
 										Name:  VarField{Value: "bar"},
@@ -1091,7 +1091,7 @@ func Test_composeBlueprints(t *testing.T) {
 										Value: VarField{Value: "hello"},
 									},
 								},
-								DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
+								DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
 								FileOverrides: []TemplateConfig{
 									{
 										Path:      "xlr-pipeline.yml",
@@ -1125,7 +1125,7 @@ func Test_composeBlueprints(t *testing.T) {
 							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Value: "TestDepends"}, RenameTo: VarField{Value: "xlr-pipeline2-new.yml"}},
 						},
 					},
-					DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
+					DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
 				},
 			},
 			false,
@@ -1178,7 +1178,7 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 		{
 			"should return true when VarField evaluates to true",
 			args{
-				VarField{Value: "1 > 0", Tag: "!expression"},
+				VarField{Value: "1 > 0", Tag: tagExpressionV2},
 				&[]Variable{},
 				&PreparedData{},
 			},
@@ -1188,7 +1188,7 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 		{
 			"should return false when VarField evaluates to false",
 			args{
-				VarField{Value: "1 > 2", Tag: "!expression"},
+				VarField{Value: "1 > 2", Tag: tagExpressionV2},
 				&[]Variable{},
 				&PreparedData{},
 			},
@@ -1214,7 +1214,7 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 		{
 			"should return true when VarField evaluates to true based on variable lookup in expression",
 			args{
-				VarField{Value: "Foo > 2", Tag: "!expression"},
+				VarField{Value: "Foo > 2", Tag: tagExpressionV2},
 				&[]Variable{},
 				&PreparedData{
 					TemplateData: map[string]interface{}{
@@ -1345,13 +1345,13 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 							{
 								Name:      VarField{Value: "Test"},
 								Value:     VarField{Value: "hello"},
-								DependsOn: VarField{Tag: "!expression", Value: "2 > 1"},
+								DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"},
 							},
 						},
 						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xld-infrastructure.yml.tmpl",
-								DependsOn: VarField{Value: "false", Tag: "!expression"},
+								DependsOn: VarField{Value: "false", Tag: tagExpressionV2},
 							},
 						},
 					},
@@ -1364,7 +1364,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 								Value: VarField{Value: "hello"},
 							},
 						},
-						DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"},
+						DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
 						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xlr-pipeline.yml",
@@ -1375,13 +1375,13 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 					},
 				},
 				Variables: []Variable{
-					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Value: "2 > 1"}},
+					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"}},
 					{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "testing"}},
 					{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Value: VarField{Value: "hello"}},
 				},
 				TemplateConfigs: []TemplateConfig{
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
-					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Value: "false", Tag: "!expression"}},
+					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Value: "false", Tag: tagExpressionV2}},
 					{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
 					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/compose/xld-infrastructure.yml.tmpl"},
@@ -1422,18 +1422,18 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 							{
 								Name:      VarField{Value: "Test"},
 								Value:     VarField{Value: "hello"},
-								DependsOn: VarField{Tag: "!expression", Value: "2 > 1"},
+								DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"},
 							},
 							{
 								Name:  VarField{Value: "bar"},
 								Value: VarField{Value: "true", Bool: true},
 							},
 						},
-						DependsOn: VarField{Tag: "!expression", Value: "2 < 1"},
+						DependsOn: VarField{Tag: tagExpressionV2, Value: "2 < 1"},
 						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xld-infrastructure.yml.tmpl",
-								DependsOn: VarField{Tag: "!expression", Value: "2 < 1"},
+								DependsOn: VarField{Tag: tagExpressionV2, Value: "2 < 1"},
 							},
 						},
 					},
@@ -1446,7 +1446,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 								Value: VarField{Value: "hello"},
 							},
 						},
-						DependsOn: VarField{Tag: "!expression", Value: "Bar != 'testing'"},
+						DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar != 'testing'"},
 						FileOverrides: []TemplateConfig{
 							{
 								Path:      "xlr-pipeline.yml",

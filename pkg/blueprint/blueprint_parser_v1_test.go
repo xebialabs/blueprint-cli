@@ -450,7 +450,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 						Value:          "string",
 						Description:    "desc",
 						Default:        "string2",
-						DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+						DependsOnTrue:  yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
 						DependsOnFalse: "Var",
 						Options: []interface{}{
 							"test", "foo", 10, 13.4,
@@ -466,10 +466,10 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 						Value:          true,
 						Description:    "desc",
 						Default:        false,
-						DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+						DependsOnTrue:  yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
 						DependsOnFalse: "Var",
 						Options: []interface{}{
-							"test", yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+							"test", yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
 						},
 						Pattern:      "pat",
 						SaveInXlvals: true,
@@ -504,7 +504,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Default:     VarField{Bool: false, Value: "false"},
 					DependsOn:   VarField{Value: "Var", InvertBool: true},
 					Options: []VarField{
-						VarField{Value: "test"}, VarField{Tag: "!expression", Value: "1 > 2"},
+						VarField{Value: "test"}, VarField{Tag: tagExpression, Value: "1 > 2"},
 					},
 					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpression},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
@@ -523,7 +523,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Value:          "string",
 					Description:    "desc",
 					Default:        "string2",
-					DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+					DependsOnTrue:  yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
 					DependsOnFalse: "Var",
 					Options: []interface{}{
 						"test", "foo", 10, 13.4,
@@ -539,10 +539,10 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Value:          true,
 					Description:    "desc",
 					Default:        false,
-					DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+					DependsOnTrue:  yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
 					DependsOnFalse: "Var",
 					Options: []interface{}{
-						"test", yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+						"test", yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
 					},
 					Pattern:      "pat",
 					SaveInXlvals: true,
@@ -577,7 +577,7 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 					Default:     VarField{Bool: false, Value: "false"},
 					DependsOn:   VarField{Value: "Var", InvertBool: true},
 					Options: []VarField{
-						VarField{Value: "test"}, VarField{Tag: "!expression", Value: "1 > 2"},
+						VarField{Value: "test"}, VarField{Tag: tagExpression, Value: "1 > 2"},
 					},
 					Validate:     VarField{Value: "regexMatch('pat', test)", Tag: tagExpression},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
@@ -723,17 +723,17 @@ func TestParseFileV1(t *testing.T) {
 		{
 			"parse a file declaration with path and dependsOn as !fn tag",
 			&FileV1{
-				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: "!fn", Value: "aws.credentials().IsAvailable"},
+				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: tagFn, Value: "aws.credentials().IsAvailable"},
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: "!fn"}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: tagFn}},
 			nil,
 		},
 		{
 			"parse a file declaration with path and dependsOn as !expression tag",
 			&FileV1{
-				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
+				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: tagExpression, Value: "1 > 2"},
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "1 > 2", Tag: "!expression"}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "1 > 2", Tag: tagExpression}},
 			nil,
 		},
 	}

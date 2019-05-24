@@ -139,7 +139,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeInput},
-			Default: VarField{Value: "aws.regs", Tag: tagExpression},
+			Default: VarField{Value: "aws.regs", Tag: tagExpressionV2},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
@@ -149,14 +149,14 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeInput},
-			Default: VarField{Value: "'foo' + 'bar'", Tag: tagExpression},
+			Default: VarField{Value: "'foo' + 'bar'", Tag: tagExpressionV2},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeInput},
-			Default: VarField{Value: "Foo > 10", Tag: tagExpression},
+			Default: VarField{Value: "Foo > 10", Tag: tagExpressionV2},
 		}
 		defaultVal = v.GetDefaultVal(map[string]interface{}{
 			"Foo": 100,
@@ -202,7 +202,7 @@ func TestGetValueFieldVal(t *testing.T) {
 		v := Variable{
 			Name:  VarField{Value: "test"},
 			Type:  VarField{Value: TypeInput},
-			Value: VarField{Value: "aws.regs()", Tag: tagExpression},
+			Value: VarField{Value: "aws.regs()", Tag: tagExpressionV2},
 		}
 		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "", val)
@@ -212,14 +212,14 @@ func TestGetValueFieldVal(t *testing.T) {
 		v := Variable{
 			Name:  VarField{Value: "test"},
 			Type:  VarField{Value: TypeInput},
-			Value: VarField{Value: "'foo' + 'bar'", Tag: tagExpression},
+			Value: VarField{Value: "'foo' + 'bar'", Tag: tagExpressionV2},
 		}
 		defaultVal := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
 			Name:  VarField{Value: "test"},
 			Type:  VarField{Value: TypeInput},
-			Value: VarField{Value: "Foo > 10", Tag: tagExpression},
+			Value: VarField{Value: "Foo > 10", Tag: tagExpressionV2},
 		}
 		defaultVal = v.GetValueFieldVal(map[string]interface{}{
 			"Foo": 100,
@@ -255,7 +255,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "aws.regions(ecs)", Tag: "!fn"}},
+			Options: []VarField{{Value: "aws.regions(ecs)", Tag: tagFn}},
 		}
 		values := v.GetOptions(dummyData)
 		assert.True(t, len(values) > 1)
@@ -265,7 +265,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "aws.regs", Tag: "!fn"}},
+			Options: []VarField{{Value: "aws.regs", Tag: tagFn}},
 		}
 		out := v.GetOptions(dummyData)
 		require.Nil(t, out)
@@ -275,7 +275,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "Foo ? Bar : (1, 2, 3)", Tag: tagExpression}},
+			Options: []VarField{{Value: "Foo ? Bar : (1, 2, 3)", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": true,
@@ -288,7 +288,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "Provider == 'GCP' ? ('GKE', 'CloudSore') : ('test')", Tag: tagExpression}},
+			Options: []VarField{{Value: "Provider == 'GCP' ? ('GKE', 'CloudSore') : ('test')", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Provider": "GCP",
@@ -301,7 +301,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "Foo ? Bar : (Foo1, Foo2)", Tag: tagExpression}},
+			Options: []VarField{{Value: "Foo ? Bar : (Foo1, Foo2)", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo":  false,
@@ -317,7 +317,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "Foo ? Bar : (1, 2, 3)", Tag: tagExpression}},
+			Options: []VarField{{Value: "Foo ? Bar : (1, 2, 3)", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
@@ -331,7 +331,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "Foo ? Bar : (true, false)", Tag: tagExpression}},
+			Options: []VarField{{Value: "Foo ? Bar : (true, false)", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
@@ -345,7 +345,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "Foo ? Bar : (Fooo, Foo)", Tag: tagExpression}},
+			Options: []VarField{{Value: "Foo ? Bar : (Fooo, Foo)", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
@@ -358,7 +358,7 @@ func TestGetOptions(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "aws.regs()", Tag: tagExpression}},
+			Options: []VarField{{Value: "aws.regs()", Tag: tagExpressionV2}},
 		}
 		out := v.GetOptions(dummyData)
 		require.Nil(t, out)
@@ -696,17 +696,17 @@ func TestGetValidateExpr(t *testing.T) {
 			"should error on empty tag for validate attribute",
 			&Variable{Validate: VarField{Value: "test"}},
 			"",
-			fmt.Errorf("only '!expression' tag is supported for validate attribute"),
+			fmt.Errorf("only '!expr' tag is supported for validate attribute"),
 		},
 		{
 			"should error on non-expression tag for validate attribute",
-			&Variable{Validate: VarField{Value: "test", Tag: "!fn"}},
+			&Variable{Validate: VarField{Value: "test", Tag: tagFn}},
 			"",
-			fmt.Errorf("only '!expression' tag is supported for validate attribute"),
+			fmt.Errorf("only '!expr' tag is supported for validate attribute"),
 		},
 		{
 			"should return empty string for empty expression value with tag value",
-			&Variable{Validate: VarField{Value: "", Tag: "!expression"}},
+			&Variable{Validate: VarField{Value: "", Tag: tagExpressionV2}},
 			"",
 			nil,
 		},
@@ -718,7 +718,7 @@ func TestGetValidateExpr(t *testing.T) {
 		},
 		{
 			"should return expression string for valid expression tag",
-			&Variable{Validate: VarField{Value: "regex('*', TestVar)", Tag: "!expression"}},
+			&Variable{Validate: VarField{Value: "regex('*', TestVar)", Tag: tagExpressionV2}},
 			"regex('*', TestVar)",
 			nil,
 		},

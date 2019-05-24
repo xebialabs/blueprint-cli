@@ -13,7 +13,7 @@ spec:
 
   files:
   - path: xlr-pipeline-4.yml
-    writeIf: !expression "TestDepends3"
+    writeIf: !expr "TestDepends3"
 
   includeBefore:
   # 'blueprint' we will look in the current-repository being used for these
@@ -23,11 +23,11 @@ spec:
     - name: TestFoo
       # expression and functions will be supported for 'value'
       value: hello
-      promptIf: !expression "3 > 2"
+      promptIf: !expr "3 > 2"
     # 'fileOverrides' can be used to skip files and can be conditional using dependsOn
     fileOverrides:
     - path: xld-environment.yml.tmpl
-      writeIf: !expression "false"
+      writeIf: !expr "false"
     - path: xlr-pipeline.yml
       renameTo: xlr-pipeline-new.yml
   includeAfter:
@@ -37,7 +37,7 @@ spec:
       value: hello2
     fileOverrides:
     - path: xld-environment.yml.tmpl
-      writeIf: !expression "false"
+      writeIf: !expr "false"
     - path: xlr-pipeline.yml
       renameTo: xlr-pipeline-new.yml
       writeIf: TestDepends

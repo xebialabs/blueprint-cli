@@ -37,7 +37,7 @@ spec:
   - name: AppName
     type: Input
     prompt: Test Prompt
-    validate: !expression "regexMatch('[a-zA-Z-]*', AppName)"
+    validate: !expr "regexMatch('[a-zA-Z-]*', AppName)"
     saveInXlvals: true
     description: Application name, will be used in various AWS resource names
     default: TestApp

@@ -28,9 +28,10 @@ const (
 	FnOs      = "os"
 	FnVersion = "version"
 
-	tagFn         = "!fn"
-	tagExpression = "!expression"
-	fmtTagValue   = "!value %s"
+	tagFn           = "!fn"
+	tagExpression   = "!expression"
+	tagExpressionV2 = "!expr"
+	fmtTagValue     = "!value %s"
 )
 
 // InputType constants
@@ -85,10 +86,10 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 			}
 			return values[0]
 		}
-	case tagExpression:
+	case tagExpression, tagExpressionV2:
 		value, err := ProcessCustomExpression(defaultVal, variables)
 		if err != nil {
-			util.Info("Error while processing default value !expression [%s] for [%s]. %s", defaultVal, variable.Name.Value, err.Error())
+			util.Info("Error while processing default value !expr [%s] for [%s]. %s", defaultVal, variable.Name.Value, err.Error())
 			defaultVal = ""
 		} else {
 			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", defaultVal, value)
@@ -124,10 +125,10 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) in
 			return values[0]
 		}
 		return values[0]
-	case tagExpression:
+	case tagExpression, tagExpressionV2:
 		value, err := ProcessCustomExpression(variable.Value.Value, parameters)
 		if err != nil {
-			util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", variable.Value.Value, variable.Name.Value, err.Error())
+			util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", variable.Value.Value, variable.Name.Value, err.Error())
 			return ""
 		} else {
 			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", variable.Value.Value, value)
@@ -156,10 +157,10 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 			}
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Value, opts)
 			options = append(options, opts...)
-		case tagExpression:
+		case tagExpression, tagExpressionV2:
 			opts, err := ProcessCustomExpression(option.Value, parameters)
 			if err != nil {
-				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
+				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
 				return nil
 			}
 			switch val := opts.(type) {
@@ -172,7 +173,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 					options = append(options, fmt.Sprint(option))
 				}
 			default:
-				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, "Return type should be a string array")
+				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, "Return type should be a string array")
 				return nil
 			}
 		default:
@@ -193,10 +194,10 @@ func (variable *Variable) GetValidateExpr() (string, error) {
 	}
 
 	switch variable.Validate.Tag {
-	case tagExpression:
+	case tagExpression, tagExpressionV2:
 		return variable.Validate.Value, nil
 	}
-	return "", fmt.Errorf("only '!expression' tag is supported for validate attribute")
+	return "", fmt.Errorf("only '!expr' tag is supported for validate attribute")
 }
 
 func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[string]interface{}) (interface{}, error) {
