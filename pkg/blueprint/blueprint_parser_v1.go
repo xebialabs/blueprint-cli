@@ -209,7 +209,7 @@ func parseFieldsFromStructV1(original interface{}, target interface{}) error {
 			case tagFnV1, tagExpressionV1:
 				setVariableField(&field, val.Value, VarField{Value: val.Value, Tag: val.Tag, InvertBool: invertBool})
 			default:
-				return fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
+				return fmt.Errorf("unknown tag %s %s, supported tags are [%s, %s]", val.Tag, val.Value, tagExpressionV1, tagFnV1)
 			}
 		case nil:
 			// do nothing when field is not set
