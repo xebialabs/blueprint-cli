@@ -8,7 +8,6 @@ metadata:
 spec:
   parameters:
   - name: TestCompose
-    type: Input
     value: testing
     saveInXlvals: true
 

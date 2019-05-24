@@ -8,45 +8,58 @@ metadata:
 spec:
   parameters:
   - name: Test
+    prompt: Test Prompt
     type: Input
     saveInXlvals: true
   - name: ClientCert
+    prompt: Test Prompt
     type: Editor
     saveInXlvals: true
   - name: TestDepends
     type: Confirm
+    prompt: Test Prompt
   - name: TestDepends2
     type: Confirm
+    prompt: Test Prompt
   - name: TestDepends3
     type: Confirm
+    prompt: Test Prompt
   - name: AppName
     type: Input
+    prompt: Test Prompt
     validate: !expression "regexMatch('[a-zA-Z-]*', AppName)"
     saveInXlvals: true
     description: Application name, will be used in various AWS resource names
   - name: ShouldNotBeThere
     type: Input
+    prompt: Test Prompt
     saveInXlvals: true
     promptIf: TestDepends2
   - name: AWSAccessKey
     type: SecretInput
+    prompt: Test Prompt
   - name: AWSAccessSecret
     type: SecretInput
+    prompt: Test Prompt
     replaceAsIs: true
   - name: SuperSecret
     type: Input
+    prompt: Test Prompt
     saveInXlvals: true
   - name: AWSRegion
     type: Select
+    prompt: Test Prompt
     options:
       - !fn aws.regions(ecs)
     default: !fn aws.regions(ecs)[0]
     saveInXlvals: true
   - name: DiskSize
     type: Input
+    prompt: Test Prompt
     saveInXlvals: true
   - name: DiskSizeWithBuffer
     type: Input
+    prompt: Test Prompt
     saveInXlvals: true
 
   files:

@@ -36,7 +36,6 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
              saveInXlvals: true
              prompt: help text
            - name: fn
-             type: Input
              value: !fn aws.regions(ecs)[0]
            - name: select
              type: Select
@@ -49,7 +48,6 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
              default: b
            - name: isit
              description: is it?
-             type: Confirm
              value: true
            - name: isitnot
              prompt: negative question?
@@ -127,7 +125,8 @@ func TestParseTemplateMetadataV2(t *testing.T) {
                   parameters:
                   - name: Test
                     type: Invalid
-                    value: testing`,
+                    prompt: what?
+                    default: testing`,
 				models.BlueprintYamlFormatV2))
 		_, err := parseTemplateMetadataV2(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
@@ -143,10 +142,10 @@ func TestParseTemplateMetadataV2(t *testing.T) {
                spec:
                  parameters:
                  - name: Test
-                   value: testing`, models.BlueprintYamlFormatV2))
+                   default: testing`, models.BlueprintYamlFormatV2))
 		_, err := parseTemplateMetadataV2(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
-		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
+		assert.Equal(t, "parameter Test must have a 'prompt' field", err.Error())
 	})
 
 	t.Run("should error on missing options for variable", func(t *testing.T) {
@@ -159,6 +158,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
                   parameters:
                   - name: Test
                     type: Select
+                    prompt: what?
                     options:`, models.BlueprintYamlFormatV2))
 		_, err := parseTemplateMetadataV2(&metadata, templatePath, &blueprintRepository, true)
 		require.NotNil(t, err)
@@ -173,6 +173,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
                 spec:
                   parameters:
                   - name: Test
+                    prompt: what?
                     type: Confirm
                   files:
                   - writeIf: Test
@@ -190,6 +191,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
                spec:
                  parameters:
                  - name: Test
+                   prompt: what?
                    type: Confirm
                  files:
                  - path: ../xbc.yaml`, models.BlueprintYamlFormatV2))
@@ -207,9 +209,11 @@ func TestParseTemplateMetadataV2(t *testing.T) {
                  parameters:
                  - name: Test
                    type: Input
+                   prompt: what?
                    default: 1
                  - name: Test
                    type: Input
+                   prompt: what?
                    default: 2
                  files:`, models.BlueprintYamlFormatV2))
 		_, err := parseTemplateMetadataV2(&metadata, "aws/test", &blueprintRepository, true)
@@ -302,7 +306,6 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 		assert.Equal(t, Variable{
 			Name:  VarField{Value: "fn"},
 			Label: VarField{Value: "fn"},
-			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFn},
 		}, doc.Variables[2])
 		assert.Equal(t, Variable{
@@ -320,7 +323,6 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 		assert.Equal(t, Variable{
 			Name:        VarField{Value: "isit"},
 			Label:       VarField{Value: "isit"},
-			Type:        VarField{Value: TypeConfirm},
 			Description: VarField{Value: "is it?"},
 			Value:       VarField{Bool: true, Value: "true"},
 		}, doc.Variables[4])
@@ -452,7 +454,6 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 					{
 						Name:        "test",
 						Type:        TypeSecret,
-						Value:       "string",
 						Description: "desc",
 						Default:     "string2",
 						PromptIf:    yaml.CustomTag{Tag: "!foo", Value: "1 > 2"},
@@ -474,7 +475,6 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 					{
 						Name:        "test",
 						Type:        TypeSecret,
-						Value:       "string",
 						Description: "desc",
 						Default:     "string2",
 						Options: []interface{}{
@@ -496,7 +496,6 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 						Name:        "test",
 						Label:       "testLabel",
 						Type:        TypeSecret,
-						Value:       "string",
 						Description: "desc",
 						Prompt:      "desc?",
 						Default:     "string2",
@@ -505,12 +504,11 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 							"test", "foo", 10, 13.4,
 						},
 						SaveInXlvals: true,
-						ReplaceAsIs:  false,
+						ReplaceAsIs:  true,
 					},
 					{
 						Name:     "test",
 						Type:     "Confirm",
-						Value:    true,
 						Prompt:   "desc",
 						Default:  false,
 						PromptIf: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
@@ -518,7 +516,10 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 							"test", yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
 						},
 						SaveInXlvals: true,
-						ReplaceAsIs:  false,
+					},
+					{
+						Name:  "test2",
+						Value: true,
 					},
 				},
 			},
@@ -527,7 +528,6 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 					Name:        VarField{Value: "test"},
 					Label:       VarField{Value: "testLabel"},
 					Type:        VarField{Value: TypeSecret},
-					Value:       VarField{Value: "string"},
 					Prompt:      VarField{Value: "desc?"},
 					Description: VarField{Value: "desc"},
 					Default:     VarField{Value: "string2"},
@@ -536,13 +536,12 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 						VarField{Value: "test"}, VarField{Value: "foo"}, VarField{Value: "10"}, VarField{Value: "13.400000"},
 					},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
-					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
+					ReplaceAsIs:  VarField{Bool: true, Value: "true"},
 				},
 				{
 					Name:      VarField{Value: "test"},
 					Label:     VarField{Value: "test"},
 					Type:      VarField{Value: "Confirm"},
-					Value:     VarField{Bool: true, Value: "true"},
 					Prompt:    VarField{Value: "desc"},
 					Default:   VarField{Bool: false, Value: "false"},
 					DependsOn: VarField{Tag: "!expression", Value: "1 > 2"},
@@ -550,7 +549,11 @@ func TestBlueprintYaml_parseParameters(t *testing.T) {
 						VarField{Value: "test"}, VarField{Tag: "!expression", Value: "1 > 2"},
 					},
 					SaveInXlvals: VarField{Bool: true, Value: "true"},
-					ReplaceAsIs:  VarField{Bool: false, Value: "false"},
+				},
+				{
+					Name:  VarField{Value: "test2"},
+					Label: VarField{Value: "test2"},
+					Value: VarField{Bool: true, Value: "true"},
 				},
 			},
 			false,
@@ -914,4 +917,137 @@ func TestParseDependsOnValue(t *testing.T) {
 		require.Nil(t, err)
 		assert.Equal(t, vars[0].Value.Bool, val)
 	})
+}
+
+func TestVariable_validate(t *testing.T) {
+	tests := []struct {
+		name   string
+		fields Variable
+		errMsg string
+	}{
+		{
+			"should error on validation failure for a parameter with missing name field",
+			Variable{
+				Type: VarField{Value: TypeInput},
+			},
+			"parameter must have a 'name' field",
+		},
+		{
+			"should error on validation failure for a parameter with missing prompt field",
+			Variable{
+				Name: VarField{Value: "test"},
+				Type: VarField{Value: TypeInput},
+			},
+			"parameter test must have a 'prompt' field",
+		},
+		{
+			"should error on validation failure for a parameter with missing type field",
+			Variable{
+				Name:   VarField{Value: "test"},
+				Prompt: VarField{Value: "??"},
+			},
+			"parameter test must have a 'type' field",
+		},
+		{
+			"should validate without error for a valid parameter",
+			Variable{
+				Name:    VarField{Value: "test"},
+				Type:    VarField{Value: TypeInput},
+				Prompt:  VarField{Value: "??"},
+				Default: VarField{Value: "hello"},
+			},
+			"",
+		},
+		{
+			"should error on validation failure for a parameter with value which has invalid field 'prompt' set",
+			Variable{
+				Name:   VarField{Value: "test"},
+				Value:  VarField{Value: "val"},
+				Prompt: VarField{Value: "??"},
+			},
+			"parameter test must not have a 'prompt' field when field 'value' is set",
+		},
+		{
+			"should error on validation failure for a parameter with value which has invalid field 'default' set",
+			Variable{
+				Name:    VarField{Value: "test"},
+				Value:   VarField{Value: "val"},
+				Default: VarField{Value: "hello"},
+			},
+			"parameter test must not have a 'default' field when field 'value' is set",
+		},
+		{
+			"should error on validation failure for a parameter with value which has invalid field 'options' set",
+			Variable{
+				Name:    VarField{Value: "test"},
+				Value:   VarField{Value: "val"},
+				Options: []VarField{{Value: "test"}},
+			},
+			"parameter test must not have a 'options' field when field 'value' is set",
+		},
+		{
+			"should error on validation failure for a parameter with value which has invalid field 'promptIf' set",
+			Variable{
+				Name:      VarField{Value: "test"},
+				Value:     VarField{Value: "val"},
+				DependsOn: VarField{Value: "test"},
+			},
+			"parameter test must not have a 'promptIf' field when field 'value' is set",
+		},
+		{
+			"should validate without error for a valid parameter used as constant",
+			Variable{
+				Name:  VarField{Value: "test"},
+				Value: VarField{Value: "hello"},
+			},
+			"",
+		},
+		{
+			"should error on validation failure for a parameter of TypeInput which has invalid field 'replaceAsIs' set",
+			Variable{
+				Name:        VarField{Value: "test"},
+				Type:        VarField{Value: TypeInput},
+				Prompt:      VarField{Value: "test"},
+				ReplaceAsIs: VarField{Value: "true", Bool: true},
+			},
+			"parameter test must not have a 'replaceAsIs' field when field 'type=SecretInput' is set",
+		},
+		{
+			"should validate without error for a parameter of TypeSecret which has 'replaceAsIs' & 'revealOnSummary' set",
+			Variable{
+				Name:            VarField{Value: "test"},
+				Type:            VarField{Value: TypeSecret},
+				Prompt:          VarField{Value: "test"},
+				ReplaceAsIs:     VarField{Value: "true", Bool: true},
+				RevealOnSummary: VarField{Value: "true", Bool: true},
+			},
+			"",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			variable := &Variable{
+				Name:            tt.fields.Name,
+				Type:            tt.fields.Type,
+				Value:           tt.fields.Value,
+				Prompt:          tt.fields.Prompt,
+				Default:         tt.fields.Default,
+				DependsOn:       tt.fields.DependsOn,
+				Options:         tt.fields.Options,
+				SaveInXlvals:    tt.fields.SaveInXlvals,
+				ReplaceAsIs:     tt.fields.ReplaceAsIs,
+				RevealOnSummary: tt.fields.RevealOnSummary,
+				Validate:        tt.fields.Validate,
+				Description:     tt.fields.Description,
+				Label:           tt.fields.Label,
+			}
+			err := variable.validate()
+			if tt.errMsg != "" {
+				require.NotNil(t, err)
+				assert.Equal(t, tt.errMsg, err.Error())
+			} else {
+				require.Nil(t, err)
+			}
+		})
+	}
 }

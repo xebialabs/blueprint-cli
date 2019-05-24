@@ -143,7 +143,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 		)
 		require.NotNil(t, err)
-		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
+		assert.Equal(t, "parameter AppName must have a 'prompt' field", err.Error())
 	})
 
 	t.Run("should create output files for valid test template with answers file", func(t *testing.T) {
@@ -629,7 +629,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 						},
 						Include: []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}, SaveInXlvals: VarField{Value: "true", Bool: true}},
+							{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "testing"}, SaveInXlvals: VarField{Value: "true", Bool: true}},
 						},
 					},
 				},
@@ -657,7 +657,6 @@ func Test_getBlueprintConfig(t *testing.T) {
 							{
 								Name:         VarField{Value: "Test"},
 								Label:        VarField{Value: "Test"},
-								Type:         VarField{Value: "Input"},
 								Value:        VarField{Value: "hello"},
 								SaveInXlvals: VarField{Value: "true", Bool: true},
 								DependsOn:    VarField{Tag: "!expression", Value: "2 > 1"},
@@ -713,7 +712,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 							},
 						},
 						Variables: []Variable{
-							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
+							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "testing"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -729,7 +728,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}},
+							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Value: VarField{Value: "hello"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
@@ -818,7 +817,7 @@ func Test_composeBlueprints(t *testing.T) {
 						},
 					},
 					Variables: []Variable{
-						{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
+						{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "testing"}},
 					},
 					TemplateConfigs: []TemplateConfig{
 						{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -846,7 +845,7 @@ func Test_composeBlueprints(t *testing.T) {
 							},
 						},
 						Variables: []Variable{
-							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
+							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "testing"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -862,7 +861,7 @@ func Test_composeBlueprints(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project 3"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
+							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Value: VarField{Value: "testing"}},
 						},
 						TemplateConfigs: []TemplateConfig{},
 					},
@@ -910,7 +909,7 @@ func Test_composeBlueprints(t *testing.T) {
 						},
 					},
 					Variables: []Variable{
-						{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
+						{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "testing"}},
 					},
 					TemplateConfigs: []TemplateConfig{
 						{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -949,7 +948,7 @@ func Test_composeBlueprints(t *testing.T) {
 							},
 						},
 						Variables: []Variable{
-							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
+							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "testing"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -965,7 +964,7 @@ func Test_composeBlueprints(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}},
+							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Value: VarField{Value: "hello"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
@@ -1026,7 +1025,7 @@ func Test_composeBlueprints(t *testing.T) {
 						},
 					},
 					Variables: []Variable{
-						{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
+						{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "testing"}},
 					},
 					TemplateConfigs: []TemplateConfig{
 						{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -1047,7 +1046,7 @@ func Test_composeBlueprints(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"}},
+							{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Value: "Bar == 'testing'"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
@@ -1103,7 +1102,7 @@ func Test_composeBlueprints(t *testing.T) {
 							},
 						},
 						Variables: []Variable{
-							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
+							{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "testing"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
@@ -1119,7 +1118,7 @@ func Test_composeBlueprints(t *testing.T) {
 						Metadata:   Metadata{Name: "Test Project 2"},
 						Include:    []IncludedBlueprintProcessed{},
 						Variables: []Variable{
-							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}},
+							{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Value: VarField{Value: "hello"}},
 						},
 						TemplateConfigs: []TemplateConfig{
 							{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
@@ -1306,7 +1305,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 				Metadata:   Metadata{Name: "Test Project"},
 				Include:    []IncludedBlueprintProcessed{},
 				Variables: []Variable{
-					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}, SaveInXlvals: VarField{Value: "true", Bool: true}},
+					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "testing"}, SaveInXlvals: VarField{Value: "true", Bool: true}},
 				},
 				TemplateConfigs: []TemplateConfig{
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
@@ -1376,9 +1375,9 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 					},
 				},
 				Variables: []Variable{
-					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Value: "2 > 1"}},
-					{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
-					{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "hello"}},
+					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: "!expression", Value: "2 > 1"}},
+					{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "testing"}},
+					{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Value: VarField{Value: "hello"}},
 				},
 				TemplateConfigs: []TemplateConfig{
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
@@ -1458,7 +1457,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 					},
 				},
 				Variables: []Variable{
-					{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Type: VarField{Value: "Input"}, Value: VarField{Value: "testing"}},
+					{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "testing"}},
 				},
 				TemplateConfigs: []TemplateConfig{
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose-2/xld-environment.yml.tmpl"},

@@ -118,10 +118,69 @@ func (yamlDoc *BlueprintYamlV2) parseIncludes() ([]IncludedBlueprintProcessed, e
 func parseParameterV2(m *ParameterV2) (Variable, error) {
 	parsedVar := Variable{}
 	err := parseFieldsFromStructV2(m, &parsedVar)
+	if err != nil {
+		return parsedVar, err
+	}
 	if parsedVar.Label == (VarField{}) {
 		parsedVar.Label = parsedVar.Name
 	}
+	err = parsedVar.validate()
 	return parsedVar, err
+}
+
+func parameterValidationErrorMsg(params ...interface{}) error {
+	if len(params) == 1 {
+		return fmt.Errorf("parameter must have a '%s' field", params...)
+	}
+	if len(params) == 2 {
+		return fmt.Errorf("parameter %s must have a '%s' field", params...)
+	}
+	if len(params) == 3 {
+		return fmt.Errorf("parameter %s must not have a '%s' field when field '%s' is set", params...)
+	}
+	return fmt.Errorf("validation error")
+}
+
+func (variable *Variable) validate() error {
+	varName := variable.Name.Value
+	if util.IsStringEmpty(varName) {
+		return parameterValidationErrorMsg("name")
+	}
+	if variable.Value == (VarField{}) {
+		// variable used as prompt
+		if util.IsStringEmpty(variable.Prompt.Value) {
+			return parameterValidationErrorMsg(varName, "prompt")
+		}
+		if util.IsStringEmpty(variable.Type.Value) {
+			return parameterValidationErrorMsg(varName, "type")
+		}
+		if !util.IsStringInSlice(variable.Type.Value, validTypes) {
+			return fmt.Errorf("type [%s] is not valid for parameter [%s]", variable.Type.Value, variable.Name.Value)
+		}
+	} else {
+		// variable used as constant
+		if !util.IsStringEmpty(variable.Prompt.Value) {
+			return parameterValidationErrorMsg(varName, "prompt", "value")
+		}
+		if variable.Default != (VarField{}) {
+			return parameterValidationErrorMsg(varName, "default", "value")
+		}
+		if variable.Options != nil && len(variable.Options) != 0 {
+			return parameterValidationErrorMsg(varName, "options", "value")
+		}
+		if variable.DependsOn != (VarField{}) {
+			return parameterValidationErrorMsg(varName, "promptIf", "value")
+		}
+	}
+	if variable.Type.Value != TypeSecret {
+		if variable.ReplaceAsIs != (VarField{}) {
+			return parameterValidationErrorMsg(varName, "replaceAsIs", "type=SecretInput")
+		}
+		if variable.RevealOnSummary != (VarField{}) {
+			return parameterValidationErrorMsg(varName, "revealOnSummary", "type=SecretInput")
+		}
+	}
+	return nil
 }
 
 func parseFileV2(m *FileV2) (TemplateConfig, error) {

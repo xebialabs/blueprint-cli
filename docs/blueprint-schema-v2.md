@@ -48,7 +48,7 @@ spec:
     default: Foo
   # A parameter with value 
   - name: TestDepends # mandatory field (Validated)
-    # If value is specified, you can't have type, prompt, promptIf, default & options (Validated)
+    # If value is specified, you can't have prompt, promptIf, default & options (Validated)
     value: FOO
 
   files:
@@ -82,7 +82,7 @@ spec:
     - path: xld-infrastructure.yml.tmpl
       renameTo: xld-infrastructure2.yml
 
-includeAfter:
+ includeAfter:
   - blueprint: kubernetes/namespace
     # To use parameters in includeIf they need to be defined before the expression is evaluated.
     includeIf: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/yaml"
 )
 
@@ -99,9 +100,25 @@ func (blueprintDoc *BlueprintYamlV1) parseFiles(templatePath string, isLocal boo
 
 func parseParameterV1(m *ParameterV1) (Variable, error) {
 	parsedVar := Variable{}
-	err := parseFieldsFromStructV1(m, &parsedVar)
+    err := parseFieldsFromStructV1(m, &parsedVar)
+    if err != nil {
+        return parsedVar, err
+    }
+	transformedVar := transformToV2(parsedVar, m)
+	err = transformedVar.validateV1()
+	return transformedVar, err
+}
 
-	return transformToV2(parsedVar, m), err
+func (variable *Variable) validateV1() error {
+	// validate non-empty
+	if util.IsStringEmpty(variable.Name.Value) || util.IsStringEmpty(variable.Type.Value) {
+		return fmt.Errorf("parameter [%s] is missing required fields: [type]", variable.Name.Value)
+	}
+	// validate type field
+	if !util.IsStringInSlice(variable.Type.Value, validTypes) {
+		return fmt.Errorf("type [%s] is not valid for parameter [%s]", variable.Type.Value, variable.Name.Value)
+	}
+	return nil
 }
 
 func transformToV2(parsedVar Variable, m *ParameterV1) Variable {

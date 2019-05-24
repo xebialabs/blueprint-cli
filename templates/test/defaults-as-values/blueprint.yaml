@@ -8,11 +8,14 @@ metadata:
 spec:
   parameters:
   - name: Test
+    label: Test Label
     type: Input
+    prompt: Test Prompt
     saveInXlvals: true
     default: testing
   - name: ClientCert
     type: Editor
+    prompt: Test Prompt
     saveInXlvals: true
     default: |
         this is a multiline
@@ -20,46 +23,58 @@ spec:
         with escape chars
   - name: TestDepends
     type: Confirm
+    prompt: Test Prompt
     default: true
   - name: TestDepends2
     type: Confirm
+    prompt: Test Prompt
     default: false
   - name: TestDepends3
+    label: TestDepends 3 label
     type: Confirm
+    prompt: Test Prompt
     default: true
   - name: AppName
     type: Input
+    prompt: Test Prompt
     validate: !expression "regexMatch('[a-zA-Z-]*', AppName)"
     saveInXlvals: true
     description: Application name, will be used in various AWS resource names
     default: TestApp
   - name: ShouldNotBeThere
     type: Input
+    prompt: Test Prompt
     saveInXlvals: true
     promptIf: TestDepends2
     default: shouldnotbehere
   - name: AWSAccessKey
     type: SecretInput
+    prompt: Test Prompt
     default: accesskey
   - name: AWSAccessSecret
     type: SecretInput
+    prompt: Test Prompt
     default: accesssecret
   - name: SuperSecret
     type: Input
+    prompt: Test Prompt
     saveInXlvals: true
     default: supersecret
   - name: AWSRegion
     type: Select
+    prompt: Test Prompt
     options:
       - !fn aws.regions(ecs)
     default: eu-central-1
     saveInXlvals: true
   - name: DiskSize
     type: Input
+    prompt: Test Prompt
     saveInXlvals: true
     default: 10.0
   - name: DiskSizeWithBuffer
     type: Input
+    prompt: Test Prompt
     saveInXlvals: true
     default: 125.6
 

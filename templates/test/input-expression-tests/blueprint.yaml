@@ -9,13 +9,14 @@ metadata:
 spec:
   parameters:
   - name: ExpTest1
-    type: Input
     value: us-west
   - name: ExpTest2
     type: Input
+    prompt: ExpTest2?
     default: 10
   - name: ExpTest3
     type: Input
+    prompt: ExpTest3?
     default: !expression "max(ExpTest2, 20) - 1"
   - name: ExpTest4
     type: Input

@@ -92,7 +92,6 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
       spec:
         parameters:
         - name: Test
-          type: Input
           value: testing
           saveInXlvals: true
 
@@ -123,7 +122,6 @@ with a new line`),
     spec:
       parameters:
       - name: Foo
-        type: Input
         value: testing
 
       files:
@@ -145,7 +143,6 @@ with a new line`),
     spec:
       parameters:
       - name: Foo
-        type: Input
         value: testing`
 
 	httpmock.RegisterResponder(
@@ -179,7 +176,6 @@ with a new line`),
       spec:
         parameters:
         - name: Bar
-          type: Input
           value: testing
         includeBefore:
         - blueprint: aws/monolith
@@ -221,7 +217,6 @@ with a new line`),
       spec:
         parameters:
         - name: Bar
-          type: Input
           value: testing
         includeBefore:
         - blueprint: aws/monolith
@@ -414,7 +409,6 @@ func TestBlueprintContext_fetchLocalFile(t *testing.T) {
       spec:
         parameters:
         - name: Test
-          type: Input
           value: testing
 
         files:
@@ -541,7 +535,6 @@ func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
       spec:
         parameters:
         - name: Test
-          type: Input
           value: testing
 
         files:

@@ -422,7 +422,7 @@ func (blueprintDoc *BlueprintConfig) validate() error {
 		return fmt.Errorf("api version needs to be %s or %s", models.BlueprintYamlFormatV2, models.BlueprintYamlFormatV1)
 	}
 	if blueprintDoc.ApiVersion != models.BlueprintYamlFormatV1 {
-		util.Info("This blueprint uses a deprecated schema format %s\n", models.BlueprintYamlFormatV1)
+		util.Info("This blueprint uses a deprecated blueprint.yaml schema for apiVersion %s\n", models.BlueprintYamlFormatV1)
 	}
 	if blueprintDoc.Kind != models.BlueprintSpecKind {
 		return fmt.Errorf("yaml document kind needs to be %s", models.BlueprintSpecKind)
@@ -597,16 +597,6 @@ func getFileContents(filepath string) (string, error) {
 func validateVariables(variables *[]Variable) error {
 	var variableNames []string
 	for _, userVar := range *variables {
-		// validate non-empty
-		if util.IsStringEmpty(userVar.Name.Value) || util.IsStringEmpty(userVar.Type.Value) {
-			return fmt.Errorf("parameter [%s] is missing required fields: [type]", userVar.Name.Value)
-		}
-
-		// validate type field
-		if !util.IsStringInSlice(userVar.Type.Value, validTypes) {
-			return fmt.Errorf("type [%s] is not valid for parameter [%s]", userVar.Type.Value, userVar.Name.Value)
-		}
-
 		// validate select case
 		if userVar.Type.Value == TypeSelect && len(userVar.Options) == 0 {
 			return fmt.Errorf("at least one option field is need to be set for parameter [%s]", userVar.Name.Value)
