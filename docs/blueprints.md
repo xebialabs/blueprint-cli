@@ -66,7 +66,7 @@ Parameters are defined by the blueprint creator in the `blueprint.yaml` file, it
 
 ## Supported Custom YAML Tags
 
-### Function tag (`!fn`)
+### Function tag (`!fn`) - *Will be deprecated in v9.0*
 
 Blueprints support custom functions to be used within variable definitions and file declarations (`spec` part in YAML file). Function tag can be used in `value`, `default`, `options`, `dependsOnTrue` and `dependsOnFalse` fields.
 
@@ -136,7 +136,7 @@ Backslashes can be used anywhere in an expression to escape the very next charac
 You can use the provided functions in an expression
 
 | Function | Parameters | Examples | Description |
-|:------: |:-----------: |:----------------------------------------: |:----------------: |------------------------------------------------------- |:------------------------------------------------------------: |
+|:------: |:-----------: |:----------------------------------------: |:----------------: 
 | **strlen** | Variable or Text(string) | - `!expression "strlen('Foo') > 5"`<br>- `!expression "strlen(FooVariable) > 5"` | Get the length of the given string variable |
 | **max** | Variable or numbers(float64, float64) | - `!expression "max(5, 10) > 5"`<br>- `!expression "max(FooVariable, 100)"` | Get the maximum of the two given numbers |
 | **min** | Variable or numbers(float64, float64) | - `!expression "min(5, 10) > 5"`<br>- `!expression "min(FooVariable, 100)"` | Get the minimum of the two given numbers |
@@ -144,6 +144,14 @@ You can use the provided functions in an expression
 | **floor** | Variable or number(float64) | - `!expression "floor(5.8) > 5"`<br>- `!expression "floor(FooVariable) > 5"` | Floor the given number to nearest whole number |
 | **round** | Variable or number(float64) | - `!expression "round(5.8) > 5"`<br>- `!expression "round(FooVariable) > 5"` | Round the given number to nearest whole number |
 | **randPassword** | String | - `!expression "randPassword()"`| Generates a 16-character random password |
+| **string** | Variable or number(float64) | - `!expression "string(103.4)"`| Converts variable or number to string |
+| **regex** | - Pattern text</br>- Value to test | - `!expression "regex('[a-zA-Z-]*', VarName)"`| Tests given value with the provided regular expression pattern. Return `true` or `false`. |
+| **isFile** | File path string | - `!expression "isFile('/test/dir/file.txt')"`| Checks if the file exists or not |
+| **isDir** | Directory path string | - `!expression "isDir('/test/dir')"`| Checks if the directory exists or not |
+| **isValidUrl** | URL text | - `!expression "isValidUrl('http://xebialabs.com/')"`| Checks if the given URL text is a valid URL or not. Doesn't check for the status code or availibity of the URL, just checks the structure |
+| **awsCredentials** | Attribute text:</br>- `IsAvailable`</br>- `AccessKeyID`</br>- `SecretAccessKey`</br>- `ProviderName`</br> | - `!expression "awsCredentials('IsAvailable')"`| System-wide defined AWS credentials can be accessed with this function. `IsAvailable` attribute returns `true` or `false` based on if the AWS configuration file can be found in the system or not. Rest of the attributes return the text value read from AWS configuration file. `AWS_PROFILE` env variable can be set to change the active AWS profile system wide. |
+| **awsRegions** | - AWS service name</br>- Index of the result list [**optional**] | - `!expression "awsRegions('ecs', 2)"`| Returns list of AWS regions that is available for the given AWS service. If the second parameter is not provided, function will return the whole list. |
+| **k8sConfig** | - K8s Config attribute name(`ClusterServer`/`ClusterCertificateAuthorityData`/`ClusterInsecureSkipTLSVerify`/`ContextCluster`/`ContextNamespace`/`ContextUser`/`UserClientCertificateData`/`UserClientKeyData`/`IsAvailable`)</br>- Context name [**optional**] | - `!expression "k8sConfig('IsAvailable')"`</br>- `!expression "k8sConfig('ClusterServer', 'myContext')"` | Returns k8s config attribute value from the config file read from the system. For `IsAvailable` attribute, `true` or `false` value will be returned. If context name is not defined, `current-contex` will be read from the config file. |
 
 An example `blueprint.yaml` using expressions for complex behaviors
 

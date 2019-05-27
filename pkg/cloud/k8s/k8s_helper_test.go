@@ -532,7 +532,7 @@ func Test_getK8SConfigField(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getK8SConfigField(tt.args.v, tt.args.field); got != tt.want {
+			if got := tt.args.v.GetConfigField(tt.args.field); got != tt.want {
 				t.Errorf("getK8SConfigField() = %v, want %v", got, tt.want)
 			}
 		})

@@ -28,7 +28,7 @@ type OSFnResult struct {
 type OperatingSystem struct{}
 
 func (s *OperatingSystem) getOs() string {
-	return getOperatingSystem()
+	return GetOperatingSystem()
 }
 
 type IOperatingSystem interface {
@@ -50,11 +50,11 @@ func (result *OSFnResult) GetResult(module string, attr string, index int) ([]st
 	}
 }
 
-func getOperatingSystem() string {
+func GetOperatingSystem() string {
 	return runtime.GOOS
 }
 
-func defaultApiServerUrl(ios IOperatingSystem) ([]string, error) {
+func DefaultApiServerUrl(ios IOperatingSystem) ([]string, error) {
 	if ios.getOs() == "windows" {
 		return []string{"https://host.docker.internal:6445"}, nil
 	} else if ios.getOs() == "darwin" {
@@ -64,27 +64,44 @@ func defaultApiServerUrl(ios IOperatingSystem) ([]string, error) {
 	}
 }
 
-// CallOSFuncByName calls related OS module function with parameters provided
-func CallOSFuncByName(module string, params ...string) (models.FnResult, error) {
-	switch strings.ToLower(module) {
-	case _DefaultApiServerUrl:
-		url, _ := defaultApiServerUrl(&OperatingSystem{})
-		return &OSFnResult{kubeURL: url}, nil
-	case Os:
-		return &OSFnResult{os: []string{getOperatingSystem()}}, nil
-    case CertFileLocation:
-        return &OSFnResult{certFileLocation: getLocation("cert.crt")}, nil
-    case KeyFileLocation:
-        return &OSFnResult{keyFileLocation: getLocation("cert.key")}, nil
-	default:
-		return nil, fmt.Errorf("%s is not a valid OS module", module)
-	}
-}
-
-func getLocation(file string) []string {
+func GetLocation(file string) []string {
     dir, err := os.Getwd()
     if err != nil {
         log.Fatal(err)
     }
     return []string{filepath.Join(dir, file)}
+}
+
+func GetPropertyByName(module string) (interface{}, error) {
+    switch strings.ToLower(module) {
+    case _DefaultApiServerUrl:
+        url, _ := DefaultApiServerUrl(&OperatingSystem{})
+        return url, nil
+    case Os:
+        return GetOperatingSystem(), nil
+    case CertFileLocation:
+        return GetLocation("cert.crt"), nil
+    case KeyFileLocation:
+        return GetLocation("cert.key"), nil
+    default:
+        return nil, fmt.Errorf("%s is not a valid OS module", module)
+    }
+}
+
+// CallOSFuncByName calls related OS module function with parameters provided
+// to be deprecated after 9.0
+func CallOSFuncByName(module string, params ...string) (models.FnResult, error) {
+    switch strings.ToLower(module) {
+    case _DefaultApiServerUrl:
+        url, _ := DefaultApiServerUrl(&OperatingSystem{})
+        return &OSFnResult{kubeURL: url}, nil
+    case Os:
+        return &OSFnResult{os: []string{GetOperatingSystem()}}, nil
+    case CertFileLocation:
+        return &OSFnResult{certFileLocation: GetLocation("cert.crt")}, nil
+    case KeyFileLocation:
+        return &OSFnResult{keyFileLocation: GetLocation("cert.key")}, nil
+    default:
+        return nil, fmt.Errorf("%s is not a valid OS module", module)
+    }
 }

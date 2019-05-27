@@ -253,15 +253,14 @@ func TestParseDependsOnValue(t *testing.T) {
 		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
 		require.NotNil(t, err)
 	})
-	t.Run("should return parsed bool value for DependsOn field from function", func(t *testing.T) {
+	t.Run("should return valid value for DependsOn field from function", func(t *testing.T) {
 		v := Variable{
 			Name:      VarField{Val: "test"},
 			Type:      VarField{Val: TypeInput},
 			DependsOn: VarField{Val: "aws.credentials().IsAvailable", Tag: "!fn"},
 		}
-		out, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
+		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
 		require.Nil(t, err)
-		assert.Equal(t, true, out)
 	})
 	t.Run("should error when invalid expression in DependsOn", func(t *testing.T) {
 		v := Variable{

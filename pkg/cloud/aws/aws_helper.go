@@ -1,18 +1,18 @@
 package aws
 
 import (
-	"fmt"
-	"strconv"
+    "fmt"
+    "sort"
+    "strconv"
 
-	"reflect"
-	"sort"
-	"strings"
+    "reflect"
+    "strings"
 
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+    "github.com/aws/aws-sdk-go/aws/credentials"
+    "github.com/aws/aws-sdk-go/aws/endpoints"
+    "github.com/aws/aws-sdk-go/aws/session"
+    "github.com/xebialabs/xl-cli/pkg/models"
+    "github.com/xebialabs/xl-cli/pkg/util"
 )
 
 const (
@@ -38,7 +38,7 @@ func (result *AWSFnResult) GetResult(module string, attr string, index int) ([]s
 		}
 
 		// return attribute
-		return []string{getAWSCredentialsField(&result.creds, attr)}, nil
+		return []string{GetAWSCredentialsField(&result.creds, attr)}, nil
 	case Regions:
 		if index != -1 {
 			return result.regions[index : index+1], nil
@@ -47,12 +47,6 @@ func (result *AWSFnResult) GetResult(module string, attr string, index int) ([]s
 	default:
 		return nil, fmt.Errorf("%s is not a valid AWS module", module)
 	}
-}
-
-func getAWSCredentialsField(v *credentials.Value, field string) string {
-	r := reflect.ValueOf(v)
-	f := reflect.Indirect(r).FieldByName(field)
-	return f.String()
 }
 
 // GetAvailableAWSRegions lists AWS regions for the service
@@ -67,6 +61,7 @@ func GetAvailableAWSRegionsForService(serviceName string) ([]string, error) {
 		regions = append(regions, key)
 	}
 
+    sort.Strings(regions)
 	return regions, nil
 }
 
@@ -76,6 +71,12 @@ func GetAWSCredentialsFromSystem() (credentials.Value, error) {
 		SharedConfigState: session.SharedConfigEnable,
 	}))
 	return sess.Config.Credentials.Get()
+}
+
+func GetAWSCredentialsField(v *credentials.Value, field string) string {
+    r := reflect.ValueOf(v)
+    f := reflect.Indirect(r).FieldByName(field)
+    return f.String()
 }
 
 // CallAWSFuncByName calls related AWS module function with parameters provided
@@ -97,7 +98,6 @@ func CallAWSFuncByName(module string, params ...string) (models.FnResult, error)
 		if err != nil {
 			return nil, err
 		}
-		sort.Strings(regionsList)
 		return &AWSFnResult{regions: regionsList}, err
 	default:
 		return nil, fmt.Errorf("%s is not a valid AWS module", module)

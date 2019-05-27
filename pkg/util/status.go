@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"sort"
 	"strings"
 )
@@ -71,6 +72,17 @@ func Error(format string, a ...interface{}) {
 func Fatal(format string, a ...interface{}) {
 	Error(format, a...)
 	os.Exit(1)
+}
+
+func Trace(format string, a ...interface{}) {
+	if IsVerbose {
+		pc := make([]uintptr, 10) // at least 1 entry needed
+		runtime.Callers(2, pc)
+		f := runtime.FuncForPC(pc[0])
+		file, line := f.FileLine(pc[0])
+		fmt.Printf("Function %s in file %s:%d\n", f.Name(), file, line)
+		fmt.Printf(format, a...)
+	}
 }
 
 func Indent(step int) string {

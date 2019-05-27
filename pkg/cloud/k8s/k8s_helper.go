@@ -80,11 +80,36 @@ func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]s
 			return []string{strconv.FormatBool(result != nil && result.Cluster.Server != "")}, nil
 		}
 		// return attribute
-		attrVal := getK8SConfigField(result, attr)
+		attrVal := result.GetConfigField(attr)
 		return []string{attrVal}, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid Kubernetes module", module)
 	}
+}
+
+func (result *K8SFnResult) GetConfigField(attr string) string {
+    flatFields := FlattenFields(*result)
+    for k, field := range flatFields {
+        knorm := strings.ToLower(strings.Replace(k, "_", "", -1))
+        attrnorm := strings.ToLower(strings.Replace(attr, "_", "", -1))
+        if knorm == attrnorm {
+            if val, ok := SpecialHandling[k]; ok {
+                if val == "bool" {
+                    return strconv.FormatBool(field.Bool())
+                }
+                if val == "encoded" {
+                    data, err := base64.StdEncoding.DecodeString(field.String())
+                    if err != nil {
+                        util.Verbose("[k8s] Error while decoding value for [%s] is: %v\n", k, err)
+                        return field.String()
+                    }
+                    return string(data)
+                }
+            }
+            return field.String()
+        }
+    }
+    return ""
 }
 
 var SpecialHandling = map[string]string{
@@ -92,31 +117,6 @@ var SpecialHandling = map[string]string{
 	"Cluster_CertificateAuthorityData": "encoded",
 	"User_ClientCertificateData":       "encoded",
 	"User_ClientKeyData":               "encoded",
-}
-
-func getK8SConfigField(res *K8SFnResult, attr string) string {
-	flatFields := FlattenFields(*res)
-	for k, field := range flatFields {
-		knorm := strings.ToLower(strings.Replace(k, "_", "", -1))
-		attrnorm := strings.ToLower(strings.Replace(attr, "_", "", -1))
-		if knorm == attrnorm {
-			if val, ok := SpecialHandling[k]; ok {
-				if val == "bool" {
-					return strconv.FormatBool(field.Bool())
-				}
-				if val == "encoded" {
-					data, err := base64.StdEncoding.DecodeString(field.String())
-					if err != nil {
-						util.Verbose("[k8s] Error while decoding value for [%s] is: %v\n", k, err)
-						return field.String()
-					}
-					return string(data)
-				}
-			}
-			return field.String()
-		}
-	}
-	return ""
 }
 
 // CallK8SFuncByName calls related K8S module function with parameters provided

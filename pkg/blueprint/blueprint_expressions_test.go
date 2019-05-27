@@ -11,14 +11,22 @@ import (
 )
 
 func Test_processCustomExpression(t *testing.T) {
+    // initialize temp dir for tests
 	tmpDir, err := ioutil.TempDir("", "xltest")
 	if err != nil {
 		t.Error(err)
 	}
 	defer os.RemoveAll(tmpDir)
+
+	// create test yaml file
 	testFilePath := filepath.Join(tmpDir, "test.yaml")
 	originalConfigBytes := []byte("testing")
 	ioutil.WriteFile(testFilePath, originalConfigBytes, 0755)
+
+	// create test k8s config file
+    d1 := []byte(sampleKubeConfig)
+    ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
+    os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
 
 	type args struct {
 		exStr      string
@@ -29,6 +37,7 @@ func Test_processCustomExpression(t *testing.T) {
 		onlyInUnix bool
 		args       args
 		want       interface{}
+		wantFn     func(got interface{}) bool
 		wantErr    bool
 	}{
 		{
@@ -40,6 +49,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"foo": "foo",
 				},
 			},
+			nil,
 			nil,
 			true,
 		},
@@ -53,6 +63,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			float64(100),
+			nil,
 			false,
 		},
 		{
@@ -65,6 +76,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			true,
+			nil,
 			false,
 		},
 		{
@@ -78,6 +90,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			false,
+			nil,
 			false,
 		},
 		{
@@ -90,6 +103,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			false,
+			nil,
 			false,
 		},
 		{
@@ -103,6 +117,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			float64(200),
+			nil,
 			false,
 		},
 		{
@@ -116,6 +131,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			"200",
+			nil,
 			false,
 		},
 		{
@@ -129,6 +145,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			[]string{"test", "foo"},
+			nil,
 			false,
 		},
 		{
@@ -142,6 +159,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			true,
+			nil,
 			false,
 		},
 		{
@@ -155,6 +173,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			float64(100),
+			nil,
 			false,
 		},
 		{
@@ -168,6 +187,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			"foo+bar",
+			nil,
 			false,
 		},
 		{
@@ -180,6 +200,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			float64(4),
+			nil,
 			false,
 		},
 		{
@@ -193,6 +214,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			float64(2),
+			nil,
 			false,
 		},
 		{
@@ -205,6 +227,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			float64(4),
+			nil,
 			false,
 		},
 		{
@@ -217,6 +240,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			"009",
+			nil,
 			false,
 		},
 		{
@@ -229,6 +253,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			"090",
+			nil,
 			false,
 		},
 		{
@@ -241,6 +266,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			float64(100),
+			nil,
 			false,
 		},
 		{
@@ -254,6 +280,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			float64(2),
+			nil,
 			false,
 		},
 		{
@@ -266,15 +293,17 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			float64(2),
+			nil,
 			false,
 		},
 		{
 			"should error on invalid number of args for regex expression",
 			false,
 			args{
-				"regexMatch('[a-zA-Z-]*')",
+				"regex('[a-zA-Z-]*')",
 				map[string]interface{}{},
 			},
+			nil,
 			nil,
 			true,
 		},
@@ -282,24 +311,26 @@ func Test_processCustomExpression(t *testing.T) {
 			"should return success regex match for own valid value",
 			false,
 			args{
-				"regexMatch('[a-zA-Z-]*', TestVar)",
+				"regex('[a-zA-Z-]*', TestVar)",
 				map[string]interface{}{
 					"TestVar": "SomeName",
 				},
 			},
 			true,
+			nil,
 			false,
 		},
 		{
 			"should return fail regex match for own invalid value",
 			false,
 			args{
-				"regexMatch('[a-zA-Z-]*', TestVar)",
+				"regex('[a-zA-Z-]*', TestVar)",
 				map[string]interface{}{
 					"TestVar": "SomeName123",
 				},
 			},
 			false,
+			nil,
 			false,
 		},
 		{
@@ -313,6 +344,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			100.0,
+			nil,
 			false,
 		},
 		{
@@ -327,6 +359,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			true,
+			nil,
 			false,
 		},
 		{
@@ -341,6 +374,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			float64(3),
+			nil,
 			false,
 		},
 		{
@@ -351,6 +385,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{},
 			},
 			float64(16),
+			nil,
 			false,
 		},
 		{
@@ -363,6 +398,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			true,
+			nil,
 			false,
 		},
 		{
@@ -375,6 +411,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			false,
+			nil,
 			false,
 		},
 		{
@@ -387,6 +424,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			true,
+			nil,
 			false,
 		},
 		{
@@ -399,6 +437,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			true,
+			nil,
 			false,
 		},
 		{
@@ -411,6 +450,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			false,
+			nil,
 			false,
 		},
 		{
@@ -423,6 +463,7 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			false,
+			nil,
 			false,
 		},
 		{
@@ -435,8 +476,233 @@ func Test_processCustomExpression(t *testing.T) {
 				},
 			},
 			true,
+			nil,
 			false,
 		},
+
+		// aws helper functions
+		{
+			"should error when an invalid awsCredentials expression is requested",
+			false,
+			args{
+				"awsCredentials()",
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should error when an invalid attribute is sent for awsCredentials expression",
+			false,
+			args{
+				"awsCredentials('unknown')",
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should return result for proper awsCredentials expression",
+			false,
+			args{
+				"regex('^(true|false|1|0)$', awsCredentials('IsAvailable'))",
+				map[string]interface{}{},
+			},
+			true,
+			nil,
+			false,
+		},
+		{
+			"should error when no aws service specified for awsRegions expression",
+			false,
+			args{
+				"awsRegions()",
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should return list of ECS regions for awsRegions expression",
+			false,
+			args{
+				"awsRegions('ecs')",
+				map[string]interface{}{},
+			},
+			nil,
+			func(result interface{}) bool {
+				switch result.(type) {
+				case []string:
+					if len(result.([]string)) > 0 {
+						return true
+					}
+				}
+
+				return false
+			},
+			false,
+		},
+		{
+			"should return first ECS region for awsRegions expression",
+			false,
+			args{
+				"regex('[a-zA-Z0-9-]+', awsRegions('ecs', 0))",
+				map[string]interface{}{},
+			},
+			true,
+			nil,
+			false,
+		},
+		{
+			"should error on invalid index for ECS regions list for awsRegions expression",
+			false,
+			args{
+				"awsRegions('ecs', 10000)",
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
+
+		// k8s helper functions
+        {
+            "should error on invalid k8sConfig expression call",
+            false,
+            args{
+                "k8sConfig()",
+                map[string]interface{}{},
+            },
+            nil,
+            nil,
+            true,
+        },
+        {
+            "should error on unknown context for k8sConfig expression",
+            false,
+            args{
+                "k8sConfig('ClusterServer', 'unknown')",
+                map[string]interface{}{},
+            },
+            nil,
+            nil,
+            true,
+        },
+        {
+            "should return isAvailable true for k8sConfig expression with default context",
+            false,
+            args{
+                "k8sConfig('IsAvailable')",
+                map[string]interface{}{},
+            },
+            true,
+            nil,
+            false,
+        },
+        {
+            "should return isAvailable false for k8sConfig expression with unknown context",
+            false,
+            args{
+                "k8sConfig('IsAvailable', 'unknown')",
+                map[string]interface{}{},
+            },
+            false,
+            nil,
+            false,
+        },
+		{
+			"should return cluster server url for k8sConfig expression",
+			false,
+			args{
+				"k8sConfig('ClusterServer')",
+				map[string]interface{}{},
+			},
+			"https://test.hcp.eastus.azmk8s.io:443",
+			nil,
+			false,
+		},
+
+		// os helper functions
+        {
+            "should error on empty module for os expression",
+            false,
+            args{
+                "os()",
+                map[string]interface{}{},
+            },
+            nil,
+            nil,
+            true,
+        },
+        {
+            "should error on unknown module for os expression",
+            false,
+            args{
+                "os('unknown')",
+                map[string]interface{}{},
+            },
+            nil,
+            nil,
+            true,
+        },
+        {
+            "should return os name for valid os expression",
+            false,
+            args{
+                "os('_operatingsystem') != ''",
+                map[string]interface{}{},
+            },
+            true,
+            nil,
+            false,
+        },
+
+        // up helper functions
+        {
+            "should error on empty module for xlUp expression",
+            false,
+            args{
+                "xlUp()",
+                map[string]interface{}{},
+            },
+            nil,
+            nil,
+            true,
+        },
+        {
+            "should error on unknown module for xlUp expression",
+            false,
+            args{
+                "xlUp('unknown')",
+                map[string]interface{}{},
+            },
+            nil,
+            nil,
+            true,
+        },
+        {
+            "should return list of versions for valid xlUp expression",
+            false,
+            args{
+                "xlUp('_showapplicableversions')",
+                map[string]interface{}{},
+            },
+            nil,
+            func(result interface{}) bool {
+                switch result.(type) {
+                case []string:
+                    if len(result.([]string)) > 0 {
+                        return true
+                    }
+                }
+
+                return false
+            },
+            false,
+        },
 	}
 	for _, tt := range tests {
 		if tt.onlyInUnix && runtime.GOOS == "windows" {
@@ -448,7 +714,11 @@ func Test_processCustomExpression(t *testing.T) {
 				t.Errorf("processCustomExpression() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			assert.Equal(t, tt.want, got)
+			if tt.wantFn != nil {
+				assert.True(t, tt.wantFn(got))
+			} else {
+				assert.Equal(t, tt.want, got)
+			}
 		})
 	}
 }

@@ -24,7 +24,7 @@ func (s *MockOperatingSystem) getOs() string {
 }
 
 func testScenarios(t *testing.T, ms *MockOperatingSystem, apiServerURL string) {
-	value, err := defaultApiServerUrl(ms)
+	value, err := DefaultApiServerUrl(ms)
 	require.Nil(t, err)
 	assert.NotEmpty(t, value)
 	assert.Len(t, value, 1)
