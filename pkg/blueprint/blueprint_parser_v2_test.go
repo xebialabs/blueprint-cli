@@ -36,12 +36,12 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
              saveInXlvals: true
              prompt: help text
            - name: fn
-             value: !fn aws.regions(ecs)[0]
+             value: !expr "awsRegions('ecs', 0)"
            - name: select
              type: Select
              prompt: select region
              options:
-             - !fn aws.regions(ecs)[0]
+             - !expr "awsRegions('ecs')"
              - b
              - label: test
                value: testVal
@@ -234,7 +234,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
                    prompt: select region
                    default: testVal
                    options:
-                   - !fn aws.regions(ecs)[0]
+                   - !expr "awsRegions('ecs', 0)"
                    - b
                    - label: test1
                      value: teeee
@@ -252,7 +252,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 			Type:   VarField{Value: TypeSelect},
 			Prompt: VarField{Value: "select region"},
 			Options: []VarField{
-				{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
+				{Value: "awsRegions('ecs', 0)", Tag: tagExpressionV2},
 				{Value: "b"},
 				{Value: "teeee", Label: "test1"},
 				{Value: "10", Label: "test2"},
@@ -275,7 +275,6 @@ func TestParseTemplateMetadataV2(t *testing.T) {
                    type: Select
                    prompt: select region
                    options:
-                   - !fn aws.regions(ecs)[0]
                    - b
                    - key: test1
                      value: test
@@ -306,7 +305,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 		assert.Equal(t, Variable{
 			Name:  VarField{Value: "fn"},
 			Label: VarField{Value: "fn"},
-			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
+			Value: VarField{Value: "awsRegions('ecs', 0)", Tag: tagExpressionV2},
 		}, doc.Variables[2])
 		assert.Equal(t, Variable{
 			Name:   VarField{Value: "select"},
@@ -314,7 +313,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 			Type:   VarField{Value: TypeSelect},
 			Prompt: VarField{Value: "select region"},
 			Options: []VarField{
-				{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
+				{Value: "awsRegions('ecs')", Tag: tagExpressionV2},
 				{Value: "b"},
 				{Value: "testVal", Label: "test"},
 			},
@@ -675,12 +674,12 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 								{
 									Name:     "bar",
 									Value:    true,
-									PromptIf: yaml.CustomTag{Tag: tagFnV1, Value: "foo"},
+									PromptIf: yaml.CustomTag{Tag: tagExpressionV2, Value: "foo"},
 								},
 								{
 									Name:     "barr",
 									Value:    10.5,
-									PromptIf: yaml.CustomTag{Tag: tagFnV1, Value: "!foo"},
+									PromptIf: yaml.CustomTag{Tag: tagExpressionV2, Value: "!foo"},
 								},
 							},
 							FileOverrides: []FileV2{
@@ -699,7 +698,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 								{
 									Path:     "foo/baar2.md",
 									RenameTo: yaml.CustomTag{Tag: tagExpressionV2, Value: "1 > 2 ? 'foo' : 'bar'"},
-									WriteIf:  yaml.CustomTag{Tag: tagFnV1, Value: "foo"},
+									WriteIf:  yaml.CustomTag{Tag: tagExpressionV2, Value: "foo"},
 								},
 							},
 							IncludeIf: yaml.CustomTag{Tag: tagExpressionV2, Value: "1 > 2"},
@@ -720,12 +719,12 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 						{
 							Name:      VarField{Value: "bar"},
 							Value:     VarField{Value: "true", Bool: true},
-							DependsOn: VarField{Tag: tagFnV1, Value: "foo"},
+							DependsOn: VarField{Tag: tagExpressionV2, Value: "foo"},
 						},
 						{
 							Name:      VarField{Value: "barr"},
 							Value:     VarField{Value: "10.500000"},
-							DependsOn: VarField{Tag: tagFnV1, Value: "!foo"},
+							DependsOn: VarField{Tag: tagExpressionV2, Value: "!foo"},
 						},
 					},
 					FileOverrides: []TemplateConfig{
@@ -744,7 +743,7 @@ func TestBlueprintYaml_parseIncludes(t *testing.T) {
 						{
 							Path:      "foo/baar2.md",
 							RenameTo:  VarField{Tag: tagExpressionV2, Value: "1 > 2 ? 'foo' : 'bar'"},
-							DependsOn: VarField{Tag: tagFnV1, Value: "foo"},
+							DependsOn: VarField{Tag: tagExpressionV2, Value: "foo"},
 						},
 					},
 					DependsOn: VarField{Tag: tagExpressionV2, Value: "1 > 2"},
@@ -824,11 +823,11 @@ func TestParseFileV2(t *testing.T) {
 			nil,
 		},
 		{
-			"parse a file declaration with path and dependsOn as !fn tag",
+			"parse a file declaration with path and dependsOn as !expr tag function",
 			&FileV2{
-				Path: "test.yaml", WriteIf: yaml.CustomTag{Tag: tagFnV1, Value: "aws.credentials().IsAvailable"},
+				Path: "test.yaml", WriteIf: yaml.CustomTag{Tag: tagExpressionV2, Value: "awsCredentials('IsAvailable')"},
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: tagFnV1}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "awsCredentials('IsAvailable')", Tag: tagExpressionV2}},
 			nil,
 		},
 		{
@@ -864,16 +863,15 @@ func TestParseDependsOnValue(t *testing.T) {
 		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
 		require.NotNil(t, err)
 	})
-	t.Run("should return parsed bool value for DependsOn field from function", func(t *testing.T) {
+	t.Run("should return valid value for DependsOn field from function", func(t *testing.T) {
 		v := Variable{
 			Name:      VarField{Value: "test"},
 			Label:     VarField{Value: "test"},
 			Type:      VarField{Value: TypeInput},
 			DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: tagFnV1},
 		}
-		out, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
+		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
 		require.Nil(t, err)
-		assert.Equal(t, true, out)
 	})
 	t.Run("should error when invalid expression in DependsOn", func(t *testing.T) {
 		v := Variable{

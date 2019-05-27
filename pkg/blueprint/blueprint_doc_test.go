@@ -760,7 +760,7 @@ func TestValidatePrompt(t *testing.T) {
 		},
 		{
 			"should fail required validation on empty value with pattern",
-			args{"test", "regexMatch('.', test)", "", false, make(map[string]interface{})},
+			args{"test", "regex('.', test)", "", false, make(map[string]interface{})},
 			fmt.Errorf("Value is required"),
 		},
 		{
@@ -770,42 +770,42 @@ func TestValidatePrompt(t *testing.T) {
 		},
 		{
 			"should fail pattern validation on invalid value",
-			args{"test", "regexMatch('[a-z]*', test)", "123", false, make(map[string]interface{})},
-			fmt.Errorf("validation [regexMatch('[a-z]*', test)] failed with value [123]"),
+			args{"test", "regex('[a-z]*', test)", "123", false, make(map[string]interface{})},
+			fmt.Errorf("validation [regex('[a-z]*', test)] failed with value [123]"),
 		},
 		{
 			"should pass pattern validation on valid value",
-			args{"test", "regexMatch('[a-z]*', test)", "abc", false, make(map[string]interface{})},
+			args{"test", "regex('[a-z]*', test)", "abc", false, make(map[string]interface{})},
 			nil,
 		},
 		{
 			"should pass pattern validation on valid value with extra start/end tag on pattern",
-			args{"test", "regexMatch('^[a-z]*$', test)", "abc", false, make(map[string]interface{})},
+			args{"test", "regex('^[a-z]*$', test)", "abc", false, make(map[string]interface{})},
 			nil,
 		},
 		{
 			"should pass pattern validation on valid value with fixed pattern",
-			args{"test", "regexMatch('test', test)", "test", false, make(map[string]interface{})},
+			args{"test", "regex('test', test)", "test", false, make(map[string]interface{})},
 			nil,
 		},
 		{
 			"should fail pattern validation on invalid value with fixed pattern",
-			args{"test", "regexMatch('test', test)", "abcd", false, make(map[string]interface{})},
-			fmt.Errorf("validation [regexMatch('test', test)] failed with value [abcd]"),
+			args{"test", "regex('test', test)", "abcd", false, make(map[string]interface{})},
+			fmt.Errorf("validation [regex('test', test)] failed with value [abcd]"),
 		},
 		{
 			"should fail pattern validation on valid value with complex pattern",
-			args{"test", `regexMatch('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)`, "123.123.123.256", false, make(map[string]interface{})},
-			fmt.Errorf(`validation [regexMatch('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)] failed with value [123.123.123.256]`),
+			args{"test", `regex('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)`, "123.123.123.256", false, make(map[string]interface{})},
+			fmt.Errorf(`validation [regex('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)] failed with value [123.123.123.256]`),
 		},
 		{
 			"should pass pattern validation on valid value with complex pattern",
-			args{"test", `regexMatch('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)`, "255.255.255.255", false, make(map[string]interface{})},
+			args{"test", `regex('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)`, "255.255.255.255", false, make(map[string]interface{})},
 			nil,
 		},
 		{
 			"should fail pattern validation on invalid pattern",
-			args{"test", "regexMatch('[[', test)", "abcd", false, make(map[string]interface{})},
+			args{"test", "regex('[[', test)", "abcd", false, make(map[string]interface{})},
 			fmt.Errorf("error parsing regexp: missing closing ]: `[[$`"),
 		},
 	}

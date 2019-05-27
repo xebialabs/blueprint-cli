@@ -290,8 +290,7 @@ func parseFieldsFromStructV2(original interface{}, target interface{}) error {
 		case yaml.CustomTag:
 			// Set string field with YAML tag
 			switch val.Tag {
-			// TODO remove tagFnV1 after LOVE-903 is merged
-			case tagFnV1, tagExpressionV2:
+			case tagExpressionV2:
 				setVariableField(&field, val.Value, VarField{Value: val.Value, Tag: val.Tag})
 			default:
 				return fmt.Errorf("unknown tag %s %s, supported tags are [%s]", val.Tag, val.Value, tagExpressionV2)
