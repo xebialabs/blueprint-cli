@@ -66,7 +66,7 @@ Parameters are defined by the blueprint creator in the `blueprint.yaml` file, it
 
 ## Supported Custom YAML Tags
 
-### Function tag (`!fn`) - *Will be deprecated in v9.0*
+### Function tag (`!fn`)
 
 Blueprints support custom functions to be used within variable definitions and file declarations (`spec` part in YAML file). Function tag can be used in `value`, `default`, `options`, `dependsOnTrue` and `dependsOnFalse` fields.
 

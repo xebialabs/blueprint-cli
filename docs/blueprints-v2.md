@@ -33,20 +33,20 @@ The spec field holds parameters and files
 
 Parameters are defined by the blueprint creator in the `blueprint.yaml` file, it can be used in the blueprint template files. If the `prompt` field is defined for a parameter in the `blueprint.yaml` file, the user will be prompted to enter its value during execution of the blueprint. By default parameter values will be used to replace variables in template files during blueprint generation. You can find all possible parameter options below.
 
-| Field Name | Expected value(s) | Examples | Default Value | Required | Explanation |
+| Field Name | Expected value(s) | Examples | Default Value | Required | Description |
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **name** | — | AppName | — | ✔ | Parameter name, to be used in templates |
-| **type** | `Input`/`SecretInput`/`Select`/`Confirm`/`Editor`/`FileContent` | | — | Required when `value` is not set | Type of the prompt input.<br> When type is `SecretInput` the parameter is saved in `secrets.xlvals` files so that they won't be checked in GIT repo and will not be replaced by default in the template files|
+| **name** | — | AppName | — | ✔ | Parameter name, to be used in template placeholders |
+| **type** | `Input`/<br>`SecretInput`/<br>`Select`/<br>`Confirm`/<br>`Editor`/<br>`FileContent` | | — | Required when `value` is not set | Type of the prompt input.<br> When type is `SecretInput` the parameter is saved in `secrets.xlvals` files so that they won't be checked in GIT repo and will not be replaced with actual value by default in the template files|
 | **prompt** | - | What is your application name? | — | Required when `value` is not set | Question to prompt. Should not be set along with `value` |
-| **value** | — | - eu-west-1<br>-`!expr "Foo == 'foo' ? 'A' : 'B'"` | — | **x** | If present, user will not be asked a question to provide value. |
-| **default** | — | - eu-west-1<br>-`!expr "Foo == 'foo' ? 'A' : 'B'"` | — | **x** | Default value, will be present during the question prompt. Also will be the parameter value if question is skipped. Should not be set along with `value`|
+| **value** | — | `eu-west-1`/<br>`!expr "Foo == 'foo' ? 'A' : 'B'"` | — | **x** | If present, user will not be asked a question to provide value. |
+| **default** | — | `eu-west-1`/<br>-`!expr "Foo == 'foo' ? 'A' : 'B'"` | — | **x** | Default value, will be present during the question prompt. Also will be the parameter value if question is skipped. Should not be set along with `value`|
 | **description** | — | Application name, will be used in various AWS resource names | — | **x** | If present, will be used as help text for question prompt |
 | **label** | — | Application name | — | **x** | If present, will be used instead of name in summary table |
-| **options** | — | - eu-west-1<br>- us-east-1<br>- us-west-1<br>- label: us west 1<br>&nbsp;&nbsp;value: us-west-1<br>-`!expr "Foo == 'foo' ? ('A', 'B') : ('C', 'D')"` | — | Required for `Select` input type | Set of options for the `Select` input type. Can consist of any number of text values, label/value pairs or custom tags. Should not be set along with `value` |
+| **options** | — | `- eu-west-1`<br>`- us-east-1`<br>`- us-west-1`<br>`- label: us west 1`<br>&nbsp;&nbsp;`value: us-west-1`<br>`-!expr "Foo == 'foo' ? ('A', 'B') : ('C', 'D')"` | — | Required for `Select` input type | Set of options for the `Select` input type. Can consist of any number of text values, label/value pairs or values retrieved from an expression. Should not be set along with `value` |
 | **validate** | `!expr` tag | `!expr "regex('[a-z]*', paramName)"`| — | **x** | Validation expression to be verified at the time of user input, any combination of expressions and expression functions can be used. <br>The current parameter name must be passed to the validation function. Expected result of the expression evaluated is of type boolean. |
-| **promptIf** | — | - CreateNewCluster<br>- `!expr "CreateNewCluster == true"` | — | **x** | If this question needs to be asked to user depending on the value of another, promptIf field can be defined.<br>A valid parameter name should be given and the parameter name used should have been defined before order-wise. Expression tags also can be used, but expected result should always be boolean. Should not be set along with `value` |
-| **saveInXlvals** | `true`/`false` | — | `true` for `SecretInput` fields<br>`false` for other fields | **x** | If true, output parameter will be included in the `values.xlvals` output file. By default every `SecretInput` field will be written to `secrets.xlvals` file and this setting doesn't effect that functionality |
-| **replaceAsIs** | `true`/`false` | — | `false` | **x** | If set to `true`, output parameter will be used as raw value instead of with `!value` tag. Useful in cases where parameter will be used with a post-process function in any template file. <br/> This parameter is only valid for `SecretInput` fields, for other fields it will produce a validation error. |
+| **promptIf** | — | `CreateNewCluster`/<br>`!expr "CreateNewCluster == true"` | — | **x** | If this question needs to be asked to user depending on the value of another, promptIf field can be defined.<br>A valid parameter name should be given and the parameter name used should have been defined before order-wise. Expression tags also can be used, but expected result should always be boolean. Should not be set along with `value` |
+| **saveInXlvals** | `true`/`false` | — | `true` for `SecretInput` fields<br>`false` for other fields | **x** | If true, output parameter will be included in the `values.xlvals` output file. `SecretInput` parameters will always be written to `secrets.xlvals` file regardless of what you set for this field |
+| **replaceAsIs** | `true`/`false` | — | `false` | **x** | `SecretInput` field values are normally not directly used in Go template files, instead it will be referred using `!value ParameterName` syntax. If `replaceAsIs` is set to `true`, output parameter will be used as raw value instead of with `!value` tag in Go templates. Useful in cases where parameter will be used with a post-process function in any template file. <br/> This parameter is only valid for `SecretInput` fields, for other fields it will produce a validation error. |
 | **revealOnSummary** | `true`/`false` | — | `false` | **x** | If set to `true`, the value will be present on the summary table. <br/> This parameter is only valid for `SecretInput` fields, for other fields it will produce a validation error. |
 
 > Note #1: `File` type doesn't support `value` parameter. `default` parameter for this field expects to have a file path instead of final value string.
@@ -59,20 +59,65 @@ Parameters are defined by the blueprint creator in the `blueprint.yaml` file, it
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **path** | — | `xebialabs/xlr-pipeline.yaml` | — | ✔ | File/template path to be copied/processed  |
 | **renameTo** | — | `xebialabs/xlr-pipeline-new.yaml` | — | **x** | The name to be used for output file  |
-| **writeIf** | — | - CreateNewCluster<br>- `!expr "CreateNewCluster == true"` | — | **x** | This file will be generated only when value of a parameter or function return true.<br>A valid parameter name should be given and the parameter name used should have been defined. Expression tags also can be used, but expected result should always be boolean. |
+| **writeIf** | — | `CreateNewCluster`/<br>`!expr "CreateNewCluster == true"` | — | **x** | This file will be generated only when value of a parameter or function return true.<br>A valid parameter name should be given and the parameter name used should have been defined. Expression tags also can be used, but expected result should always be boolean. |
 
 ##### IncludeBefore/IncludeAfter Fields
 
-includeBefore/includeAfter will decide if the blueprint should be composed before or after the master blueprint, this will affect the order of question and order in which files are written, Entries in before/after will stack based on order of definition.
+includeBefore/includeAfter will decide if the blueprint should be composed before or after the master blueprint, this will affect the order in which the parameters will be presented to the user and order in which files are written, Entries in before/after will stack based on order of definition.
 
 | Field Name | Expected value(s) | Examples | Default Value | Required | Explanation |
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **blueprint** | — | - aws/monolith | — | ✔ | The name of the blueprint to be composed |
-| **includeIf** | — | - CreateNewCluster<br>- `!expr "CreateNewCluster == true"` | — | **x** | This include will be processed only when value of a parameter or function return true.<br>A valid parameter name should be given and the parameter name used should have been defined. Expression tags also can be used, but expected result should always be boolean. |
-| **parameterOverrides** | Parameter definition | - | — | **x** | Can be used to override fields of any parameter definition in the blueprint being composed. This way we can force to skip any question by providing a value for it or by overriding its `promptIf`. Can override everything except `name` and `type` fields |
+| **blueprint** | — | aws/monolith | — | ✔ | The full path of the blueprint to be composed, will be looked up from the current repository being used |
+| **includeIf** | — | `CreateNewCluster`/<br>`!expr "CreateNewCluster == true"` | — | **x** | This blueprint will be included only when value of a parameter or expression returns true.<br>A valid parameter name should be given and the parameter name used should have been defined. Expression tags can also be used if the returned value is a boolean. |
+| **parameterOverrides** | Parameter definition | - | — | **x** | Overrides fields of the parameters defined on the blueprint included. This way we can force to skip any question by providing a value for it or by overriding its `promptIf`. Can override everything except `name` and `type` fields |
 | **fileOverrides** | File definition | - | — | **x** | Can be used to override fields of any file definition in the blueprint being composed. This way we can force to skip any file by overriding its `writeIf` or rename a file by providing `renameTo`. Can override everything except `path` field |
 
+An example `blueprint.yaml` using expressions for complex behaviors
+
+```yaml
+apiVersion: xl/v2
+kind: Blueprint
+metadata:
+  name: Composed blueprint
+  version: 2.0
+spec:
+  parameters:
+  - name: Foo
+    prompt: what is value for Foo?
+
+  files:
+  - path: xlr-pipeline.yml
+    writeIf: !expr "Foo == 'foo'"
+
+  includeBefore: # the `aws/datalake` will be executed first followed by the current blueprint.yaml
+  # we will look for `aws/datalake` in the current-repository being used
+  - blueprint: aws/datalake
+    # with 'parameterOverrides' we can provide values for any parameter in the blueprint being composed. This way we can force to skip any question by providing a value for it
+    parameterOverrides:
+    # we are overriding the value and promptIf fields of the TestFoo parameter in the `aws/datalake` blueprint
+    - name: TestFoo
+      value: hello
+      promptIf: !expr "3 > 2"
+    # 'fileOverrides' can be used to skip files and can be conditional using dependsOn
+    fileOverrides:
+    - path: xld-environment.yml.tmpl
+      writeIf: !expr "false" # we are skipping this file
+    - path: xlr-pipeline.yml
+      renameTo: xlr-pipeline-new.yml # we are renaming this file since the current blueprint.yaml already has this file defined in the file section above
+  includeAfter: # the `k8s/environment` will be executed after the current blueprint.yaml
+  # we will look for `k8s/environment` in the current-repository being used
+  - blueprint: k8s/environment
+    parameterOverrides:
+    - name: Test
+      value: hello2
+    fileOverrides:
+    - path: xld-environment.yml.tmpl
+      writeIf: !expr "false"
+
+```
+
 ---------------
+
 
 ## Supported Custom YAML Tags
 
@@ -132,22 +177,30 @@ Backslashes can be used anywhere in an expression to escape the very next charac
 You can use the provided functions in an expression
 
 | Function | Parameters | Examples | Description |
-|:------: |:-----------: |:----------------------------------------: |:----------------: |------------------------------------------------------- |:------------------------------------------------------------: |
-| **strlen** | Parameter or Text(string) | - `!expr "strlen('Foo') > 5"`<br>- `!expr "strlen(FooParameter) > 5"` | Get the length of the given string parameter |
+|:------: |:-----------: |:----------------------------------------: |:----------------: 
+| **strlen** | Parameter or Text(string) | - `!expr "strlen('Foo') > 5"`<br>- `!expr "strlen(FooParameter) > 5"` | Get the length of the given string variable |
 | **max** | Parameter or numbers(float64, float64) | - `!expr "max(5, 10) > 5"`<br>- `!expr "max(FooParameter, 100)"` | Get the maximum of the two given numbers |
 | **min** | Parameter or numbers(float64, float64) | - `!expr "min(5, 10) > 5"`<br>- `!expr "min(FooParameter, 100)"` | Get the minimum of the two given numbers |
 | **ceil** | Parameter or number(float64) | - `!expr "ceil(5.8) > 5"`<br>- `!expr "ceil(FooParameter) > 5"` | Ceil the given number to nearest whole number |
 | **floor** | Parameter or number(float64) | - `!expr "floor(5.8) > 5"`<br>- `!expr "floor(FooParameter) > 5"` | Floor the given number to nearest whole number |
 | **round** | Parameter or number(float64) | - `!expr "round(5.8) > 5"`<br>- `!expr "round(FooParameter) > 5"` | Round the given number to nearest whole number |
 | **randPassword** | String | - `!expr "randPassword()"`| Generates a 16-character random password |
+| **string** | Parameter or number(float64) | - `!expr "string(103.4)"`| Converts variable or number to string |
+| **regex** | - Pattern text</br>- Value to test | - `!expr "regex('[a-zA-Z-]*', ParameterName)"`| Tests given value with the provided regular expression pattern. Return `true` or `false`. |
+| **isFile** | File path string | - `!expr "isFile('/test/dir/file.txt')"`| Checks if the file exists or not |
+| **isDir** | Directory path string | - `!expr "isDir('/test/dir')"`| Checks if the directory exists or not |
+| **isValidUrl** | URL text | - `!expr "isValidUrl('http://xebialabs.com/')"`| Checks if the given URL text is a valid URL or not. Doesn't check for the status code or availibity of the URL, just checks the structure |
+| **awsCredentials** | Attribute text:</br>- `IsAvailable`</br>- `AccessKeyID`</br>- `SecretAccessKey`</br>- `ProviderName`</br> | - `!expr "awsCredentials('IsAvailable')"`| System-wide defined AWS credentials can be accessed with this function. `IsAvailable` attribute returns `true` or `false` based on if the AWS configuration file can be found in the system or not. Rest of the attributes return the text value read from AWS configuration file. `AWS_PROFILE` env variable can be set to change the active AWS profile system wide. |
+| **awsRegions** | - AWS service name</br>- Index of the result list [**optional**] | - `!expr "awsRegions('ecs', 2)"`| Returns list of AWS regions that is available for the given AWS service. If the second parameter is not provided, function will return the whole list. |
+| **k8sConfig** | - K8s Config attribute name(`ClusterServer`/<br>`ClusterCertificateAuthorityData`/<br>`ClusterInsecureSkipTLSVerify`/<br>`ContextCluster`/<br>`ContextNamespace`/<br>`ContextUser`/<br>`UserClientCertificateData`/<br>`UserClientKeyData`/<br>`IsAvailable`)</br>- Context name [**optional**] | - `!expr "k8sConfig('IsAvailable')"`</br>- `!expr "k8sConfig('ClusterServer', 'myContext')"` | Returns k8s config attribute value from the config file read from the system. For `IsAvailable` attribute, `true` or `false` value will be returned. If context name is not defined, `current-contex` will be read from the config file. |
 
 An example `blueprint.yaml` using expressions for complex behaviors
 
-```
-apiVersion: xl/v1
+```yaml
+apiVersion: xl/v2
 kind: Blueprint
 metadata:
-  projectName: Blueprint Project
+  name: Blueprint Project
   description: A Blueprint project
   author: XebiaLabs
   version: 1.0
@@ -173,6 +226,33 @@ spec:
     prompt: What is your Kubernetes cluster name
     type: Input
     promptIf: !expr "Service == 'GKE' || Service == 'EKS' || Service == 'AKS'"
+    default: !expr "k8sConfig('ClusterServer')"
+
+  # AWS specific variables
+  - name: UseAWSCredentialsFromSystem
+    prompt: Do you want to use AWS credentials from your ~/.aws/credentials file?
+    type: Confirm
+    promptIf: !expr "Provider == 'AWS' && awsCredentials('IsAvailable')"
+
+  - name: AWSAccessKey
+    type: SecretInput
+    prompt: What is the AWS Access Key ID?
+    promptIf: !expr "Provider == 'AWS' && !UseAWSCredentialsFromSystem"
+    default: !expr "awsCredentials('AccessKeyID')"
+
+  - name: AWSAccessSecret
+    prompt: What is the AWS Secret Access Key?
+    type: SecretInput
+    promptIf: !expr "Provider == 'AWS' && !UseAWSCredentialsFromSystem"
+    default: !expr "awsCredentials('SecretAccessKey')"
+
+  - name: AWSRegion
+    type: Select
+    prompt: "Select the AWS region:"
+    promptIf: !expr "Provider == 'AWS'"
+    options:
+      - !expr "awsRegions('ecs')"
+    default: !expr "awsRegions('ecs', 0)"
 
   files:
   - path: xld-k8s-infrastructure.yml
