@@ -11,7 +11,7 @@ import (
 )
 
 func Test_processCustomExpression(t *testing.T) {
-    // initialize temp dir for tests
+	// initialize temp dir for tests
 	tmpDir, err := ioutil.TempDir("", "xltest")
 	if err != nil {
 		t.Error(err)
@@ -24,9 +24,9 @@ func Test_processCustomExpression(t *testing.T) {
 	ioutil.WriteFile(testFilePath, originalConfigBytes, 0755)
 
 	// create test k8s config file
-    d1 := []byte(sampleKubeConfig)
-    ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
-    os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
+	d1 := []byte(sampleKubeConfig)
+	ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
+	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
 
 	type args struct {
 		exStr      string
@@ -334,6 +334,32 @@ func Test_processCustomExpression(t *testing.T) {
 			false,
 		},
 		{
+			"should return success regex match for own valid value with PCRE compatible regex",
+			false,
+			args{
+				"regex('([a-c])x\\\\1x\\\\1', TestVar)",
+				map[string]interface{}{
+					"TestVar": "axaxa",
+				},
+			},
+			true,
+			nil,
+			false,
+		},
+		{
+			"should return success regex match for own valid value with PCRE lookbehind regex",
+			false,
+			args{
+				"regex('\\\\b\\\\w+(?<!s)\\\\b', TestVar)",
+				map[string]interface{}{
+					"TestVar": "john",
+				},
+			},
+			true,
+			nil,
+			false,
+		},
+		{
 			"should use both own value and other parameter value in expression function",
 			false,
 			args{
@@ -569,50 +595,50 @@ func Test_processCustomExpression(t *testing.T) {
 		},
 
 		// k8s helper functions
-        {
-            "should error on invalid k8sConfig expression call",
-            false,
-            args{
-                "k8sConfig()",
-                map[string]interface{}{},
-            },
-            nil,
-            nil,
-            true,
-        },
-        {
-            "should error on unknown context for k8sConfig expression",
-            false,
-            args{
-                "k8sConfig('ClusterServer', 'unknown')",
-                map[string]interface{}{},
-            },
-            nil,
-            nil,
-            true,
-        },
-        {
-            "should return isAvailable true for k8sConfig expression with default context",
-            false,
-            args{
-                "k8sConfig('IsAvailable')",
-                map[string]interface{}{},
-            },
-            true,
-            nil,
-            false,
-        },
-        {
-            "should return isAvailable false for k8sConfig expression with unknown context",
-            false,
-            args{
-                "k8sConfig('IsAvailable', 'unknown')",
-                map[string]interface{}{},
-            },
-            false,
-            nil,
-            false,
-        },
+		{
+			"should error on invalid k8sConfig expression call",
+			false,
+			args{
+				"k8sConfig()",
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should error on unknown context for k8sConfig expression",
+			false,
+			args{
+				"k8sConfig('ClusterServer', 'unknown')",
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should return isAvailable true for k8sConfig expression with default context",
+			false,
+			args{
+				"k8sConfig('IsAvailable')",
+				map[string]interface{}{},
+			},
+			true,
+			nil,
+			false,
+		},
+		{
+			"should return isAvailable false for k8sConfig expression with unknown context",
+			false,
+			args{
+				"k8sConfig('IsAvailable', 'unknown')",
+				map[string]interface{}{},
+			},
+			false,
+			nil,
+			false,
+		},
 		{
 			"should return cluster server url for k8sConfig expression",
 			false,
@@ -626,83 +652,83 @@ func Test_processCustomExpression(t *testing.T) {
 		},
 
 		// os helper functions
-        {
-            "should error on empty module for os expression",
-            false,
-            args{
-                "os()",
-                map[string]interface{}{},
-            },
-            nil,
-            nil,
-            true,
-        },
-        {
-            "should error on unknown module for os expression",
-            false,
-            args{
-                "os('unknown')",
-                map[string]interface{}{},
-            },
-            nil,
-            nil,
-            true,
-        },
-        {
-            "should return os name for valid os expression",
-            false,
-            args{
-                "os('_operatingsystem') != ''",
-                map[string]interface{}{},
-            },
-            true,
-            nil,
-            false,
-        },
+		{
+			"should error on empty module for os expression",
+			false,
+			args{
+				"os()",
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should error on unknown module for os expression",
+			false,
+			args{
+				"os('unknown')",
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should return os name for valid os expression",
+			false,
+			args{
+				"os('_operatingsystem') != ''",
+				map[string]interface{}{},
+			},
+			true,
+			nil,
+			false,
+		},
 
-        // up helper functions
-        {
-            "should error on empty module for xlUp expression",
-            false,
-            args{
-                "xlUp()",
-                map[string]interface{}{},
-            },
-            nil,
-            nil,
-            true,
-        },
-        {
-            "should error on unknown module for xlUp expression",
-            false,
-            args{
-                "xlUp('unknown')",
-                map[string]interface{}{},
-            },
-            nil,
-            nil,
-            true,
-        },
-        {
-            "should return list of versions for valid xlUp expression",
-            false,
-            args{
-                "xlUp('_showapplicableversions')",
-                map[string]interface{}{},
-            },
-            nil,
-            func(result interface{}) bool {
-                switch result.(type) {
-                case []string:
-                    if len(result.([]string)) > 0 {
-                        return true
-                    }
-                }
+		// up helper functions
+		{
+			"should error on empty module for xlUp expression",
+			false,
+			args{
+				"xlUp()",
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should error on unknown module for xlUp expression",
+			false,
+			args{
+				"xlUp('unknown')",
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should return list of versions for valid xlUp expression",
+			false,
+			args{
+				"xlUp('_showapplicableversions')",
+				map[string]interface{}{},
+			},
+			nil,
+			func(result interface{}) bool {
+				switch result.(type) {
+				case []string:
+					if len(result.([]string)) > 0 {
+						return true
+					}
+				}
 
-                return false
-            },
-            false,
-        },
+				return false
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		if tt.onlyInUnix && runtime.GOOS == "windows" {

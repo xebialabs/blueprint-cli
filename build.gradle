@@ -104,6 +104,7 @@ dependencies {
         build name: 'github.com/Knetic/govaluate',          tag: '3.0.0'
         build name: 'github.com/mattn/go-isatty',           tag: 'v0.0.6'
         build name: 'gopkg.in/src-d/go-git.v4',             tag: 'v4.10.0'
+        build name: 'github.com/dlclark/regexp2',           tag: 'v1.1.6'
         test name: 'github.com/stretchr/testify/',          tag: 'v1.2.2'
         test name: 'github.com/stretchr/testify/assert',    tag: 'v1.2.2'
         test name: 'golang.org/x/crypto/ssh/terminal'

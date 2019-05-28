@@ -145,7 +145,7 @@ You can use the provided functions in an expression
 | **round** | Variable or number(float64) | - `!expression "round(5.8) > 5"`<br>- `!expression "round(FooVariable) > 5"` | Round the given number to nearest whole number |
 | **randPassword** | String | - `!expression "randPassword()"`| Generates a 16-character random password |
 | **string** | Variable or number(float64) | - `!expression "string(103.4)"`| Converts variable or number to string |
-| **regex** | - Pattern text</br>- Value to test | - `!expression "regex('[a-zA-Z-]*', VarName)"`| Tests given value with the provided regular expression pattern. Return `true` or `false`. |
+| **regex** | - Pattern text</br>- Value to test | - `!expression "regex('[a-zA-Z-]*', VarName)"`| Tests given value with the provided regular expression pattern. Return `true` or `false`. Note that `\` needs to be escaped as `\\\\`|
 | **isFile** | File path string | - `!expression "isFile('/test/dir/file.txt')"`| Checks if the file exists or not |
 | **isDir** | Directory path string | - `!expression "isDir('/test/dir')"`| Checks if the directory exists or not |
 | **isValidUrl** | URL text | - `!expression "isValidUrl('http://xebialabs.com/')"`| Checks if the given URL text is a valid URL or not. Doesn't check for the status code or availibity of the URL, just checks the structure |
