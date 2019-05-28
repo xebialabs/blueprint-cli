@@ -422,7 +422,7 @@ func (blueprintDoc *BlueprintConfig) validate() error {
 	if !util.IsStringInSlice(blueprintDoc.ApiVersion, models.BlueprintYamlFormatSupportedVersions) {
 		return fmt.Errorf("api version needs to be %s or %s", models.BlueprintYamlFormatV2, models.BlueprintYamlFormatV1)
 	}
-	if blueprintDoc.ApiVersion != models.BlueprintYamlFormatV1 {
+	if blueprintDoc.ApiVersion != models.BlueprintYamlFormatV2 {
 		util.Info("This blueprint uses a deprecated blueprint.yaml schema for apiVersion %s\n", models.BlueprintYamlFormatV1)
 	}
 	if blueprintDoc.Kind != models.BlueprintSpecKind {
