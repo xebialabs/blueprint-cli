@@ -790,6 +790,11 @@ func TestValidatePrompt(t *testing.T) {
 			nil,
 		},
 		{
+			"should pass pattern validation on valid value with escape char in pattern",
+			args{"test", "regex('(\\\\S)*', test)", "abc", false, make(map[string]interface{})},
+			nil,
+		},
+		{
 			"should pass pattern validation on valid value with extra start/end tag on pattern",
 			args{"test", "regex('^[a-z]*$', test)", "abc", false, make(map[string]interface{})},
 			nil,
