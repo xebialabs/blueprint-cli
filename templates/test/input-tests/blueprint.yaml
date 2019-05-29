@@ -1,7 +1,7 @@
-apiVersion: xl/v
+apiVersion: xl/v2
 kind: Blueprint
 metadata:
-  projectName: Test Project
+  name: Test Project
   description: Is just a test blueprint project used for manual testing of inputs
   author: XebiaLabs
   version: 1.0
@@ -11,8 +11,10 @@ metadata:
 spec:
   parameters:
   - name: Test
-    value: testing
+    type: Input
+    prompt: testing?
     saveInXlvals: true
+    validate: !expr "regex('(\\\\S){16,}', Test)"
   - name: ClientCert
     saveInXlvals: true
     value: |

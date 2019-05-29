@@ -373,6 +373,19 @@ func Test_processCustomExpression(t *testing.T) {
 			false,
 		},
 		{
+			"should return true for a pattern with escape char",
+			false,
+			args{
+				"regex('(\\\\S){16,}', TestVar)",
+				map[string]interface{}{
+					"TestVar": "1234567890123456",
+				},
+			},
+			true,
+			nil,
+			false,
+		},
+		{
 			"should use both own value and other parameter value in expression function",
 			false,
 			args{
