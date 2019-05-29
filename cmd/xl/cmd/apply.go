@@ -54,15 +54,29 @@ func printChangedIds(idsArray *[]xl.ChangedIds) {
 	}
 }
 
-func printTaskInfo(task *xl.TaskInfo) {
+func printTaskInfo(changes *xl.Changes) {
+    task := changes.Task
 	if task != nil {
-		util.Info("%s%s started as %s\n", util.IndentFlexible(), task.Description, task.Id)
+        if changes.Server != nil {
+            baseUrl := changes.Server.Url.String()
+            if !strings.HasSuffix(baseUrl, "/") {
+                baseUrl = baseUrl + "/"
+            }
+            if changes.Server.Product == models.XLR {
+                urlId := strings.ReplaceAll(task.Id, "/", "-")
+                util.Info("%s%s started: %s#/releases/%s\n", util.IndentFlexible(), task.Description, baseUrl, urlId)
+            } else if changes.Server.Product == models.XLD {
+                util.Info("%s%s started: %s#/explorer?taskId=%s\n", util.IndentFlexible(), task.Description, baseUrl, changes.Task.Id)
+            } else {
+                util.Error("Unknown product %s\n", changes.Server.Product)
+            }
+        }
 	}
 }
 
 func printChanges(changes *xl.Changes) {
 	if changes != nil {
-		printTaskInfo(changes.Task)
+		printTaskInfo(changes)
 		printChangedIds(changes.Ids)
 	}
 }

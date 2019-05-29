@@ -69,7 +69,7 @@ publishing {
 }
 
 golang {
-    goVersion = '1.11'
+    goVersion = '1.12'
     packagePath = 'github.com/xebialabs/xl-cli' // go import path of project to be built, NOT local file system path!
 }
 

@@ -45,6 +45,7 @@ type TaskInfo struct {
 }
 
 type Changes struct {
+    Server *SimpleHTTPServer
 	Ids  *[]ChangedIds
 	Task *TaskInfo
 }

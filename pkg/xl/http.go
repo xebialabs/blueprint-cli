@@ -226,6 +226,11 @@ func (server *SimpleHTTPServer) ApplyYamlDoc(resource string, yamlDocBytes []byt
 	if e != nil {
 		return nil, e
 	}
+
+	if asCodeResponse.Changes != nil {
+        asCodeResponse.Changes.Server = server
+    }
+
 	return asCodeResponse.Changes, nil
 }
 
@@ -245,6 +250,11 @@ func (server *SimpleHTTPServer) ApplyYamlZip(resource string, yamlZipFilename st
 	if e != nil {
 		return nil, e
 	}
+
+    if asCodeResponse.Changes != nil {
+        asCodeResponse.Changes.Server = server
+    }
+
 	return asCodeResponse.Changes, nil
 }
 
