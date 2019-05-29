@@ -57,14 +57,17 @@ var functions = map[string]govaluate.ExpressionFunction{
 			return nil, fmt.Errorf("invalid number of arguments for regex expression, expecting 2 got %d", len(args))
 		}
 		pattern := args[0].(string)
-		re := regexp2.MustCompile(fmt.Sprintf("^%s$", pattern), 0)
+		re, err := regexp2.Compile(fmt.Sprintf("^%s$", pattern), 0)
+		if err != nil {
+			return false, fmt.Errorf("invalid pattern in regex expression, %s", err.Error())
+		}
 		// setting a 5 second timeout to avoid hanging on complex regex
 		re.MatchTimeout = time.Second * 5
 		value := fmt.Sprintf("%v", args[1])
 		match, err := re.MatchString(value)
 
 		if err != nil {
-			return false, err
+			return false, fmt.Errorf("error while matching regex expression %s, %s", pattern, err.Error())
 		}
 
 		if !match {

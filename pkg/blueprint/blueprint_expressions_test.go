@@ -308,6 +308,19 @@ func Test_processCustomExpression(t *testing.T) {
 			true,
 		},
 		{
+			"should error on invalid pattern for regex",
+			false,
+			args{
+				"regex('[a-zA-Z-*', TestVar)",
+				map[string]interface{}{
+					"TestVar": "SomeName",
+				},
+			},
+			false,
+			nil,
+			true,
+		},
+		{
 			"should return success regex match for own valid value",
 			false,
 			args{
