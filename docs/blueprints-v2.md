@@ -123,7 +123,7 @@ spec:
 
 ### Expression tag (`!expr`)
 
-Blueprints support custom expressions to be used within parameter definitions and file declarations (`spec` part in YAML file). Expression tag can be used in any Parameter, File(except `path`) & IncludeBefore/IncludeAfter(except `blueprint`) fields. 
+Blueprints support custom expressions to be used within parameter definitions, file declarations & includeBefore/includeAfter (`spec` part in YAML file). Expression tag can be used in parameter/parameterOverrides fields `default`, `value`, `promptIf`, `options`, `validate`, file/fileOverrides field `writeIf` & includeBefore/includeAfter fields `includeIf`. 
 
 You can use a parameter defined in the parameters section inside an expression. Parameter names are case sensitive and you should define the parameter before it is used in an expression, in other words you can't refer to a parameter that will be defined after the expression is defined in the `blueprint.yaml` file or in an included blueprint.
 
@@ -186,7 +186,7 @@ You can use the provided functions in an expression
 | **round** | Parameter or number(float64) | - `!expr "round(5.8) > 5"`<br>- `!expr "round(FooParameter) > 5"` | Round the given number to nearest whole number |
 | **randPassword** | String | - `!expr "randPassword()"`| Generates a 16-character random password |
 | **string** | Parameter or number(float64) | - `!expr "string(103.4)"`| Converts variable or number to string |
-| **regex** | - Pattern text</br>- Value to test | - `!expr "regex('[a-zA-Z-]*', ParameterName)"`| Tests given value with the provided regular expression pattern. Return `true` or `false`. |
+| **regex** | - Pattern text</br>- Value to test | - `!expr "regex('[a-zA-Z-]*', ParameterName)"`| Tests given value with the provided regular expression pattern. Return `true` or `false`. Note that `\` needs to be escaped as `\\\\` in the patterns used. |
 | **isFile** | File path string | - `!expr "isFile('/test/dir/file.txt')"`| Checks if the file exists or not |
 | **isDir** | Directory path string | - `!expr "isDir('/test/dir')"`| Checks if the directory exists or not |
 | **isValidUrl** | URL text | - `!expr "isValidUrl('http://xebialabs.com/')"`| Checks if the given URL text is a valid URL or not. Doesn't check for the status code or availibity of the URL, just checks the structure |
