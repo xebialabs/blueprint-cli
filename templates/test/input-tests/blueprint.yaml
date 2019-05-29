@@ -15,6 +15,19 @@ spec:
     prompt: testing?
     saveInXlvals: true
     validate: !expr "regex('(\\\\S){16,}', Test)"
+  - name: SelectTest
+    type: Select
+    prompt: what are you looking at bro?
+    options:
+    - label: Yo
+      value: yoyo
+    - label: yolo
+      value: yaya
+    - heeya
+  - name: SelectTestVal
+    type: Input
+    prompt: yo?
+    default: !expr "SelectTest"
   - name: ClientCert
     saveInXlvals: true
     value: |

@@ -28,10 +28,11 @@ const (
 	FnOs      = "os"
 	FnVersion = "version"
 
-	tagFnV1         = "!fn"
-	tagExpressionV1 = "!expression"
-	tagExpressionV2 = "!expr"
-	fmtTagValue     = "!value %s"
+	tagFnV1          = "!fn"
+	tagExpressionV1  = "!expression"
+	tagExpressionV2  = "!expr"
+	fmtTagValue      = "!value %s"
+	optionTextFormat = "%s (%s)"
 )
 
 // InputType constants
@@ -145,7 +146,7 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) in
 	return variable.Value.Value
 }
 
-func (variable *Variable) GetOptions(parameters map[string]interface{}) []string {
+func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabel bool) []string {
 	var options []string
 	for _, option := range variable.Options {
 		switch option.Tag {
@@ -177,14 +178,22 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}) []string
 				return nil
 			}
 		default:
-			optionText := option.Value
-			if option.Label != "" {
-				optionText = fmt.Sprintf("%s (%s)", option.Label, optionText)
+			if withLabel {
+				options = append(options, getOptionTextWithLabel(option))
+			} else {
+				options = append(options, option.Value)
 			}
-			options = append(options, optionText)
 		}
 	}
 	return options
+}
+
+func getOptionTextWithLabel(option VarField) string {
+	optionText := option.Value
+	if option.Label != "" {
+		optionText = fmt.Sprintf(optionTextFormat, option.Label, optionText)
+	}
+	return optionText
 }
 
 // Get variable validate expression
@@ -230,7 +239,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		return answerBool, nil
 	case TypeSelect:
 		// check if answer is one of the options, error if not
-		options := variable.GetOptions(parameters)
+		options := variable.GetOptions(parameters, false)
 		answerStr := fmt.Sprintf("%v", value)
 		if !funk.Contains(options, answerStr) {
 			return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Value)
@@ -345,7 +354,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		}
 		answer = string(data)
 	case TypeSelect:
-		options := variable.GetOptions(parameters)
+		options := variable.GetOptions(parameters, true)
 		err = survey.AskOne(
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("Select value for %s?", variable.Name.Value)),
@@ -358,6 +367,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
 			surveyOpts...,
 		)
+		answer = findLabelValueFromOptions(answer, variable.Options)
 	case TypeConfirm:
 		var confirm bool
 		err = survey.AskOne(
@@ -379,6 +389,15 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	}
 	// This always returns string
 	return answer, err
+}
+
+func findLabelValueFromOptions(val string, options []VarField) string {
+	for _, o := range options {
+		if getOptionTextWithLabel(o) == val {
+			return o.Value
+		}
+	}
+	return val
 }
 
 // verify blueprint directory & generate full paths for local files

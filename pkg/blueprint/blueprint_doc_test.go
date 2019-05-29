@@ -235,20 +235,31 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "a"}, {Value: "b"}, {Value: "c"}},
 		}
-		values := v.GetOptions(dummyData)
+		values := v.GetOptions(dummyData, true)
 		assert.Len(t, values, 3)
 		assert.Equal(t, []string{"a", "b", "c"}, values)
 	})
 
-	t.Run("should return string values of map options", func(t *testing.T) {
+	t.Run("should return string values of map options with label", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "aVal"}, {Label: "bLabel", Value: "bVal"}, {Label: "cLabel", Value: "cVal"}},
 		}
-		values := v.GetOptions(dummyData)
+		values := v.GetOptions(dummyData, true)
 		assert.Len(t, values, 3)
 		assert.Equal(t, []string{"aVal", "bLabel (bVal)", "cLabel (cVal)"}, values)
+	})
+
+	t.Run("should return string values of map options without label", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "aVal"}, {Label: "bLabel", Value: "bVal"}, {Label: "cLabel", Value: "cVal"}},
+		}
+		values := v.GetOptions(dummyData, false)
+		assert.Len(t, values, 3)
+		assert.Equal(t, []string{"aVal", "bVal", "cVal"}, values)
 	})
 
 	t.Run("should return generated values for fn options tag", func(t *testing.T) {
@@ -257,7 +268,7 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "aws.regions(ecs)", Tag: tagFnV1}},
 		}
-		values := v.GetOptions(dummyData)
+		values := v.GetOptions(dummyData, true)
 		assert.True(t, len(values) > 1)
 	})
 
@@ -267,7 +278,7 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "aws.regs", Tag: tagFnV1}},
 		}
-		out := v.GetOptions(dummyData)
+		out := v.GetOptions(dummyData, true)
 		require.Nil(t, out)
 	})
 
@@ -280,7 +291,7 @@ func TestGetOptions(t *testing.T) {
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": true,
 			"Bar": []string{"test", "foo"},
-		})
+		}, true)
 		assert.True(t, len(values) == 2)
 	})
 
@@ -292,7 +303,7 @@ func TestGetOptions(t *testing.T) {
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Provider": "GCP",
-		})
+		}, true)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 2)
 	})
@@ -308,7 +319,7 @@ func TestGetOptions(t *testing.T) {
 			"Foo1": "test",
 			"Foo2": "foo",
 			"Bar":  []string{"test", "foo"},
-		})
+		}, true)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 2)
 	})
@@ -322,7 +333,7 @@ func TestGetOptions(t *testing.T) {
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
 			"Bar": []string{"test", "foo"},
-		})
+		}, true)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 3)
 	})
@@ -336,7 +347,7 @@ func TestGetOptions(t *testing.T) {
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
 			"Bar": []string{"test", "foo"},
-		})
+		}, true)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 2)
 	})
@@ -350,7 +361,7 @@ func TestGetOptions(t *testing.T) {
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
 			"Bar": []string{"test", "foo"},
-		})
+		}, true)
 		assert.Nil(t, values)
 	})
 
@@ -360,7 +371,7 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "aws.regs()", Tag: tagExpressionV2}},
 		}
-		out := v.GetOptions(dummyData)
+		out := v.GetOptions(dummyData, true)
 		require.Nil(t, out)
 	})
 }
@@ -1082,6 +1093,53 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 				return
 			}
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func Test_findLabelValueFromOptions(t *testing.T) {
+	tests := []struct {
+		name    string
+		val     string
+		options []VarField
+		want    string
+	}{
+		{
+			"find correct values from different option types for string val",
+			"yoyo",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
+			},
+			"yoyo",
+		},
+		{
+			"find correct values from different option types for map val",
+			"Hooya (hiya)",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
+			},
+			"hiya",
+		},
+		{
+			"return given value for val from !expr",
+			"foo",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
+			},
+			"foo",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := findLabelValueFromOptions(tt.val, tt.options); got != tt.want {
+				t.Errorf("findLabelValueFromOptions() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
