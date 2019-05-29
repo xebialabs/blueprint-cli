@@ -28,6 +28,7 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
            parameters:
            - name: pass
              type: Input
+             pattern: "(\\S)*"
              description: password?
              secret: true
            - name: test
@@ -262,6 +263,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 			Label:       VarField{Value: "pass"},
 			Type:        VarField{Value: TypeSecret},
 			Prompt:      VarField{Value: "password?"},
+			Validate:    VarField{Value: "regex('(\\\\S)*', pass)", Tag: tagExpressionV1},
 			Description: VarField{Value: "password?"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{

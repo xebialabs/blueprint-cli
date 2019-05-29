@@ -141,7 +141,7 @@ func transformToV2(parsedVar Variable, m *ParameterV1) Variable {
 		switch val := m.Pattern.(type) {
 		case string:
 			if val != "" {
-				parsedVar.Validate.Value = fmt.Sprintf("regex('%s', %s)", val, parsedVar.Name.Value)
+				parsedVar.Validate.Value = fmt.Sprintf("regex('%s', %s)", strings.Replace(val, "\\", "\\\\", -1), parsedVar.Name.Value)
 				parsedVar.Validate.Tag = tagExpressionV1
 			}
 		}

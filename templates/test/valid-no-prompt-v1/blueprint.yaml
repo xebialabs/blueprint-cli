@@ -9,6 +9,7 @@ parameters:
 - name: TestFoo
   type: Input
   value: testing
+  pattern: "(\\S){2,}"
   saveInXlVals: true
 - name: ClientCert
   type: Editor
