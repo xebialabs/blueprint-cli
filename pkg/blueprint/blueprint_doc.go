@@ -436,9 +436,7 @@ func (blueprintDoc *BlueprintConfig) validate() error {
 }
 
 // prepare template data by getting user input and calling named functions
-func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string, strictAnswers bool, useDefaultsAsValue bool, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
-	data := NewPreparedData()
-
+func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string, strictAnswers bool, useDefaultsAsValue bool, data *PreparedData, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
 	// if exists, get map of answers from file
 	var answerMap map[string]string
 	var err error

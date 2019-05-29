@@ -238,7 +238,7 @@ func prepareMergedTemplateData(
 		}
 		if ok {
 			// ask for user input
-			preparedData, err := blueprintDoc.BlueprintConfig.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
+			preparedData, err := blueprintDoc.BlueprintConfig.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, mergedData, surveyOpts...)
 			if err != nil {
 				return nil, nil, err
 			}

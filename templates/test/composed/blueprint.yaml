@@ -8,7 +8,7 @@ metadata:
 spec:
   parameters:
   - name: TestCompose
-    value: testing
+    value: !expr "TestFoo"
     saveInXlvals: true
 
   files:
@@ -34,7 +34,7 @@ spec:
   - blueprint: defaults-as-values
     parameterOverrides:
     - name: Test
-      value: hello2
+      value: !expr "TestCompose"
     fileOverrides:
     - path: xld-environment.yml.tmpl
       writeIf: !expr "false"

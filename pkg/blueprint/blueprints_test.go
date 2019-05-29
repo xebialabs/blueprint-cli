@@ -420,9 +420,9 @@ func TestInstantiateBlueprint(t *testing.T) {
 		// check values file
 		valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
 		valueMap := map[string]string{
-			"Test":               "hello2",
-			"TestFoo":            "hello",
-			"TestCompose":        "testing",
+			"Test":               "hello", // value from parameterOverride using !expr "TestCompose"
+			"TestFoo":            "hello", // value from parameterOverride
+			"TestCompose":        "hello", // value from parameterOverride using !expr "TestFoo"
 			"ClientCert":         "this is a multiline\\ntext\\n\\nwith escape chars\\n",
 			"AppName":            "TestApp",
 			"SuperSecret":        "supersecret",
