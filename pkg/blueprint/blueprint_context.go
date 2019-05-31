@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -314,6 +315,21 @@ func (blueprintContext *BlueprintContext) parseLocalDefinitionFile(templatePath 
 	}
 
 	return blueprintDoc, err
+}
+
+func parseTemplateMetadata(ymlContent *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
+	decoder := yaml.NewDecoder(bytes.NewReader(*ymlContent))
+	yamlDoc := struct {
+		ApiVersion string `yaml:"apiVersion"`
+	}{}
+	err := decoder.Decode(&yamlDoc)
+	if err != nil {
+		return nil, err
+	}
+	if yamlDoc.ApiVersion == models.BlueprintYamlFormatV1 {
+		return parseTemplateMetadataV1(ymlContent, templatePath, blueprintRepository, isLocal)
+	}
+	return parseTemplateMetadataV2(ymlContent, templatePath, blueprintRepository, isLocal)
 }
 
 /*

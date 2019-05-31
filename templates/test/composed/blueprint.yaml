@@ -1,50 +1,43 @@
-apiVersion: xl/v1
+apiVersion: xl/v2
 kind: Blueprint
 metadata:
-  projectName: Test Project
+  name: Test Project
   description: Is just a test blueprint project
   author: XebiaLabs
   version: 1.0
 spec:
   parameters:
   - name: TestCompose
-    type: Input
-    value: testing
-    saveInXlVals: true
+    value: !expr "TestFoo"
+    saveInXlvals: true
 
   files:
   - path: xlr-pipeline-4.yml
-    dependsOnFalse: TestDepends3
+    writeIf: !expr "TestDepends3"
 
-  include:
+  includeBefore:
   # 'blueprint' we will look in the current-repository being used for these
   - blueprint: valid-no-prompt
-    # 'stage' will decide if the blueprint should be composed before or after the master blueprint, this will affect the order of question and order in which files are written, multiple before/after will stack based on order of definition.
-    stage: before
     # 'parameterOverrides' we can provide values for any parameter in the blueprint being composed. This way we can force to skip any question by providing a value for it, these can be conditional using dependsOn
     parameterOverrides:
     - name: TestFoo
       # expression and functions will be supported for 'value'
       value: hello
-      dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends" # do this later
+      promptIf: !expr "3 > 2"
     # 'fileOverrides' can be used to skip files and can be conditional using dependsOn
     fileOverrides:
     - path: xld-environment.yml.tmpl
-      operation: skip
-      dependsOn: TestDepends # do this later
+      writeIf: !expr "false"
     - path: xlr-pipeline.yml
-      operation: rename
-      renamedPath: xlr-pipeline-new.yml
+      renameTo: xlr-pipeline-new.yml
+  includeAfter:
   - blueprint: defaults-as-values
-    # dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
-    stage: after
     parameterOverrides:
     - name: Test
-      value: hello2
+      value: !expr "TestCompose"
     fileOverrides:
     - path: xld-environment.yml.tmpl
-      operation: skip
+      writeIf: !expr "false"
     - path: xlr-pipeline.yml
-      operation: rename
-      renamedPath: xlr-pipeline-new.yml
-      dependsOnTrue: TestDepends # do this later
+      renameTo: xlr-pipeline-new.yml
+      writeIf: TestDepends

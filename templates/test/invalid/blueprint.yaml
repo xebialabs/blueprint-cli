@@ -1,7 +1,7 @@
-apiVersion: xl/v1
+apiVersion: xl/v2
 kind: Blueprint
 metadata:
-  projectName: Test Project
+  name: Test Project
   description: Is just a test blueprint project
   author: XebiaLabs
   version: 1.0
@@ -12,12 +12,10 @@ spec:
   - name: AppName
     type: Input
   - name: AWSAccessKey
-    type: Input
-    secret: true
+    type: SecretInput
     value: !fn aws.credentials().AccessKeyID
   - name: AWSAccessSecret
-    type: Input
-    secret: true
+    type: SecretInput
     value: !fn aws.credentials().SecretAccessKey
   - name: AWSRegion
     type: Select

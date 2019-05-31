@@ -85,21 +85,20 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 	)
 
 	yaml := `
-      apiVersion: xl/v1
+      apiVersion: xl/v2
       kind: Blueprint
       metadata:
-        projectName: Test Project
+        name: Test Project
+      spec:
+        parameters:
+        - name: Test
+          value: testing
+          saveInXlvals: true
 
-      parameters:
-      - name: Test
-        type: Input
-        value: testing
-        saveInXlVals: true
-
-      files:
-      - path: xld-environment.yml.tmpl
-      - path: xld-infrastructure.yml.tmpl
-      - path: xlr-pipeline.yml`
+        files:
+        - path: xld-environment.yml.tmpl
+        - path: xld-infrastructure.yml.tmpl
+        - path: xlr-pipeline.yml`
 
 	httpmock.RegisterResponder(
 		"GET",
@@ -115,19 +114,19 @@ with a new line`),
 	)
 
 	yaml = `
-    apiVersion: xl/v1
+    apiVersion: xl/v2
     kind: Blueprint
     metadata:
-      projectName: Test Project 2
+      name: Test Project 2
 
-    parameters:
-    - name: Foo
-      type: Input
-      value: testing
+    spec:
+      parameters:
+      - name: Foo
+        value: testing
 
-    files:
-    - path: xld-app.yml.tmpl
-    - path: xlr-pipeline.yml`
+      files:
+      - path: xld-app.yml.tmpl
+      - path: xlr-pipeline.yml`
 
 	httpmock.RegisterResponder(
 		"GET",
@@ -136,15 +135,15 @@ with a new line`),
 	)
 
 	yaml = `
-    apiVersion: xl/v1
+    apiVersion: xl/v2
     kind: Blueprint
     metadata:
-      projectName: Test Project 3
+      name: Test Project 3
 
-    parameters:
-    - name: Foo
-      type: Input
-      value: testing`
+    spec:
+      parameters:
+      - name: Foo
+        value: testing`
 
 	httpmock.RegisterResponder(
 		"GET",
@@ -153,13 +152,14 @@ with a new line`),
 	)
 
 	yaml = `
-    apiVersion: xl/v1
+    apiVersion: xl/v2
     kind: Blueprint
     metadata:
-      projectName: Test Project 4
-    files:
-    - path: xld-app.yml.tmpl
-    - path: xlr-pipeline.yml`
+      name: Test Project 4
+    spec:
+      files:
+      - path: xld-app.yml.tmpl
+      - path: xlr-pipeline.yml`
 
 	httpmock.RegisterResponder(
 		"GET",
@@ -168,40 +168,34 @@ with a new line`),
 	)
 
 	yaml = `
-      apiVersion: xl/v1
+      apiVersion: xl/v2
       kind: Blueprint
       metadata:
-        projectName: Test Project
+        name: Test Project
 
       spec:
         parameters:
         - name: Bar
-          type: Input
           value: testing
-        include:
+        includeBefore:
         - blueprint: aws/monolith
-          stage: before
           parameterOverrides:
           - name: Test
             value: hello
-            dependsOn: !expression "Bar == 'testing'"
-          - name: bar
-            value: true
+            promptIf: !expr "2 > 1"
           fileOverrides:
           - path: xld-infrastructure.yml.tmpl
-            operation: skip
-            dependsOnTrue: TestDepends
+            writeIf: !expr "false"
+        includeAfter:
         - blueprint: aws/datalake
-          dependsOnTrue: !expression "Bar == 'testing'"
-          stage: after
+          includeIf: !expr "Bar == 'testing'"
           parameterOverrides:
           - name: Foo
             value: hello
           fileOverrides:
           - path: xlr-pipeline.yml
-            operation: rename
-            renamedPath: xlr-pipeline2-new.yml
-            dependsOnTrue: TestDepends
+            renameTo: xlr-pipeline2-new.yml
+            writeIf: TestDepends
 
         files:
         - path: xld-environment.yml.tmpl
@@ -215,41 +209,37 @@ with a new line`),
 	)
 
 	yaml = `
-      apiVersion: xl/v1
+      apiVersion: xl/v2
       kind: Blueprint
       metadata:
-        projectName: Test Project
+        name: Test Project
 
       spec:
         parameters:
         - name: Bar
-          type: Input
           value: testing
-        include:
+        includeBefore:
         - blueprint: aws/monolith
-          stage: before
-          dependsOnFalse: !expression "2 > 1"
+          includeIf: !expr "2 < 1"
           parameterOverrides:
           - name: Test
             value: hello
-            dependsOn: !expression "2 > 1"
+            promptIf: !expr "2 > 1"
           - name: bar
             value: true
           fileOverrides:
           - path: xld-infrastructure.yml.tmpl
-            operation: skip
-            dependsOnTrue: TestDepends
+            writeIf: !expr "2 < 1"
+        includeAfter:
         - blueprint: aws/datalake
-          dependsOnTrue: !expression "Bar != 'testing'"
-          stage: after
+          includeIf: !expr "Bar != 'testing'"
           parameterOverrides:
           - name: Foo
             value: hello
           fileOverrides:
           - path: xlr-pipeline.yml
-            operation: rename
-            renamedPath: xlr-pipeline2-new.yml
-            dependsOnTrue: TestDepends
+            renameTo: xlr-pipeline2-new.yml
+            writeIf: TestDepends
 
         files:
         - path: xld-environment.yml.tmpl
@@ -411,20 +401,20 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 
 func TestBlueprintContext_fetchLocalFile(t *testing.T) {
 	yaml := `
-      apiVersion: xl/v1
+      apiVersion: xl/v2
       kind: Blueprint
       metadata:
-        projectName: Test Project
+        name: Test Project
 
-      parameters:
-      - name: Test
-        type: Input
-        value: testing
+      spec:
+        parameters:
+        - name: Test
+          value: testing
 
-      files:
-      - path: xld-environment.yml.tmpl
-      - path: xld-infrastructure.yml.tmpl
-      - path: xlr-pipeline.yml`
+        files:
+        - path: xld-environment.yml.tmpl
+        - path: xld-infrastructure.yml.tmpl
+        - path: xlr-pipeline.yml`
 
 	tmpDir := path.Join("test", "blueprints")
 	os.MkdirAll(tmpDir, os.ModePerm)
@@ -538,20 +528,19 @@ func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
 	require.NotNil(t, blueprints)
 
 	yaml := `
-      apiVersion: xl/v1
+      apiVersion: xl/v2
       kind: Blueprint
       metadata:
-        projectName: Test Project
+        name: Test Project
+      spec:
+        parameters:
+        - name: Test
+          value: testing
 
-      parameters:
-      - name: Test
-        type: Input
-        value: testing
-
-      files:
-      - path: xld-environment.yml.tmpl
-      - path: xld-infrastructure.yml.tmpl
-      - path: xlr-pipeline.yml`
+        files:
+        - path: xld-environment.yml.tmpl
+        - path: xld-infrastructure.yml.tmpl
+        - path: xlr-pipeline.yml`
 
 	tmpDir := path.Join("test", "blueprints")
 	os.MkdirAll(tmpDir, os.ModePerm)
@@ -1097,6 +1086,119 @@ func Test_doesDefaultExist(t *testing.T) {
 			if tt.checkIndex > -1 {
 				assert.Equal(t, models.DefaultBlueprintRepositoryUrl, tt.repositories[tt.checkIndex]["url"])
 				assert.Equal(t, models.DefaultBlueprintRepositoryProvider, tt.repositories[tt.checkIndex]["type"])
+			}
+		})
+	}
+}
+
+func Test_parseTemplateMetadata(t *testing.T) {
+	templatePath := "test/blueprints"
+	blueprintRepository := BlueprintContext{}
+
+	type args struct {
+		ymlContent          string
+		templatePath        string
+		blueprintRepository *BlueprintContext
+		isLocal             bool
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *BlueprintConfig
+		wantErr bool
+	}{
+		{
+			"should error when invalid apiVersion is used",
+			args{
+				`
+                  apiVersion: xl/v3
+                  kind: Blueprint
+                  metadata:
+                    name: Test Project
+                `,
+				templatePath,
+				&blueprintRepository,
+				false,
+			},
+			nil,
+			true,
+		},
+		{
+			"should error when invalid fields are used for apiVersion",
+			args{
+				`
+                  apiVersion: xl/v1
+                  kind: Blueprint
+                  metadata:
+                    name: Test Project
+                `,
+				templatePath,
+				&blueprintRepository,
+				false,
+			},
+			nil,
+			true,
+		},
+		{
+			"should parse v1 when apiversion is xl/v1",
+			args{
+				`
+                  apiVersion: xl/v1
+                  kind: Blueprint
+                  metadata:
+                    projectName: Test Project
+                `,
+				templatePath,
+				&blueprintRepository,
+				false,
+			},
+			&BlueprintConfig{
+				ApiVersion: "xl/v1",
+				Kind:       "Blueprint",
+				Metadata: Metadata{
+					Name: "Test Project",
+				},
+				TemplateConfigs: []TemplateConfig{},
+				Variables:       []Variable{},
+			},
+			false,
+		},
+		{
+			"should parse v2 when apiversion is xl/v2",
+			args{
+				`
+                  apiVersion: xl/v2
+                  kind: Blueprint
+                  metadata:
+                    name: Test Project
+                `,
+				templatePath,
+				&blueprintRepository,
+				false,
+			},
+			&BlueprintConfig{
+				ApiVersion: "xl/v2",
+				Kind:       "Blueprint",
+				Metadata: Metadata{
+					Name: "Test Project",
+				},
+				TemplateConfigs: []TemplateConfig{},
+				Variables:       []Variable{},
+				Include:         []IncludedBlueprintProcessed{},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			yml := []byte(tt.args.ymlContent)
+			got, err := parseTemplateMetadata(&yml, tt.args.templatePath, tt.args.blueprintRepository, tt.args.isLocal)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseTemplateMetadata() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				assert.Equal(t, tt.want, got)
 			}
 		})
 	}

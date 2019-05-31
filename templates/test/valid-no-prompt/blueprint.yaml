@@ -1,19 +1,17 @@
-apiVersion: xl/v1
+apiVersion: xl/v2
 kind: Blueprint
 metadata:
-  projectName: Test Project
+  name: Test Project
   description: Is just a test blueprint project
   author: XebiaLabs
   version: 1.0
 spec:
   parameters:
   - name: TestFoo
-    type: Input
     value: testing
-    saveInXlVals: true
+    saveInXlvals: true
   - name: ClientCert
-    type: Editor
-    saveInXlVals: true
+    saveInXlvals: true
     value: |
       FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5
       QJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ
@@ -31,51 +29,37 @@ spec:
       XUrYNapiDWYsPEGTaQTX8L1ZkrFaQTL8wC1Zko8aZFfzqmYbNi5OvJydnWWoaRc0eyvnFmtNh0utLQZEME4DXCU3RxET3q6pwsid8DolT1FZtWBE0V3F0XM
       ffWx27IYj63dyTtT4UoJwtTgdtXeHAG4a0AGvbfM9p462qEbV3rMNynLWyzQDc3sN6nI-
   - name: TestDepends
-    type: Confirm
     value: true
   - name: TestDepends2
-    type: Confirm
     value: false
   - name: TestDepends3
-    type: Confirm
-    value: !expression "!TestDepends"
+    value: !expr "!TestDepends"
   - name: AppName
-    type: Input
-    pattern: "[a-zA-Z-]*"
+    validate: !expr "regex('[a-zA-Z-]*', AppName)"
     description: Application name, will be used in various AWS resource names
     value: testApp
   - name: AWSAccessKey
-    type: Input
-    secret: true
+    type: SecretInput
     value: accesskey
   - name: AWSAccessSecret
-    type: Input
-    secret: true
+    type: SecretInput
     value: accesssecret
   - name: SuperSecret
-    type: Input
-    secret: false
     value: invisible
   - name: AWSRegion
-    type: Select
-    options:
-      - !fn aws.regions(ecs)
-    default: !fn aws.regions(ecs)[0]
     value: us-west
   - name: DiskSize
-    type: Input
     value: 100.0
   - name: DiskSizeWithBuffer
-    type: Input
-    saveInXlVals: true
-    value: !expression "DiskSize * 1.251"
+    saveInXlvals: true
+    value: !expr "DiskSize * 1.251"
 
   files:
   - path: xld-environment.yml.tmpl
   - path: xld-infrastructure.yml.tmpl
   - path: xlr-pipeline-2.yml
-    dependsOnTrue: !expression "AWSRegion == 'us-west' && AppName != 'foo' && TestDepends && !TestDepends2"
+    writeIf: !expr "AWSRegion == 'us-west' && AppName != 'foo' && TestDepends && !TestDepends2"
   - path: xlr-pipeline.yml
-    dependsOnFalse: TestDepends
+    writeIf: !expr "!TestDepends"
   - path: xlr-pipeline-3.yml
-    dependsOnFalse: TestDepends3
+    writeIf: !expr "!TestDepends3"

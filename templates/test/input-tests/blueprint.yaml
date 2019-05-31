@@ -1,7 +1,7 @@
-apiVersion: xl/v1
+apiVersion: xl/v2
 kind: Blueprint
 metadata:
-  projectName: Test Project
+  name: Test Project
   description: Is just a test blueprint project used for manual testing of inputs
   author: XebiaLabs
   version: 1.0
@@ -12,11 +12,26 @@ spec:
   parameters:
   - name: Test
     type: Input
-    value: testing
-    saveInXlVals: true
+    prompt: testing?
+    saveInXlvals: true
+    validate: !expr "regex('(\\\\S){2,}', Test)"
+  - name: SelectTest
+    type: Select
+    prompt: what are you looking at bro?
+    options:
+    - label: Yo
+      value: yoyo
+    - label: yolo
+      value: yaya
+    - heeya
+    - !expr "awsRegions('ecs')"
+    default: ap-south-1
+  - name: SelectTestVal
+    type: Input
+    prompt: yo?
+    default: !expr "SelectTest"
   - name: ClientCert
-    type: Editor
-    saveInXlVals: true
+    saveInXlvals: true
     value: |
       FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5
       QJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ
@@ -34,34 +49,29 @@ spec:
       XUrYNapiDWYsPEGTaQTX8L1ZkrFaQTL8wC1Zko8aZFfzqmYbNi5OvJydnWWoaRc0eyvnFmtNh0utLQZEME4DXCU3RxET3q6pwsid8DolT1FZtWBE0V3F0XM
       ffWx27IYj63dyTtT4UoJwtTgdtXeHAG4a0AGvbfM9p462qEbV3rMNynLWyzQDc3sN6nI-
   - name: TestDepends0
-    type: Confirm
     value: false
   - name: TestDepends
-    type: Confirm
     value: true
   - name: TestDepends2
     type: Confirm
+    prompt: TestDepends2?
     default: false
   - name: TestDepends3
     type: Confirm
-    default: !expression "!TestDepends2"
+    prompt: TestDepends3?
+    default: !expr "!TestDepends2"
   - name: AppName
     type: Input
-    pattern: "[a-zA-Z-]*"
+    prompt: AppName?
+    validate: !expr "regex('[a-zA-Z-]*', AppName)"
     description: Application name, will be used in various AWS resource names
     default: testApp
   - name: AWSAccessKey
-    type: Input
-    secret: true
     value: accesskey
   - name: AWSAccessSecret
-    type: Input
-    secret: true
+    type: SecretInput
+    prompt: AWSAccessSecret?
     default: accesssecret
   - name: AWSRegion
-    type: Select
-    options:
-      - !fn aws.regions(ecs)
-    default: !fn aws.regions(ecs)[0]
     value: us-west
 

@@ -1,12 +1,10 @@
 package blueprint
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -30,21 +28,24 @@ const (
 	FnOs      = "os"
 	FnVersion = "version"
 
-	tagFn         = "!fn"
-	tagExpression = "!expression"
-	fmtTagValue   = "!value %s"
+	tagFnV1          = "!fn"
+	tagExpressionV1  = "!expression"
+	tagExpressionV2  = "!expr"
+	fmtTagValue      = "!value %s"
+	optionTextFormat = "%s (%s)"
 )
 
 // InputType constants
 const (
 	TypeInput   = "Input"
+	TypeSecret  = "SecretInput"
 	TypeEditor  = "Editor"
 	TypeFile    = "File"
 	TypeSelect  = "Select"
 	TypeConfirm = "Confirm"
 )
 
-var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfirm}
+var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfirm, TypeSecret}
 
 type PreparedData struct {
 	TemplateData map[string]interface{}
@@ -64,65 +65,21 @@ func NewPreparedData() *PreparedData {
 // regular Expressions
 var regExFn = regexp.MustCompile(`([\w\d]+).([\w\d]+)\(([,/\-:\s\w\d]*)\)(?:\.([\w\d]*)|\[([\d]+)\])*`)
 
-func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
-	tagVal := varField.Tag
-	fieldVal := varField.Val
-	switch tagVal {
-	case tagFn:
-		values, err := ProcessCustomFunction(fieldVal)
-		if err != nil {
-			return false, err
-		}
-		if len(values) == 0 {
-			return false, fmt.Errorf("function [%s] results is empty", fieldVal)
-		}
-		util.Verbose("[fn] Processed value of function [%s] is: %s\n", fieldVal, values[0])
-
-		dependsOnVal, err := strconv.ParseBool(values[0])
-		if err != nil {
-			return false, err
-		}
-		if varField.InvertBool {
-			return !dependsOnVal, nil
-		}
-		return dependsOnVal, nil
-	case tagExpression:
-		value, err := ProcessCustomExpression(fieldVal, parameters)
-		if err != nil {
-			return false, err
-		}
-		dependsOnVal, ok := value.(bool)
-		if ok {
-			util.Verbose("[expression] Processed value of expression [%s] is: %v\n", fieldVal, dependsOnVal)
-			if varField.InvertBool {
-				return !dependsOnVal, nil
-			}
-			return dependsOnVal, nil
-		}
-		return false, fmt.Errorf("Expression [%s] result is invalid for a boolean field", fieldVal)
-	}
-	dependsOnVar, err := findVariableByName(variables, fieldVal)
-	if err != nil {
-		return false, err
-	}
-	return dependsOnVar.Value.Bool, nil
-}
-
 // GetDefaultVal variable struct functions
 func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interface{} {
-	defaultVal := variable.Default.Val
+	defaultVal := variable.Default.Value
 	switch variable.Default.Tag {
-	case tagFn:
+	case tagFnV1:
 		values, err := ProcessCustomFunction(defaultVal)
 		if err != nil {
-			util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
+			util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Value, err.Error())
 			defaultVal = ""
 		} else {
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", defaultVal, values[0])
-			if variable.Type.Val == TypeConfirm {
+			if variable.Type.Value == TypeConfirm {
 				boolVal, err := strconv.ParseBool(values[0])
 				if err != nil {
-					util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
+					util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Value, err.Error())
 					return false
 				}
 				variable.Default.Bool = boolVal
@@ -130,16 +87,16 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 			}
 			return values[0]
 		}
-	case tagExpression:
+	case tagExpressionV1, tagExpressionV2:
 		value, err := ProcessCustomExpression(defaultVal, variables)
 		if err != nil {
-			util.Info("Error while processing default value !expression [%s] for [%s]. %s", defaultVal, variable.Name.Val, err.Error())
+			util.Info("Error while processing default value !expr [%s] for [%s]. %s", defaultVal, variable.Name.Value, err.Error())
 			defaultVal = ""
 		} else {
 			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", defaultVal, value)
 			boolVal, ok := value.(bool)
 			if ok {
-				if variable.Type.Val == TypeConfirm {
+				if variable.Type.Value == TypeConfirm {
 					variable.Default.Bool = boolVal
 				}
 			}
@@ -152,33 +109,33 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 
 func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) interface{} {
 	switch variable.Value.Tag {
-	case tagFn:
-		values, err := ProcessCustomFunction(variable.Value.Val)
+	case tagFnV1:
+		values, err := ProcessCustomFunction(variable.Value.Value)
 		if err != nil {
-			util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
+			util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", variable.Value.Value, variable.Name.Value, err.Error())
 			return ""
 		}
-		util.Verbose("[fn] Processed value of function [%s] is: %s\n", variable.Value.Val, values[0])
-		if variable.Type.Val == TypeConfirm {
+		util.Verbose("[fn] Processed value of function [%s] is: %s\n", variable.Value.Value, values[0])
+		if variable.Type.Value == TypeConfirm {
 			boolVal, err := strconv.ParseBool(values[0])
 			if err != nil {
-				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
+				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", variable.Value.Value, variable.Name.Value, err.Error())
 				return ""
 			}
 			variable.Value.Bool = boolVal
 			return values[0]
 		}
 		return values[0]
-	case tagExpression:
-		value, err := ProcessCustomExpression(variable.Value.Val, parameters)
+	case tagExpressionV1, tagExpressionV2:
+		value, err := ProcessCustomExpression(variable.Value.Value, parameters)
 		if err != nil {
-			util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", variable.Value.Val, variable.Name.Val, err.Error())
+			util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", variable.Value.Value, variable.Name.Value, err.Error())
 			return ""
 		} else {
-			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", variable.Value.Val, value)
+			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", variable.Value.Value, value)
 			boolVal, ok := value.(bool)
 			if ok {
-				if variable.Type.Val == TypeConfirm {
+				if variable.Type.Value == TypeConfirm {
 					variable.Value.Bool = boolVal
 				}
 				return fmt.Sprint(boolVal)
@@ -186,58 +143,88 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) in
 			return value
 		}
 	}
-	return variable.Value.Val
+	return variable.Value.Value
 }
 
-func (variable *Variable) GetOptions(parameters map[string]interface{}) []string {
+func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabel bool) []string {
 	var options []string
 	for _, option := range variable.Options {
 		switch option.Tag {
-		case tagFn:
-			opts, err := ProcessCustomFunction(option.Val)
+		case tagFnV1:
+			opts, err := ProcessCustomFunction(option.Value)
 			if err != nil {
-				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
+				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
 				return nil
 			}
-			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Val, opts)
+			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Value, opts)
 			options = append(options, opts...)
-		case tagExpression:
-			opts, err := ProcessCustomExpression(option.Val, parameters)
+		case tagExpressionV1, tagExpressionV2:
+			opts, err := ProcessCustomExpression(option.Value, parameters)
 			if err != nil {
-				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, err.Error())
+				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
 				return nil
 			}
 			switch val := opts.(type) {
 			case []string:
-				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Val, val)
+				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Value, val)
 				options = append(options, val...)
 			case []interface{}:
-				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Val, val)
+				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Value, val)
 				for _, option := range val {
 					options = append(options, fmt.Sprint(option))
 				}
 			default:
-				util.Info("Error while processing !expression [%s]. Please update the value for [%s] manually. %s", option.Val, variable.Name.Val, "Return type should be a string array")
+				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, "Return type should be a string array")
 				return nil
 			}
 		default:
-			options = append(options, option.Val)
+			if withLabel {
+				options = append(options, getOptionTextWithLabel(option))
+			} else {
+				options = append(options, option.Value)
+			}
 		}
 	}
 	return options
 }
 
+func getOptionTextWithLabel(option VarField) string {
+	optionText := option.Value
+	if option.Label != "" {
+		optionText = fmt.Sprintf(optionTextFormat, option.Label, optionText)
+	}
+	return optionText
+}
+
+func getDefaultTextWithLabel(defVal string, options []VarField) string {
+	for _, o := range options {
+		if o.Value == defVal {
+			return getOptionTextWithLabel(o)
+		}
+	}
+	return defVal
+}
+
+func findLabelValueFromOptions(val string, options []VarField) string {
+	for _, o := range options {
+		if getOptionTextWithLabel(o) == val {
+			return o.Value
+		}
+	}
+	return val
+}
+
 // Get variable validate expression
 func (variable *Variable) GetValidateExpr() (string, error) {
-	if variable.Validate.Val == "" {
+	if variable.Validate.Value == "" {
 		return "", nil
 	}
 
 	switch variable.Validate.Tag {
-	case tagExpression:
-		return variable.Validate.Val, nil
+	case tagExpressionV1, tagExpressionV2:
+		return variable.Validate.Value, nil
 	}
-	return "", fmt.Errorf("only '!expression' tag is supported for validate attribute")
+	return "", fmt.Errorf("only '!expr' tag is supported for validate attribute")
 }
 
 func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[string]interface{}) (interface{}, error) {
@@ -248,7 +235,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 	}
 
 	// specific conversions by type if needed
-	switch variable.Type.Val {
+	switch variable.Type.Value {
 	case TypeConfirm:
 		var answerBool bool
 		var err error
@@ -270,10 +257,10 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		return answerBool, nil
 	case TypeSelect:
 		// check if answer is one of the options, error if not
-		options := variable.GetOptions(parameters)
+		options := variable.GetOptions(parameters, false)
 		answerStr := fmt.Sprintf("%v", value)
 		if !funk.Contains(options, answerStr) {
-			return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Val)
+			return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Value)
 		}
 		return answerStr, nil
 	case TypeFile:
@@ -286,19 +273,26 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		}
 		return string(data), nil
 	default:
-		// do pattern validation if needed
-		if variable.Pattern.Val != "" {
+		// do validation if needed
+		if validateExpr != "" {
 			allowEmpty := false
-			if variable.Type.Val == TypeInput && variable.Secret.Bool {
+			if variable.Type.Value == TypeSecret {
 				allowEmpty = true
 			}
-			validationErr := validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, allowEmpty, parameters)(value)
+			validationErr := validatePrompt(variable.Name.Value, validateExpr, allowEmpty, parameters)(value)
 			if validationErr != nil {
-				return nil, fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", value, variable.Name.Val, validationErr.Error())
+				return nil, fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", value, variable.Name.Value, validationErr.Error())
 			}
 		}
 		return value, nil
 	}
+}
+
+func (variable *Variable) GetHelpText() string {
+	if variable.Description.Value != "" && variable.Description.Value != variable.Prompt.Value {
+		return variable.Description.Value
+	}
+	return ""
 }
 
 func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (interface{}, error) {
@@ -312,54 +306,58 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		return nil, fmt.Errorf("error getting validation expression: %s", err.Error())
 	}
 
-	switch variable.Type.Val {
+	switch variable.Type.Value {
 	case TypeInput:
-		if variable.Secret.Bool {
-			questionMsg := prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val))
-			if defaultVal != "" {
-				questionMsg += fmt.Sprintf(" (%s)", defaultVal)
-			}
-			err = survey.AskOne(
-				&survey.Password{Message: questionMsg},
-				&answer,
-				validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, true, parameters),
-				surveyOpts...,
-			)
+		err = survey.AskOne(
+			&survey.Input{
+				Message: prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the value of %s?", variable.Name.Value)),
+				Default: defaultValStr,
+				Help:    variable.GetHelpText(),
+			},
+			&answer,
+			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
+			surveyOpts...,
+		)
+	case TypeSecret:
+		questionMsg := prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the value of %s?", variable.Name.Value))
+		if defaultVal != "" {
+			questionMsg += fmt.Sprintf(" (%s)", defaultVal)
+		}
+		err = survey.AskOne(
+			&survey.Password{
+				Message: questionMsg,
+				Help:    variable.GetHelpText(),
+			},
+			&answer,
+			validatePrompt(variable.Name.Value, validateExpr, true, parameters),
+			surveyOpts...,
+		)
 
-			// if user bypassed question, replace with default value
-			if answer == "" {
-				util.Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Val, defaultVal)
-				answer = defaultValStr
-			}
-		} else {
-			err = survey.AskOne(
-				&survey.Input{
-					Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
-					Default: defaultValStr,
-				},
-				&answer,
-				validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
-				surveyOpts...,
-			)
+		// if user bypassed question, replace with default value
+		if answer == "" {
+			util.Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Value, defaultVal)
+			answer = defaultValStr
 		}
 	case TypeEditor:
 		err = survey.AskOne(
 			&survey.Editor{
-				Message:       prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the value of %s?", variable.Name.Val)),
+				Message:       prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the value of %s?", variable.Name.Value)),
 				Default:       defaultValStr,
 				HideDefault:   true,
 				AppendDefault: true,
+				Help:          variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
 			surveyOpts...,
 		)
 	case TypeFile:
 		var filePath string
 		err = survey.AskOne(
 			&survey.Input{
-				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("What is the file path (relative/absolute) for %s?", variable.Name.Val)),
+				Message: prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the file path (relative/absolute) for %s?", variable.Name.Value)),
 				Default: defaultValStr,
+				Help:    variable.GetHelpText(),
 			},
 			&filePath,
 			validateFilePath(),
@@ -374,27 +372,30 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		}
 		answer = string(data)
 	case TypeSelect:
-		options := variable.GetOptions(parameters)
+		options := variable.GetOptions(parameters, true)
 		err = survey.AskOne(
 			&survey.Select{
-				Message:  prepareQuestionText(variable.Description.Val, fmt.Sprintf("Select value for %s?", variable.Name.Val)),
+				Message:  prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("Select value for %s?", variable.Name.Value)),
 				Options:  options,
-				Default:  defaultValStr,
+				Default:  getDefaultTextWithLabel(defaultValStr, variable.Options),
 				PageSize: 10,
+				Help:     variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
 			surveyOpts...,
 		)
+		answer = findLabelValueFromOptions(answer, variable.Options)
 	case TypeConfirm:
 		var confirm bool
 		err = survey.AskOne(
 			&survey.Confirm{
-				Message: prepareQuestionText(variable.Description.Val, fmt.Sprintf("%s?", variable.Name.Val)),
+				Message: prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("%s?", variable.Name.Value)),
 				Default: variable.Default.Bool,
+				Help:    variable.GetHelpText(),
 			},
 			&confirm,
-			validatePrompt(variable.Name.Val, validateExpr, variable.Pattern.Val, false, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
 			surveyOpts...,
 		)
 		if err != nil {
@@ -406,229 +407,6 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	}
 	// This always returns string
 	return answer, err
-}
-
-// parse blueprint definition doc
-func parseTemplateMetadata(blueprintVars *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
-	decoder := yaml.NewDecoder(bytes.NewReader(*blueprintVars))
-	decoder.SetStrict(true)
-	yamlDoc := BlueprintYaml{}
-	err := decoder.Decode(&yamlDoc)
-	if err != nil {
-		return nil, err
-	}
-
-	// parse & validate
-	variables, err := yamlDoc.parseParameters()
-	if err != nil {
-		return nil, err
-	}
-	templateConfigs, err := yamlDoc.parseFiles(templatePath, isLocal)
-	if err != nil {
-		return nil, err
-	}
-	included, err := yamlDoc.parseIncludes()
-	if err != nil {
-		return nil, err
-	}
-	blueprintConfig := BlueprintConfig{
-		ApiVersion:      yamlDoc.ApiVersion,
-		Kind:            yamlDoc.Kind,
-		Metadata:        yamlDoc.Metadata,
-		Include:         included,
-		TemplateConfigs: templateConfigs,
-		Variables:       variables,
-	}
-	err = blueprintConfig.validate()
-	return &blueprintConfig, err
-}
-
-// parse doc parameters into list of variables
-func (blueprintDoc *BlueprintYaml) parseParameters() ([]Variable, error) {
-	parameters := []Parameter{}
-	variables := []Variable{}
-	if blueprintDoc.Spec.Parameters != nil {
-		parameters = blueprintDoc.Spec.Parameters
-	} else {
-		// for backward compatibility with v8.5
-		parameters = blueprintDoc.Parameters
-	}
-	for _, m := range parameters {
-		parsedVar, err := parseParameter(&m)
-		if err != nil {
-			return variables, err
-		}
-		variables = append(variables, parsedVar)
-	}
-	return variables, nil
-}
-
-// parse doc files into list of TemplateConfig
-func (blueprintDoc *BlueprintYaml) parseFiles(templatePath string, isLocal bool) ([]TemplateConfig, error) {
-	files := []File{}
-	templateConfigs := []TemplateConfig{}
-	if blueprintDoc.Spec.Files != nil {
-		files = blueprintDoc.Spec.Files
-	} else {
-		// for backward compatibility with v8.5
-		files = blueprintDoc.Files
-	}
-	for _, m := range files {
-		templateConfig, err := parseFile(&m)
-		if err != nil {
-			return nil, err
-		}
-		if isLocal {
-			// If local mode, fix path separator in needed cases
-			adjustedPath := AdjustPathSeperatorIfNeeded(templateConfig.Path)
-			templateConfig.Path = adjustedPath
-			templateConfig.FullPath = filepath.Join(templatePath, adjustedPath)
-		}
-		templateConfigs = append(templateConfigs, templateConfig)
-	}
-	return templateConfigs, nil
-}
-
-// parse doc files into list of TemplateConfig
-func (blueprintDoc *BlueprintYaml) parseIncludes() ([]IncludedBlueprintProcessed, error) {
-	processedIncludes := []IncludedBlueprintProcessed{}
-	for _, m := range blueprintDoc.Spec.Include {
-		include, err := parseInclude(&m)
-		if err != nil {
-			return nil, err
-		}
-		processedIncludes = append(processedIncludes, include)
-	}
-	return processedIncludes, nil
-}
-
-func parseParameter(m *Parameter) (Variable, error) {
-	parsedVar := Variable{}
-	err := parseFieldsFromStruct(m, func() reflect.Value {
-		return reflect.ValueOf(&parsedVar).Elem()
-	})
-	return parsedVar, err
-}
-
-func parseFile(m *File) (TemplateConfig, error) {
-	parsedConfig := TemplateConfig{}
-	err := parseFieldsFromStruct(m, func() reflect.Value {
-		return reflect.ValueOf(&parsedConfig).Elem()
-	})
-	return parsedConfig, err
-}
-
-func parseInclude(m *IncludedBlueprint) (IncludedBlueprintProcessed, error) {
-	parsedInclude := IncludedBlueprintProcessed{}
-	err := parseFieldsFromStruct(m, func() reflect.Value {
-		return reflect.ValueOf(&parsedInclude).Elem()
-	})
-	return parsedInclude, err
-}
-
-func parseFieldsFromStruct(original interface{}, getFieldByReflect func() reflect.Value) error {
-	parameterR := reflect.ValueOf(original).Elem()
-	typeOfT := parameterR.Type()
-	// iterate over the struct fields and map them
-	for i := 0; i < parameterR.NumField(); i++ {
-		fieldR := parameterR.Field(i)
-		fieldName := typeOfT.Field(i).Name
-		value := fieldR.Interface()
-		// for backward compatibility
-		invertBool := false
-		if (strings.ToLower(fieldName) == "dependsontrue" || strings.ToLower(fieldName) == "dependsonfalse") && value != nil {
-			invertBool = strings.ToLower(fieldName) == "dependsonfalse"
-			fieldName = "DependsOn"
-		}
-		field := getFieldByReflect().FieldByName(strings.Title(fieldName))
-		switch val := value.(type) {
-		case string:
-			// Set string field
-			setVariableField(&field, val, VarField{Val: val, InvertBool: invertBool})
-		case int, uint, uint8, uint16, uint32, uint64:
-			// Set integer field
-			setVariableField(&field, fmt.Sprint(val), VarField{Val: fmt.Sprint(val), InvertBool: invertBool})
-		case float32, float64:
-			// Set float field
-			setVariableField(&field, fmt.Sprintf("%f", val), VarField{Val: fmt.Sprintf("%f", val), InvertBool: invertBool})
-		case bool:
-			// Set boolean field
-			setVariableField(&field, strconv.FormatBool(val), VarField{Val: strconv.FormatBool(val), Bool: val, InvertBool: invertBool})
-		case []interface{}:
-			// Set options array field for Parameters
-			if len(val) > 0 {
-				field.Set(reflect.MakeSlice(reflect.TypeOf([]VarField{}), len(val), len(val)))
-				for i, it := range val {
-					switch wVal := it.(type) {
-					case int, uint, uint8, uint16, uint32, uint64:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprint(wVal)}))
-					case float32, float64:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: fmt.Sprintf("%f", wVal)}))
-					case string:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: wVal}))
-					case yaml.CustomTag:
-						field.Index(i).Set(reflect.ValueOf(VarField{Val: wVal.Value, Tag: wVal.Tag}))
-					default:
-						return fmt.Errorf("unknown list item type %s", wVal)
-					}
-				}
-			}
-		case []ParameterOverride:
-			// Set ParameterOverride array field for Include
-			if len(val) > 0 {
-				field.Set(reflect.MakeSlice(reflect.TypeOf([]ParameterOverridesProcessed{}), len(val), len(val)))
-				for i, it := range val {
-					parsed := ParameterOverridesProcessed{}
-					err := parseFieldsFromStruct(&it, func() reflect.Value {
-						return reflect.ValueOf(&parsed).Elem()
-					})
-					if err != nil {
-						return err
-					}
-					field.Index(i).Set(reflect.ValueOf(parsed))
-				}
-			}
-		case []File:
-			// Set File array field for Include
-			if len(val) > 0 {
-				field.Set(reflect.MakeSlice(reflect.TypeOf([]TemplateConfig{}), len(val), len(val)))
-				for i, it := range val {
-					parsed := TemplateConfig{}
-					err := parseFieldsFromStruct(&it, func() reflect.Value {
-						return reflect.ValueOf(&parsed).Elem()
-					})
-					if err != nil {
-						return err
-					}
-					field.Index(i).Set(reflect.ValueOf(parsed))
-				}
-			}
-		case yaml.CustomTag:
-			// Set string field with YAML tag
-			switch val.Tag {
-			case tagFn, tagExpression:
-				setVariableField(&field, val.Value, VarField{Val: val.Value, Tag: val.Tag, InvertBool: invertBool})
-			default:
-				return fmt.Errorf("unknown tag %s %s", val.Tag, val.Value)
-			}
-		case nil:
-			// do nothing when field is not set
-		default:
-			return fmt.Errorf("unknown variable type [%s]", val)
-		}
-	}
-	return nil
-}
-
-func setVariableField(field *reflect.Value, val interface{}, varField VarField) {
-	if field.IsValid() && field.CanInterface() {
-		switch field.Interface().(type) {
-		case string:
-			field.Set(reflect.ValueOf(val))
-		case VarField:
-			field.Set(reflect.ValueOf(varField))
-		}
-	}
 }
 
 // verify blueprint directory & generate full paths for local files
@@ -669,8 +447,11 @@ func (blueprintDoc *BlueprintConfig) verifyTemplateDirAndPaths(templatePath stri
 
 // validate blueprint yaml document based on required fields
 func (blueprintDoc *BlueprintConfig) validate() error {
-	if blueprintDoc.ApiVersion != models.YamlFormatVersion {
-		return fmt.Errorf("api version needs to be %s", models.YamlFormatVersion)
+	if !util.IsStringInSlice(blueprintDoc.ApiVersion, models.BlueprintYamlFormatSupportedVersions) {
+		return fmt.Errorf("api version needs to be %s or %s", models.BlueprintYamlFormatV2, models.BlueprintYamlFormatV1)
+	}
+	if blueprintDoc.ApiVersion != models.BlueprintYamlFormatV2 {
+		util.Info("This blueprint uses a deprecated blueprint.yaml schema for apiVersion %s\n", models.BlueprintYamlFormatV1)
 	}
 	if blueprintDoc.Kind != models.BlueprintSpecKind {
 		return fmt.Errorf("yaml document kind needs to be %s", models.BlueprintSpecKind)
@@ -683,9 +464,7 @@ func (blueprintDoc *BlueprintConfig) validate() error {
 }
 
 // prepare template data by getting user input and calling named functions
-func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string, strictAnswers bool, useDefaultsAsValue bool, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
-	data := NewPreparedData()
-
+func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string, strictAnswers bool, useDefaultsAsValue bool, data *PreparedData, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
 	// if exists, get map of answers from file
 	var answerMap map[string]string
 	var err error
@@ -711,51 +490,51 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		defaultVal := variable.GetDefaultVal(data.TemplateData)
 
 		// skip question based on DependsOn fields
-		if !util.IsStringEmpty(variable.DependsOn.Val) {
+		if !util.IsStringEmpty(variable.DependsOn.Value) {
 			dependsOnVal, err := ParseDependsOnValue(variable.DependsOn, &blueprintDoc.Variables, data.TemplateData)
 			if err != nil {
 				return nil, err
 			}
-			if skipQuestionOnCondition(&variable, variable.DependsOn.Val, dependsOnVal, data, defaultVal, variable.DependsOn.InvertBool) {
+			if skipQuestionOnCondition(&variable, variable.DependsOn.Value, dependsOnVal, data, defaultVal, variable.DependsOn.InvertBool) {
 				continue
 			}
 		}
 		// skip user input if value field is present
-		if variable.Value.Val != "" {
+		if variable.Value.Value != "" {
 			parsedVal := variable.GetValueFieldVal(data.TemplateData)
 
 			// check if resulting value is non-empty
 			if parsedVal != nil && parsedVal != "" {
-				if variable.Type.Val == TypeConfirm {
+				if variable.Type.Value == TypeConfirm {
 					saveItemToTemplateDataMap(&variable, data, variable.Value.Bool)
 				} else {
 					saveItemToTemplateDataMap(&variable, data, parsedVal)
 				}
-				util.Verbose("[dataPrep] Skipping question for parameter [%s] because value [%s] is present\n", variable.Name.Val, variable.Value.Val)
+				util.Verbose("[dataPrep] Skipping question for parameter [%s] because value [%s] is present\n", variable.Name.Value, variable.Value.Value)
 				continue
 			} else {
-				util.Verbose("[dataPrep] Parsed value for parameter [%s] is empty, therefore not being skipped\n", variable.Name.Val)
+				util.Verbose("[dataPrep] Parsed value for parameter [%s] is empty, therefore not being skipped\n", variable.Name.Value)
 			}
 		}
 
 		// check answers file for variable value, if exists
 		if usingAnswersFile {
-			if util.MapContainsKeyWithVal(answerMap, variable.Name.Val) {
-				answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Val], data.TemplateData)
+			if util.MapContainsKeyWithVal(answerMap, variable.Name.Value) {
+				answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Value], data.TemplateData)
 				if err != nil {
 					return nil, err
 				}
 
 				// if we have a valid answer, skip user input
-				if variable.Type.Val == TypeConfirm {
+				if variable.Type.Value == TypeConfirm {
 					blueprintDoc.Variables[i] = variable
 				}
 				saveItemToTemplateDataMap(&variable, data, answer)
-				util.Info("[dataPrep] Using answer file value [%v] for variable [%s]\n", answer, variable.Name.Val)
+				util.Info("[dataPrep] Using answer file value [%v] for variable [%s]\n", answer, variable.Name.Value)
 				continue
 			} else {
 				if strictAnswers {
-					return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Val)
+					return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Value)
 				} // do not return error when in non-strict answers mode, instead ask user input for the variable value
 			}
 		}
@@ -769,17 +548,17 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 
 			util.Verbose(
 				"[dataPrep] Use Defaults as Value mode: Skipping question for parameter [%s] because default value [%v] is present\n",
-				variable.Name.Val,
+				variable.Name.Value,
 				finalVal,
 			)
-			if variable.Type.Val == TypeConfirm {
+			if variable.Type.Value == TypeConfirm {
 				blueprintDoc.Variables[i] = variable
 			}
 			saveItemToTemplateDataMap(&variable, data, finalVal)
-			if variable.Secret.Bool && !variable.ShowValueOnSummary.Bool {
-				data.DefaultData[variable.Name.Val] = "*****"
+			if variable.Type.Value == TypeSecret && !variable.RevealOnSummary.Bool {
+				data.DefaultData[variable.Label.Value] = "*****"
 			} else {
-				data.DefaultData[variable.Name.Val] = finalVal
+				data.DefaultData[variable.Label.Value] = finalVal
 			}
 			continue
 		}
@@ -789,7 +568,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		// * if value field is not present
 		// * if not in default mode and default value is present
 		// * if answers file is not present or isPartial is set to TRUE and answer not found on file for the variable
-		util.Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Val, variable.Type.Val)
+		util.Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Value, variable.Type.Value)
 		var answer interface{}
 		if !SkipUserInput {
 			answer, err = variable.GetUserInput(defaultVal, data.TemplateData, surveyOpts...)
@@ -797,7 +576,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		if err != nil {
 			return nil, err
 		}
-		if variable.Type.Val == TypeConfirm {
+		if variable.Type.Value == TypeConfirm {
 			blueprintDoc.Variables[i] = variable
 		}
 		saveItemToTemplateDataMap(&variable, data, answer)
@@ -845,27 +624,17 @@ func getFileContents(filepath string) (string, error) {
 func validateVariables(variables *[]Variable) error {
 	var variableNames []string
 	for _, userVar := range *variables {
-		// validate non-empty
-		if util.IsStringEmpty(userVar.Name.Val) || util.IsStringEmpty(userVar.Type.Val) {
-			return fmt.Errorf("parameter [%s] is missing required fields: [type]", userVar.Name.Val)
-		}
-
-		// validate type field
-		if !util.IsStringInSlice(userVar.Type.Val, validTypes) {
-			return fmt.Errorf("type [%s] is not valid for parameter [%s]", userVar.Type.Val, userVar.Name.Val)
-		}
-
 		// validate select case
-		if userVar.Type.Val == TypeSelect && len(userVar.Options) == 0 {
-			return fmt.Errorf("at least one option field is need to be set for parameter [%s]", userVar.Name.Val)
+		if userVar.Type.Value == TypeSelect && len(userVar.Options) == 0 {
+			return fmt.Errorf("at least one option field is need to be set for parameter [%s]", userVar.Name.Value)
 		}
 
 		// validate file case
-		if userVar.Type.Val == TypeFile && !util.IsStringEmpty(userVar.Value.Val) {
+		if userVar.Type.Value == TypeFile && !util.IsStringEmpty(userVar.Value.Value) {
 			return fmt.Errorf("'value' field is not allowed for file input type")
 		}
 
-		variableNames = append(variableNames, userVar.Name.Val)
+		variableNames = append(variableNames, userVar.Name.Value)
 	}
 
 	// Check if there are duplicate variable names
@@ -888,27 +657,13 @@ func validateFiles(configs *[]TemplateConfig) error {
 	return nil
 }
 
-func validatePrompt(varName string, validateExpr string, pattern string, allowEmpty bool, parameters map[string]interface{}) func(val interface{}) error {
+func validatePrompt(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}) func(val interface{}) error {
 	return func(val interface{}) error {
 		// if empty value is not allowed, check for any value
 		if !allowEmpty {
 			err := survey.Required(val)
 			if err != nil {
 				return err
-			}
-		}
-
-		// do pattern validation - TODO: to be removed after v9.0
-		if pattern != "" {
-			// the reflect value of the result
-			value := reflect.ValueOf(val)
-
-			match, err := regexp.MatchString("^"+pattern+"$", value.String())
-			if err != nil {
-				return err
-			}
-			if !match {
-				return fmt.Errorf("Value should match pattern %s", pattern)
 			}
 		}
 
@@ -957,12 +712,12 @@ func validateFilePath() func(val interface{}) error {
 func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsOn bool, dataMap *PreparedData, defaultVal interface{}, condition bool) bool {
 	if dependsOn == condition {
 		// return false if this is a skipped confirm question
-		if defaultVal == "" && currentVar.Type.Val == TypeConfirm {
+		if defaultVal == "" && currentVar.Type.Value == TypeConfirm {
 			defaultVal = false
 		}
 
 		saveItemToTemplateDataMap(currentVar, dataMap, defaultVal)
-		util.Verbose("[dataPrep] Skipping question for parameter [%s] because DependsOn [%s] value is %t\n", currentVar.Name.Val, dependsOnVal, condition)
+		util.Verbose("[dataPrep] Skipping question for parameter [%s] because PromptIf [%s] value is %t\n", currentVar.Name.Value, dependsOnVal, condition)
 		return true
 	}
 	return false
@@ -977,7 +732,7 @@ func prepareQuestionText(desc string, fallbackQuestion string) string {
 
 func findVariableByName(variables *[]Variable, name string) (*Variable, error) {
 	for _, variable := range *variables {
-		if variable.Name.Val == name {
+		if variable.Name.Value == name {
 			return &variable, nil
 		}
 	}
@@ -985,20 +740,20 @@ func findVariableByName(variables *[]Variable, name string) (*Variable, error) {
 }
 
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
-	if variable.Secret.Bool {
-		preparedData.Secrets[variable.Name.Val] = data
+	if variable.Type.Value == TypeSecret {
+		preparedData.Secrets[variable.Name.Value] = data
 		// Use raw value of secret field if flag is set
-		if variable.UseRawValue.Bool {
-			preparedData.TemplateData[variable.Name.Val] = data
+		if variable.ReplaceAsIs.Bool {
+			preparedData.TemplateData[variable.Name.Value] = data
 		} else {
-			preparedData.TemplateData[variable.Name.Val] = fmt.Sprintf(fmtTagValue, variable.Name.Val)
+			preparedData.TemplateData[variable.Name.Value] = fmt.Sprintf(fmtTagValue, variable.Name.Value)
 		}
 	} else {
 		// Save to values file if switch is ON
-		if variable.SaveInXlVals.Bool {
-			preparedData.Values[variable.Name.Val] = data
+		if variable.SaveInXlvals.Bool {
+			preparedData.Values[variable.Name.Value] = data
 		}
-		preparedData.TemplateData[variable.Name.Val] = data
+		preparedData.TemplateData[variable.Name.Value] = data
 	}
 }
 

@@ -56,11 +56,7 @@ func AdjustPathSeperatorIfNeeded(blueprintTemplate string) string {
 }
 
 func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
-	// skipped via composed blueprint
-	if templateConfig.Operation == skipOperation {
-		return true, nil
-	}
-	if !util.IsStringEmpty(templateConfig.DependsOn.Val) {
+	if !util.IsStringEmpty(templateConfig.DependsOn.Value) {
 		dependsOnVal, err := ParseDependsOnValue(templateConfig.DependsOn, variables, parameters)
 		if err != nil {
 			return false, err
@@ -154,7 +150,7 @@ func InstantiateBlueprint(
 		}
 
 		if skipFile {
-			util.Verbose("[file] skipping file [%s] since it has dependsOn value set or is skipped by composed blueprint\n", config.Path)
+			util.Verbose("[file] skipping file [%s] since it has writeIf value set or is skipped by composed blueprint\n", config.Path)
 			continue
 		}
 
@@ -166,8 +162,8 @@ func InstantiateBlueprint(
 		}
 		templateString := string(*templateContent)
 		finalFileName := config.Path
-		if config.RenamedPath.Val != "" {
-			finalFileName = config.RenamedPath.Val
+		if config.RenameTo.Value != "" {
+			finalFileName = config.RenameTo.Value
 			util.Verbose("[file] Renaming template file %s to %s as it is overridden by composed blueprint\n", config.Path, finalFileName)
 		}
 
@@ -242,7 +238,7 @@ func prepareMergedTemplateData(
 		}
 		if ok {
 			// ask for user input
-			preparedData, err := blueprintDoc.BlueprintConfig.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
+			preparedData, err := blueprintDoc.BlueprintConfig.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, mergedData, surveyOpts...)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -275,7 +271,7 @@ func prepareMergedTemplateData(
 }
 
 func evaluateAndSkipIfDependsOnIsFalse(dependsOn VarField, variables *[]Variable, mergedData *PreparedData) (bool, error) {
-	if util.IsStringEmpty(dependsOn.Val) {
+	if util.IsStringEmpty(dependsOn.Value) {
 		return true, nil
 	}
 	dependsOnVal, err := ParseDependsOnValue(dependsOn, variables, mergedData.TemplateData)
@@ -314,23 +310,22 @@ func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *Blueprin
 			return nil, err
 		}
 		if included.ParameterOverrides != nil {
-			for _, overide := range included.ParameterOverrides {
-				targetIndex := findParameter(currentBlueprintDoc.Variables, overide.Name)
+			for _, override := range included.ParameterOverrides {
+				targetIndex := findParameter(currentBlueprintDoc.Variables, override.Name)
 				if targetIndex != -1 {
-					currentBlueprintDoc.Variables[targetIndex].Value = overide.Value
+					util.MergeStructFields(&(currentBlueprintDoc.Variables[targetIndex]), &override, []string{"Name", "Type"})
 				} else {
-					util.Verbose("[compose] Could not find parameterOverride for %s\n", overide.Name)
+					util.Verbose("[compose] Could not find parameterOverride for %s\n", override.Name.Value)
 				}
 			}
 		}
 		if included.FileOverrides != nil {
-			for _, overide := range included.FileOverrides {
-				targetIndex := findTemplateConfig(currentBlueprintDoc.TemplateConfigs, overide.Path)
+			for _, override := range included.FileOverrides {
+				targetIndex := findTemplateConfig(currentBlueprintDoc.TemplateConfigs, override.Path)
 				if targetIndex != -1 {
-					currentBlueprintDoc.TemplateConfigs[targetIndex].Operation = overide.Operation
-					currentBlueprintDoc.TemplateConfigs[targetIndex].RenamedPath = overide.RenamedPath
+					util.MergeStructFields(&(currentBlueprintDoc.TemplateConfigs[targetIndex]), &override, []string{"Path"})
 				} else {
-					util.Verbose("[compose] Could not find fileOverride for %s\n", overide.Path)
+					util.Verbose("[compose] Could not find fileOverride for %s\n", override.Path)
 				}
 			}
 		}
@@ -345,9 +340,9 @@ func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *Blueprin
 	return blueprintDocs, nil
 }
 
-func findParameter(params []Variable, name string) int {
+func findParameter(params []Variable, name VarField) int {
 	for i, param := range params {
-		if param.Name.Val == name {
+		if param.Name.Value == name.Value {
 			return i
 		}
 	}

@@ -7,6 +7,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -196,5 +197,29 @@ func ParseVersion(version string, digits int) int64 {
 func CopyIntoStringInterfaceMap(in map[string]interface{}, out map[string]interface{}) {
 	for k, v := range in {
 		out[k] = v
+	}
+}
+
+// MergeStructFields merges the source into target, zero value fields are skipped along with fieldsToSkip. The target reference is updated
+func MergeStructFields(target interface{}, source interface{}, fieldsToSkip []string) {
+	sourceR := reflect.ValueOf(source).Elem()
+	targetR := reflect.ValueOf(target).Elem()
+	typeOfTarget := targetR.Type()
+	// iterate over the struct fields and map them
+	for i := 0; i < sourceR.NumField(); i++ {
+		fieldName := typeOfTarget.Field(i).Name
+		if IsStringInSlice(fieldName, fieldsToSkip) {
+			continue
+		}
+		sourceField := sourceR.Field(i)
+		value := sourceField.Interface()
+		f := targetR.FieldByName(strings.Title(fieldName))
+		if !f.IsValid() || !f.CanSet() {
+			continue
+		}
+		if reflect.DeepEqual(reflect.Zero(reflect.TypeOf(value)).Interface(), value) {
+			continue
+		}
+		f.Set(reflect.ValueOf(value))
 	}
 }

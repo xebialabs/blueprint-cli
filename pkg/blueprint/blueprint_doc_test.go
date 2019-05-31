@@ -11,8 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/yaml"
 )
 
 var sampleKubeConfig = `apiVersion: v1
@@ -93,89 +91,13 @@ func Setupk8sConfig() {
 	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
 }
 
-func getValidTestBlueprintMetadata(templatePath string, blueprintRepository BlueprintContext) (*BlueprintConfig, error) {
-	metadata := []byte(
-		fmt.Sprintf(`
-         apiVersion: %s
-         kind: Blueprint
-         metadata:
-           projectName: Test Project
-           description: Is just a test blueprint project used for manual testing of inputs
-           author: XebiaLabs
-           version: 1.0
-           instructions: These are the instructions for executing this blueprint
-         spec:
-           parameters:
-           - name: pass
-             type: Input
-             description: password?
-             secret: true
-           - name: test
-             type: Input
-             default: lala
-             saveInXlVals: true
-             description: help text
-           - name: fn
-             type: Input
-             value: !fn aws.regions(ecs)[0]
-           - name: select
-             type: Select
-             description: select region
-             options:
-             - !fn aws.regions(ecs)[0]
-             - b
-             - c
-             default: b
-           - name: isit
-             description: is it?
-             type: Confirm
-             value: true
-           - name: isitnot
-             description: negative question?
-             type: Confirm
-           - name: dep
-             description: depends on others
-             type: Input
-             dependsOn: !expression "isit && true"
-             dependsOnFalse: isitnot
-           files:
-           - path: xebialabs/foo.yaml
-           - path: readme.md
-             dependsOnTrue: isit
-           - path: bar.md
-             dependsOn: isitnot
-           - path: foo.md
-             dependsOnFalse: !expression "!!isitnot"
-           include:
-           - blueprint: kubernetes/gke-cluster
-             stage: before
-             parameterOverrides:
-             - name: Foo
-               value: hello
-               dependsOn: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
-             - name: bar
-               value: true
-             fileOverrides:
-             - path: xld-infrastructure.yml.tmpl
-               operation: skip
-               dependsOnTrue: TestDepends
-           - blueprint: kubernetes/namespace
-             dependsOnTrue: !expression "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"
-             stage: after
-             parameterOverrides:
-             - name: Foo
-               value: hello
-`, models.YamlFormatVersion))
-	return parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
-}
-
 var dummyData = make(map[string]interface{})
 
 func TestGetVariableDefaultVal(t *testing.T) {
 	t.Run("should return empty string when default is not defined", func(t *testing.T) {
 		v := Variable{
-			Name: VarField{Val: "test"},
-			Type: VarField{Val: TypeInput},
+			Name: VarField{Value: "test"},
+			Type: VarField{Value: TypeInput},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
@@ -183,9 +105,9 @@ func TestGetVariableDefaultVal(t *testing.T) {
 
 	t.Run("should return default value string when default is defined", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "default_val"},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "default_val"},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "default_val", defaultVal)
@@ -193,9 +115,9 @@ func TestGetVariableDefaultVal(t *testing.T) {
 
 	t.Run("should return empty string when invalid function tag in default field", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "aws.regs", Tag: tagFn},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "aws.regs", Tag: tagFnV1},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
@@ -203,9 +125,9 @@ func TestGetVariableDefaultVal(t *testing.T) {
 
 	t.Run("should return function output on valid function tag in default field", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "aws.regions(ecs)[0]", Tag: tagFn},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
@@ -215,9 +137,9 @@ func TestGetVariableDefaultVal(t *testing.T) {
 
 	t.Run("should return empty string when invalid expression tag in default field", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "aws.regs", Tag: tagExpression},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "aws.regs", Tag: tagExpressionV2},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
@@ -225,16 +147,16 @@ func TestGetVariableDefaultVal(t *testing.T) {
 
 	t.Run("should return output on valid expression tag in default field", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "'foo' + 'bar'", Tag: tagExpression},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "'foo' + 'bar'", Tag: tagExpressionV2},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeInput},
-			Default: VarField{Val: "Foo > 10", Tag: tagExpression},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "Foo > 10", Tag: tagExpressionV2},
 		}
 		defaultVal = v.GetDefaultVal(map[string]interface{}{
 			"Foo": 100,
@@ -243,71 +165,12 @@ func TestGetVariableDefaultVal(t *testing.T) {
 	})
 }
 
-func TestParseDependsOnValue(t *testing.T) {
-	t.Run("should error when unknown function in DependsOn", func(t *testing.T) {
-		v := Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "aws.creds", Tag: "!fn"},
-		}
-		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
-		require.NotNil(t, err)
-	})
-	t.Run("should return valid value for DependsOn field from function", func(t *testing.T) {
-		v := Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "aws.credentials().IsAvailable", Tag: "!fn"},
-		}
-		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
-		require.Nil(t, err)
-	})
-	t.Run("should error when invalid expression in DependsOn", func(t *testing.T) {
-		v := Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "aws.creds", Tag: tagExpression},
-		}
-		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
-		require.NotNil(t, err)
-	})
-	t.Run("should return parsed bool value for DependsOn field from expression", func(t *testing.T) {
-		v := Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "Foo > 10", Tag: tagExpression},
-		}
-
-		val, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, map[string]interface{}{
-			"Foo": 100,
-		})
-		require.Nil(t, err)
-		require.True(t, val)
-	})
-	t.Run("should return bool value from referenced var for dependsOn field", func(t *testing.T) {
-		vars := make([]Variable, 2)
-		vars[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: true, Val: "true"},
-		}
-		vars[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "confirm"},
-		}
-		val, err := ParseDependsOnValue(vars[1].DependsOn, &vars, dummyData)
-		require.Nil(t, err)
-		assert.Equal(t, vars[0].Value.Bool, val)
-	})
-}
-
 func TestGetValueFieldVal(t *testing.T) {
 	t.Run("should return value field string value when defined", func(t *testing.T) {
 		v := Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "testing"},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "testing"},
 		}
 		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "testing", val)
@@ -315,9 +178,9 @@ func TestGetValueFieldVal(t *testing.T) {
 
 	t.Run("should return empty on invalid function tag in value field", func(t *testing.T) {
 		v := Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "aws.regs", Tag: tagFn},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "aws.regs", Tag: tagFnV1},
 		}
 		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "", val)
@@ -325,9 +188,9 @@ func TestGetValueFieldVal(t *testing.T) {
 
 	t.Run("should return function output on valid function tag in value field", func(t *testing.T) {
 		v := Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "aws.regions(ecs)[0]", Tag: tagFn},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
 		val := v.GetValueFieldVal(dummyData)
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
@@ -337,9 +200,9 @@ func TestGetValueFieldVal(t *testing.T) {
 
 	t.Run("should return empty on invalid expression tag in value field", func(t *testing.T) {
 		v := Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "aws.regs()", Tag: tagExpression},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "aws.regs()", Tag: tagExpressionV2},
 		}
 		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "", val)
@@ -347,16 +210,16 @@ func TestGetValueFieldVal(t *testing.T) {
 
 	t.Run("should return expression output on valid expression tag in value field", func(t *testing.T) {
 		v := Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "'foo' + 'bar'", Tag: tagExpression},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "'foo' + 'bar'", Tag: tagExpressionV2},
 		}
 		defaultVal := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
-			Name:  VarField{Val: "test"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "Foo > 10", Tag: tagExpression},
+			Name:  VarField{Value: "test"},
+			Type:  VarField{Value: TypeInput},
+			Value: VarField{Value: "Foo > 10", Tag: tagExpressionV2},
 		}
 		defaultVal = v.GetValueFieldVal(map[string]interface{}{
 			"Foo": 100,
@@ -368,534 +231,224 @@ func TestGetValueFieldVal(t *testing.T) {
 func TestGetOptions(t *testing.T) {
 	t.Run("should return string values of options", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "a"}, {Val: "b"}, {Val: "c"}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "a"}, {Value: "b"}, {Value: "c"}},
 		}
-		values := v.GetOptions(dummyData)
+		values := v.GetOptions(dummyData, true)
 		assert.Len(t, values, 3)
 		assert.Equal(t, []string{"a", "b", "c"}, values)
 	})
 
+	t.Run("should return string values of map options with label", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "aVal"}, {Label: "bLabel", Value: "bVal"}, {Label: "cLabel", Value: "cVal"}},
+		}
+		values := v.GetOptions(dummyData, true)
+		assert.Len(t, values, 3)
+		assert.Equal(t, []string{"aVal", "bLabel (bVal)", "cLabel (cVal)"}, values)
+	})
+
+	t.Run("should return string values of map options without label", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "aVal"}, {Label: "bLabel", Value: "bVal"}, {Label: "cLabel", Value: "cVal"}},
+		}
+		values := v.GetOptions(dummyData, false)
+		assert.Len(t, values, 3)
+		assert.Equal(t, []string{"aVal", "bVal", "cVal"}, values)
+	})
+
 	t.Run("should return generated values for fn options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "aws.regions(ecs)", Tag: "!fn"}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "aws.regions(ecs)", Tag: tagFnV1}},
 		}
-		values := v.GetOptions(dummyData)
+		values := v.GetOptions(dummyData, true)
 		assert.True(t, len(values) > 1)
 	})
 
 	t.Run("should return nil on invalid function tag for options", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "aws.regs", Tag: "!fn"}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "aws.regs", Tag: tagFnV1}},
 		}
-		out := v.GetOptions(dummyData)
+		out := v.GetOptions(dummyData, true)
 		require.Nil(t, out)
 	})
 
 	t.Run("should return generated values for expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (1, 2, 3)", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Foo ? Bar : (1, 2, 3)", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": true,
 			"Bar": []string{"test", "foo"},
-		})
+		}, true)
 		assert.True(t, len(values) == 2)
 	})
 
 	t.Run("should return generated string array values for expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Provider == 'GCP' ? ('GKE', 'CloudSore') : ('test')", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Provider == 'GCP' ? ('GKE', 'CloudSore') : ('test')", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Provider": "GCP",
-		})
+		}, true)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 2)
 	})
 
 	t.Run("should return string values for param reference in expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (Foo1, Foo2)", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Foo ? Bar : (Foo1, Foo2)", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo":  false,
 			"Foo1": "test",
 			"Foo2": "foo",
 			"Bar":  []string{"test", "foo"},
-		})
+		}, true)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 2)
 	})
 
 	t.Run("should return string values for numeric type in expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (1, 2, 3)", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Foo ? Bar : (1, 2, 3)", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
 			"Bar": []string{"test", "foo"},
-		})
+		}, true)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 3)
 	})
 
 	t.Run("should return string values for boolean type in expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (true, false)", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Foo ? Bar : (true, false)", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
 			"Bar": []string{"test", "foo"},
-		})
+		}, true)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 2)
 	})
 
 	t.Run("should return nil values for invalid return type in expression options tag", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "Foo ? Bar : (Fooo, Foo)", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "Foo ? Bar : (Fooo, Foo)", Tag: tagExpressionV2}},
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
 			"Bar": []string{"test", "foo"},
-		})
+		}, true)
 		assert.Nil(t, values)
 	})
 
 	t.Run("should return nil on invalid expression tag for options", func(t *testing.T) {
 		v := Variable{
-			Name:    VarField{Val: "test"},
-			Type:    VarField{Val: TypeSelect},
-			Options: []VarField{{Val: "aws.regs()", Tag: tagExpression}},
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeSelect},
+			Options: []VarField{{Value: "aws.regs()", Tag: tagExpressionV2}},
 		}
-		out := v.GetOptions(dummyData)
+		out := v.GetOptions(dummyData, true)
 		require.Nil(t, out)
 	})
 }
 
 func TestSkipQuestionOnCondition(t *testing.T) {
-	t.Run("should skip question (dependsOnFalse)", func(t *testing.T) {
+	t.Run("should skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: true, Val: "true"},
+			Name:  VarField{Value: "confirm"},
+			Type:  VarField{Value: TypeConfirm},
+			Value: VarField{Bool: true, Value: "true"},
 		}
 		variables[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "confirm", InvertBool: true},
+			Name:      VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "confirm", InvertBool: true},
 		}
-		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Value, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
-	t.Run("should skip question (dependsOn)", func(t *testing.T) {
+	t.Run("should skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: false, Val: "false"},
+			Name:  VarField{Value: "confirm"},
+			Type:  VarField{Value: TypeConfirm},
+			Value: VarField{Bool: false, Value: "false"},
 		}
 		variables[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "confirm"},
+			Name:      VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "confirm"},
 		}
-		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Value, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
-	t.Run("should skip question and default value should be false (dependsOn)", func(t *testing.T) {
+	t.Run("should skip question and default value should be false (promptIf)", func(t *testing.T) {
 		data := NewPreparedData()
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: false, Val: "false"},
+			Name:  VarField{Value: "confirm"},
+			Type:  VarField{Value: TypeConfirm},
+			Value: VarField{Bool: false, Value: "false"},
 		}
 		variables[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeConfirm},
-			DependsOn: VarField{Val: "confirm"},
+			Name:      VarField{Value: "test"},
+			Type:      VarField{Value: TypeConfirm},
+			DependsOn: VarField{Value: "confirm"},
 		}
-		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, data, "", variables[1].DependsOn.InvertBool))
-		assert.False(t, data.TemplateData[variables[1].Name.Val].(bool))
+		assert.True(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Value, variables[0].Value.Bool, data, "", variables[1].DependsOn.InvertBool))
+		assert.False(t, data.TemplateData[variables[1].Name.Value].(bool))
 	})
 
-	t.Run("should not skip question (dependsOnFalse)", func(t *testing.T) {
+	t.Run("should not skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: false, Val: "false"},
+			Name:  VarField{Value: "confirm"},
+			Type:  VarField{Value: TypeConfirm},
+			Value: VarField{Bool: false, Value: "false"},
 		}
 		variables[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "confirm", InvertBool: true},
+			Name:      VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "confirm", InvertBool: true},
 		}
-		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
+		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Value, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
-	t.Run("should not skip question (dependsOn)", func(t *testing.T) {
+	t.Run("should not skip question (promptIf)", func(t *testing.T) {
 		variables := make([]Variable, 2)
 		variables[0] = Variable{
-			Name:  VarField{Val: "confirm"},
-			Type:  VarField{Val: TypeConfirm},
-			Value: VarField{Bool: true, Val: "true"},
+			Name:  VarField{Value: "confirm"},
+			Type:  VarField{Value: TypeConfirm},
+			Value: VarField{Bool: true, Value: "true"},
 		}
 		variables[1] = Variable{
-			Name:      VarField{Val: "test"},
-			Type:      VarField{Val: TypeInput},
-			DependsOn: VarField{Val: "confirm"},
+			Name:      VarField{Value: "test"},
+			Type:      VarField{Value: TypeInput},
+			DependsOn: VarField{Value: "confirm"},
 		}
-		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Val, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
-	})
-}
-
-func TestParseTemplateMetadata(t *testing.T) {
-	templatePath := "test/blueprints"
-	blueprintRepository := BlueprintContext{}
-	tmpDir := filepath.Join("test", "blueprints")
-	os.MkdirAll(tmpDir, os.ModePerm)
-	defer os.RemoveAll("test")
-	d1 := []byte("hello\ngo\n")
-	ioutil.WriteFile(filepath.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
-
-	t.Run("should error on invalid xl yaml", func(t *testing.T) {
-		metadata := []byte("test: blueprint")
-		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
-		require.NotNil(t, err)
-		assert.Equal(t, fmt.Sprintf("yaml: unmarshal errors:\n  line 1: field test not found in type blueprint.BlueprintYaml"), err.Error())
-	})
-
-	t.Run("should error on missing api version", func(t *testing.T) {
-		metadata := []byte("kind: blueprint")
-		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
-		require.NotNil(t, err)
-		assert.Equal(t, fmt.Sprintf("api version needs to be %s", models.YamlFormatVersion), err.Error())
-	})
-
-	t.Run("should error on missing doc kind", func(t *testing.T) {
-		metadata := []byte("apiVersion: " + models.YamlFormatVersion)
-		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
-		require.NotNil(t, err)
-		assert.Equal(t, "yaml document kind needs to be Blueprint", err.Error())
-	})
-
-	t.Run("should error on unknown field type", func(t *testing.T) {
-		metadata := []byte(
-			fmt.Sprintf(`
-                apiVersion: %s
-                kind: Blueprint
-                metadata:
-                spec:
-                  parameters:
-                  - name: Test
-                    type: Invalid
-                    value: testing`,
-				models.YamlFormatVersion))
-		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
-		require.NotNil(t, err)
-		assert.Equal(t, "type [Invalid] is not valid for parameter [Test]", err.Error())
-	})
-
-	t.Run("should error on missing variable field", func(t *testing.T) {
-		metadata := []byte(
-			fmt.Sprintf(`
-               apiVersion: %s
-               kind: Blueprint
-               metadata:
-               spec:
-                 parameters:
-                 - name: Test
-                   value: testing`, models.YamlFormatVersion))
-		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
-		require.NotNil(t, err)
-		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
-	})
-
-	t.Run("should error on missing options for variable", func(t *testing.T) {
-		metadata := []byte(
-			fmt.Sprintf(`
-                apiVersion: %s
-                kind: Blueprint
-                metadata:
-                spec:
-                  parameters:
-                  - name: Test
-                    type: Select
-                    options:`, models.YamlFormatVersion))
-		_, err := parseTemplateMetadata(&metadata, templatePath, &blueprintRepository, true)
-		require.NotNil(t, err)
-		assert.Equal(t, "at least one option field is need to be set for parameter [Test]", err.Error())
-	})
-	t.Run("should error on missing path for files", func(t *testing.T) {
-		metadata := []byte(
-			fmt.Sprintf(`
-                apiVersion: %s
-                kind: Blueprint
-                metadata:
-                spec:
-                  parameters:
-                  - name: Test
-                    type: Confirm
-                  files:
-                  - dependsOnFalse: Test
-                  - path: xbc.yaml`, models.YamlFormatVersion))
-		_, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
-		require.NotNil(t, err)
-		assert.Equal(t, "path is missing for file specification in files", err.Error())
-	})
-	t.Run("should error on invalid path for files", func(t *testing.T) {
-		metadata := []byte(
-			fmt.Sprintf(`
-               apiVersion: %s
-               kind: Blueprint
-               metadata:
-               spec:
-                 parameters:
-                 - name: Test
-                   type: Confirm
-                 files:
-                 - path: ../xbc.yaml`, models.YamlFormatVersion))
-		_, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
-		require.NotNil(t, err)
-		assert.Equal(t, "path for file specification cannot start with /, .. or ./", err.Error())
-	})
-	t.Run("should error on duplicate variable names", func(t *testing.T) {
-		metadata := []byte(
-			fmt.Sprintf(`
-               apiVersion: %s
-               kind: Blueprint
-               metadata:
-               spec:
-                 parameters:
-                 - name: Test
-                   type: Input
-                   default: 1
-                 - name: Test
-                   type: Input
-                   default: 2
-                 files:`, models.YamlFormatVersion))
-		_, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
-		require.NotNil(t, err)
-		assert.Equal(t, "variable names must be unique within blueprint 'parameters' definition", err.Error())
-	})
-	t.Run("should parse nested variables and files from valid legacy metadata", func(t *testing.T) {
-		metadata := []byte(
-			fmt.Sprintf(`
-               apiVersion: %s
-               kind: Blueprint
-               metadata:
-               parameters:
-               - name: pass
-                 type: Input
-                 description: password?
-                 secret: true
-                 useRawValue: true
-               - name: test
-                 type: Input
-                 default: lala
-                 saveInXlVals: true
-                 description: help text
-                 showValueOnSummary: true
-
-               files:
-               - path: xebialabs/foo.yaml
-               - path: readme.md
-                 dependsOn: isit`, models.YamlFormatVersion))
-		doc, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
-		require.Nil(t, err)
-		assert.Equal(t, Variable{
-			Name:        VarField{Val: "pass"},
-			Type:        VarField{Val: TypeInput},
-			Description: VarField{Val: "password?"},
-			Secret:      VarField{Bool: true, Val: "true"},
-			UseRawValue: VarField{Bool: true, Val: "true"},
-		}, doc.Variables[0])
-		assert.Equal(t, Variable{
-			Name:               VarField{Val: "test"},
-			Type:               VarField{Val: TypeInput},
-			Default:            VarField{Val: "lala"},
-			Description:        VarField{Val: "help text"},
-			SaveInXlVals:       VarField{Bool: true, Val: "true"},
-			ShowValueOnSummary: VarField{Bool: true, Val: "true"},
-		}, doc.Variables[1])
-		assert.Equal(t, TemplateConfig{
-			Path:     "xebialabs/foo.yaml",
-			FullPath: filepath.Join("aws/test", "xebialabs/foo.yaml"),
-		}, doc.TemplateConfigs[0])
-		assert.Equal(t, TemplateConfig{
-			Path:      "readme.md",
-			FullPath:  filepath.Join("aws/test", "readme.md"),
-			DependsOn: VarField{Val: "isit"},
-		}, doc.TemplateConfigs[1])
-	})
-
-	t.Run("should parse nested variables from valid metadata", func(t *testing.T) {
-		doc, err := getValidTestBlueprintMetadata(templatePath, blueprintRepository)
-		require.Nil(t, err)
-		assert.Len(t, doc.Variables, 7)
-		assert.Equal(t, Variable{
-			Name:        VarField{Val: "pass"},
-			Type:        VarField{Val: TypeInput},
-			Description: VarField{Val: "password?"},
-			Secret:      VarField{Bool: true, Val: "true"},
-		}, doc.Variables[0])
-		assert.Equal(t, Variable{
-			Name:         VarField{Val: "test"},
-			Type:         VarField{Val: TypeInput},
-			Default:      VarField{Val: "lala"},
-			Description:  VarField{Val: "help text"},
-			SaveInXlVals: VarField{Bool: true, Val: "true"},
-		}, doc.Variables[1])
-		assert.Equal(t, Variable{
-			Name:  VarField{Val: "fn"},
-			Type:  VarField{Val: TypeInput},
-			Value: VarField{Val: "aws.regions(ecs)[0]", Tag: tagFn},
-		}, doc.Variables[2])
-		assert.Equal(t, Variable{
-			Name:        VarField{Val: "select"},
-			Type:        VarField{Val: TypeSelect},
-			Description: VarField{Val: "select region"},
-			Options: []VarField{
-				{Val: "aws.regions(ecs)[0]", Tag: tagFn},
-				{Val: "b"},
-				{Val: "c"},
-			},
-			Default: VarField{Val: "b"},
-		}, doc.Variables[3])
-		assert.Equal(t, Variable{
-			Name:        VarField{Val: "isit"},
-			Type:        VarField{Val: TypeConfirm},
-			Description: VarField{Val: "is it?"},
-			Value:       VarField{Bool: true, Val: "true"},
-		}, doc.Variables[4])
-		assert.Equal(t, Variable{
-			Name:        VarField{Val: "isitnot"},
-			Type:        VarField{Val: TypeConfirm},
-			Description: VarField{Val: "negative question?"},
-		}, doc.Variables[5])
-		assert.Equal(t, Variable{
-			Name:        VarField{Val: "dep"},
-			Type:        VarField{Val: TypeInput},
-			Description: VarField{Val: "depends on others"},
-			DependsOn:   VarField{Val: "isitnot", InvertBool: true},
-		}, doc.Variables[6])
-	})
-	t.Run("should parse files from valid metadata", func(t *testing.T) {
-		doc, err := getValidTestBlueprintMetadata("templatePath/test", blueprintRepository)
-		require.Nil(t, err)
-		assert.Equal(t, 4, len(doc.TemplateConfigs))
-		assert.Equal(t, TemplateConfig{
-			Path:     "xebialabs/foo.yaml",
-			FullPath: "templatePath/test/xebialabs/foo.yaml",
-		}, doc.TemplateConfigs[0])
-		assert.Equal(t, TemplateConfig{
-			Path:      "readme.md",
-			FullPath:  "templatePath/test/readme.md",
-			DependsOn: VarField{Val: "isit"},
-		}, doc.TemplateConfigs[1])
-		assert.Equal(t, TemplateConfig{
-			Path:      "bar.md",
-			FullPath:  "templatePath/test/bar.md",
-			DependsOn: VarField{Val: "isitnot"},
-		}, doc.TemplateConfigs[2])
-		assert.Equal(t, TemplateConfig{
-			Path:      "foo.md",
-			FullPath:  "templatePath/test/foo.md",
-			DependsOn: VarField{Val: "!!isitnot", Tag: tagExpression, InvertBool: true},
-		}, doc.TemplateConfigs[3])
-	})
-	t.Run("should parse includes from valid metadata", func(t *testing.T) {
-		doc, err := getValidTestBlueprintMetadata("templatePath/test", blueprintRepository)
-		require.Nil(t, err)
-		assert.Equal(t, 2, len(doc.Include))
-		assert.Equal(t, IncludedBlueprintProcessed{
-			Blueprint: "kubernetes/gke-cluster",
-			Stage:     "before",
-			ParameterOverrides: []ParameterOverridesProcessed{
-				{
-					Name:      "Foo",
-					Value:     VarField{Val: "hello"},
-					DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
-				},
-				{
-					Name:  "bar",
-					Value: VarField{Val: "true", Bool: true},
-				},
-			},
-			FileOverrides: []TemplateConfig{
-				{
-					Path:      "xld-infrastructure.yml.tmpl",
-					Operation: "skip",
-					DependsOn: VarField{Val: "TestDepends"},
-				},
-			},
-		}, doc.Include[0])
-		assert.Equal(t, IncludedBlueprintProcessed{
-			Blueprint: "kubernetes/namespace",
-			Stage:     "after",
-			ParameterOverrides: []ParameterOverridesProcessed{
-				{
-					Name:  "Foo",
-					Value: VarField{Val: "hello"},
-				},
-			},
-			DependsOn: VarField{Tag: "!expression", Val: "ExpTest1 == 'us-west' && AppName != 'foo' && TestDepends"},
-		}, doc.Include[1])
-	})
-	t.Run("should parse metadata fields", func(t *testing.T) {
-		doc, err := getValidTestBlueprintMetadata("templatePath/test", blueprintRepository)
-		require.Nil(t, err)
-		assert.Equal(t, "Test Project", doc.Metadata.ProjectName)
-		assert.Equal(t,
-			"Is just a test blueprint project used for manual testing of inputs",
-			doc.Metadata.Description)
-		assert.Equal(t,
-			"XebiaLabs",
-			doc.Metadata.Author)
-		assert.Equal(t,
-			"1.0",
-			doc.Metadata.Version)
-		assert.Equal(t,
-			"These are the instructions for executing this blueprint",
-			doc.Metadata.Instructions)
-	})
-	t.Run("should parse multiline instructions", func(t *testing.T) {
-		metadata := []byte(
-			fmt.Sprintf(`
-                apiVersion: %s
-                kind: Blueprint
-                metadata:
-                  projectName: allala
-                  instructions: |
-                    This is a multiline instruction:
-
-                    The instructions continue here:
-                      1. First step
-                      2. Second step
-                spec:`, models.YamlFormatVersion))
-		doc, err := parseTemplateMetadata(&metadata, "aws/test", &blueprintRepository, true)
-		require.Nil(t, err)
-		assert.Equal(t,
-			"This is a multiline instruction:\n\nThe instructions continue here:\n  1. First step\n  2. Second step\n",
-			doc.Metadata.Instructions)
+		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Value, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
 	})
 }
 
@@ -1144,63 +697,62 @@ func TestProcessCustomFunction_K8S_noconfig(t *testing.T) {
 }
 
 func TestGetValidateExpr(t *testing.T) {
-    tests := []struct {
-        name      string
-        variable  *Variable
-        wantStr   string
-        wantErr   error
-    }{
-        {
-            "should error on empty tag for validate attribute",
-            &Variable{Validate: VarField{Val: "test"}},
-            "",
-            fmt.Errorf("only '!expression' tag is supported for validate attribute"),
-        },
-        {
-            "should error on non-expression tag for validate attribute",
-            &Variable{Validate: VarField{Val: "test", Tag: "!fn"}},
-            "",
-            fmt.Errorf("only '!expression' tag is supported for validate attribute"),
-        },
-        {
-            "should return empty string for empty expression value with tag value",
-            &Variable{Validate: VarField{Val: "", Tag: "!expression"}},
-            "",
-            nil,
-        },
-        {
-            "should return empty string for empty expression value without tag value",
-            &Variable{Validate: VarField{Val: ""}},
-            "",
-            nil,
-        },
-        {
-            "should return expression string for valid expression tag",
-            &Variable{Validate: VarField{Val: "regex('*', TestVar)", Tag: "!expression"}},
-            "regex('*', TestVar)",
-            nil,
-        },
-    }
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got, err := tt.variable.GetValidateExpr()
-            if tt.wantErr == nil || err == nil {
-                assert.Equal(t, tt.wantStr, got)
-            } else {
-                assert.Equal(t, tt.wantErr.Error(), err.Error())
-            }
-        })
-    }
+	tests := []struct {
+		name     string
+		variable *Variable
+		wantStr  string
+		wantErr  error
+	}{
+		{
+			"should error on empty tag for validate attribute",
+			&Variable{Validate: VarField{Value: "test"}},
+			"",
+			fmt.Errorf("only '!expr' tag is supported for validate attribute"),
+		},
+		{
+			"should error on non-expression tag for validate attribute",
+			&Variable{Validate: VarField{Value: "test", Tag: tagFnV1}},
+			"",
+			fmt.Errorf("only '!expr' tag is supported for validate attribute"),
+		},
+		{
+			"should return empty string for empty expression value with tag value",
+			&Variable{Validate: VarField{Value: "", Tag: tagExpressionV2}},
+			"",
+			nil,
+		},
+		{
+			"should return empty string for empty expression value without tag value",
+			&Variable{Validate: VarField{Value: ""}},
+			"",
+			nil,
+		},
+		{
+			"should return expression string for valid expression tag",
+			&Variable{Validate: VarField{Value: "regex('*', TestVar)", Tag: tagExpressionV2}},
+			"regex('*', TestVar)",
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.variable.GetValidateExpr()
+			if tt.wantErr == nil || err == nil {
+				assert.Equal(t, tt.wantStr, got)
+			} else {
+				assert.Equal(t, tt.wantErr.Error(), err.Error())
+			}
+		})
+	}
 }
 
 func TestValidatePrompt(t *testing.T) {
 	type args struct {
-	    varName      string
-	    validateExpr string
-		pattern      string
+		varName      string
+		validateExpr string
 		value        string
 		emtpyAllowed bool
-	    params       map[string]interface{}
+		params       map[string]interface{}
 	}
 	tests := []struct {
 		name string
@@ -1208,69 +760,74 @@ func TestValidatePrompt(t *testing.T) {
 		want error
 	}{
 		{
-		    "should pass on empty value since empty values are allowed in secret fields",
-		    args{"test", "", "", "", true, nil},
-		    nil,
-		},
-		{
-		    "should fail required validation on empty value",
-		    args{"test", "", "", "", false, nil},
-		    fmt.Errorf("Value is required"),
-		},
-		{
-		    "should fail required validation on empty value with pattern",
-		    args{"test", "", ".", "", false, nil},
-		    fmt.Errorf("Value is required"),
-		},
-		{
-		    "should pass required validation on valid value",
-		    args{"test", "", "", "test", false, nil},
-		    nil,
-		},
-		{
-		    "should fail pattern validation on invalid value",
-		    args{"test", "", "[a-z]*", "123", false, nil},
-		    fmt.Errorf("Value should match pattern [a-z]*"),
-		},
-		{
-		    "should pass pattern validation on valid value",
-		    args{"test", "", "[a-z]*", "abc", false, nil},
-		    nil,
-		},
-		{
-		    "should pass pattern validation on valid value with extra start/end tag on pattern",
-		    args{"test", "", "^[a-z]*$", "abc", false, nil},
-		    nil,
-		},
-		{
-		    "should pass pattern validation on valid value with fixed pattern",
-		    args{"test", "", "test", "test", false, nil},
-		    nil,
-		},
-		{
-		    "should fail pattern validation on invalid value with fixed pattern",
-		    args{"test", "", "test", "abcd", false, nil},
-		    fmt.Errorf("Value should match pattern test"),
-		},
-		{
-		    "should fail pattern validation on valid value with complex pattern",
-		    args{"test", "", `\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`, "123.123.123.256", false, nil},
-			fmt.Errorf(`Value should match pattern \b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`),
-		},
-		{
-			"should pass pattern validation on valid value with complex pattern",
-			args{"test", "", `\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b`, "255.255.255.255", false, nil},
+			"should pass on empty value since empty values are allowed in secret fields",
+			args{"test", "", "", true, nil},
 			nil,
 		},
 		{
-		    "should fail pattern validation on invalid pattern",
-		    args{"test", "", "[[", "abcd", false, nil},
-		    fmt.Errorf("error parsing regexp: missing closing ]: `[[$`"),
+			"should fail required validation on empty value",
+			args{"test", "", "", false, nil},
+			fmt.Errorf("Value is required"),
+		},
+		{
+			"should fail required validation on empty value with pattern",
+			args{"test", "regex('.', test)", "", false, make(map[string]interface{})},
+			fmt.Errorf("Value is required"),
+		},
+		{
+			"should pass required validation on valid value",
+			args{"test", "", "test", false, nil},
+			nil,
+		},
+		{
+			"should fail pattern validation on invalid value",
+			args{"test", "regex('[a-z]*', test)", "123", false, make(map[string]interface{})},
+			fmt.Errorf("validation [regex('[a-z]*', test)] failed with value [123]"),
+		},
+		{
+			"should pass pattern validation on valid value",
+			args{"test", "regex('[a-z]*', test)", "abc", false, make(map[string]interface{})},
+			nil,
+		},
+		{
+			"should pass pattern validation on valid value with escape char in pattern",
+			args{"test", "regex('(\\\\S)*', test)", "abc", false, make(map[string]interface{})},
+			nil,
+		},
+		{
+			"should pass pattern validation on valid value with extra start/end tag on pattern",
+			args{"test", "regex('^[a-z]*$', test)", "abc", false, make(map[string]interface{})},
+			nil,
+		},
+		{
+			"should pass pattern validation on valid value with fixed pattern",
+			args{"test", "regex('test', test)", "test", false, make(map[string]interface{})},
+			nil,
+		},
+		{
+			"should fail pattern validation on invalid value with fixed pattern",
+			args{"test", "regex('test', test)", "abcd", false, make(map[string]interface{})},
+			fmt.Errorf("validation [regex('test', test)] failed with value [abcd]"),
+		},
+		{
+			"should fail pattern validation on valid value with complex pattern",
+			args{"test", `regex('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)`, "123.123.123.256", false, make(map[string]interface{})},
+			fmt.Errorf(`validation [regex('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)] failed with value [123.123.123.256]`),
+		},
+		{
+			"should pass pattern validation on valid value with complex pattern",
+			args{"test", `regex('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)`, "255.255.255.255", false, make(map[string]interface{})},
+			nil,
+		},
+		{
+			"should fail pattern validation on invalid pattern",
+			args{"test", "regex('[[', test)", "abcd", false, make(map[string]interface{})},
+			fmt.Errorf("invalid pattern in regex expression, error parsing regexp: unterminated [] set in `^[[$`"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := validatePrompt(tt.args.varName, tt.args.validateExpr, tt.args.pattern, tt.args.emtpyAllowed, tt.args.params)(tt.args.value)
+			got := validatePrompt(tt.args.varName, tt.args.validateExpr, tt.args.emtpyAllowed, tt.args.params)(tt.args.value)
 			if tt.want == nil || got == nil {
 				assert.Equal(t, tt.want, got)
 			} else {
@@ -1313,151 +870,6 @@ func TestValidateFilePath(t *testing.T) {
 			} else {
 				assert.Equal(t, tt.want.Error(), got.Error())
 			}
-		})
-	}
-}
-
-func TestBlueprintYaml_parseFiles(t *testing.T) {
-	templatePath := "aws/monolith"
-	tests := []struct {
-		name    string
-		fields  BlueprintYaml
-		want    []TemplateConfig
-		wantErr error
-	}{
-		{
-			"parse a valid file declaration",
-			BlueprintYaml{
-				Spec: Spec{
-					Files: []File{
-						{Path: "test.yaml"},
-						{Path: "test2.yaml"},
-					},
-				},
-			},
-			[]TemplateConfig{
-				{Path: "test.yaml", FullPath: filepath.Join(templatePath, "test.yaml")},
-				{Path: "test2.yaml", FullPath: filepath.Join(templatePath, "test2.yaml")},
-			},
-			nil,
-		},
-		{
-			"parse a valid file declaration with dependsOn that refers to existing variables",
-			BlueprintYaml{
-				Spec: Spec{
-					Parameters: []Parameter{
-						{Name: "foo", Type: "Confirm", Value: "true"},
-						{Name: "bar", Type: "Confirm", Value: "false"},
-					},
-					Files: []File{
-						{Path: "test.yaml"},
-						{Path: "test2.yaml", DependsOn: "foo"},
-						{Path: "test3.yaml", DependsOnFalse: "bar"},
-						{Path: "test4.yaml", DependsOn: "bar"},
-						{Path: "test5.yaml", DependsOnFalse: "foo"},
-					},
-				},
-			},
-			[]TemplateConfig{
-				{Path: "test.yaml", FullPath: filepath.Join(templatePath, "test.yaml")},
-				{Path: "test2.yaml", FullPath: filepath.Join(templatePath, "test2.yaml"), DependsOn: VarField{Val: "foo", Tag: ""}},
-				{Path: "test3.yaml", FullPath: filepath.Join(templatePath, "test3.yaml"), DependsOn: VarField{Val: "bar", Tag: "", InvertBool: true}},
-				{Path: "test4.yaml", FullPath: filepath.Join(templatePath, "test4.yaml"), DependsOn: VarField{Val: "bar", Tag: ""}},
-				{Path: "test5.yaml", FullPath: filepath.Join(templatePath, "test5.yaml"), DependsOn: VarField{Val: "foo", Tag: "", InvertBool: true}},
-			},
-			nil,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			blueprintDoc := &BlueprintYaml{
-				ApiVersion: tt.fields.ApiVersion,
-				Kind:       tt.fields.Kind,
-				Metadata:   tt.fields.Metadata,
-				Spec:       tt.fields.Spec,
-			}
-			tconfigs, err := blueprintDoc.parseFiles(templatePath, true)
-			if tt.wantErr == nil || err == nil {
-				assert.Equal(t, tt.wantErr, err)
-			} else {
-				assert.Equal(t, tt.wantErr.Error(), err.Error())
-			}
-			assert.Equal(t, tt.want, tconfigs)
-		})
-	}
-}
-
-func TestParseFile(t *testing.T) {
-	tests := []struct {
-		name    string
-		args    *File
-		want    TemplateConfig
-		wantErr error
-	}{
-		{
-			"return empty for empty map",
-			&File{},
-			TemplateConfig{},
-			nil,
-		},
-		{
-			"parse a file declaration with only path",
-			&File{
-				Path: "test.yaml",
-			},
-			TemplateConfig{Path: "test.yaml"},
-			nil,
-		},
-		{
-			"parse a file declaration with only path and nil for dependsOn",
-			&File{
-				Path: "test.yaml", DependsOn: "",
-			},
-			TemplateConfig{Path: "test.yaml"},
-			nil,
-		},
-		{
-			"parse a file declaration with path and dependsOnTrue",
-			&File{
-				Path: "test.yaml", DependsOnTrue: "foo",
-			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "foo"}},
-			nil,
-		},
-		{
-			"parse a file declaration with path dependsOnFalse and dependsOn",
-			&File{
-				Path: "test.yaml", DependsOn: "foo", DependsOnFalse: "bar",
-			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "bar", InvertBool: true}},
-			nil,
-		},
-		{
-			"parse a file declaration with path and dependsOn as !fn tag",
-			&File{
-				Path: "test.yaml", DependsOn: yaml.CustomTag{Tag: "!fn", Value: "aws.credentials().IsAvailable"},
-			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "aws.credentials().IsAvailable", Tag: "!fn"}},
-			nil,
-		},
-		{
-			"parse a file declaration with path and dependsOn as !expression tag",
-			&File{
-				Path: "test.yaml", DependsOnTrue: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Val: "1 > 2", Tag: "!expression"}},
-			nil,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseFile(tt.args)
-			if tt.wantErr == nil || err == nil {
-				assert.Equal(t, tt.wantErr, err)
-			} else {
-				assert.Equal(t, tt.wantErr.Error(), err.Error())
-			}
-			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -1534,7 +946,7 @@ func TestVerifyVariableValue(t *testing.T) {
 	}{
 		{
 			"answers from map: save string answer value to variable value with type Input",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeInput}},
 			"sample answer",
 			map[string]interface{}{},
 			"sample answer",
@@ -1542,7 +954,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save float answer value to variable value with type Input",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeInput}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeInput}},
 			5.45,
 			map[string]interface{}{},
 			5.45,
@@ -1550,7 +962,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save boolean answer value to variable value with type Confirm",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeConfirm}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeConfirm}},
 			true,
 			map[string]interface{}{},
 			true,
@@ -1558,7 +970,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save boolean answer value (convert from string) to variable value with type Confirm",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeConfirm}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeConfirm}},
 			"true",
 			map[string]interface{}{},
 			true,
@@ -1566,7 +978,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save long text answer value to variable value with type Editor",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeEditor}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeEditor}},
 			"long text for testing..\nand the rest of it\n",
 			map[string]interface{}{},
 			"long text for testing..\nand the rest of it\n",
@@ -1574,7 +986,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save long text answer value to variable value with type File",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeFile}},
 			filepath.Join("test", "sample.txt"),
 			map[string]interface{}{},
 			"hello\ngo\n",
@@ -1582,7 +994,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: give error on file not found (input type: File)",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeFile}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeFile}},
 			filepath.Join("test", "error.txt"),
 			map[string]interface{}{},
 			"",
@@ -1594,7 +1006,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: save string answer value to variable value with type Select",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeSelect}, Options: []VarField{{Value: "a"}, {Value: "b"}}},
 			"b",
 			map[string]interface{}{},
 			"b",
@@ -1602,7 +1014,7 @@ func TestVerifyVariableValue(t *testing.T) {
 		},
 		{
 			"answers from map: give error on unknown select option value",
-			Variable{Name: VarField{Val: "Test"}, Type: VarField{Val: TypeSelect}, Options: []VarField{{Val: "a"}, {Val: "b"}}},
+			Variable{Name: VarField{Value: "Test"}, Type: VarField{Value: TypeSelect}, Options: []VarField{{Value: "a"}, {Value: "b"}}},
 			"c",
 			map[string]interface{}{},
 			"",
@@ -1614,228 +1026,6 @@ func TestVerifyVariableValue(t *testing.T) {
 			got, err := tt.variable.VerifyVariableValue(tt.answer, tt.parameters)
 			assert.Equal(t, tt.errOut, err)
 			assert.Equal(t, tt.wantOut, got)
-		})
-	}
-}
-
-func TestBlueprintYaml_parseParameters(t *testing.T) {
-	tests := []struct {
-		name    string
-		params  []Parameter
-		spec    Spec
-		want    []Variable
-		wantErr bool
-	}{
-		{
-			"should error on invalid tag in dependsOn ",
-			nil,
-			Spec{
-				Parameters: []Parameter{
-					{
-						Name:           "test",
-						Type:           "Input",
-						Secret:         true,
-						Value:          "string",
-						Description:    "desc",
-						Default:        "string2",
-						DependsOn:      yaml.CustomTag{Tag: "!foo", Value: "1 > 2"},
-						DependsOnFalse: "Var",
-						Options: []interface{}{
-							"test", "foo", 10, 13.4,
-						},
-						Pattern:      "pat",
-						SaveInXlVals: true,
-						UseRawValue:  false,
-					},
-				},
-			},
-			[]Variable{},
-			true,
-		},
-		{
-			"should error on invalid type in list ",
-			nil,
-			Spec{
-				Parameters: []Parameter{
-					{
-						Name:           "test",
-						Type:           "Input",
-						Secret:         true,
-						Value:          "string",
-						Description:    "desc",
-						Default:        "string2",
-						DependsOnFalse: "Var",
-						Options: []interface{}{
-							"test", "foo", true,
-						},
-						Pattern:      "pat",
-						SaveInXlVals: true,
-						UseRawValue:  false,
-					},
-				},
-			},
-			[]Variable{},
-			true,
-		},
-		{
-			"should parse parameters under spec",
-			nil,
-			Spec{
-				Parameters: []Parameter{
-					{
-						Name:           "test",
-						Type:           "Input",
-						Secret:         true,
-						Value:          "string",
-						Description:    "desc",
-						Default:        "string2",
-						DependsOn:      yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-						DependsOnFalse: "Var",
-						Options: []interface{}{
-							"test", "foo", 10, 13.4,
-						},
-						Pattern:      "pat",
-						SaveInXlVals: true,
-						UseRawValue:  false,
-					},
-					{
-						Name:           "test",
-						Type:           "Confirm",
-						Secret:         false,
-						Value:          true,
-						Description:    "desc",
-						Default:        false,
-						DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-						DependsOnFalse: "Var",
-						Options: []interface{}{
-							"test", yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-						},
-						Pattern:      "pat",
-						SaveInXlVals: true,
-						UseRawValue:  false,
-					},
-				},
-			},
-			[]Variable{
-				{
-					Name:        VarField{Val: "test"},
-					Type:        VarField{Val: "Input"},
-					Secret:      VarField{Bool: true, Val: "true"},
-					Value:       VarField{Val: "string"},
-					Description: VarField{Val: "desc"},
-					Default:     VarField{Val: "string2"},
-					DependsOn:   VarField{Val: "Var", InvertBool: true},
-					Options: []VarField{
-						VarField{Val: "test"}, VarField{Val: "foo"}, VarField{Val: "10"}, VarField{Val: "13.400000"},
-					},
-					Pattern:      VarField{Val: "pat"},
-					SaveInXlVals: VarField{Bool: true, Val: "true"},
-					UseRawValue:  VarField{Bool: false, Val: "false"},
-				},
-				{
-					Name:        VarField{Val: "test"},
-					Type:        VarField{Val: "Confirm"},
-					Secret:      VarField{Bool: false, Val: "false"},
-					Value:       VarField{Bool: true, Val: "true"},
-					Description: VarField{Val: "desc"},
-					Default:     VarField{Bool: false, Val: "false"},
-					DependsOn:   VarField{Val: "Var", InvertBool: true},
-					Options: []VarField{
-						VarField{Val: "test"}, VarField{Tag: "!expression", Val: "1 > 2"},
-					},
-					Pattern:      VarField{Val: "pat"},
-					SaveInXlVals: VarField{Bool: true, Val: "true"},
-					UseRawValue:  VarField{Bool: false, Val: "false"},
-				},
-			},
-			false,
-		},
-		{
-			"should parse parameters",
-			[]Parameter{
-				{
-					Name:           "test",
-					Type:           "Input",
-					Secret:         true,
-					Value:          "string",
-					Description:    "desc",
-					Default:        "string2",
-					DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-					DependsOnFalse: "Var",
-					Options: []interface{}{
-						"test", "foo", 10, 13.4,
-					},
-					Pattern:      "pat",
-					SaveInXlVals: true,
-					UseRawValue:  false,
-				},
-				{
-					Name:           "test",
-					Type:           "Confirm",
-					Secret:         false,
-					Value:          true,
-					Description:    "desc",
-					Default:        false,
-					DependsOn:      yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-					DependsOnFalse: "Var",
-					Options: []interface{}{
-						"test", yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-					},
-					Pattern:      "pat",
-					SaveInXlVals: true,
-					UseRawValue:  false,
-				},
-			},
-			Spec{},
-			[]Variable{
-				{
-					Name:        VarField{Val: "test"},
-					Type:        VarField{Val: "Input"},
-					Secret:      VarField{Bool: true, Val: "true"},
-					Value:       VarField{Val: "string"},
-					Description: VarField{Val: "desc"},
-					Default:     VarField{Val: "string2"},
-					DependsOn:   VarField{Val: "Var", InvertBool: true},
-					Options: []VarField{
-						VarField{Val: "test"}, VarField{Val: "foo"}, VarField{Val: "10"}, VarField{Val: "13.400000"},
-					},
-					Pattern:      VarField{Val: "pat"},
-					SaveInXlVals: VarField{Bool: true, Val: "true"},
-					UseRawValue:  VarField{Bool: false, Val: "false"},
-				},
-				{
-					Name:        VarField{Val: "test"},
-					Type:        VarField{Val: "Confirm"},
-					Secret:      VarField{Bool: false, Val: "false"},
-					Value:       VarField{Bool: true, Val: "true"},
-					Description: VarField{Val: "desc"},
-					Default:     VarField{Bool: false, Val: "false"},
-					DependsOn:   VarField{Val: "Var", InvertBool: true},
-					Options: []VarField{
-						VarField{Val: "test"}, VarField{Tag: "!expression", Val: "1 > 2"},
-					},
-					Pattern:      VarField{Val: "pat"},
-					SaveInXlVals: VarField{Bool: true, Val: "true"},
-					UseRawValue:  VarField{Bool: false, Val: "false"},
-				},
-			},
-			false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			blueprintDoc := &BlueprintYaml{
-				ApiVersion: "",
-				Kind:       "",
-				Parameters: tt.params,
-				Spec:       tt.spec,
-			}
-			got, err := blueprintDoc.parseParameters()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("BlueprintYaml.parseParameters() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -1860,32 +1050,33 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 			BlueprintConfig{
 				Variables: []Variable{
 					{
-						Name:    VarField{Val: "input1"},
-						Type:    VarField{Val: "Input"},
-						Value:   VarField{Bool: false, Val: ""},
-						Default: VarField{Bool: false, Val: "default1"},
+						Name:    VarField{Value: "input1"},
+						Label:   VarField{Value: "input1"},
+						Type:    VarField{Value: "Input"},
+						Value:   VarField{Bool: false, Value: ""},
+						Default: VarField{Bool: false, Value: "default1"},
 					},
 					{
-						Name:    VarField{Val: "input2"},
-						Type:    VarField{Val: "Input"},
-						Value:   VarField{Bool: false, Val: ""},
-						Default: VarField{Bool: false, Val: "default2"},
-						Secret:  VarField{Bool: true, Val: "true"},
+						Name:    VarField{Value: "input2"},
+						Label:   VarField{Value: "input 2"},
+						Type:    VarField{Value: "SecretInput"},
+						Value:   VarField{Bool: false, Value: ""},
+						Default: VarField{Bool: false, Value: "default2"},
 					},
 					{
-						Name:               VarField{Val: "input3"},
-						Type:               VarField{Val: "Input"},
-						Value:              VarField{Bool: false, Val: ""},
-						Default:            VarField{Bool: false, Val: "default3"},
-						Secret:             VarField{Bool: true, Val: "true"},
-						ShowValueOnSummary: VarField{Bool: true, Val: "true"},
+						Name:            VarField{Value: "input3"},
+						Label:           VarField{Value: "input 3"},
+						Type:            VarField{Value: "SecretInput"},
+						Value:           VarField{Bool: false, Value: ""},
+						Default:         VarField{Bool: false, Value: "default3"},
+						RevealOnSummary: VarField{Bool: true, Value: "true"},
 					},
 				},
 			},
 			args{"", false, true},
 			&PreparedData{
 				TemplateData: map[string]interface{}{"input1": "default1", "input2": "!value input2", "input3": "!value input3"},
-				DefaultData:  map[string]interface{}{"input1": "default1", "input2": "*****", "input3": "default3"},
+				DefaultData:  map[string]interface{}{"input1": "default1", "input 2": "*****", "input 3": "default3"},
 				Secrets:      map[string]interface{}{"input2": "default2", "input3": "default3"},
 				Values:       map[string]interface{}{},
 			},
@@ -1901,7 +1092,7 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 				TemplateConfigs: tt.fields.TemplateConfigs,
 				Variables:       tt.fields.Variables,
 			}
-			got, err := blueprintDoc.prepareTemplateData(tt.args.answersFilePath, tt.args.strictAnswers, tt.args.useDefaultsAsValue, nil)
+			got, err := blueprintDoc.prepareTemplateData(tt.args.answersFilePath, tt.args.strictAnswers, tt.args.useDefaultsAsValue, NewPreparedData())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BlueprintYaml.prepareTemplateData() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1911,146 +1102,122 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 	}
 }
 
-func TestBlueprintYaml_parseIncludes(t *testing.T) {
+func Test_findLabelValueFromOptions(t *testing.T) {
 	tests := []struct {
 		name    string
-		fields  BlueprintYaml
-		want    []IncludedBlueprintProcessed
-		wantErr error
+		val     string
+		options []VarField
+		want    string
 	}{
 		{
-			"parse a valid include declaration with dependsOn that is an expression",
-			BlueprintYaml{
-				Spec: Spec{
-					Include: []IncludedBlueprint{
-						{
-							Blueprint:      "bar",
-							Stage:          "after",
-							DependsOn:      yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-							DependsOnFalse: "Var",
-						},
-						{
-							Blueprint: "foo",
-							Stage:     "before",
-							ParameterOverrides: []ParameterOverride{
-								{
-									Name:      "foo",
-									Value:     "bar",
-									DependsOn: yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-								},
-								{
-									Name:          "bar",
-									Value:         true,
-									DependsOnTrue: yaml.CustomTag{Tag: "!fn", Value: "foo"},
-								},
-								{
-									Name:           "barr",
-									Value:          10.5,
-									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
-								},
-							},
-							FileOverrides: []File{
-								{
-									Path:      "foo/bar.md",
-									Operation: "skip",
-									DependsOn: yaml.CustomTag{Tag: "!fn", Value: "foo"},
-								},
-								{
-									Path:           "foo/bar2.md",
-									Operation:      "skip",
-									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
-								},
-								{
-									Path:        "foo/bar.md",
-									Operation:   "rename",
-									RenamedPath: "foo/baar.md",
-									DependsOn:   yaml.CustomTag{Tag: "!fn", Value: "foo"},
-								},
-								{
-									Path:           "foo/bar2.md",
-									Operation:      "rename",
-									RenamedPath:    yaml.CustomTag{Tag: "!expression", Value: "1 > 2 ? 'foo' : 'bar'"},
-									DependsOnFalse: yaml.CustomTag{Tag: "!fn", Value: "foo"},
-								},
-							},
-							DependsOnTrue:  yaml.CustomTag{Tag: "!expression", Value: "1 > 2"},
-							DependsOnFalse: "Var",
-						},
-					},
-				},
+			"find correct values from different option types for string val",
+			"yoyo",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
 			},
-			[]IncludedBlueprintProcessed{
-				{
-					Blueprint: "bar",
-					Stage:     "after",
-					DependsOn: VarField{Val: "Var", InvertBool: true},
-				},
-				{
-					Blueprint: "foo",
-					Stage:     "before",
-					ParameterOverrides: []ParameterOverridesProcessed{
-						{
-							Name:      "foo",
-							Value:     VarField{Val: "bar"},
-							DependsOn: VarField{Val: "1 > 2", Tag: "!expression"},
-						},
-						{
-							Name:      "bar",
-							Value:     VarField{Val: "true", Bool: true},
-							DependsOn: VarField{Tag: "!fn", Val: "foo"},
-						},
-						{
-							Name:      "barr",
-							Value:     VarField{Val: "10.500000"},
-							DependsOn: VarField{Tag: "!fn", Val: "foo", InvertBool: true},
-						},
-					},
-					FileOverrides: []TemplateConfig{
-						{
-							Path:      "foo/bar.md",
-							Operation: "skip",
-							DependsOn: VarField{Tag: "!fn", Val: "foo"},
-						},
-						{
-							Path:      "foo/bar2.md",
-							Operation: "skip",
-							DependsOn: VarField{Tag: "!fn", Val: "foo", InvertBool: true},
-						},
-						{
-							Path:        "foo/bar.md",
-							Operation:   "rename",
-							RenamedPath: VarField{Val: "foo/baar.md"},
-							DependsOn:   VarField{Tag: "!fn", Val: "foo"},
-						},
-						{
-							Path:        "foo/bar2.md",
-							Operation:   "rename",
-							RenamedPath: VarField{Tag: "!expression", Val: "1 > 2 ? 'foo' : 'bar'"},
-							DependsOn:   VarField{Tag: "!fn", Val: "foo", InvertBool: true},
-						},
-					},
-					DependsOn: VarField{Val: "Var", InvertBool: true},
-				},
+			"yoyo",
+		},
+		{
+			"find correct values from different option types for map val",
+			"Hooya (hiya)",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
 			},
-			nil,
+			"hiya",
+		},
+		{
+			"return given value for val from !expr",
+			"foo",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
+			},
+			"foo",
 		},
 	}
 	for _, tt := range tests {
-
 		t.Run(tt.name, func(t *testing.T) {
-			blueprintDoc := &BlueprintYaml{
-				ApiVersion: tt.fields.ApiVersion,
-				Kind:       tt.fields.Kind,
-				Metadata:   tt.fields.Metadata,
-				Spec:       tt.fields.Spec,
+			if got := findLabelValueFromOptions(tt.val, tt.options); got != tt.want {
+				t.Errorf("findLabelValueFromOptions() = %v, want %v", got, tt.want)
 			}
-			tconfigs, err := blueprintDoc.parseIncludes()
-			if tt.wantErr == nil || err == nil {
-				assert.Equal(t, tt.wantErr, err)
-			} else {
-				assert.Equal(t, tt.wantErr.Error(), err.Error())
+		})
+	}
+}
+
+func Test_getDefaultTextWithLabel(t *testing.T) {
+	tests := []struct {
+		name    string
+		defVal  string
+		options []VarField
+		want    string
+	}{
+		{
+			"should return default value with label",
+			"hiya",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
+			},
+			"Hooya (hiya)",
+		},
+		{
+			"should return default value without label",
+			"yoyo",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
+			},
+			"yoyo",
+		},
+		{
+			"should return default value given when not found in options",
+			"yaya",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
+			},
+			"yaya",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getDefaultTextWithLabel(tt.defVal, tt.options); got != tt.want {
+				t.Errorf("getDefaultTextWithLabel() = %v, want %v", got, tt.want)
 			}
-			assert.Equal(t, tt.want, tconfigs)
+		})
+	}
+}
+
+func Test_getOptionTextWithLabel(t *testing.T) {
+	tests := []struct {
+		name   string
+		option VarField
+		want   string
+	}{
+		{
+			"should return value with label",
+			VarField{Value: "hiya", Label: "Hooya"},
+			"Hooya (hiya)",
+		},
+		{
+			"should return default value without label",
+			VarField{Value: "yoyo"},
+			"yoyo",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getOptionTextWithLabel(tt.option); got != tt.want {
+				t.Errorf("getOptionTextWithLabel() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

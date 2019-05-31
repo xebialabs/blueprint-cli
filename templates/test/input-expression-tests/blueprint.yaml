@@ -1,23 +1,56 @@
-apiVersion: xl/v1
+apiVersion: xl/v2
 kind: Blueprint
 metadata:
-  projectName: Test Project
-  description: Is just a test blueprint project used for manual testing of inputs
+  name: Blueprint Project
+  description: A Blueprint project
   author: XebiaLabs
   version: 1.0
-  instructions: These are the instructions for executing this blueprint
 spec:
   parameters:
-  - name: ExpTest1
-    type: Input
-    value: us-west
-  - name: ExpTest2
-    type: Input
-    default: 10
-  - name: ExpTest3
-    type: Input
-    default: !expression "max(ExpTest2, 20) - 1"
-  - name: ExpTest4
-    type: Input
-    default: !expression "k8sConfig('ClusterServer')"
+  - name: Provider
+    prompt: what is your Kubernetes provider?
+    type: Select
+    options:
+      - AWS
+      - GCP
+      - Azure
+    default: AWS
 
+  - name: Service
+    prompt: What service do you want to deploy?
+    type: Select
+    options:
+      - !expr "Provider == 'GCP' ? ('GKE', 'CloudStorage') : (Provider == 'AWS' ? ('EKS', 'S3') : ('AKS', 'AzureStorage'))"
+    default: !expr "Provider == 'GCP' ? 'GKE' : (Provider == 'AWS' ? 'EKS' : 'AKS')"
+
+  - name: K8sClusterName
+    prompt: What is your Kubernetes cluster name
+    type: Input
+    promptIf: !expr "Service == 'GKE' || Service == 'EKS' || Service == 'AKS'"
+    default: !expr "k8sConfig('ClusterServer')"
+
+  # AWS specific variables
+  - name: UseAWSCredentialsFromSystem
+    prompt: Do you want to use AWS credentials from your ~/.aws/credentials file?
+    type: Confirm
+    promptIf: !expr "Provider == 'AWS' && awsCredentials('IsAvailable')"
+
+  - name: AWSAccessKey
+    type: SecretInput
+    prompt: What is the AWS Access Key ID?
+    promptIf: !expr "Provider == 'AWS' && !UseAWSCredentialsFromSystem"
+    default: !expr "awsCredentials('AccessKeyID')"
+
+  - name: AWSAccessSecret
+    prompt: What is the AWS Secret Access Key?
+    type: SecretInput
+    promptIf: !expr "Provider == 'AWS' && !UseAWSCredentialsFromSystem"
+    default: !expr "awsCredentials('SecretAccessKey')"
+
+  - name: AWSRegion
+    type: Select
+    prompt: "Select the AWS region:"
+    promptIf: !expr "Provider == 'AWS'"
+    options:
+      - !expr "awsRegions('ecs')"
+    default: !expr "awsRegions('ecs', 0)"

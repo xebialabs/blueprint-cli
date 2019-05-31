@@ -1,69 +1,81 @@
-apiVersion: xl/v1
+apiVersion: xl/v2
 kind: Blueprint
 metadata:
-  projectName: Test Project
+  name: Test Project
   description: Is just a test blueprint project
   author: XebiaLabs
   version: 1.0
 spec:
   parameters:
   - name: Test
+    label: Test Label
     type: Input
-    saveInXlVals: true
+    prompt: Test Prompt
+    saveInXlvals: true
     default: testing
   - name: ClientCert
     type: Editor
-    saveInXlVals: true
+    prompt: Test Prompt
+    saveInXlvals: true
     default: |
         this is a multiline
         text\n
         with escape chars
   - name: TestDepends
     type: Confirm
+    prompt: Test Prompt
     default: true
   - name: TestDepends2
     type: Confirm
+    prompt: Test Prompt
     default: false
   - name: TestDepends3
+    label: TestDepends 3 label
     type: Confirm
+    prompt: Test Prompt
     default: true
   - name: AppName
     type: Input
-    pattern: "[a-zA-Z-]*"
-    saveInXlVals: true
+    prompt: Test Prompt
+    validate: !expr "regex('[a-zA-Z-]*', AppName)"
+    saveInXlvals: true
     description: Application name, will be used in various AWS resource names
     default: TestApp
   - name: ShouldNotBeThere
     type: Input
-    saveInXlVals: true
-    dependsOnTrue: TestDepends2
+    prompt: Test Prompt
+    saveInXlvals: true
+    promptIf: TestDepends2
     default: shouldnotbehere
   - name: AWSAccessKey
-    type: Input
-    secret: true
+    type: SecretInput
+    prompt: Test Prompt
     default: accesskey
   - name: AWSAccessSecret
-    type: Input
-    secret: true
+    type: SecretInput
+    prompt: Test Prompt
     default: accesssecret
   - name: SuperSecret
     type: Input
-    secret: false
-    saveInXlVals: true
+    prompt: Test Prompt
+    saveInXlvals: true
     default: supersecret
   - name: AWSRegion
     type: Select
+    prompt: Test Prompt
     options:
-      - !fn aws.regions(ecs)
+      - !expr "awsRegions('ecs')"
     default: eu-central-1
-    saveInXlVals: true
+    saveInXlvals: true
   - name: DiskSize
     type: Input
-    saveInXlVals: true
+    prompt: Test Prompt
+    saveInXlvals: true
     default: 10.0
   - name: DiskSizeWithBuffer
     type: Input
-    saveInXlVals: true
+    prompt: Test Prompt
+    saveInXlvals: true
     default: 125.6
 
   files:
