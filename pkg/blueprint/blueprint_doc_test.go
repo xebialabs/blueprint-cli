@@ -822,7 +822,7 @@ func TestValidatePrompt(t *testing.T) {
 		{
 			"should fail pattern validation on invalid pattern",
 			args{"test", "regex('[[', test)", "abcd", false, make(map[string]interface{})},
-			fmt.Errorf("error parsing regexp: missing closing ]: `[[$`"),
+			fmt.Errorf("invalid pattern in regex expression, error parsing regexp: unterminated [] set in `^[[$`"),
 		},
 	}
 	for _, tt := range tests {
