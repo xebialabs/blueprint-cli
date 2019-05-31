@@ -24,7 +24,8 @@ spec:
     - label: yolo
       value: yaya
     - heeya
-    default: yaya
+    - !expr "awsRegions('ecs')"
+    default: ap-south-1
   - name: SelectTestVal
     type: Input
     prompt: yo?
