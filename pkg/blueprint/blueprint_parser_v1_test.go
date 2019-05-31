@@ -68,7 +68,7 @@ func getValidTestBlueprintMetadataV1(templatePath string, blueprintRepository Bl
            - path: foo.md
              dependsOnFalse: !expression "!!isitnot"
 `, models.BlueprintYamlFormatV1))
-	return parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
+	return parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository)
 }
 
 func TestParseTemplateMetadataV1(t *testing.T) {
@@ -82,21 +82,21 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 
 	t.Run("should error on invalid xl yaml", func(t *testing.T) {
 		metadata := []byte("test: blueprint")
-		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
+		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, fmt.Sprintf("yaml: unmarshal errors:\n  line 1: field test not found in type blueprint.BlueprintYamlV1"), err.Error())
 	})
 
 	t.Run("should error on missing api version", func(t *testing.T) {
 		metadata := []byte("kind: blueprint")
-		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
+		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, fmt.Sprintf("api version needs to be %s or %s", models.BlueprintYamlFormatV2, models.BlueprintYamlFormatV1), err.Error())
 	})
 
 	t.Run("should error on missing doc kind", func(t *testing.T) {
 		metadata := []byte("apiVersion: " + models.BlueprintYamlFormatV1)
-		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
+		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, "yaml document kind needs to be Blueprint", err.Error())
 	})
@@ -113,7 +113,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
                     type: Invalid
                     value: testing`,
 				models.BlueprintYamlFormatV1))
-		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
+		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, "type [Invalid] is not valid for parameter [Test]", err.Error())
 	})
@@ -128,7 +128,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
                  parameters:
                  - name: Test
                    value: testing`, models.BlueprintYamlFormatV1))
-		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
+		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter [Test] is missing required fields: [type]", err.Error())
 	})
@@ -144,7 +144,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
                   - name: Test
                     type: Select
                     options:`, models.BlueprintYamlFormatV1))
-		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository, true)
+		_, err := parseTemplateMetadataV1(&metadata, templatePath, &blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, "at least one option field is need to be set for parameter [Test]", err.Error())
 	})
@@ -161,7 +161,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
                   files:
                   - dependsOnFalse: Test
                   - path: xbc.yaml`, models.BlueprintYamlFormatV1))
-		_, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository, true)
+		_, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, "path is missing for file specification in files", err.Error())
 	})
@@ -177,7 +177,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
                    type: Confirm
                  files:
                  - path: ../xbc.yaml`, models.BlueprintYamlFormatV1))
-		_, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository, true)
+		_, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, "path for file specification cannot start with /, .. or ./", err.Error())
 	})
@@ -196,7 +196,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
                    type: Input
                    default: 2
                  files:`, models.BlueprintYamlFormatV1))
-		_, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository, true)
+		_, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository)
 		require.NotNil(t, err)
 		assert.Equal(t, "variable names must be unique within blueprint 'parameters' definition", err.Error())
 	})
@@ -223,7 +223,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
                - path: xebialabs/foo.yaml
                - path: readme.md
                  dependsOnTrue: isit`, models.BlueprintYamlFormatV1))
-		doc, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository, true)
+		doc, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository)
 		require.Nil(t, err)
 		assert.Equal(t, Variable{
 			Name:        VarField{Value: "pass"},
@@ -244,12 +244,10 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 			RevealOnSummary: VarField{Bool: true, Value: "true"},
 		}, doc.Variables[1])
 		assert.Equal(t, TemplateConfig{
-			Path:     "xebialabs/foo.yaml",
-			FullPath: filepath.Join("aws/test", "xebialabs/foo.yaml"),
+			Path: "xebialabs/foo.yaml",
 		}, doc.TemplateConfigs[0])
 		assert.Equal(t, TemplateConfig{
 			Path:      "readme.md",
-			FullPath:  filepath.Join("aws/test", "readme.md"),
 			DependsOn: VarField{Value: "isit"},
 		}, doc.TemplateConfigs[1])
 	})
@@ -323,22 +321,18 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 		require.Nil(t, err)
 		assert.Equal(t, 4, len(doc.TemplateConfigs))
 		assert.Equal(t, TemplateConfig{
-			Path:     "xebialabs/foo.yaml",
-			FullPath: "templatePath/test/xebialabs/foo.yaml",
+			Path: "xebialabs/foo.yaml",
 		}, doc.TemplateConfigs[0])
 		assert.Equal(t, TemplateConfig{
 			Path:      "readme.md",
-			FullPath:  "templatePath/test/readme.md",
 			DependsOn: VarField{Value: "isit"},
 		}, doc.TemplateConfigs[1])
 		assert.Equal(t, TemplateConfig{
 			Path:      "bar.md",
-			FullPath:  "templatePath/test/bar.md",
 			DependsOn: VarField{Value: "isitnot"},
 		}, doc.TemplateConfigs[2])
 		assert.Equal(t, TemplateConfig{
 			Path:      "foo.md",
-			FullPath:  "templatePath/test/foo.md",
 			DependsOn: VarField{Value: "!!isitnot", Tag: tagExpressionV1, InvertBool: true},
 		}, doc.TemplateConfigs[3])
 	})
@@ -373,7 +367,7 @@ func TestParseTemplateMetadataV1(t *testing.T) {
                       1. First step
                       2. Second step
                 spec:`, models.BlueprintYamlFormatV1))
-		doc, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository, true)
+		doc, err := parseTemplateMetadataV1(&metadata, "aws/test", &blueprintRepository)
 		require.Nil(t, err)
 		assert.Equal(t,
 			"This is a multiline instruction:\n\nThe instructions continue here:\n  1. First step\n  2. Second step\n",
@@ -608,7 +602,6 @@ func TestBlueprintYaml_parseParametersV1(t *testing.T) {
 }
 
 func TestBlueprintYaml_parseFilesV1(t *testing.T) {
-	templatePath := "aws/monolith"
 	tests := []struct {
 		name    string
 		fields  BlueprintYamlV1
@@ -626,8 +619,8 @@ func TestBlueprintYaml_parseFilesV1(t *testing.T) {
 				},
 			},
 			[]TemplateConfig{
-				{Path: "test.yaml", FullPath: filepath.Join(templatePath, "test.yaml")},
-				{Path: "test2.yaml", FullPath: filepath.Join(templatePath, "test2.yaml")},
+				{Path: "test.yaml"},
+				{Path: "test2.yaml"},
 			},
 			nil,
 		},
@@ -649,11 +642,11 @@ func TestBlueprintYaml_parseFilesV1(t *testing.T) {
 				},
 			},
 			[]TemplateConfig{
-				{Path: "test.yaml", FullPath: filepath.Join(templatePath, "test.yaml")},
-				{Path: "test2.yaml", FullPath: filepath.Join(templatePath, "test2.yaml"), DependsOn: VarField{Value: "foo", Tag: ""}},
-				{Path: "test3.yaml", FullPath: filepath.Join(templatePath, "test3.yaml"), DependsOn: VarField{Value: "bar", Tag: "", InvertBool: true}},
-				{Path: "test4.yaml", FullPath: filepath.Join(templatePath, "test4.yaml"), DependsOn: VarField{Value: "bar", Tag: ""}},
-				{Path: "test5.yaml", FullPath: filepath.Join(templatePath, "test5.yaml"), DependsOn: VarField{Value: "foo", Tag: "", InvertBool: true}},
+				{Path: "test.yaml"},
+				{Path: "test2.yaml", DependsOn: VarField{Value: "foo", Tag: ""}},
+				{Path: "test3.yaml", DependsOn: VarField{Value: "bar", Tag: "", InvertBool: true}},
+				{Path: "test4.yaml", DependsOn: VarField{Value: "bar", Tag: ""}},
+				{Path: "test5.yaml", DependsOn: VarField{Value: "foo", Tag: "", InvertBool: true}},
 			},
 			nil,
 		},
@@ -666,7 +659,7 @@ func TestBlueprintYaml_parseFilesV1(t *testing.T) {
 				Metadata:   tt.fields.Metadata,
 				Spec:       tt.fields.Spec,
 			}
-			tconfigs, err := blueprintDoc.parseFiles(templatePath, true)
+			tconfigs, err := blueprintDoc.parseFiles()
 			if tt.wantErr == nil || err == nil {
 				assert.Equal(t, tt.wantErr, err)
 			} else {

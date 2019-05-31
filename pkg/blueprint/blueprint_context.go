@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -94,6 +92,31 @@ func SetRootFlags(rootFlags *pflag.FlagSet) {
 	rootFlags.String(FlagBlueprintCurrentRepository, "", "Current active blueprint repository name")
 
 	viper.BindPFlag(ViperKeyBlueprintCurrentRepository, rootFlags.Lookup(FlagBlueprintCurrentRepository))
+}
+
+func ConstructLocalBlueprintContext(localRepoPath string) (*BlueprintContext, error) {
+	var definedRepos []*repository.BlueprintRepository
+	var localRepo repository.BlueprintRepository
+	var err error
+
+	if !util.PathExists(localRepoPath, true) {
+		return nil, fmt.Errorf("Error: Provided development local repository directory [%s] is not valid\n", localRepoPath)
+	}
+
+	localRepo, err = local.NewLocalBlueprintRepository(map[string]string{
+		"type": models.ProviderLocal,
+		"name": "cmd-arg",
+		"path": localRepoPath,
+	})
+	if err != nil {
+		return nil, err
+	}
+	definedRepos = append(definedRepos, &localRepo)
+
+	return &BlueprintContext{
+		ActiveRepo:   &localRepo,
+		DefinedRepos: definedRepos,
+	}, nil
 }
 
 func ConstructBlueprintContext(v *viper.Viper, configPath string) (*BlueprintContext, error) {
@@ -223,59 +246,27 @@ func (blueprintContext *BlueprintContext) askUserToChooseBlueprint(blueprints ma
 	return blueprintTemplate, nil
 }
 
-func (blueprintContext *BlueprintContext) fetchFileContents(filePath string, blueprintLocalMode bool, addSuffix bool) (*[]byte, error) {
+func (blueprintContext *BlueprintContext) fetchFileContents(filePath string, addSuffix bool) (*[]byte, error) {
 	if addSuffix {
 		filePath = util.AddSuffixIfNeeded(filePath, templateExtension)
 	}
-
-	// local/remote
-	if !blueprintLocalMode {
-		return blueprintContext.fetchRemoteFile(filePath)
-	} else if util.PathExists(filePath, false) {
-		// fetch templates from local path
-		content, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			return nil, err
-		}
-		return &content, nil
-	}
-	return nil, fmt.Errorf("template not found in path %s", filePath)
-}
-
-func (blueprintContext *BlueprintContext) fetchRemoteFile(filePath string) (*[]byte, error) {
 	return (*blueprintContext.ActiveRepo).GetFileContents(filePath)
 }
 
-func (blueprintContext *BlueprintContext) fetchLocalFile(filePath string) (*[]byte, error) {
-	variableConfigs, err := createTemplateConfigForSingleFile(filePath)
-	if err != nil {
-		return nil, err
-	}
-	return blueprintContext.fetchFileContents(variableConfigs[0].FullPath, true, false)
-}
-
-func (blueprintContext *BlueprintContext) parseDefinitionFile(blueprintLocalMode bool, blueprint *models.BlueprintRemote, templatePath string) (*BlueprintConfig, error) {
-	// local/remote
-	if blueprintLocalMode {
-		return blueprintContext.parseLocalDefinitionFile(templatePath)
-	}
-	return blueprintContext.parseRemoteDefinitionFile(blueprint, templatePath)
-}
-
-func (blueprintContext *BlueprintContext) parseRemoteDefinitionFile(blueprint *models.BlueprintRemote, templatePath string) (*BlueprintConfig, error) {
+func (blueprintContext *BlueprintContext) parseDefinitionFile(blueprint *models.BlueprintRemote, templatePath string) (*BlueprintConfig, error) {
 	// Since we pass a reference from a map here, it could be nil
 	if blueprint == nil {
 		return nil, fmt.Errorf("blueprint [%s] not found in repository %s", templatePath, (*blueprintContext.ActiveRepo).GetName())
 	}
 
 	// Get blueprint definition file contents
-	ymlContent, err := blueprintContext.fetchRemoteFile(blueprint.DefinitionFile.Path)
+	ymlContent, err := blueprintContext.fetchFileContents(blueprint.DefinitionFile.Path, false)
 	if err != nil {
 		return nil, err
 	}
 
 	// Parse blueprint document contents
-	blueprintDoc, err := parseTemplateMetadata(ymlContent, templatePath, blueprintContext, false)
+	blueprintDoc, err := parseTemplateMetadata(ymlContent, templatePath, blueprintContext)
 	if err != nil {
 		return nil, err
 	}
@@ -288,36 +279,7 @@ func (blueprintContext *BlueprintContext) parseRemoteDefinitionFile(blueprint *m
 	return blueprintDoc, err
 }
 
-func (blueprintContext *BlueprintContext) parseLocalDefinitionFile(templatePath string) (*BlueprintConfig, error) {
-	// Parse blueprint document contents
-	var ymlContent *[]byte
-	var err error
-	for _, ext := range repository.BlueprintMetadataFileExtensions {
-		definitionFileName := repository.BlueprintMetadataFileName + ext
-		filePath := filepath.Join(templatePath, definitionFileName)
-		ymlContent, err = blueprintContext.fetchLocalFile(filePath)
-		if err == nil {
-			break
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	blueprintDoc, err := parseTemplateMetadata(ymlContent, templatePath, blueprintContext, true)
-	if err != nil {
-		return nil, err
-	}
-
-	// Prepare full paths for the template files
-	err = blueprintDoc.verifyTemplateDirAndPaths(templatePath)
-	if err != nil {
-		return nil, err
-	}
-
-	return blueprintDoc, err
-}
-
-func parseTemplateMetadata(ymlContent *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
+func parseTemplateMetadata(ymlContent *[]byte, templatePath string, blueprintRepository *BlueprintContext) (*BlueprintConfig, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(*ymlContent))
 	yamlDoc := struct {
 		ApiVersion string `yaml:"apiVersion"`
@@ -327,9 +289,9 @@ func parseTemplateMetadata(ymlContent *[]byte, templatePath string, blueprintRep
 		return nil, err
 	}
 	if yamlDoc.ApiVersion == models.BlueprintYamlFormatV1 {
-		return parseTemplateMetadataV1(ymlContent, templatePath, blueprintRepository, isLocal)
+		return parseTemplateMetadataV1(ymlContent, templatePath, blueprintRepository)
 	}
-	return parseTemplateMetadataV2(ymlContent, templatePath, blueprintRepository, isLocal)
+	return parseTemplateMetadataV2(ymlContent, templatePath, blueprintRepository)
 }
 
 /*
@@ -337,28 +299,6 @@ func parseTemplateMetadata(ymlContent *[]byte, templatePath string, blueprintRep
  * Utility Functions
  * -----------------
  */
-func getFilePathRelativeToTemplatePath(filePath string, templatePath string) string {
-	util.Verbose("[repository] getting FilePath: %s relative to templatePath: %s \n", filePath, templatePath)
-	chunks := strings.Split(filePath, util.AddSuffixIfNeeded(templatePath, string(os.PathSeparator)))
-	if len(chunks) > 1 {
-		return chunks[len(chunks)-1]
-	}
-	return filePath
-}
-
-func createTemplateConfigForSingleFile(blueprintTemplate string) ([]TemplateConfig, error) {
-	if blueprintTemplate != "" {
-		// could be a single remote or local file
-		var templateConfigs []TemplateConfig
-		_, fileName := filepath.Split(blueprintTemplate)
-		templateConfigs = append(templateConfigs, TemplateConfig{
-			Path:     fileName,
-			FullPath: blueprintTemplate,
-		})
-		return templateConfigs, nil
-	}
-	return nil, fmt.Errorf("unknown template specified for Blueprint : %s", blueprintTemplate)
-}
 
 func doesDefaultExist(repositories []ConfMap) bool {
 	for _, repo := range repositories {

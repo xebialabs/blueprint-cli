@@ -280,6 +280,8 @@ Mainly intended to be used for local development and tests. Any local path can b
 
 > Note: Please note that in case of local repository being a too generic path, like `~`, traversing file path will be quite big and it may result in blueprint command to run very slow.
 
+> Note: In development you can use the `-l` flag to use a local repo directly without defining it in configuration. For example to execute a blueprint in a local directory `~/mySpace/myBlueprint` you can run `xl blueprint -l ~/mySpace -b myBlueprint`.
+
 ### Creating a New Blueprint Repository
 
 #### New GitHub Repository
@@ -321,6 +323,7 @@ Flags and options that can be set to `xl blueprint` command are the following:
 | `-a` | `--answers` | — | `xl blueprint -a /path/to/answers.yaml` | When provided, values within answers file will be used as variable input. By default strict mode is off so any value that is not provided in the file will be asked to user. |
 | `-s` | `--strict-answers` | `false` | `xl blueprint -sa /path/to/answers.yaml` | If flag is set, all variables will be requested from the answers file, and error will be thrown if one of them is not there.<br/>If not set, existing answer values will be used from answers file, and remaining ones will be asked to user from command line. |
 | `-b` | `--blueprint` | | `xl blueprint -b aws/monolith`  | Looks  for the path relative to the current repository and instead of asking user which blueprint to use, it will directly fetch the specified blueprint from repository, or give an error if blueprint not found in repository |
+| `-l` | `--local-repo` | | `xl blueprint -l ./templates/test -b my-blueprint`  | Local repository directory to use (bypasses active repository). Can be used along with `-b` flag to execute blueprints from your local filesystem without defining a repository for it. |
 | `-d` | `--use-defaults` | | `xl blueprint -d`  | If flag is set, default fields in variable definitions will be used as value fields, thus user will not be asked question for a variable if a default value is present |
 
 ---------------

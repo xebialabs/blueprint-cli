@@ -2,10 +2,31 @@ package up
 
 import (
 	"fmt"
+	"os/user"
+	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestGetLocalContext(t *testing.T) {
+	currentUser, _ := user.Current()
+
+	t.Run("should error when local up context path is invalid", func(t *testing.T) {
+		c, _, err := getLocalContext("")
+		require.NotNil(t, err)
+		require.Nil(t, c)
+	})
+	t.Run("should return valid local up test context", func(t *testing.T) {
+		c, templatePath, err := getLocalContext(filepath.Join(currentUser.HomeDir, "xlTest", "blueprints"))
+		require.Nil(t, err)
+		require.NotNil(t, c)
+		assert.Equal(t, "cmd-arg", (*c.ActiveRepo).GetName())
+		assert.Equal(t, "xlTest", templatePath)
+	})
+}
 
 func TestGetRepo(t *testing.T) {
 	t.Run("should return repo with a branch name", func(t *testing.T) {

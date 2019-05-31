@@ -409,42 +409,6 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	return answer, err
 }
 
-// verify blueprint directory & generate full paths for local files
-func (blueprintDoc *BlueprintConfig) verifyTemplateDirAndPaths(templatePath string) error {
-	if util.PathExists(templatePath, true) {
-		util.Verbose("[repository] Verifying local path and files within: %s \n", templatePath)
-		var filePaths []string
-
-		// walk the root directory
-		err := filepath.Walk(templatePath, func(path string, fileInfo os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if !fileInfo.IsDir() {
-				filePaths = append(filePaths, path)
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-		if len(filePaths) == 0 {
-			return fmt.Errorf("path [%s] doesn't include any valid files", templatePath)
-		}
-
-		// verify full local paths
-		for _, config := range blueprintDoc.TemplateConfigs {
-			configIndex := findInFilePaths(config, filePaths)
-			if configIndex == -1 {
-				return fmt.Errorf("path [%s] doesn't exist", config.FullPath)
-			}
-
-		}
-		return nil
-	}
-	return fmt.Errorf("path [%s] doesn't exist", templatePath)
-}
-
 // validate blueprint yaml document based on required fields
 func (blueprintDoc *BlueprintConfig) validate() error {
 	if !util.IsStringInSlice(blueprintDoc.ApiVersion, models.BlueprintYamlFormatSupportedVersions) {
@@ -818,13 +782,4 @@ func ProcessCustomFunction(fnStr string) ([]string, error) {
 	} else {
 		return nil, fmt.Errorf("invalid syntax in function reference: %s", fnStr)
 	}
-}
-
-func findInFilePaths(templateConfig TemplateConfig, filePaths []string) int {
-	for i, filepath := range filePaths {
-		if templateConfig.FullPath == filepath {
-			return i
-		}
-	}
-	return -1
 }

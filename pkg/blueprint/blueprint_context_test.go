@@ -255,6 +255,24 @@ with a new line`),
 	return c
 }
 
+func TestConstructLocalBlueprintContext(t *testing.T) {
+	pwd, _ := os.Getwd()
+	localPath := strings.Replace(pwd, path.Join("pkg", "blueprint"), path.Join("templates", "test"), -1)
+	defer httpmock.DeactivateAndReset()
+
+	t.Run("should error when local blueprint path is invalid", func(t *testing.T) {
+		c, err := ConstructLocalBlueprintContext(filepath.Join(localPath, "not-there"))
+		require.NotNil(t, err)
+		require.Nil(t, c)
+	})
+	t.Run("should return valid local blueprint test context", func(t *testing.T) {
+		c, err := ConstructLocalBlueprintContext(localPath)
+		require.Nil(t, err)
+		require.NotNil(t, c)
+		assert.Equal(t, "cmd-arg", (*c.ActiveRepo).GetName())
+	})
+}
+
 func TestConstructBlueprintContext(t *testing.T) {
 	configDir, _ := ioutil.TempDir("", "xebialabsconfig")
 	defer os.RemoveAll(configDir)
@@ -338,33 +356,6 @@ func TestConstructBlueprintContext(t *testing.T) {
 func TestBlueprintContext_fetchFileContents(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 
-	stream := fmt.Sprintf(`
-		apiVersion: %s
-		kind: Infrastructure
-		spec:
-		- name: aws
-		type: aws.Cloud
-		accesskey: {{.AccessKey}}
-		accessSecret: {{.AccessSecret}}
-
-		---
-		  `, models.XldApiVersion)
-
-	t.Run("should fetch a template from local path", func(t *testing.T) {
-		blueprintContext := BlueprintContext{}
-		tmpDir := path.Join("test", "blueprints")
-		templateConfig := TemplateConfig{
-			Path: "test.yaml", FullPath: path.Join(tmpDir, "test.yaml"),
-		}
-		os.MkdirAll(tmpDir, os.ModePerm)
-		defer os.RemoveAll("test")
-		d1 := []byte(stream)
-		ioutil.WriteFile(path.Join(tmpDir, "test.yaml.tmpl"), d1, os.ModePerm)
-		out, err := blueprintContext.fetchFileContents(templateConfig.FullPath, true, true)
-		require.Nil(t, err)
-		assert.Equal(t, stream, string(*out))
-	})
-
 	t.Run("should fetch a template from remote path", func(t *testing.T) {
 		repo := getMockHttpBlueprintContext(t)
 		blueprints, err := repo.initCurrentRepoClient()
@@ -372,7 +363,7 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 		require.NotNil(t, blueprints)
 
 		t.Run("should get file contents", func(t *testing.T) {
-			contents, err := repo.fetchFileContents("aws/monolith/test.yaml", false, false)
+			contents, err := repo.fetchFileContents("aws/monolith/test.yaml", false)
 			require.Nil(t, err)
 			require.NotNil(t, contents)
 			assert.NotEmptyf(t, string(*contents), "mock blueprint file content is empty")
@@ -380,219 +371,16 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 		})
 
 		t.Run("should error on non-existing remote file path", func(t *testing.T) {
-			_, err := repo.fetchFileContents("non-existing-path/file.yaml", false, true)
+			_, err := repo.fetchFileContents("non-existing-path/file.yaml", true)
 			require.NotNil(t, err)
 			assert.Equal(t, "Get http://mock.repo.server.com/non-existing-path/file.yaml.tmpl: no responder found", err.Error())
 		})
 	})
-
-	t.Run("should error on no file found", func(t *testing.T) {
-		blueprintContext := BlueprintContext{}
-		tmpPath := path.Join("aws", "monolith", "test.yaml.tmpl")
-		templateConfig := TemplateConfig{
-			Path: "test.yaml", FullPath: tmpPath,
-		}
-		out, err := blueprintContext.fetchFileContents(templateConfig.FullPath, true, true)
-		require.Nil(t, out)
-		require.NotNil(t, err)
-		assert.Equal(t, "template not found in path "+tmpPath, err.Error())
-	})
-}
-
-func TestBlueprintContext_fetchLocalFile(t *testing.T) {
-	yaml := `
-      apiVersion: xl/v2
-      kind: Blueprint
-      metadata:
-        name: Test Project
-
-      spec:
-        parameters:
-        - name: Test
-          value: testing
-
-        files:
-        - path: xld-environment.yml.tmpl
-        - path: xld-infrastructure.yml.tmpl
-        - path: xlr-pipeline.yml`
-
-	tmpDir := path.Join("test", "blueprints")
-	os.MkdirAll(tmpDir, os.ModePerm)
-	defer os.RemoveAll("test")
-	d1 := []byte(yaml)
-	ioutil.WriteFile(path.Join(tmpDir, "blueprint.yaml"), d1, os.ModePerm)
-
-	type args struct {
-		templatePath      string
-		blueprintFileName string
-	}
-
-	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr error
-	}{
-		{
-			"read a given blueprint.yaml local file",
-			args{"test/blueprints", "blueprint.yaml"},
-			yaml,
-			nil,
-		},
-		{
-			"read a given blueprint.yaml local file when repository exists",
-			args{"test/blueprints", "blueprint.yaml"},
-			yaml,
-			nil,
-		},
-		{
-			"error on when local file doesn't exist",
-			args{"test/blueprints", "blueprints.yml"},
-			"",
-			fmt.Errorf("template not found in path test/blueprints/blueprints.yml"),
-		},
-		{
-			"error on local path doesn't exist",
-			args{"test/blueprints2", "blueprint.yaml"},
-			"",
-			fmt.Errorf("template not found in path test/blueprints2/blueprint.yaml"),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			blueprintContext := BlueprintContext{}
-			filePath := fmt.Sprintf("%s/%s", tt.args.templatePath, tt.args.blueprintFileName)
-			got, err := blueprintContext.fetchLocalFile(filePath)
-			if tt.wantErr == nil || err == nil {
-				assert.Equal(t, tt.wantErr, err)
-			} else {
-				assert.Equal(t, tt.wantErr.Error(), err.Error())
-			}
-			if tt.want == "" {
-				assert.Nil(t, got)
-			} else {
-				assert.Equal(t, tt.want, string(*got))
-			}
-		})
-	}
 }
 
 // utility function tests
-func TestGetFilePathRelativeToTemplatePath(t *testing.T) {
-	t.Run("should get a relative file path based on templatepath", func(t *testing.T) {
-		out := getFilePathRelativeToTemplatePath(path.Join("test", "blueprints", "test.yaml.tmpl"), path.Join("test", "blueprints"))
-		require.NotNil(t, out)
-		assert.Equal(t, "test.yaml.tmpl", out)
-		out = getFilePathRelativeToTemplatePath(path.Join("test", "blueprints", "nested", "test.yaml.tmpl"), path.Join("test", "blueprints"))
-		require.NotNil(t, out)
-		assert.Equal(t, path.Join("nested", "test.yaml.tmpl"), out)
-		out = getFilePathRelativeToTemplatePath(path.Join("test", "blueprints", "nested", "test.yaml.tmpl"), path.Join("test", "blueprints", ""))
-		require.NotNil(t, out)
-		assert.Equal(t, path.Join("nested", "test.yaml.tmpl"), out)
-		out = getFilePathRelativeToTemplatePath(path.Join("test", "blueprints", "nested", "test.yaml.tmpl"), path.Join("test", "blueprintssss"))
-		require.NotNil(t, out)
-		assert.Equal(t, path.Join("test", "blueprints", "nested", "test.yaml.tmpl"), out)
-	})
-}
 
-func TestCreateTemplateConfigForSingleFile(t *testing.T) {
-	t.Run("should create template config for a relative file", func(t *testing.T) {
-		tmpPath := path.Join("test", "blueprints")
-		out, err := createTemplateConfigForSingleFile(path.Join(tmpPath, "test.yaml.tmpl"))
-		require.Nil(t, err)
-		require.NotNil(t, out)
-		assert.Equal(t, []TemplateConfig{
-			{Path: "test.yaml.tmpl", FullPath: path.Join(tmpPath, "test.yaml.tmpl")},
-		}, out)
-	})
-	t.Run("should create template config for a file", func(t *testing.T) {
-		out, err := createTemplateConfigForSingleFile("test.yaml.tmpl")
-		require.Nil(t, err)
-		require.NotNil(t, out)
-		assert.Equal(t, []TemplateConfig{
-			{Path: "test.yaml.tmpl", FullPath: "test.yaml.tmpl"},
-		}, out)
-	})
-	t.Run("should return err if template is empty", func(t *testing.T) {
-		out, err := createTemplateConfigForSingleFile("")
-		require.NotNil(t, err)
-		require.Nil(t, out)
-	})
-}
-
-func TestBlueprintContext_parseLocalDefinitionFile(t *testing.T) {
-	defer httpmock.DeactivateAndReset()
-	repo := getMockHttpBlueprintContext(t)
-	blueprints, err := repo.initCurrentRepoClient()
-	require.Nil(t, err)
-	require.NotNil(t, blueprints)
-
-	yaml := `
-      apiVersion: xl/v2
-      kind: Blueprint
-      metadata:
-        name: Test Project
-      spec:
-        parameters:
-        - name: Test
-          value: testing
-
-        files:
-        - path: xld-environment.yml.tmpl
-        - path: xld-infrastructure.yml.tmpl
-        - path: xlr-pipeline.yml`
-
-	tmpDir := path.Join("test", "blueprints")
-	os.MkdirAll(tmpDir, os.ModePerm)
-	defer os.RemoveAll("test")
-	d1 := []byte(yaml)
-	ioutil.WriteFile(path.Join(tmpDir, "blueprint.yaml"), d1, os.ModePerm)
-	ioutil.WriteFile(path.Join(tmpDir, "xld-environment.yml.tmpl"), d1, os.ModePerm)
-	ioutil.WriteFile(path.Join(tmpDir, "xld-infrastructure.yml.tmpl"), d1, os.ModePerm)
-	ioutil.WriteFile(path.Join(tmpDir, "xlr-pipeline.yml"), d1, os.ModePerm)
-
-	tests := []struct {
-		name             string
-		blueprintContext BlueprintContext
-		templatePath     string
-		want             []TemplateConfig
-		wantErr          bool
-	}{
-		{
-			"should error when non existing path is used",
-			*repo,
-			"aws/test",
-			nil,
-			true,
-		},
-		{
-			"should parse blueprint definition file",
-			*repo,
-			tmpDir,
-			[]TemplateConfig{
-				{Path: "xld-environment.yml.tmpl", FullPath: "test/blueprints/xld-environment.yml.tmpl"},
-				{Path: "xld-infrastructure.yml.tmpl", FullPath: "test/blueprints/xld-infrastructure.yml.tmpl"},
-				{Path: "xlr-pipeline.yml", FullPath: "test/blueprints/xlr-pipeline.yml"},
-			},
-			false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			blueprintContext := tt.blueprintContext
-			got, err := blueprintContext.parseLocalDefinitionFile(tt.templatePath)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("BlueprintContext.parseLocalDefinitionFile() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != nil && !reflect.DeepEqual(got.TemplateConfigs, tt.want) {
-				t.Errorf("BlueprintContext.parseLocalDefinitionFile() = %v (length %d), want length %d", got, len(got.TemplateConfigs), len(tt.want))
-			}
-		})
-	}
-}
-
-func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
+func TestBlueprintContext_parseDefinitionFile(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	repo := getMockHttpBlueprintContext(t)
 	blueprints, err := repo.initCurrentRepoClient()
@@ -638,7 +426,7 @@ func TestBlueprintContext_parseRemoteDefinitionFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			blueprintContext := tt.blueprintContext
-			got, err := blueprintContext.parseRemoteDefinitionFile(tt.args.blueprint, tt.args.templatePath)
+			got, err := blueprintContext.parseDefinitionFile(tt.args.blueprint, tt.args.templatePath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BlueprintContext.parseRemoteDefinitionFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1099,7 +887,6 @@ func Test_parseTemplateMetadata(t *testing.T) {
 		ymlContent          string
 		templatePath        string
 		blueprintRepository *BlueprintContext
-		isLocal             bool
 	}
 	tests := []struct {
 		name    string
@@ -1118,7 +905,6 @@ func Test_parseTemplateMetadata(t *testing.T) {
                 `,
 				templatePath,
 				&blueprintRepository,
-				false,
 			},
 			nil,
 			true,
@@ -1134,7 +920,6 @@ func Test_parseTemplateMetadata(t *testing.T) {
                 `,
 				templatePath,
 				&blueprintRepository,
-				false,
 			},
 			nil,
 			true,
@@ -1150,7 +935,6 @@ func Test_parseTemplateMetadata(t *testing.T) {
                 `,
 				templatePath,
 				&blueprintRepository,
-				false,
 			},
 			&BlueprintConfig{
 				ApiVersion: "xl/v1",
@@ -1174,7 +958,6 @@ func Test_parseTemplateMetadata(t *testing.T) {
                 `,
 				templatePath,
 				&blueprintRepository,
-				false,
 			},
 			&BlueprintConfig{
 				ApiVersion: "xl/v2",
@@ -1192,7 +975,7 @@ func Test_parseTemplateMetadata(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			yml := []byte(tt.args.ymlContent)
-			got, err := parseTemplateMetadata(&yml, tt.args.templatePath, tt.args.blueprintRepository, tt.args.isLocal)
+			got, err := parseTemplateMetadata(&yml, tt.args.templatePath, tt.args.blueprintRepository)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("parseTemplateMetadata() error = %v, wantErr %v", err, tt.wantErr)
 				return

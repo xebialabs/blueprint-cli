@@ -94,20 +94,6 @@ func TestWriteConfigToFile(t *testing.T) {
 	})
 }
 
-func TestAdjustPathSeperatorIfNeeded(t *testing.T) {
-	t.Run("should produce standard path using the host os seperator", func(t *testing.T) {
-		assert.Equal(t, "", AdjustPathSeperatorIfNeeded(""))
-		assert.Equal(t, "test", AdjustPathSeperatorIfNeeded("test"))
-		assert.Equal(t, path.Join("..", "test"), AdjustPathSeperatorIfNeeded("../test"))
-		assert.Equal(t, path.Join("..", "microservice", "blueprint.yaml"), AdjustPathSeperatorIfNeeded(`..\microservice\blueprint.yaml`))
-		assert.Equal(t, path.Join("..", "microservice", "blueprint.yaml"), AdjustPathSeperatorIfNeeded(`../microservice\blueprint.yaml`))
-		assert.Equal(t, path.Join("..", "microservice", "blueprint.yaml"), AdjustPathSeperatorIfNeeded(`../microservice/blueprint.yaml`))
-		assert.Equal(t, path.Join("test", "test", "again"), AdjustPathSeperatorIfNeeded(`test/test\again`))
-		assert.Equal(t, path.Join("test", "test", "again"), AdjustPathSeperatorIfNeeded(`test\test\again`))
-		assert.Equal(t, path.Join("test", "test", "again"), AdjustPathSeperatorIfNeeded(`test/test/again`))
-	})
-}
-
 func TestInstantiateBlueprint(t *testing.T) {
 	SkipFinalPrompt = true
 	// V2 schema test
@@ -115,7 +101,6 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-			false,
 			"abc",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -133,7 +118,6 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-			false,
 			"invalid",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -150,7 +134,6 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-			false,
 			"answer-input",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -208,7 +191,6 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-			false,
 			"dependson-test",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -253,7 +235,6 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-			false,
 			"defaults-as-values",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -307,7 +288,6 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-			false,
 			"valid-no-prompt",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -364,7 +344,6 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-			false,
 			"composed",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -451,7 +430,6 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		err := InstantiateBlueprint(
-			false,
 			"valid-no-prompt-v1",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -579,11 +557,10 @@ func Test_getBlueprintConfig(t *testing.T) {
 	require.NotNil(t, blueprints)
 
 	type args struct {
-		blueprintContext   *BlueprintContext
-		blueprintLocalMode bool
-		blueprints         map[string]*models.BlueprintRemote
-		templatePath       string
-		dependsOn          VarField
+		blueprintContext *BlueprintContext
+		blueprints       map[string]*models.BlueprintRemote
+		templatePath     string
+		dependsOn        VarField
 	}
 	type ComposedBlueprintPtr = []*ComposedBlueprint
 	tests := []struct {
@@ -597,7 +574,6 @@ func Test_getBlueprintConfig(t *testing.T) {
 			"should error when invalid path is passed",
 			args{
 				repo,
-				false,
 				blueprints,
 				"test",
 				VarField{},
@@ -610,7 +586,6 @@ func Test_getBlueprintConfig(t *testing.T) {
 			"should get blueprint config for a simple definition without composed includes",
 			args{
 				repo,
-				false,
 				blueprints,
 				"aws/monolith",
 				VarField{},
@@ -640,7 +615,6 @@ func Test_getBlueprintConfig(t *testing.T) {
 			"should get blueprint config for a simple definition with composed includes",
 			args{
 				repo,
-				false,
 				blueprints,
 				"aws/compose",
 				VarField{},
@@ -747,7 +721,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotArray, got, err := getBlueprintConfig(tt.args.blueprintContext, tt.args.blueprintLocalMode, tt.args.blueprints, tt.args.templatePath, tt.args.dependsOn)
+			gotArray, got, err := getBlueprintConfig(tt.args.blueprintContext, tt.args.blueprints, tt.args.templatePath, tt.args.dependsOn)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getBlueprintConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -768,11 +742,10 @@ func Test_composeBlueprints(t *testing.T) {
 	require.NotNil(t, blueprints)
 
 	type args struct {
-		blueprintDoc       *BlueprintConfig
-		blueprintContext   *BlueprintContext
-		blueprintLocalMode bool
-		blueprints         map[string]*models.BlueprintRemote
-		dependsOn          VarField
+		blueprintDoc     *BlueprintConfig
+		blueprintContext *BlueprintContext
+		blueprints       map[string]*models.BlueprintRemote
+		dependsOn        VarField
 	}
 
 	type ComposedBlueprintPtr = []*ComposedBlueprint
@@ -787,14 +760,13 @@ func Test_composeBlueprints(t *testing.T) {
 			args{
 				&BlueprintConfig{
 					Include: []IncludedBlueprintProcessed{
-						IncludedBlueprintProcessed{
+						{
 							Blueprint: "aws/nonexisting",
 							Stage:     "after",
 						},
 					},
 				},
 				repo,
-				false,
 				blueprints,
 				VarField{},
 			},
@@ -809,10 +781,10 @@ func Test_composeBlueprints(t *testing.T) {
 					Kind:       "Blueprint",
 					Metadata:   Metadata{Name: "Test Project"},
 					Include: []IncludedBlueprintProcessed{
-						IncludedBlueprintProcessed{
+						{
 							Blueprint: "aws/emptyfiles",
 						},
-						IncludedBlueprintProcessed{
+						{
 							Blueprint: "aws/emptyparams",
 						},
 					},
@@ -826,7 +798,6 @@ func Test_composeBlueprints(t *testing.T) {
 					},
 				},
 				repo,
-				false,
 				blueprints,
 				VarField{},
 			},
@@ -837,10 +808,10 @@ func Test_composeBlueprints(t *testing.T) {
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project"},
 						Include: []IncludedBlueprintProcessed{
-							IncludedBlueprintProcessed{
+							{
 								Blueprint: "aws/emptyfiles",
 							},
-							IncludedBlueprintProcessed{
+							{
 								Blueprint: "aws/emptyparams",
 							},
 						},
@@ -890,7 +861,7 @@ func Test_composeBlueprints(t *testing.T) {
 					Kind:       "Blueprint",
 					Metadata:   Metadata{Name: "Test Project"},
 					Include: []IncludedBlueprintProcessed{
-						IncludedBlueprintProcessed{
+						{
 							Blueprint: "aws/datalake",
 							ParameterOverrides: []Variable{
 								{
@@ -918,7 +889,6 @@ func Test_composeBlueprints(t *testing.T) {
 					},
 				},
 				repo,
-				false,
 				blueprints,
 				VarField{},
 			},
@@ -929,7 +899,7 @@ func Test_composeBlueprints(t *testing.T) {
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project"},
 						Include: []IncludedBlueprintProcessed{
-							IncludedBlueprintProcessed{
+							{
 								Blueprint: "aws/datalake",
 								ParameterOverrides: []Variable{
 									{
@@ -984,7 +954,7 @@ func Test_composeBlueprints(t *testing.T) {
 					Kind:       "Blueprint",
 					Metadata:   Metadata{Name: "Test Project"},
 					Include: []IncludedBlueprintProcessed{
-						IncludedBlueprintProcessed{
+						{
 							Blueprint: "aws/monolith",
 							Stage:     "before",
 							ParameterOverrides: []Variable{
@@ -1005,7 +975,7 @@ func Test_composeBlueprints(t *testing.T) {
 								},
 							},
 						},
-						IncludedBlueprintProcessed{
+						{
 							Blueprint: "aws/datalake",
 							Stage:     "after",
 							ParameterOverrides: []Variable{
@@ -1034,7 +1004,6 @@ func Test_composeBlueprints(t *testing.T) {
 					},
 				},
 				repo,
-				false,
 				blueprints,
 				VarField{},
 			},
@@ -1061,7 +1030,7 @@ func Test_composeBlueprints(t *testing.T) {
 						Kind:       "Blueprint",
 						Metadata:   Metadata{Name: "Test Project"},
 						Include: []IncludedBlueprintProcessed{
-							IncludedBlueprintProcessed{
+							{
 								Blueprint: "aws/monolith",
 								Stage:     "before",
 								ParameterOverrides: []Variable{
@@ -1082,7 +1051,7 @@ func Test_composeBlueprints(t *testing.T) {
 									},
 								},
 							},
-							IncludedBlueprintProcessed{
+							{
 								Blueprint: "aws/datalake",
 								Stage:     "after",
 								ParameterOverrides: []Variable{
@@ -1133,7 +1102,7 @@ func Test_composeBlueprints(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := composeBlueprints(tt.args.blueprintDoc, tt.args.blueprintContext, tt.args.blueprintLocalMode, tt.args.blueprints, tt.args.dependsOn)
+			got, err := composeBlueprints(tt.args.blueprintDoc, tt.args.blueprintContext, tt.args.blueprints, tt.args.dependsOn)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("composeBlueprints() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1250,7 +1219,6 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 
 	type args struct {
 		blueprintContext   *BlueprintContext
-		blueprintLocalMode bool
 		blueprints         map[string]*models.BlueprintRemote
 		templatePath       string
 		answersFile        string
@@ -1269,7 +1237,6 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			"should return error when unable fetch blueprint",
 			args{
 				repo,
-				false,
 				blueprints,
 				"foo",
 				"",
@@ -1285,7 +1252,6 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			"should return processed data for simple blueprint",
 			args{
 				repo,
-				false,
 				blueprints,
 				"aws/monolith",
 				"",
@@ -1319,7 +1285,6 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			"should return processed data for composed blueprint",
 			args{
 				repo,
-				false,
 				blueprints,
 				"aws/compose",
 				"",
@@ -1396,7 +1361,6 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			"should return processed data for composed blueprint with includeIf",
 			args{
 				repo,
-				false,
 				blueprints,
 				"aws/compose-2",
 				"",
@@ -1415,7 +1379,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 				Kind:       "Blueprint",
 				Metadata:   Metadata{Name: "Test Project"},
 				Include: []IncludedBlueprintProcessed{
-					IncludedBlueprintProcessed{
+					{
 						Blueprint: "aws/monolith",
 						Stage:     "before",
 						ParameterOverrides: []Variable{
@@ -1437,7 +1401,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 							},
 						},
 					},
-					IncludedBlueprintProcessed{
+					{
 						Blueprint: "aws/datalake",
 						Stage:     "after",
 						ParameterOverrides: []Variable{
@@ -1470,7 +1434,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := prepareMergedTemplateData(tt.args.blueprintContext, tt.args.blueprintLocalMode, tt.args.blueprints, tt.args.templatePath, tt.args.answersFile, tt.args.strictAnswers, tt.args.useDefaultsAsValue, tt.args.surveyOpts...)
+			got, got1, err := prepareMergedTemplateData(tt.args.blueprintContext, tt.args.blueprints, tt.args.templatePath, tt.args.answersFile, tt.args.strictAnswers, tt.args.useDefaultsAsValue, tt.args.surveyOpts...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("prepareMergedTemplateData() error = %v, wantErr %v", err, tt.wantErr)
 				return

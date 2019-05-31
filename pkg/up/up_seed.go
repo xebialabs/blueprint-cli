@@ -40,16 +40,23 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode bool, quickSetup bo
 	blueprint.SkipFinalPrompt = true
 	util.IsQuiet = true
 
-	if !upLocalMode && !cfgOverridden {
+	var err error
+	blueprintContext := context.BlueprintContext
+	if upLocalMode {
+		blueprintContext, blueprintTemplate, err = getLocalContext(blueprintTemplate)
+		if err != nil {
+			util.Fatal("Error while creating local blueprint context: %s \n", err)
+		}
+	} else if !upLocalMode && !cfgOverridden {
 		blueprintTemplate = DefaultInfraBlueprintTemplate
 		repo := getRepo(branchVersion)
-		context.BlueprintContext.ActiveRepo = &repo
+		blueprintContext.ActiveRepo = &repo
 	}
 
 	gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 
 	// Infra blueprint
-	err := blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, gb, upAnswerFile, false, quickSetup, true)
+	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true)
 	if err != nil {
 		util.Fatal("Error while creating Infrastructure Blueprint: %s \n", err)
 	}
@@ -101,7 +108,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode bool, quickSetup bo
 	} else {
 		blueprintTemplate = DefaultBlueprintTemplate
 		repo := getRepo(branchVersion)
-		context.BlueprintContext.ActiveRepo = &repo
+		blueprintContext.ActiveRepo = &repo
 	}
 
 	if !noCleanup {
@@ -136,7 +143,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode bool, quickSetup bo
 		upAnswerFile = AnswerFileFromKubernetes
 	}
 
-	err = blueprint.InstantiateBlueprint(upLocalMode, blueprintTemplate, context.BlueprintContext, gb, upAnswerFile, false, quickSetup, true)
+	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s \n", err)
 	}

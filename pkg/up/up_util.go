@@ -4,9 +4,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
 	"github.com/xebialabs/xl-cli/pkg/models"
@@ -42,6 +46,33 @@ func runSeed() models.Command {
 		Name: Docker,
 		Args: []string{"run", "-v", dir + ":/data", SeedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
 	}
+}
+
+func getLocalContext(templatePath string) (*blueprint.BlueprintContext, string, error) {
+	if len(templatePath) < 1 {
+		return nil, "", fmt.Errorf("template path cannot be empty")
+	}
+
+	// add leading slash if not there
+	if templatePath[len(templatePath)-1:] != string(os.PathSeparator) {
+		templatePath += string(os.PathSeparator)
+	}
+
+	// prepare local context from provided template path
+	blueprintDir := filepath.Dir(templatePath)
+	paths := strings.Split(blueprintDir, string(os.PathSeparator))
+	if runtime.GOOS != "windows" {
+		paths = append([]string{string(os.PathSeparator)}, paths[:len(paths)-1]...)
+	}
+	parentDir := filepath.Join(paths[:len(paths)-1]...)
+	blueprintContext, err := blueprint.ConstructLocalBlueprintContext(parentDir)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// adjust relative template path from provided path
+	blueprintTemplate := paths[len(paths)-1]
+	return blueprintContext, blueprintTemplate, nil
 }
 
 func getRepo(branchVersion string) repository.BlueprintRepository {

@@ -3,7 +3,6 @@ package blueprint
 import (
 	"bytes"
 	"fmt"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -13,7 +12,7 @@ import (
 )
 
 // parse blueprint definition doc
-func parseTemplateMetadataV2(ymlContent *[]byte, templatePath string, blueprintRepository *BlueprintContext, isLocal bool) (*BlueprintConfig, error) {
+func parseTemplateMetadataV2(ymlContent *[]byte, templatePath string, blueprintRepository *BlueprintContext) (*BlueprintConfig, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(*ymlContent))
 	decoder.SetStrict(true)
 	yamlDoc := BlueprintYamlV2{}
@@ -27,7 +26,7 @@ func parseTemplateMetadataV2(ymlContent *[]byte, templatePath string, blueprintR
 	if err != nil {
 		return nil, err
 	}
-	templateConfigs, err := yamlDoc.parseFiles(templatePath, isLocal)
+	templateConfigs, err := yamlDoc.parseFiles()
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +72,7 @@ func (yamlDoc *BlueprintYamlV2) parseParameters() ([]Variable, error) {
 }
 
 // parse doc files into list of TemplateConfig
-func (yamlDoc *BlueprintYamlV2) parseFiles(templatePath string, isLocal bool) ([]TemplateConfig, error) {
+func (yamlDoc *BlueprintYamlV2) parseFiles() ([]TemplateConfig, error) {
 	files := []FileV2{}
 	templateConfigs := []TemplateConfig{}
 	files = yamlDoc.Spec.Files
@@ -81,12 +80,6 @@ func (yamlDoc *BlueprintYamlV2) parseFiles(templatePath string, isLocal bool) ([
 		templateConfig, err := parseFileV2(&m)
 		if err != nil {
 			return nil, err
-		}
-		if isLocal {
-			// If local mode, fix path separator in needed cases
-			adjustedPath := AdjustPathSeperatorIfNeeded(templateConfig.Path)
-			templateConfig.Path = adjustedPath
-			templateConfig.FullPath = filepath.Join(templatePath, adjustedPath)
 		}
 		templateConfigs = append(templateConfigs, templateConfig)
 	}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -50,11 +49,6 @@ func getFuncMaps() template.FuncMap {
 	return funcMaps
 }
 
-func AdjustPathSeperatorIfNeeded(blueprintTemplate string) string {
-	re := regexp.MustCompile(`[\/\\]`)
-	return re.ReplaceAllString(blueprintTemplate, string(os.PathSeparator))
-}
-
 func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
 	if !util.IsStringEmpty(templateConfig.DependsOn.Value) {
 		dependsOnVal, err := ParseDependsOnValue(templateConfig.DependsOn, variables, parameters)
@@ -71,7 +65,6 @@ func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parame
 
 // InstantiateBlueprint is entry point for the cli command
 func InstantiateBlueprint(
-	blueprintLocalMode bool,
 	templatePath string,
 	blueprintContext *BlueprintContext,
 	generatedBlueprint *GeneratedBlueprint,
@@ -84,26 +77,22 @@ func InstantiateBlueprint(
 	var err error
 	var blueprints map[string]*models.BlueprintRemote
 
-	// if remote mode, initialize repository client
-	if !blueprintLocalMode {
-		util.Verbose("[cmd] Reading blueprints from provider: %s\n", (*blueprintContext.ActiveRepo).GetProvider())
-		blueprints, err = blueprintContext.initCurrentRepoClient()
+	// initialize repository client
+	util.Verbose("[cmd] Reading blueprints from provider: %s\n", (*blueprintContext.ActiveRepo).GetProvider())
+	blueprints, err = blueprintContext.initCurrentRepoClient()
+	if err != nil {
+		return err
+	}
+
+	// if template path is not defined in cmd, get user selection
+	if templatePath == "" {
+		templatePath, err = blueprintContext.askUserToChooseBlueprint(blueprints, templatePath, surveyOpts...)
 		if err != nil {
 			return err
 		}
-
-		// if template path is not defined in cmd, get user selection
-		if templatePath == "" {
-			templatePath, err = blueprintContext.askUserToChooseBlueprint(blueprints, templatePath, surveyOpts...)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		templatePath = AdjustPathSeperatorIfNeeded(templatePath)
 	}
 
-	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprintLocalMode, blueprints, templatePath, answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
+	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, templatePath, answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
 	if err != nil {
 		return err
 	}
@@ -156,7 +145,7 @@ func InstantiateBlueprint(
 
 		// read template contents
 		util.Verbose("[file] Fetching template file %s from %s\n", config.Path, config.FullPath)
-		templateContent, err := blueprintContext.fetchFileContents(config.FullPath, blueprintLocalMode, strings.HasSuffix(config.Path, templateExtension))
+		templateContent, err := blueprintContext.fetchFileContents(config.FullPath, strings.HasSuffix(config.Path, templateExtension))
 		if err != nil {
 			return err
 		}
@@ -209,7 +198,6 @@ func InstantiateBlueprint(
 
 func prepareMergedTemplateData(
 	blueprintContext *BlueprintContext,
-	blueprintLocalMode bool,
 	blueprints map[string]*models.BlueprintRemote,
 	templatePath string,
 	answersFile string,
@@ -217,8 +205,8 @@ func prepareMergedTemplateData(
 	useDefaultsAsValue bool,
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
-	// get local/remote blueprint definition
-	blueprintDocs, masterBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprints, templatePath, VarField{})
+	// get blueprint definition
+	blueprintDocs, masterBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprints, templatePath, VarField{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -281,31 +269,31 @@ func evaluateAndSkipIfDependsOnIsFalse(dependsOn VarField, variables *[]Variable
 	return dependsOnVal, nil
 }
 
-func getBlueprintConfig(blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote, templatePath string, dependsOn VarField) ([]*ComposedBlueprint, *BlueprintConfig, error) {
+func getBlueprintConfig(blueprintContext *BlueprintContext, blueprints map[string]*models.BlueprintRemote, templatePath string, dependsOn VarField) ([]*ComposedBlueprint, *BlueprintConfig, error) {
 	util.Verbose("[cmd] Parsing Blueprint from %s\n", templatePath)
 	blueprintDocs := make([]*ComposedBlueprint, 0)
 	blueprint := blueprints[templatePath]
-	masterBlueprintDoc, err := blueprintContext.parseDefinitionFile(blueprintLocalMode, blueprint, templatePath)
+	masterBlueprintDoc, err := blueprintContext.parseDefinitionFile(blueprint, templatePath)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	util.Verbose("[compose] Found %d included blueprints\n", len(masterBlueprintDoc.Include))
-	blueprintDocs, err = composeBlueprints(masterBlueprintDoc, blueprintContext, blueprintLocalMode, blueprints, dependsOn)
+	blueprintDocs, err = composeBlueprints(masterBlueprintDoc, blueprintContext, blueprints, dependsOn)
 	if err != nil {
 		return nil, nil, err
 	}
 	return blueprintDocs, masterBlueprintDoc, nil
 }
 
-func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprintLocalMode bool, blueprints map[string]*models.BlueprintRemote, dependsOn VarField) ([]*ComposedBlueprint, error) {
+func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprints map[string]*models.BlueprintRemote, dependsOn VarField) ([]*ComposedBlueprint, error) {
 	blueprintDocs := make([]*ComposedBlueprint, 0)
 	// add the master blueprint
 	blueprintDocs = append(blueprintDocs, &ComposedBlueprint{blueprintDoc, dependsOn})
 	for _, included := range blueprintDoc.Include {
 		util.Verbose("[compose] Fetch included blueprint %s\n", included.Blueprint)
 		// fetch blueprint from current repo
-		composedBlueprintDocs, currentBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprintLocalMode, blueprints, included.Blueprint, included.DependsOn)
+		composedBlueprintDocs, currentBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprints, included.Blueprint, included.DependsOn)
 		if err != nil {
 			return nil, err
 		}
