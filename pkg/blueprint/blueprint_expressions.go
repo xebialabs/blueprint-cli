@@ -1,21 +1,23 @@
 package blueprint
 
 import (
-    "fmt"
-    "github.com/thoas/go-funk"
-    "math"
-    "net/url"
-    "os/user"
-    "regexp"
-    "strconv"
-    "strings"
+	"fmt"
+	"math"
+	"net/url"
+	"os/user"
+	"strconv"
+	"strings"
+	"time"
 
-    "github.com/Knetic/govaluate"
-    "github.com/xebialabs/xl-cli/pkg/cloud/aws"
-    "github.com/xebialabs/xl-cli/pkg/cloud/k8s"
-    "github.com/xebialabs/xl-cli/pkg/osHelper"
-    "github.com/xebialabs/xl-cli/pkg/util"
-    upHelper "github.com/xebialabs/xl-cli/pkg/version"
+	"github.com/thoas/go-funk"
+
+	"github.com/Knetic/govaluate"
+	"github.com/dlclark/regexp2"
+	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
+	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
+	"github.com/xebialabs/xl-cli/pkg/osHelper"
+	"github.com/xebialabs/xl-cli/pkg/util"
+	upHelper "github.com/xebialabs/xl-cli/pkg/version"
 )
 
 var functions = map[string]govaluate.ExpressionFunction{
@@ -55,11 +57,19 @@ var functions = map[string]govaluate.ExpressionFunction{
 			return nil, fmt.Errorf("invalid number of arguments for regex expression, expecting 2 got %d", len(args))
 		}
 		pattern := args[0].(string)
-		value := fmt.Sprintf("%v", args[1])
-		match, err := regexp.MatchString("^"+pattern+"$", value)
+		re, err := regexp2.Compile(fmt.Sprintf("^%s$", pattern), 0)
 		if err != nil {
-			return false, err
+			return false, fmt.Errorf("invalid pattern in regex expression, %s", err.Error())
 		}
+		// setting a 5 second timeout to avoid hanging on complex regex
+		re.MatchTimeout = time.Second * 5
+		value := fmt.Sprintf("%v", args[1])
+		match, err := re.MatchString(value)
+
+		if err != nil {
+			return false, fmt.Errorf("error while matching regex expression %s, %s", pattern, err.Error())
+		}
+
 		if !match {
 			return false, nil
 		}
@@ -97,120 +107,120 @@ var functions = map[string]govaluate.ExpressionFunction{
 
 	// aws helper functions
 	"awsCredentials": func(args ...interface{}) (interface{}, error) {
-        if len(args) != 1 {
-            return nil, fmt.Errorf("invalid number of arguments for expression function 'awsCredentials', expecting 1 got %d", len(args))
-        }
+		if len(args) != 1 {
+			return nil, fmt.Errorf("invalid number of arguments for expression function 'awsCredentials', expecting 1 got %d", len(args))
+		}
 
-        // possible attributes: [IsAvailable, AccessKeyID, SecretAccessKey, ProviderName]
-        attr := fmt.Sprintf("%v", args[0])
-        if !funk.Contains([]string{"IsAvailable", "AccessKeyID", "SecretAccessKey", "ProviderName"}, attr) {
-            return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'awsCredentials'", attr)
-        }
+		// possible attributes: [IsAvailable, AccessKeyID, SecretAccessKey, ProviderName]
+		attr := fmt.Sprintf("%v", args[0])
+		if !funk.Contains([]string{"IsAvailable", "AccessKeyID", "SecretAccessKey", "ProviderName"}, attr) {
+			return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'awsCredentials'", attr)
+		}
 
-        creds, err := aws.GetAWSCredentialsFromSystem()
-        if err != nil {
-            if strings.Contains(err.Error(), "NoCredentialProviders: no valid providers in chain") {
-                if attr == "IsAvailable" {
-                    return false, nil
-                }
-                return nil, nil
-            }
-            return nil, fmt.Errorf("Error when executing expression function 'awsCredentials', %s", err.Error())
-        }
+		creds, err := aws.GetAWSCredentialsFromSystem()
+		if err != nil {
+			if strings.Contains(err.Error(), "NoCredentialProviders: no valid providers in chain") {
+				if attr == "IsAvailable" {
+					return false, nil
+				}
+				return nil, nil
+			}
+			return nil, fmt.Errorf("Error when executing expression function 'awsCredentials', %s", err.Error())
+		}
 
-        if attr == "IsAvailable" {
-            return creds.AccessKeyID != "", nil
-        }
-	    return aws.GetAWSCredentialsField(&creds, attr), nil
-    },
-    "awsRegions": func(args ...interface{}) (interface{}, error) {
-        if len(args) == 0 || len(args) > 2 {
-            return nil, fmt.Errorf("invalid number of arguments for expression function 'awsRegions', expecting between 1 and 2 got %d", len(args))
-        }
+		if attr == "IsAvailable" {
+			return creds.AccessKeyID != "", nil
+		}
+		return aws.GetAWSCredentialsField(&creds, attr), nil
+	},
+	"awsRegions": func(args ...interface{}) (interface{}, error) {
+		if len(args) == 0 || len(args) > 2 {
+			return nil, fmt.Errorf("invalid number of arguments for expression function 'awsRegions', expecting between 1 and 2 got %d", len(args))
+		}
 
-        // attributes:
-        // - 0: AWS service name
-        // - 1: Index of the result list [optional]
-        serviceName := fmt.Sprintf("%v", args[0])
-        i := -1
-        var err error
-        if len(args) == 2 {
-            i, err = strconv.Atoi(fmt.Sprintf("%v", args[1]))
-            if err != nil {
-                return nil, fmt.Errorf("second argument for expression function 'awsRegions' should be a number")
-            }
-        }
+		// attributes:
+		// - 0: AWS service name
+		// - 1: Index of the result list [optional]
+		serviceName := fmt.Sprintf("%v", args[0])
+		i := -1
+		var err error
+		if len(args) == 2 {
+			i, err = strconv.Atoi(fmt.Sprintf("%v", args[1]))
+			if err != nil {
+				return nil, fmt.Errorf("second argument for expression function 'awsRegions' should be a number")
+			}
+		}
 
-        regions, err := aws.GetAvailableAWSRegionsForService(serviceName)
-        if err != nil {
-            return nil, fmt.Errorf("Error when executing expression function 'awsRegions', %s", err.Error())
-        }
+		regions, err := aws.GetAvailableAWSRegionsForService(serviceName)
+		if err != nil {
+			return nil, fmt.Errorf("Error when executing expression function 'awsRegions', %s", err.Error())
+		}
 
-        if i >= len(regions) {
-            return nil, fmt.Errorf("index %d doesn't exist in the result of expression function 'awsRegions'", i)
-        }
-        if i >= 0 {
-            return regions[i], nil
-        }
-        return regions, nil
-    },
+		if i >= len(regions) {
+			return nil, fmt.Errorf("index %d doesn't exist in the result of expression function 'awsRegions'", i)
+		}
+		if i >= 0 {
+			return regions[i], nil
+		}
+		return regions, nil
+	},
 
 	// k8s helper functions
-    "k8sConfig": func(args ...interface{}) (interface{}, error) {
-        if len(args) == 0 || len(args) > 2 {
-            return nil, fmt.Errorf("invalid number of arguments for expression function 'k8sConfig', expecting between 1 and 2 got %d", len(args))
-        }
+	"k8sConfig": func(args ...interface{}) (interface{}, error) {
+		if len(args) == 0 || len(args) > 2 {
+			return nil, fmt.Errorf("invalid number of arguments for expression function 'k8sConfig', expecting between 1 and 2 got %d", len(args))
+		}
 
-        // attributes:
-        // - 0: Config attribute name [ClusterServer, ClusterInsecureSkipTLSVerify, ContextCluster, ContextNamespace, ContextUser, UserClientCertificateData, UserClientKeyData, IsAvailable]
-        // - 1: Context name [optional]
-        attr := fmt.Sprintf("%v", args[0])
-        contextName := ""
-        if len(args) == 2 {
-            contextName = fmt.Sprintf("%v", args[1])
-        }
-        k8sConfig, err := k8s.GetK8SConfigFromSystem(contextName)
-        if err != nil {
-            if strings.Contains(err.Error(), "Specified context was not found in the Kubernetes config file") && attr == "IsAvailable" {
-                return false, nil
-            }
-            return nil, fmt.Errorf("Error when executing expression function 'k8sConfig', %s", err.Error())
-        }
+		// attributes:
+		// - 0: Config attribute name [ClusterServer, ClusterInsecureSkipTLSVerify, ContextCluster, ContextNamespace, ContextUser, UserClientCertificateData, UserClientKeyData, IsAvailable]
+		// - 1: Context name [optional]
+		attr := fmt.Sprintf("%v", args[0])
+		contextName := ""
+		if len(args) == 2 {
+			contextName = fmt.Sprintf("%v", args[1])
+		}
+		k8sConfig, err := k8s.GetK8SConfigFromSystem(contextName)
+		if err != nil {
+			if strings.Contains(err.Error(), "Specified context was not found in the Kubernetes config file") && attr == "IsAvailable" {
+				return false, nil
+			}
+			return nil, fmt.Errorf("Error when executing expression function 'k8sConfig', %s", err.Error())
+		}
 
-        if attr == "IsAvailable" {
-            return k8sConfig.Cluster.Server != "", nil
-        }
-        return k8sConfig.GetConfigField(attr), nil
-    },
+		if attr == "IsAvailable" {
+			return k8sConfig.Cluster.Server != "", nil
+		}
+		return k8sConfig.GetConfigField(attr), nil
+	},
 
 	// os helper functions
-    "os": func(args ...interface{}) (interface{}, error) {
-        if len(args) != 1 {
-            return nil, fmt.Errorf("invalid number of arguments for expression function 'os', expecting 1 (module name) got %d", len(args))
-        }
+	"os": func(args ...interface{}) (interface{}, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("invalid number of arguments for expression function 'os', expecting 1 (module name) got %d", len(args))
+		}
 
-        /* Available modules:
-         - _defaultapiserverurl
-         - _operatingsystem
-         - getcertfilelocation
-         - getkeyfilelocation
-         */
-        module := fmt.Sprintf("%v", args[0])
-        return osHelper.GetPropertyByName(module)
-    },
+		/* Available modules:
+		   - _defaultapiserverurl
+		   - _operatingsystem
+		   - getcertfilelocation
+		   - getkeyfilelocation
+		*/
+		module := fmt.Sprintf("%v", args[0])
+		return osHelper.GetPropertyByName(module)
+	},
 
-    // xl up helper functions
-    "xlUp": func(args ...interface{}) (interface{}, error) {
-        if len(args) != 1 {
-            return nil, fmt.Errorf("invalid number of arguments for  expression function 'xlUp', expecting 1 (module name) got %d", len(args))
-        }
+	// xl up helper functions
+	"xlUp": func(args ...interface{}) (interface{}, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("invalid number of arguments for  expression function 'xlUp', expecting 1 (module name) got %d", len(args))
+		}
 
-        /* Available modules:
-           - _showapplicableversions
-        */
-        module := fmt.Sprintf("%v", args[0])
-        return upHelper.GetPropertyByName(module)
-    },
+		/* Available modules:
+		   - _showapplicableversions
+		*/
+		module := fmt.Sprintf("%v", args[0])
+		return upHelper.GetPropertyByName(module)
+	},
 }
 
 // ProcessCustomExpression evaluates the expressions passed in the blueprint.yaml file using https://github.com/Knetic/govaluate
