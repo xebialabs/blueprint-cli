@@ -1148,3 +1148,76 @@ func Test_findLabelValueFromOptions(t *testing.T) {
 		})
 	}
 }
+
+func Test_getDefaultTextWithLabel(t *testing.T) {
+	tests := []struct {
+		name    string
+		defVal  string
+		options []VarField
+		want    string
+	}{
+		{
+			"should return default value with label",
+			"hiya",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
+			},
+			"Hooya (hiya)",
+		},
+		{
+			"should return default value without label",
+			"yoyo",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
+			},
+			"yoyo",
+		},
+		{
+			"should return default value given when not found in options",
+			"yaya",
+			[]VarField{
+				VarField{Value: "yoyo"},
+				VarField{Value: "hiya", Label: "Hooya"},
+				VarField{Value: "someFun()", Tag: "!expr"},
+			},
+			"yaya",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getDefaultTextWithLabel(tt.defVal, tt.options); got != tt.want {
+				t.Errorf("getDefaultTextWithLabel() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_getOptionTextWithLabel(t *testing.T) {
+	tests := []struct {
+		name   string
+		option VarField
+		want   string
+	}{
+		{
+			"should return value with label",
+			VarField{Value: "hiya", Label: "Hooya"},
+			"Hooya (hiya)",
+		},
+		{
+			"should return default value without label",
+			VarField{Value: "yoyo"},
+			"yoyo",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getOptionTextWithLabel(tt.option); got != tt.want {
+				t.Errorf("getOptionTextWithLabel() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -196,6 +196,24 @@ func getOptionTextWithLabel(option VarField) string {
 	return optionText
 }
 
+func getDefaultTextWithLabel(defVal string, options []VarField) string {
+	for _, o := range options {
+		if o.Value == defVal {
+			return getOptionTextWithLabel(o)
+		}
+	}
+	return defVal
+}
+
+func findLabelValueFromOptions(val string, options []VarField) string {
+	for _, o := range options {
+		if getOptionTextWithLabel(o) == val {
+			return o.Value
+		}
+	}
+	return val
+}
+
 // Get variable validate expression
 func (variable *Variable) GetValidateExpr() (string, error) {
 	if variable.Validate.Value == "" {
@@ -359,7 +377,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("Select value for %s?", variable.Name.Value)),
 				Options:  options,
-				Default:  defaultValStr,
+				Default:  getDefaultTextWithLabel(defaultValStr, variable.Options),
 				PageSize: 10,
 				Help:     variable.GetHelpText(),
 			},
@@ -389,15 +407,6 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	}
 	// This always returns string
 	return answer, err
-}
-
-func findLabelValueFromOptions(val string, options []VarField) string {
-	for _, o := range options {
-		if getOptionTextWithLabel(o) == val {
-			return o.Value
-		}
-	}
-	return val
 }
 
 // verify blueprint directory & generate full paths for local files

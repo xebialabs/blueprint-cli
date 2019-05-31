@@ -14,7 +14,7 @@ spec:
     type: Input
     prompt: testing?
     saveInXlvals: true
-    validate: !expr "regex('(\\\\S){16,}', Test)"
+    validate: !expr "regex('(\\\\S){2,}', Test)"
   - name: SelectTest
     type: Select
     prompt: what are you looking at bro?
@@ -24,6 +24,7 @@ spec:
     - label: yolo
       value: yaya
     - heeya
+    default: yaya
   - name: SelectTestVal
     type: Input
     prompt: yo?
