@@ -72,7 +72,7 @@ includeBefore/includeAfter will decide if the blueprint should be composed befor
 | **parameterOverrides** | Parameter definition | - | — | **x** | Overrides fields of the parameters defined on the blueprint included. This way we can force to skip any question by providing a value for it or by overriding its `promptIf`. Can override everything except `name` and `type` fields |
 | **fileOverrides** | File definition | - | — | **x** | Can be used to override fields of any file definition in the blueprint being composed. This way we can force to skip any file by overriding its `writeIf` or rename a file by providing `renameTo`. Can override everything except `path` field |
 
-An example `blueprint.yaml` using expressions for complex behaviors
+An example `blueprint.yaml` using include for composing multiple blueprints
 
 ```yaml
 apiVersion: xl/v2
