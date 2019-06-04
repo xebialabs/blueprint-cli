@@ -61,7 +61,7 @@ func previewDocument(context *xl.Context, fileWithDocs xl.FileWithDocuments, doc
 }
 
 func DoPreview(previewFilenames []string) {
-	xl.ForEachDocument("Previewing", previewFilenames, previewValues, false, previewDocument)
+	xl.ForEachDocument("Previewing", previewFilenames, previewValues, false, false, previewDocument)
 }
 
 func init() {
