@@ -358,7 +358,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 		assert.False(t, util.PathExists("xld-environment.yml", false))   // this file is skipped when composing
 		assert.True(t, util.PathExists("xld-infrastructure.yml", false)) // this comes from composed blueprint 'defaults-as-values'
 		assert.False(t, util.PathExists("xlr-pipeline.yml", false))      // this file is renamed when composing
-		assert.True(t, util.PathExists("xlr-pipeline-new.yml", false))   // this comes from composed blueprint 'defaults-as-values'
+		assert.True(t, util.PathExists("xlr-pipeline-new2.yml", false))  // this comes from composed blueprint 'defaults-as-values'
+		assert.True(t, util.PathExists("xlr-pipeline-new.yml", false))   // this comes from composed blueprint 'valid-no-prompt'
 		assert.True(t, util.PathExists("xlr-pipeline-4.yml", false))     // this comes from blueprint 'composed'
 
 		// these files are from the main blueprint 'composed'
