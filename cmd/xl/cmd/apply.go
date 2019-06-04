@@ -215,6 +215,6 @@ func init() {
 	applyFlags.StringToStringVar(&applyValues, "values", map[string]string{}, "Values")
 	applyFlags.BoolVarP(&applyDetach, "detach", "d", false, "Detach the client at the moment of starting a deploy or release")
 	applyFlags.BoolVar(&nonInteractive, "non-interactive", false, "Automatically archive finished deployment tasks")
-	applyFlags.BoolVar(&requireVCSinfo, "require-version-control-info", false, "Send version control info. Fails if version control info can not be found or is dirty")
-	applyFlags.BoolVar(&skipDirtyCheck, "proceed-when-dirty", false, "Proceed with applying changes even if repository is dirty")
+	applyFlags.BoolVarP(&requireVCSinfo, "require-version-control-info", "r",false, "Send version control info. Fails if version control info can not be found or is dirty")
+	applyFlags.BoolVarP(&skipDirtyCheck, "proceed-when-dirty", "p",false, "Proceed with applying changes even if repository is dirty")
 }
