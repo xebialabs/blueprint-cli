@@ -99,20 +99,20 @@ func readDocumentsFromFile(fileName string, parent *string, process ToProcess, i
 	return FileWithDocuments{imports, parent, documents, fileName, info}
 }
 
-func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, process ToProcess, requireVCSinfo bool, skipDirtyCheck bool, cachedCVSInfo *VCSInfo) []FileWithDocuments {
+func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, process ToProcess, requireVCSinfo bool, skipDirtyCheck bool, cachedCVSInfo VCSInfo) []FileWithDocuments {
 
 	result := make([]FileWithDocuments, 0)
 	for _, fileName := range fileNames {
 		if !seenFiles.Contains(fileName) {
-            var vcsInfo *VCSInfo
-            if cachedCVSInfo == nil {
+            var vcsInfo VCSInfo
+            if cachedCVSInfo == (VCSInfo{}) {
                 vcsInfo = getVCSInfo(fileName, requireVCSinfo, skipDirtyCheck)
             } else {
                 vcsInfo = cachedCVSInfo
                 vcsInfo.filename = getRelativePath(fileName, cachedCVSInfo.localPath)
             }
 
-			fileWithDocuments := readDocumentsFromFile(fileName, parent, process, vcsInfo)
+			fileWithDocuments := readDocumentsFromFile(fileName, parent, process, &vcsInfo)
 			result = append(result, fileWithDocuments)
 			seenFiles.Add(fileName)
 			result = append(ParseDocuments(fileWithDocuments.Imports, seenFiles, &fileName, process, requireVCSinfo, skipDirtyCheck, vcsInfo), result...)
@@ -134,9 +134,9 @@ func logOrFail(requireVCSinfo bool, err error, format string, a ...interface{}) 
 	}
 }
 
-func getVCSInfo(filename string, requireVCSinfo bool, skipDirtyCheck bool) *VCSInfo {
+func getVCSInfo(filename string, requireVCSinfo bool, skipDirtyCheck bool) VCSInfo {
 
-	var vcsInfo *VCSInfo
+	var vcsInfo VCSInfo
 	if requireVCSinfo {
 		util.Verbose("getting vcs info for %s \n", filename)
 		repo, err := FindRepo(filename)
@@ -144,12 +144,15 @@ func getVCSInfo(filename string, requireVCSinfo bool, skipDirtyCheck bool) *VCSI
 		if repo != nil {
 		    var isDirty = false
 		    if !skipDirtyCheck {
+                util.Verbose("Checking if repository is dirty (this might take a while on large repositories)...\n")
                 isDirty, err = repo.IsDirty()
                 if err != nil {
                     util.Fatal("Unable to determine if repo is dirty: %s \n", err)
                 }
                 if isDirty {
                     util.Fatal("Repository dirty and VCS info is required. Please commit all untracked and modified files before applying or use the --proceed-when-dirty flag to skip dirty checking. Aborting. \n")
+                } else {
+                    util.Verbose("Repository clean\n")
                 }
             }
 
@@ -161,7 +164,7 @@ func getVCSInfo(filename string, requireVCSinfo bool, skipDirtyCheck bool) *VCSI
 
             remote, err := repo.Remote()
 
-            vcsInfo = &VCSInfo{relativeFilename, repo.Vcs(), remote,
+            vcsInfo = VCSInfo{relativeFilename, repo.Vcs(), remote,
                 commitInfo.Commit, commitInfo.Author, commitInfo.Date, commitInfo.Message, repo.LocalPath()}
 
             util.Verbose("Detected VCS Info: %s - dirty %t - %s - %s - %s - %s - %s - %s \n", repo.Vcs(), isDirty, remote, relativeFilename, commitInfo.Commit, commitInfo.Author, commitInfo.Date, commitInfo.Message)
@@ -185,7 +188,7 @@ func ForEachDocument(operationName string, fileNames []string, values map[string
 
 	absolutePaths := util.ToAbsolutePaths(fileNames)
 	// parsing
-	docs := ParseDocuments(absolutePaths, mapset.NewSet(), nil, ToProcess{true, true, true}, requireVCSinfo, skipDirtyCheck, nil)
+	docs := ParseDocuments(absolutePaths, mapset.NewSet(), nil, ToProcess{true, true, true}, requireVCSinfo, skipDirtyCheck, VCSInfo{})
 	for fileIdx, fileWithDocs := range docs {
 		var currentFile = util.PrintableFileName(fileWithDocs.FileName)
 		progress := fmt.Sprintf("[%d/%d]", fileIdx+1, len(docs))
