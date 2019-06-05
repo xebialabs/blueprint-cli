@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
@@ -190,7 +190,7 @@ func ForEachDocument(operationName string, fileNames []string, values map[string
 
 		allValsFiles := append(homeValsFiles, projectValsFiles...)
 
-		context, err := BuildContext(viper.GetViper(), &values, allValsFiles, fileWithDocs.VCSInfo)
+		context, err := BuildContext(viper.GetViper(), &values, allValsFiles, fileWithDocs.VCSInfo, "")
 		if err != nil {
 			util.Fatal("Error while reading configuration: %s\n", err)
 		}

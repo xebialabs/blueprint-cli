@@ -119,7 +119,7 @@ func ConstructLocalBlueprintContext(localRepoPath string) (*BlueprintContext, er
 	}, nil
 }
 
-func ConstructBlueprintContext(v *viper.Viper, configPath string) (*BlueprintContext, error) {
+func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*BlueprintContext, error) {
 	activeRepoName := v.GetString(ViperKeyBlueprintCurrentRepository)
 	if activeRepoName == "" {
 		util.Verbose("Updating CLI config %s with blueprint configuration\n", configPath)
@@ -162,7 +162,7 @@ func ConstructBlueprintContext(v *viper.Viper, configPath string) (*BlueprintCon
 		case models.ProviderGitHub:
 			repo, err = github.NewGitHubBlueprintRepository(repoDefinition)
 		case models.ProviderHttp:
-			repo, err = http.NewHttpBlueprintRepository(repoDefinition)
+			repo, err = http.NewHttpBlueprintRepository(repoDefinition, CLIVersion)
 		default:
 			return nil, fmt.Errorf("no blueprint provider implementation found for %s", repoProvider)
 		}
@@ -306,7 +306,7 @@ func doesDefaultExist(repositories []ConfMap) bool {
 			if repo["type"] == "" {
 				repo["type"] = models.DefaultBlueprintRepositoryProvider
 			}
-			if repo["url"] == "" {
+			if repo["url"] != models.DefaultBlueprintRepositoryUrl {
 				repo["url"] = models.DefaultBlueprintRepositoryUrl
 			}
 			return true

@@ -33,7 +33,7 @@ var schemaCmd = &cobra.Command{
 			util.Fatal("Error missing product flags. You need to specify a product you want to generate a schema for. " +
 				"Try adding --xl-deploy or --xl-release or both.\n")
 		}
-		context, err := xl.BuildContext(viper.GetViper(), nil, []string{}, nil)
+		context, err := xl.BuildContext(viper.GetViper(), nil, []string{}, nil, CliVersion)
 		if err != nil {
 			util.Fatal("Error while reading configuration: %s\n", err)
 		}
