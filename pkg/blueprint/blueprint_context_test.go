@@ -659,11 +659,12 @@ blueprint:
 			err := v.ReadConfig(bytes.NewBuffer([]byte(tt.vYaml)))
 			require.Nil(t, err)
 
-			got := GetDefaultBlueprintViperConfig(v)
+			got, repoName := GetDefaultBlueprintViperConfig(v)
 			c := util.SortMapStringInterface(got.AllSettings())
 			bs, err := yaml.Marshal(c)
 			bss := string(bs)
 			require.Nil(t, err)
+			require.NotNil(t, repoName)
 
 			v2 := viper.New()
 			v2.SetConfigType("yaml")
@@ -791,8 +792,9 @@ blueprint:
 			err := v.ReadConfig(bytes.NewBuffer([]byte(tt.v)))
 			require.Nil(t, err)
 
-			got, err := CreateOrUpdateBlueprintConfig(v, configfile)
+			got, repoName, err := CreateOrUpdateBlueprintConfig(v, configfile)
 			require.Nil(t, err)
+			require.NotNil(t, repoName)
 
 			c := util.SortMapStringInterface(got.AllSettings())
 			bs, err := yaml.Marshal(c)

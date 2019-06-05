@@ -2,13 +2,14 @@ package up
 
 import (
 	"fmt"
-	"github.com/xebialabs/xl-cli/pkg/xl"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/xebialabs/xl-cli/pkg/xl"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -111,8 +112,8 @@ kind: Applications
 spec:
 - name: App1
 `, xl.XlrApiVersion, xl.XldApiVersion))
-
-		v := blueprint.GetDefaultBlueprintViperConfig(viper.GetViper())
+		blueprint.WriteConfigFile = false
+		v, _ := blueprint.GetDefaultBlueprintViperConfig(viper.GetViper())
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 
