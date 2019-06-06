@@ -99,16 +99,23 @@ func readDocumentsFromFile(fileName string, parent *string, process ToProcess, i
 	return FileWithDocuments{imports, parent, documents, fileName, info}
 }
 
-func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, process ToProcess, requireVCSinfo bool) []FileWithDocuments {
+func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, process ToProcess, requireVCSinfo bool, skipDirtyCheck bool, cachedCVSInfo VCSInfo) []FileWithDocuments {
 
 	result := make([]FileWithDocuments, 0)
 	for _, fileName := range fileNames {
 		if !seenFiles.Contains(fileName) {
-			info := getVCSInfo(fileName, requireVCSinfo)
-			fileWithDocuments := readDocumentsFromFile(fileName, parent, process, info)
+            var vcsInfo VCSInfo
+            if cachedCVSInfo == (VCSInfo{}) {
+                vcsInfo = getVCSInfo(fileName, requireVCSinfo, skipDirtyCheck)
+            } else {
+                vcsInfo = cachedCVSInfo
+                vcsInfo.filename = getRelativePath(fileName, cachedCVSInfo.localPath)
+            }
+
+			fileWithDocuments := readDocumentsFromFile(fileName, parent, process, &vcsInfo)
 			result = append(result, fileWithDocuments)
 			seenFiles.Add(fileName)
-			result = append(ParseDocuments(fileWithDocuments.Imports, seenFiles, &fileName, process, requireVCSinfo), result...)
+			result = append(ParseDocuments(fileWithDocuments.Imports, seenFiles, &fileName, process, requireVCSinfo, skipDirtyCheck, vcsInfo), result...)
 		}
 	}
 	validateFileWithDocs(result)
@@ -127,41 +134,52 @@ func logOrFail(requireVCSinfo bool, err error, format string, a ...interface{}) 
 	}
 }
 
-func getVCSInfo(filename string, requireVCSinfo bool) *VCSInfo {
+func getVCSInfo(filename string, requireVCSinfo bool, skipDirtyCheck bool) VCSInfo {
 
-	var vcsInfo *VCSInfo
+	var vcsInfo VCSInfo
 	if requireVCSinfo {
 		util.Verbose("getting vcs info for %s \n", filename)
 		repo, err := FindRepo(filename)
 		logOrFail(requireVCSinfo, err, "Error while opening VCS for directory %s: %s.\n", filename, err)
 		if repo != nil {
-			isDirty, err := repo.IsDirty()
-			if err != nil {
-				util.Fatal("Unable to determine if repo is dirty: %s \n", err)
-			}
-			if isDirty {
-				util.Fatal("Repository dirty and VCS info is required. Please commit all untracked and modified files before applying. Aborting. \n")
-			} else {
-				commitInfo, err := repo.LatestCommitInfo()
+		    var isDirty = false
+		    if !skipDirtyCheck {
+                util.Verbose("Checking if repository is dirty (this might take a while on large repositories)...\n")
+                isDirty, err = repo.IsDirty()
+                if err != nil {
+                    util.Fatal("Unable to determine if repo is dirty: %s \n", err)
+                }
+                if isDirty {
+                    util.Fatal("Repository dirty and VCS info is required. Please commit all untracked and modified files before applying or use the --proceed-when-dirty flag to skip dirty checking. Aborting. \n")
+                } else {
+                    util.Verbose("Repository clean\n")
+                }
+            }
 
-				logOrFail(requireVCSinfo, err, "Error while getting commit info: %s\n", err)
+            commitInfo, err := repo.LatestCommitInfo()
 
-				runes := []rune(filename)
-				relativeFilename := string(runes[len(repo.LocalPath())+1:])
+            logOrFail(requireVCSinfo, err, "Error while getting commit info: %s\n", err)
 
-				remote, err := repo.Remote()
+            relativeFilename := getRelativePath(filename, repo.LocalPath())
 
-				vcsInfo = &VCSInfo{relativeFilename, repo.Vcs(), remote,
-					commitInfo.Commit, commitInfo.Author, commitInfo.Date, commitInfo.Message}
+            remote, err := repo.Remote()
 
-				util.Verbose("Detected VCS Info: %s - dirty %t - %s - %s - %s - %s - %s - %s \n", repo.Vcs(), isDirty, remote, relativeFilename, commitInfo.Commit, commitInfo.Author, commitInfo.Date, commitInfo.Message)
-			}
+            vcsInfo = VCSInfo{relativeFilename, repo.Vcs(), remote,
+                commitInfo.Commit, commitInfo.Author, commitInfo.Date, commitInfo.Message, repo.LocalPath()}
+
+            util.Verbose("Detected VCS Info: %s - dirty %t - %s - %s - %s - %s - %s - %s \n", repo.Vcs(), isDirty, remote, relativeFilename, commitInfo.Commit, commitInfo.Author, commitInfo.Date, commitInfo.Message)
+
 		}
 	}
 	return vcsInfo
 }
 
-func ForEachDocument(operationName string, fileNames []string, values map[string]string, requireVCSinfo bool, fn DocumentCallback) {
+func getRelativePath(fullPath string, relativePath string) string {
+    runes := []rune(fullPath)
+    return string(runes[len(relativePath)+1:])
+}
+
+func ForEachDocument(operationName string, fileNames []string, values map[string]string, requireVCSinfo bool, skipDirtyCheck bool, fn DocumentCallback) {
 	homeValsFiles, e := ListHomeXlValsFiles()
 
 	if e != nil {
@@ -169,9 +187,8 @@ func ForEachDocument(operationName string, fileNames []string, values map[string
 	}
 
 	absolutePaths := util.ToAbsolutePaths(fileNames)
-
 	// parsing
-	docs := ParseDocuments(absolutePaths, mapset.NewSet(), nil, ToProcess{true, true, true}, requireVCSinfo)
+	docs := ParseDocuments(absolutePaths, mapset.NewSet(), nil, ToProcess{true, true, true}, requireVCSinfo, skipDirtyCheck, VCSInfo{})
 	for fileIdx, fileWithDocs := range docs {
 		var currentFile = util.PrintableFileName(fileWithDocs.FileName)
 		progress := fmt.Sprintf("[%d/%d]", fileIdx+1, len(docs))

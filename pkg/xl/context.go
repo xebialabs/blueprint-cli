@@ -76,13 +76,14 @@ type TaskState struct {
 }
 
 type VCSInfo struct {
-    filename string
-    vcsType  string
-    remote   string
-    commit   string
-    author   string
-    date     time.Time
-    message  string
+    filename  string
+    vcsType   string
+    remote    string
+    commit    string
+    author    string
+    date      time.Time
+    message   string
+    localPath string
 }
 
 func (c *Context) PrintConfiguration() {
