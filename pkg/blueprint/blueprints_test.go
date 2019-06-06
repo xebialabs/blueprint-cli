@@ -1262,7 +1262,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			},
 			&PreparedData{
 				TemplateData: map[string]interface{}{"Test": "testing"},
-				DefaultData:  map[string]interface{}{},
+				SummaryData:  map[string]interface{}{"Test": "testing"},
 				Secrets:      map[string]interface{}{},
 				Values:       map[string]interface{}{"Test": "testing"},
 			},
@@ -1295,7 +1295,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			},
 			&PreparedData{
 				TemplateData: map[string]interface{}{"Bar": "testing", "Foo": "hello", "Test": "hello"},
-				DefaultData:  map[string]interface{}{},
+				SummaryData:  map[string]interface{}{"Bar": "testing", "Foo": "hello", "Test": "hello"},
 				Secrets:      map[string]interface{}{},
 				Values:       map[string]interface{}{"Test": "hello"},
 			},
@@ -1304,41 +1304,41 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 				Kind:       "Blueprint",
 				Metadata:   Metadata{Name: "Test Project"},
 				Include: []IncludedBlueprintProcessed{
-					IncludedBlueprintProcessed{
-						Blueprint: "aws/monolith",
-						Stage:     "before",
-						ParameterOverrides: []Variable{
-							{
-								Name:      VarField{Value: "Test"},
-								Value:     VarField{Value: "hello"},
-								DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"},
-							},
-						},
-						FileOverrides: []TemplateConfig{
-							{
-								Path:      "xld-infrastructure.yml.tmpl",
-								DependsOn: VarField{Value: "false", Tag: tagExpressionV2},
-							},
-						},
-					},
-					IncludedBlueprintProcessed{
-						Blueprint: "aws/datalake",
-						Stage:     "after",
-						ParameterOverrides: []Variable{
-							{
-								Name:  VarField{Value: "Foo"},
-								Value: VarField{Value: "hello"},
-							},
-						},
-						DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
-						FileOverrides: []TemplateConfig{
-							{
-								Path:      "xlr-pipeline.yml",
-								RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
-								DependsOn: VarField{Value: "TestDepends"},
-							},
-						},
-					},
+                    {
+                        Blueprint: "aws/monolith",
+                        Stage:     "before",
+                        ParameterOverrides: []Variable{
+                            {
+                                Name:      VarField{Value: "Test"},
+                                Value:     VarField{Value: "hello"},
+                                DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"},
+                            },
+                        },
+                        FileOverrides: []TemplateConfig{
+                            {
+                                Path:      "xld-infrastructure.yml.tmpl",
+                                DependsOn: VarField{Value: "false", Tag: tagExpressionV2},
+                            },
+                        },
+                    },
+                    {
+                        Blueprint: "aws/datalake",
+                        Stage:     "after",
+                        ParameterOverrides: []Variable{
+                            {
+                                Name:  VarField{Value: "Foo"},
+                                Value: VarField{Value: "hello"},
+                            },
+                        },
+                        DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
+                        FileOverrides: []TemplateConfig{
+                            {
+                                Path:      "xlr-pipeline.yml",
+                                RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
+                                DependsOn: VarField{Value: "TestDepends"},
+                            },
+                        },
+                    },
 				},
 				Variables: []Variable{
 					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"}},
@@ -1371,7 +1371,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			},
 			&PreparedData{
 				TemplateData: map[string]interface{}{"Bar": "testing"},
-				DefaultData:  map[string]interface{}{},
+				SummaryData:  map[string]interface{}{"Bar": "testing"},
 				Secrets:      map[string]interface{}{},
 				Values:       map[string]interface{}{},
 			},

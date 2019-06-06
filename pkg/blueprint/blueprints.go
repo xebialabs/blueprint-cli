@@ -233,7 +233,7 @@ func prepareMergedTemplateData(
 
 			// merge
 			util.CopyIntoStringInterfaceMap(preparedData.TemplateData, mergedData.TemplateData)
-			util.CopyIntoStringInterfaceMap(preparedData.DefaultData, mergedData.DefaultData)
+			util.CopyIntoStringInterfaceMap(preparedData.SummaryData, mergedData.SummaryData)
 			util.CopyIntoStringInterfaceMap(preparedData.Values, mergedData.Values)
 			util.CopyIntoStringInterfaceMap(preparedData.Secrets, mergedData.Secrets)
 			// append params

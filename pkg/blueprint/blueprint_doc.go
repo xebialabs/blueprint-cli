@@ -49,17 +49,17 @@ var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfi
 
 type PreparedData struct {
 	TemplateData map[string]interface{}
-	DefaultData  map[string]interface{}
+	SummaryData  map[string]interface{}
 	Values       map[string]interface{}
 	Secrets      map[string]interface{}
 }
 
 func NewPreparedData() *PreparedData {
 	templateData := make(map[string]interface{})
-	defaultData := make(map[string]interface{})
+	summaryData := make(map[string]interface{})
 	values := make(map[string]interface{})
 	secrets := make(map[string]interface{})
-	return &PreparedData{TemplateData: templateData, DefaultData: defaultData, Values: values, Secrets: secrets}
+	return &PreparedData{TemplateData: templateData, SummaryData: summaryData, Values: values, Secrets: secrets}
 }
 
 // regular Expressions
@@ -519,11 +519,6 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 				blueprintDoc.Variables[i] = variable
 			}
 			saveItemToTemplateDataMap(&variable, data, finalVal)
-			if variable.Type.Value == TypeSecret && !variable.RevealOnSummary.Bool {
-				data.DefaultData[variable.Label.Value] = "*****"
-			} else {
-				data.DefaultData[variable.Label.Value] = finalVal
-			}
 			continue
 		}
 
@@ -546,12 +541,12 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		saveItemToTemplateDataMap(&variable, data, answer)
 	}
 
-	if useDefaultsAsValue && !usingAnswersFile {
-		// Print summary default values table if in useDefaultsAsValues mode
-		// use util.Print so that this is not skipped in quiet mode
-		util.Print("Using default values:\n")
-		util.Print(util.DataMapTable(&data.DefaultData, util.TableAlignLeft, 30, 50, "\t"))
-	}
+    // Print summary table
+    // use util.Print so that this is not skipped in quiet mode
+    if useDefaultsAsValue && !usingAnswersFile {
+        util.Print("Using default values:\n")
+    }
+    util.Print(util.DataMapTable(&data.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1))
 
 	return data, nil
 }
@@ -705,6 +700,12 @@ func findVariableByName(variables *[]Variable, name string) (*Variable, error) {
 
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
 	if variable.Type.Value == TypeSecret {
+	    if variable.RevealOnSummary.Bool {
+            preparedData.SummaryData[variable.Label.Value] = data
+        } else {
+            preparedData.SummaryData[variable.Label.Value] = "*****"
+        }
+
 		preparedData.Secrets[variable.Name.Value] = data
 		// Use raw value of secret field if flag is set
 		if variable.ReplaceAsIs.Bool {
@@ -713,6 +714,8 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 			preparedData.TemplateData[variable.Name.Value] = fmt.Sprintf(fmtTagValue, variable.Name.Value)
 		}
 	} else {
+        preparedData.SummaryData[variable.Label.Value] = data
+
 		// Save to values file if switch is ON
 		if variable.SaveInXlvals.Bool {
 			preparedData.Values[variable.Name.Value] = data

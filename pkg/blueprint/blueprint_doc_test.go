@@ -969,7 +969,7 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 			args{"", false, true},
 			&PreparedData{
 				TemplateData: map[string]interface{}{"input1": "default1", "input2": "!value input2", "input3": "!value input3"},
-				DefaultData:  map[string]interface{}{"input1": "default1", "input 2": "*****", "input 3": "default3"},
+				SummaryData:  map[string]interface{}{"input1": "default1", "input 2": "*****", "input 3": "default3"},
 				Secrets:      map[string]interface{}{"input2": "default2", "input3": "default3"},
 				Values:       map[string]interface{}{},
 			},
