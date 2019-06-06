@@ -29,6 +29,7 @@ spec:
     - path: xld-environment.yml.tmpl
       writeIf: !expr "false"
     - path: xlr-pipeline.yml
+      writeIf: !expr "TestDepends"
       renameTo: xlr-pipeline-new.yml
   includeAfter:
   - blueprint: defaults-as-values
@@ -39,5 +40,5 @@ spec:
     - path: xld-environment.yml.tmpl
       writeIf: !expr "false"
     - path: xlr-pipeline.yml
-      renameTo: xlr-pipeline-new.yml
+      renameTo: xlr-pipeline-new2.yml
       writeIf: TestDepends
