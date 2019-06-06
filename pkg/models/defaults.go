@@ -42,7 +42,7 @@ const (
 
 	DefaultBlueprintRepositoryProvider = ProviderHttp
 	DefaultBlueprintRepositoryName     = "XL Blueprints"
-	DefaultBlueprintRepositoryUrl      = "https://dist.xebialabs.com/public/blueprints-maintenance/" + BlueprintCurrentCLIVersion + "/"
+	DefaultBlueprintRepositoryUrl      = "https://dist.xebialabs.com/public/blueprints/" + BlueprintCurrentCLIVersion + "/"
 )
 
 const XldApiVersion = "xl-deploy/v1"

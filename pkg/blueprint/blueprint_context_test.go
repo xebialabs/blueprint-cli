@@ -505,7 +505,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints-maintenance/${CLIVersion}/
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/
   - name: XL Github
     type: github
     owner: xebialabs
@@ -527,7 +527,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints-maintenance/${CLIVersion}/
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/
   - name: XL Github
     type: github
     owner: xebialabs
@@ -563,7 +563,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints-maintenance/${CLIVersion}/`,
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
 		},
 		{
 			"should return with default config created when no config exists",
@@ -574,7 +574,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints-maintenance/${CLIVersion}/`,
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
 		},
 		{
 			"should return with default config added when default repo doesn't exist in repositories",
@@ -613,7 +613,7 @@ blueprint:
     url: https://dist.xebialabs.com/public/blueprints/
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints-maintenance/${CLIVersion}/`,
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
 		},
 		{
 			"should return with updated default config when default repo is incomplete",
@@ -649,7 +649,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints-maintenance/${CLIVersion}/`,
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
 		},
 	}
 	for _, tt := range tests {
@@ -714,7 +714,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints-maintenance/${CLIVersion}/
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/
   - name: XL Github
     type: github
     owner: xebialabs
@@ -736,7 +736,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints-maintenance/${CLIVersion}/
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/
   - name: XL Github
     type: github
     owner: xebialabs
@@ -781,7 +781,7 @@ blueprint:
     url: https://dist.xebialabs.com/public/blueprints/
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints-maintenance/${CLIVersion}/`,
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
 			false,
 		},
 	}

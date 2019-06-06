@@ -245,15 +245,15 @@ func Test_getCLIVersionURL(t *testing.T) {
 	}{
 		{
 			"should return the given url when it doesn't have a placeholder",
-			"https://dist.xebialabs.com/public/blueprints-maintenance/",
+			"https://dist.xebialabs.com/public/blueprints/",
 			"",
-			"https://dist.xebialabs.com/public/blueprints-maintenance/",
+			"https://dist.xebialabs.com/public/blueprints/",
 		},
 		{
 			"should return the correct url when it has a placeholder",
 			models.DefaultBlueprintRepositoryUrl,
 			"9.0.0-SNAPSHOT",
-			"https://dist.xebialabs.com/public/blueprints-maintenance/9.0.0/",
+			"https://dist.xebialabs.com/public/blueprints/9.0.0/",
 		},
 		{
 			"should return the given url when placeholder cannot be replaced",
@@ -263,9 +263,9 @@ func Test_getCLIVersionURL(t *testing.T) {
 		},
 		{
 			"should return the given url when placeholder is invalid",
-			"https://dist.xebialabs.com/public/blueprints-maintenance/${foo}",
+			"https://dist.xebialabs.com/public/blueprints/${foo}",
 			"FOO9.0.0-SNAPSHOT",
-			"https://dist.xebialabs.com/public/blueprints-maintenance/${foo}",
+			"https://dist.xebialabs.com/public/blueprints/${foo}",
 		},
 	}
 	for _, tt := range tests {
