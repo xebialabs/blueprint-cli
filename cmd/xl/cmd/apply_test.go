@@ -6,16 +6,18 @@ import (
 	"path/filepath"
 	"testing"
 
+	"io/ioutil"
+	"time"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"io/ioutil"
-	"time"
 )
 
 var testDate = time.Date(2019, time.April, 17, 0, 0, 0, 0, time.UTC)
@@ -36,6 +38,7 @@ func GetMinimalViperConf(t *testing.T) *viper.Viper {
 func TestApply(t *testing.T) {
 
 	util.IsVerbose = true
+	blueprint.WriteConfigFile = false
 
 	t.Run("should apply multiple yaml files in right order with value replacement to both xlr and xld", func(t *testing.T) {
 		tempDir1 := createTempDir("firstDir")

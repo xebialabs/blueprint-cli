@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"regexp"
+	"strings"
 
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/models"
@@ -27,7 +29,7 @@ type HttpBlueprintRepository struct {
 	Password string
 }
 
-func NewHttpBlueprintRepository(confMap map[string]string) (*HttpBlueprintRepository, error) {
+func NewHttpBlueprintRepository(confMap map[string]string, CLIVersion string) (*HttpBlueprintRepository, error) {
 	// Parse context config
 	repo := new(HttpBlueprintRepository)
 	repo.Name = confMap["name"]
@@ -36,7 +38,7 @@ func NewHttpBlueprintRepository(confMap map[string]string) (*HttpBlueprintReposi
 	if !util.MapContainsKeyWithVal(confMap, "url") {
 		return nil, fmt.Errorf("'url' config field must be set for HTTP repository type")
 	}
-	parsedURL, err := url.ParseRequestURI(confMap["url"])
+	parsedURL, err := url.ParseRequestURI(getCLIVersionURL(confMap["url"], CLIVersion))
 	if err != nil {
 		return nil, fmt.Errorf("HTTP repository URL cannot be parsed: %s", err.Error())
 	}
@@ -156,4 +158,15 @@ func (repo *HttpBlueprintRepository) getResponseFromUrl(filePath string) (*http.
 		return nil, err
 	}
 	return response, nil
+}
+
+func getCLIVersionURL(url, CLIVersion string) string {
+	if strings.Contains(url, models.BlueprintCurrentCLIVersion) {
+		re := regexp.MustCompile("^[0-9].[0-9].[0-9]")
+		CLIVersionNumbers := re.FindStringSubmatch(CLIVersion)
+		if CLIVersionNumbers != nil && len(CLIVersionNumbers) > 0 {
+			return strings.Replace(url, models.BlueprintCurrentCLIVersion, CLIVersionNumbers[0], -1)
+		}
+	}
+	return url
 }

@@ -2,13 +2,14 @@ package up
 
 import (
 	"fmt"
-	"github.com/deckarep/golang-set"
+	"io/ioutil"
+	"path/filepath"
+
+	mapset "github.com/deckarep/golang-set"
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
-	"io/ioutil"
-	"path/filepath"
 )
 
 func applyFilesAndSave() {
@@ -30,7 +31,7 @@ func applyFilesAndSave() {
 
 		allValueFiles := getValueFiles(fileWithDocs.FileName)
 
-		context, err := xl.BuildContext(viper.GetViper(), &applyValues, allValueFiles, nil)
+		context, err := xl.BuildContext(viper.GetViper(), &applyValues, allValueFiles, nil, "")
 
 		if err != nil {
 			util.Fatal("Error while reading configuration: %s \n", err)

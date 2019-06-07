@@ -20,7 +20,9 @@ import (
 	"github.com/xebialabs/yaml"
 )
 
-var defaultContextYaml = `
+const DummyCLIVersion = "9.0.0-SNAPSHOT"
+
+const defaultContextYaml = `
 blueprint:
   current-repository: XL Http
   repositories:
@@ -61,7 +63,7 @@ blueprint:
     type: local
     path: %s`, localPath)
 	v := GetViperConf(t, contextYaml)
-	c, err := ConstructBlueprintContext(v, configdir)
+	c, err := ConstructBlueprintContext(v, configdir, DummyCLIVersion)
 	if err != nil {
 		t.Error(err)
 	}
@@ -72,7 +74,7 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 	configdir, _ := ioutil.TempDir("", "xebialabsconfig")
 
 	v := GetViperConf(t, defaultContextYaml)
-	c, err := ConstructBlueprintContext(v, configdir)
+	c, err := ConstructBlueprintContext(v, configdir, DummyCLIVersion)
 	if err != nil {
 		t.Error(err)
 	}
@@ -285,7 +287,7 @@ func TestConstructBlueprintContext(t *testing.T) {
           repositories:
           - name: true
             type: 1`)
-		c, err := ConstructBlueprintContext(v, configFile)
+		c, err := ConstructBlueprintContext(v, configFile, DummyCLIVersion)
 
 		require.NotNil(t, err)
 		require.Nil(t, c)
@@ -298,7 +300,7 @@ func TestConstructBlueprintContext(t *testing.T) {
           - name: XL Http
             type: https
             url: https://dist.xebialabs.com/public/blueprints/`)
-		c, err := ConstructBlueprintContext(v, configFile)
+		c, err := ConstructBlueprintContext(v, configFile, DummyCLIVersion)
 
 		require.NotNil(t, err)
 		require.Nil(t, c)
@@ -311,7 +313,7 @@ func TestConstructBlueprintContext(t *testing.T) {
           - name: XL Http
             type: https
             url: https://dist.xebialabs.com/public/blueprints/`)
-		c, err := ConstructBlueprintContext(v, configFile)
+		c, err := ConstructBlueprintContext(v, configFile, DummyCLIVersion)
 
 		require.NotNil(t, err)
 		require.Nil(t, c)
@@ -319,7 +321,7 @@ func TestConstructBlueprintContext(t *testing.T) {
 	t.Run("should add default config when current-repository is not set", func(t *testing.T) {
 		v := GetViperConf(t, defaultContextYaml)
 		v.Set(ViperKeyBlueprintCurrentRepository, "")
-		c, err := ConstructBlueprintContext(v, configFile)
+		c, err := ConstructBlueprintContext(v, configFile, DummyCLIVersion)
 
 		require.Nil(t, err)
 		require.NotNil(t, c)
@@ -331,7 +333,7 @@ func TestConstructBlueprintContext(t *testing.T) {
 	})
 	t.Run("build simple context for Blueprint repository with default current-repository", func(t *testing.T) {
 		v := GetViperConf(t, defaultContextYaml)
-		c, err := ConstructBlueprintContext(v, configFile)
+		c, err := ConstructBlueprintContext(v, configFile, DummyCLIVersion)
 
 		require.Nil(t, err)
 		require.NotNil(t, c)
@@ -342,7 +344,7 @@ func TestConstructBlueprintContext(t *testing.T) {
 	t.Run("build simple context for Blueprint repository with provided current-repository", func(t *testing.T) {
 		v := GetViperConf(t, defaultContextYaml)
 		v.Set(ViperKeyBlueprintCurrentRepository, "XL Github")
-		c, err := ConstructBlueprintContext(v, configFile)
+		c, err := ConstructBlueprintContext(v, configFile, DummyCLIVersion)
 
 		require.Nil(t, err)
 		require.NotNil(t, c)
@@ -503,7 +505,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: http://mock.repo.server.com/
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/
   - name: XL Github
     type: github
     owner: xebialabs
@@ -525,7 +527,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: http://mock.repo.server.com/
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/
   - name: XL Github
     type: github
     owner: xebialabs
@@ -561,7 +563,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints/`,
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
 		},
 		{
 			"should return with default config created when no config exists",
@@ -572,7 +574,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints/`,
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
 		},
 		{
 			"should return with default config added when default repo doesn't exist in repositories",
@@ -611,7 +613,7 @@ blueprint:
     url: https://dist.xebialabs.com/public/blueprints/
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints/`,
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
 		},
 		{
 			"should return with updated default config when default repo is incomplete",
@@ -647,7 +649,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints/`,
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
 		},
 	}
 	for _, tt := range tests {
@@ -657,11 +659,12 @@ blueprint:
 			err := v.ReadConfig(bytes.NewBuffer([]byte(tt.vYaml)))
 			require.Nil(t, err)
 
-			got := GetDefaultBlueprintViperConfig(v)
+			got, repoName := GetDefaultBlueprintViperConfig(v)
 			c := util.SortMapStringInterface(got.AllSettings())
 			bs, err := yaml.Marshal(c)
 			bss := string(bs)
 			require.Nil(t, err)
+			require.NotNil(t, repoName)
 
 			v2 := viper.New()
 			v2.SetConfigType("yaml")
@@ -711,7 +714,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: http://mock.repo.server.com/
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/
   - name: XL Github
     type: github
     owner: xebialabs
@@ -733,7 +736,7 @@ blueprint:
   repositories:
   - name: XL Blueprints
     type: http
-    url: http://mock.repo.server.com/
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/
   - name: XL Github
     type: github
     owner: xebialabs
@@ -778,7 +781,7 @@ blueprint:
     url: https://dist.xebialabs.com/public/blueprints/
   - name: XL Blueprints
     type: http
-    url: https://dist.xebialabs.com/public/blueprints/`,
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
 			false,
 		},
 	}
@@ -789,8 +792,9 @@ blueprint:
 			err := v.ReadConfig(bytes.NewBuffer([]byte(tt.v)))
 			require.Nil(t, err)
 
-			got, err := CreateOrUpdateBlueprintConfig(v, configfile)
+			got, repoName, err := CreateOrUpdateBlueprintConfig(v, configfile)
 			require.Nil(t, err)
+			require.NotNil(t, repoName)
 
 			c := util.SortMapStringInterface(got.AllSettings())
 			bs, err := yaml.Marshal(c)

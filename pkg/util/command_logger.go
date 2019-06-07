@@ -38,12 +38,12 @@ func logCapture(w io.Writer, d []byte, s *spinner.Spinner) {
 			}
 
 			if start < 0 {
-                start = getIndexPlusLen(eventLog, "# [Serial] Update")
-            }
+				start = getIndexPlusLen(eventLog, "# [Serial] Update")
+			}
 
-            if start < 0 {
-                start = getIndexPlusLen(eventLog, "* Update")
-            }
+			if start < 0 {
+				start = getIndexPlusLen(eventLog, "* Update")
+			}
 
 			if start >= 0 && end >= 0 {
 				s.Stop()

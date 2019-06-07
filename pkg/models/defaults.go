@@ -7,12 +7,18 @@ import (
 
 // Repository provider enum - used in blueprint repository configuration
 const (
-	ProviderMock       string = "mock"
-	ProviderLocal      string = "local"
-	ProviderGitHub     string = "github"
-	ProviderHttp       string = "http"
+	ProviderMock   string = "mock"
+	ProviderLocal  string = "local"
+	ProviderGitHub string = "github"
+	ProviderHttp   string = "http"
 )
-var RepoProviders = []string { ProviderMock, ProviderLocal, ProviderGitHub, ProviderHttp }
+
+const (
+	// BlueprintCurrentCLIVersion is used to replace the current CLI version on the default dist repository
+	BlueprintCurrentCLIVersion = "${CLIVersion}"
+)
+
+var RepoProviders = []string{ProviderMock, ProviderLocal, ProviderGitHub, ProviderHttp}
 
 func GetRepoProvider(s string) (string, error) {
 	for _, repoProvider := range RepoProviders {
@@ -34,11 +40,10 @@ const (
 	DefaultXlReleasePassword   = "admin"
 	DefaultXlReleaseAuthMethod = "http"
 
-	DefaultBlueprintRepositoryProvider  = ProviderHttp
-	DefaultBlueprintRepositoryName      = "XL Blueprints"
-	DefaultBlueprintRepositoryUrl       = "https://dist.xebialabs.com/public/blueprints/"
+	DefaultBlueprintRepositoryProvider = ProviderHttp
+	DefaultBlueprintRepositoryName     = "XL Blueprints"
+	DefaultBlueprintRepositoryUrl      = "https://dist.xebialabs.com/public/blueprints/" + BlueprintCurrentCLIVersion + "/"
 )
-
 
 const XldApiVersion = "xl-deploy/v1"
 const XlrApiVersion = "xl-release/v1"

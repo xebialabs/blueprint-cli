@@ -57,8 +57,12 @@ func GetDefaultBlueprintConfData() ConfData {
 	return ConfData{models.DefaultBlueprintRepositoryName, []ConfMap{defaultBlueprintRepo}}
 }
 
-func GetDefaultBlueprintViperConfig(v *viper.Viper) *viper.Viper {
-	v.Set(ViperKeyBlueprintCurrentRepository, models.DefaultBlueprintRepositoryName)
+func GetDefaultBlueprintViperConfig(v *viper.Viper) (*viper.Viper, string) {
+	activeRepoName := v.GetString(ViperKeyBlueprintCurrentRepository)
+	if activeRepoName == "" {
+		activeRepoName = models.DefaultBlueprintRepositoryName
+		v.Set(ViperKeyBlueprintCurrentRepository, activeRepoName)
+	}
 
 	repositories := make([]ConfMap, 0)
 	err := v.UnmarshalKey(RepositoryConfigKey, &repositories)
@@ -70,22 +74,27 @@ func GetDefaultBlueprintViperConfig(v *viper.Viper) *viper.Viper {
 		}
 	}
 	v.Set(RepositoryConfigKey, repositories)
-	return v
+	return v, activeRepoName
 }
 
-func CreateOrUpdateBlueprintConfig(v *viper.Viper, configPath string) (*viper.Viper, error) {
-	v = GetDefaultBlueprintViperConfig(v)
+// WriteConfigFile is used to suppress writing real config files during test
+var WriteConfigFile = true
 
-	c := util.SortMapStringInterface(v.AllSettings())
-	yamlBytes, err := yaml.Marshal(c)
-	if err != nil {
-		return v, err
+func CreateOrUpdateBlueprintConfig(v *viper.Viper, configPath string) (*viper.Viper, string, error) {
+	v, activeRepoName := GetDefaultBlueprintViperConfig(v)
+
+	if WriteConfigFile {
+		c := util.SortMapStringInterface(v.AllSettings())
+		yamlBytes, err := yaml.Marshal(c)
+		if err != nil {
+			return v, activeRepoName, err
+		}
+		err = ioutil.WriteFile(configPath, yamlBytes, 0640)
+		if err != nil {
+			return v, activeRepoName, err
+		}
 	}
-	err = ioutil.WriteFile(configPath, yamlBytes, 0640)
-	if err != nil {
-		return v, err
-	}
-	return v, nil
+	return v, activeRepoName, nil
 }
 
 func SetRootFlags(rootFlags *pflag.FlagSet) {
@@ -119,23 +128,18 @@ func ConstructLocalBlueprintContext(localRepoPath string) (*BlueprintContext, er
 	}, nil
 }
 
-func ConstructBlueprintContext(v *viper.Viper, configPath string) (*BlueprintContext, error) {
-	activeRepoName := v.GetString(ViperKeyBlueprintCurrentRepository)
-	if activeRepoName == "" {
-		util.Verbose("Updating CLI config %s with blueprint configuration\n", configPath)
-		var err error
-		v, err = CreateOrUpdateBlueprintConfig(v, configPath)
-		if err != nil {
-			util.Info("Failed to update default configuration for blueprint. Please update ~/.xebialabs/config.yaml manually.")
-		}
-		activeRepoName = models.DefaultBlueprintRepositoryName
+func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*BlueprintContext, error) {
+	util.Verbose("Updating CLI config %s with blueprint configuration\n", configPath)
+	v, activeRepoName, err := CreateOrUpdateBlueprintConfig(v, configPath)
+	if err != nil {
+		util.Info("Failed to update default configuration for blueprint. Please update ~/.xebialabs/config.yaml manually.")
 	}
 
 	var currentRepo *repository.BlueprintRepository
 	var definedRepos []*repository.BlueprintRepository
 
 	repoDefinitions := make([]ConfMap, 1, 1)
-	err := v.UnmarshalKey(RepositoryConfigKey, &repoDefinitions)
+	err = v.UnmarshalKey(RepositoryConfigKey, &repoDefinitions)
 	if err != nil {
 		return nil, fmt.Errorf("bad format in blueprint context: blueprint repositories should be a non-empty YAML list")
 	}
@@ -152,7 +156,7 @@ func ConstructBlueprintContext(v *viper.Viper, configPath string) (*BlueprintCon
 		if err != nil {
 			return nil, err
 		}
-
+		util.Verbose("Creating blueprint repo configuration %v\n", repoDefinition)
 		// Parse according to type string
 		switch repoProvider {
 		case models.ProviderMock: // only used for testing purposes
@@ -162,7 +166,7 @@ func ConstructBlueprintContext(v *viper.Viper, configPath string) (*BlueprintCon
 		case models.ProviderGitHub:
 			repo, err = github.NewGitHubBlueprintRepository(repoDefinition)
 		case models.ProviderHttp:
-			repo, err = http.NewHttpBlueprintRepository(repoDefinition)
+			repo, err = http.NewHttpBlueprintRepository(repoDefinition, CLIVersion)
 		default:
 			return nil, fmt.Errorf("no blueprint provider implementation found for %s", repoProvider)
 		}
@@ -306,7 +310,7 @@ func doesDefaultExist(repositories []ConfMap) bool {
 			if repo["type"] == "" {
 				repo["type"] = models.DefaultBlueprintRepositoryProvider
 			}
-			if repo["url"] == "" {
+			if repo["url"] != models.DefaultBlueprintRepositoryUrl {
 				repo["url"] = models.DefaultBlueprintRepositoryUrl
 			}
 			return true

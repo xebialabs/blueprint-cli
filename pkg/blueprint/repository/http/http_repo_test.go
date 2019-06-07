@@ -7,9 +7,11 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
 const mockEndpoint = "http://mock.repo.server.com/"
+const DummyCLIVersion = "9.0.0-SNAPSHOT"
 
 func getDefaultConfMap() map[string]string {
 	return map[string]string{
@@ -55,7 +57,7 @@ func TestNewHttpBlueprintRepository(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewHttpBlueprintRepository(tt.confMap)
+			got, err := NewHttpBlueprintRepository(tt.confMap, DummyCLIVersion)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewHttpBlueprintRepository() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -127,7 +129,7 @@ with a new line`),
 }
 
 func TestHttpBlueprintRepository_ListBlueprintsFromRepo(t *testing.T) {
-	repo, err := NewHttpBlueprintRepository(getDefaultConfMap())
+	repo, err := NewHttpBlueprintRepository(getDefaultConfMap(), DummyCLIVersion)
 	require.Nil(t, err)
 	err = repo.Initialize()
 	require.Nil(t, err)
@@ -154,7 +156,7 @@ func TestHttpBlueprintRepository_ListBlueprintsFromRepo(t *testing.T) {
 }
 
 func TestHttpBlueprintRepository_GetFileContents(t *testing.T) {
-	repo, err := NewHttpBlueprintRepository(getDefaultConfMap())
+	repo, err := NewHttpBlueprintRepository(getDefaultConfMap(), DummyCLIVersion)
 	require.Nil(t, err)
 	err = repo.Initialize()
 	require.Nil(t, err)
@@ -184,7 +186,7 @@ func TestHttpBlueprintRepository_GetFileContents(t *testing.T) {
 }
 
 func TestHttpBlueprintRepository_checkBlueprintDefinitionFile(t *testing.T) {
-	repo, err := NewHttpBlueprintRepository(getDefaultConfMap())
+	repo, err := NewHttpBlueprintRepository(getDefaultConfMap(), DummyCLIVersion)
 	require.Nil(t, err)
 	err = repo.Initialize()
 	require.Nil(t, err)
@@ -232,4 +234,45 @@ with a new line`),
 		require.Nil(t, err)
 		assert.Equal(t, "blueprint.yml", blueprint)
 	})
+}
+
+func Test_getCLIVersionURL(t *testing.T) {
+	tests := []struct {
+		name       string
+		url        string
+		CLIVersion string
+		want       string
+	}{
+		{
+			"should return the given url when it doesn't have a placeholder",
+			"https://dist.xebialabs.com/public/blueprints/",
+			"",
+			"https://dist.xebialabs.com/public/blueprints/",
+		},
+		{
+			"should return the correct url when it has a placeholder",
+			models.DefaultBlueprintRepositoryUrl,
+			"9.0.0-SNAPSHOT",
+			"https://dist.xebialabs.com/public/blueprints/9.0.0/",
+		},
+		{
+			"should return the given url when placeholder cannot be replaced",
+			models.DefaultBlueprintRepositoryUrl,
+			"FOO9.0.0-SNAPSHOT",
+			models.DefaultBlueprintRepositoryUrl,
+		},
+		{
+			"should return the given url when placeholder is invalid",
+			"https://dist.xebialabs.com/public/blueprints/${foo}",
+			"FOO9.0.0-SNAPSHOT",
+			"https://dist.xebialabs.com/public/blueprints/${foo}",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getCLIVersionURL(tt.url, tt.CLIVersion); got != tt.want {
+				t.Errorf("getCLIVersionURL() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
