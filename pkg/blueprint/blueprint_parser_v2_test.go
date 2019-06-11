@@ -952,33 +952,6 @@ func TestVariable_validate(t *testing.T) {
 			"",
 		},
 		{
-			"should error on validation failure for a parameter with value which has invalid field 'prompt' set",
-			Variable{
-				Name:   VarField{Value: "test"},
-				Value:  VarField{Value: "val"},
-				Prompt: VarField{Value: "??"},
-			},
-			"parameter test must not have a 'prompt' field when field 'value' is set",
-		},
-		{
-			"should error on validation failure for a parameter with value which has invalid field 'default' set",
-			Variable{
-				Name:    VarField{Value: "test"},
-				Value:   VarField{Value: "val"},
-				Default: VarField{Value: "hello"},
-			},
-			"parameter test must not have a 'default' field when field 'value' is set",
-		},
-		{
-			"should error on validation failure for a parameter with value which has invalid field 'options' set",
-			Variable{
-				Name:    VarField{Value: "test"},
-				Value:   VarField{Value: "val"},
-				Options: []VarField{{Value: "test"}},
-			},
-			"parameter test must not have a 'options' field when field 'value' is set",
-		},
-		{
 			"should error on validation failure for a parameter with value which has invalid field 'promptIf' set",
 			Variable{
 				Name:      VarField{Value: "test"},

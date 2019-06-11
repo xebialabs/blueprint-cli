@@ -152,15 +152,6 @@ func (variable *Variable) validate() error {
 		}
 	} else {
 		// variable used as constant
-		if !util.IsStringEmpty(variable.Prompt.Value) {
-			return parameterValidationErrorMsg(varName, "prompt", "value")
-		}
-		if variable.Default != (VarField{}) {
-			return parameterValidationErrorMsg(varName, "default", "value")
-		}
-		if variable.Options != nil && len(variable.Options) != 0 {
-			return parameterValidationErrorMsg(varName, "options", "value")
-		}
 		if variable.DependsOn != (VarField{}) {
 			return parameterValidationErrorMsg(varName, "promptIf", "value")
 		}
