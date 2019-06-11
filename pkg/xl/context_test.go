@@ -31,7 +31,7 @@ func (dummy *DummyXLServer) PreprocessDoc(doc *Document) {
 	dummy.preprocessInvoked++
 }
 
-func (dummy *DummyXLServer) SendDoc(doc *Document, vcsInfo *VCSInfo) (*Changes, error) {
+func (dummy *DummyXLServer) SendDoc(doc *Document, scmInfo *SCMInfo) (*Changes, error) {
 	dummy.applyDocs = append(dummy.applyDocs, *doc)
 	return nil, nil
 }

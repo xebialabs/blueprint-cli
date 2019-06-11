@@ -46,7 +46,7 @@ func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 	blueprint.SetRootFlags(rootFlags)
 }
 
-func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles []string, vcsInfo *VCSInfo, CLIVersion string) (*Context, error) {
+func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles []string, scmInfo *SCMInfo, CLIVersion string) (*Context, error) {
 	var xlDeploy *XLDeployServer
 	var xlRelease *XLReleaseServer
 	var blueprintContext *blueprint.BlueprintContext
@@ -94,7 +94,7 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles 
 		XLRelease:        xlRelease,
 		BlueprintContext: blueprintContext,
 		values:           values,
-		vcsInfo:          vcsInfo,
+		scmInfo:          scmInfo,
 	}, nil
 }
 

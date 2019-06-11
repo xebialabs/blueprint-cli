@@ -17,7 +17,7 @@ var applyFilenames []string
 var applyValues map[string]string
 var applyDetach bool
 var nonInteractive bool
-var requireVCSinfo bool
+var includeSCMInfo bool
 var skipDirtyCheck bool
 
 var kindToLabel = map[string]string{
@@ -56,22 +56,22 @@ func printChangedIds(idsArray *[]xl.ChangedIds) {
 }
 
 func printTaskInfo(changes *xl.Changes) {
-    task := changes.Task
+	task := changes.Task
 	if task != nil {
-        if changes.Server != nil {
-            baseUrl := changes.Server.Url.String()
-            if !strings.HasSuffix(baseUrl, "/") {
-                baseUrl = baseUrl + "/"
-            }
-            if changes.Server.Product == models.XLR {
-                urlId := strings.ReplaceAll(task.Id, "/", "-")
-                util.Info("%s%s started: %s#/releases/%s\n", util.IndentFlexible(), task.Description, baseUrl, urlId)
-            } else if changes.Server.Product == models.XLD {
-                util.Info("%s%s started: %s#/explorer?taskId=%s\n", util.IndentFlexible(), task.Description, baseUrl, changes.Task.Id)
-            } else {
-                util.Error("Unknown product %s\n", changes.Server.Product)
-            }
-        }
+		if changes.Server != nil {
+			baseUrl := changes.Server.Url.String()
+			if !strings.HasSuffix(baseUrl, "/") {
+				baseUrl = baseUrl + "/"
+			}
+			if changes.Server.Product == models.XLR {
+				urlId := strings.ReplaceAll(task.Id, "/", "-")
+				util.Info("%s%s started: %s#/releases/%s\n", util.IndentFlexible(), task.Description, baseUrl, urlId)
+			} else if changes.Server.Product == models.XLD {
+				util.Info("%s%s started: %s#/explorer?taskId=%s\n", util.IndentFlexible(), task.Description, baseUrl, changes.Task.Id)
+			} else {
+				util.Error("Unknown product %s\n", changes.Server.Product)
+			}
+		}
 	}
 }
 
@@ -203,7 +203,7 @@ func applyDocument(context *xl.Context, fileWithDocs xl.FileWithDocuments, doc *
 }
 
 func DoApply(applyFilenames []string) {
-	xl.ForEachDocument("Applying", applyFilenames, applyValues, requireVCSinfo, skipDirtyCheck, applyDocument)
+	xl.ForEachDocument("Applying", applyFilenames, applyValues, includeSCMInfo, skipDirtyCheck, applyDocument)
 }
 
 func init() {
@@ -215,6 +215,6 @@ func init() {
 	applyFlags.StringToStringVar(&applyValues, "values", map[string]string{}, "Values")
 	applyFlags.BoolVarP(&applyDetach, "detach", "d", false, "Detach the client at the moment of starting a deploy or release")
 	applyFlags.BoolVar(&nonInteractive, "non-interactive", false, "Automatically archive finished deployment tasks")
-	applyFlags.BoolVarP(&requireVCSinfo, "require-version-control-info", "r",false, "Send version control info. Fails if version control info can not be found or is dirty")
-	applyFlags.BoolVarP(&skipDirtyCheck, "proceed-when-dirty", "p",false, "Proceed with applying changes even if repository is dirty")
+	applyFlags.BoolVarP(&includeSCMInfo, "include-scm-info", "s", false, "Send source control management info. Fails if source control management info can not be found or source tree is dirty")
+    applyFlags.BoolVarP(&skipDirtyCheck, "proceed-when-dirty", "p",false, "Proceed with applying changes even if repository is dirty")
 }

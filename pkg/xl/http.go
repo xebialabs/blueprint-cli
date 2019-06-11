@@ -24,8 +24,8 @@ import (
 
 type HTTPServer interface {
 	TaskInfo(path string) (map[string]interface{}, error)
-	ApplyYamlDoc(path string, yamlDocBytes []byte, vcsInfo *VCSInfo) (*Changes, error)
-	ApplyYamlZip(path string, yamlZipFilename string, vcsInfo *VCSInfo) (*Changes, error)
+	ApplyYamlDoc(path string, yamlDocBytes []byte, scmInfo *SCMInfo) (*Changes, error)
+	ApplyYamlZip(path string, yamlZipFilename string, scmInfo *SCMInfo) (*Changes, error)
 	PreviewYamlDoc(path string, yamlDocBytes []byte) (*models.PreviewResponse, error)
 	DownloadSchema(resource string) ([]byte, error)
 	GenerateYamlDoc(generateFilename string, path string, override bool) error
@@ -57,7 +57,7 @@ func firstLine(s string) string {
 	}
 }
 
-func buildHeaders(contentType string, acceptType string, vcsInfo *VCSInfo) map[string]string {
+func buildHeaders(contentType string, acceptType string, scmInfo *SCMInfo) map[string]string {
 	result := make(map[string]string)
 	if contentType != "" {
 		result["Content-Type"] = contentType
@@ -66,27 +66,27 @@ func buildHeaders(contentType string, acceptType string, vcsInfo *VCSInfo) map[s
 		result["Accept"] = acceptType
 	}
 
-	if vcsInfo != nil {
-		if vcsInfo.vcsType != "" {
-			result["X-Xebialabs-Vcs-Type"] = string(vcsInfo.vcsType)
+	if scmInfo != nil {
+		if scmInfo.scmType != "" {
+			result["X-Xebialabs-Scm-Type"] = string(scmInfo.scmType)
 		}
-		if vcsInfo.filename != "" {
-			result["X-Xebialabs-Vcs-Filename"] = vcsInfo.filename
+		if scmInfo.filename != "" {
+			result["X-Xebialabs-Scm-Filename"] = scmInfo.filename
 		}
-		if vcsInfo.commit != "" {
-			result["X-Xebialabs-Vcs-Commit"] = vcsInfo.commit
+		if scmInfo.commit != "" {
+			result["X-Xebialabs-Scm-Commit"] = scmInfo.commit
 		}
-		if vcsInfo.author != "" {
-			result["X-Xebialabs-Vcs-Author"] = vcsInfo.author
+		if scmInfo.author != "" {
+			result["X-Xebialabs-Scm-Author"] = scmInfo.author
 		}
-		if vcsInfo.date != (time.Time{}) {
-			result["X-Xebialabs-Vcs-Date"] = vcsInfo.date.UTC().Format(time.RFC3339)
+		if scmInfo.date != (time.Time{}) {
+			result["X-Xebialabs-Scm-Date"] = scmInfo.date.UTC().Format(time.RFC3339)
 		}
-		if vcsInfo.message != "" {
-			result["X-Xebialabs-Vcs-Message"] = firstLine(vcsInfo.message) // Todo sanitize more? base64?
+		if scmInfo.message != "" {
+			result["X-Xebialabs-Scm-Message"] = firstLine(scmInfo.message) // Todo sanitize more? base64?
 		}
-		if vcsInfo.remote != "" {
-			result["X-Xebialabs-Vcs-Remote"] = vcsInfo.remote
+		if scmInfo.remote != "" {
+			result["X-Xebialabs-Scm-Remote"] = scmInfo.remote
 		}
 	}
 
@@ -149,9 +149,9 @@ func (server *SimpleHTTPServer) GenerateYamlDoc(generateFilename string, request
 	}
 	archiver.DefaultZip.OverwriteExisting = override
 	err = archiver.DefaultZip.Unarchive(tempArchivePath, destinationDir)
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 	err = os.Rename(filepath.Join(destinationDir, "index.yaml"), filepath.Join(destinationDir, filepath.Base(generateFilename)))
 	if err != nil {
 		return err
@@ -217,8 +217,8 @@ func (server *SimpleHTTPServer) TaskInfo(resource string) (map[string]interface{
 	return js, nil
 }
 
-func (server *SimpleHTTPServer) ApplyYamlDoc(resource string, yamlDocBytes []byte, vcsInfo *VCSInfo) (*Changes, error) {
-	response, err := server.doRequest("POST", resource, buildHeaders("text/vnd.yaml", "", vcsInfo), bytes.NewReader(yamlDocBytes))
+func (server *SimpleHTTPServer) ApplyYamlDoc(resource string, yamlDocBytes []byte, scmInfo *SCMInfo) (*Changes, error) {
+	response, err := server.doRequest("POST", resource, buildHeaders("text/vnd.yaml", "", scmInfo), bytes.NewReader(yamlDocBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -228,13 +228,13 @@ func (server *SimpleHTTPServer) ApplyYamlDoc(resource string, yamlDocBytes []byt
 	}
 
 	if asCodeResponse.Changes != nil {
-        asCodeResponse.Changes.Server = server
-    }
+		asCodeResponse.Changes.Server = server
+	}
 
 	return asCodeResponse.Changes, nil
 }
 
-func (server *SimpleHTTPServer) ApplyYamlZip(resource string, yamlZipFilename string, vcsInfo *VCSInfo) (*Changes, error) {
+func (server *SimpleHTTPServer) ApplyYamlZip(resource string, yamlZipFilename string, scmInfo *SCMInfo) (*Changes, error) {
 	f, err := os.Open(yamlZipFilename)
 	if err != nil {
 		return nil, err
@@ -242,7 +242,7 @@ func (server *SimpleHTTPServer) ApplyYamlZip(resource string, yamlZipFilename st
 
 	defer f.Close()
 
-	response, err2 := server.doRequest("POST", resource, buildHeaders("application/zip", "", vcsInfo), f)
+	response, err2 := server.doRequest("POST", resource, buildHeaders("application/zip", "", scmInfo), f)
 	if err2 != nil {
 		return nil, err2
 	}
@@ -251,9 +251,9 @@ func (server *SimpleHTTPServer) ApplyYamlZip(resource string, yamlZipFilename st
 		return nil, e
 	}
 
-    if asCodeResponse.Changes != nil {
-        asCodeResponse.Changes.Server = server
-    }
+	if asCodeResponse.Changes != nil {
+		asCodeResponse.Changes.Server = server
+	}
 
 	return asCodeResponse.Changes, nil
 }

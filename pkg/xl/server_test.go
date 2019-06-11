@@ -23,14 +23,14 @@ func (d *DummyHTTPServer) GenerateYamlDoc(path string, generateFilename string, 
 	return nil
 }
 
-func (d *DummyHTTPServer) ApplyYamlDoc(path string, yamlDocBytes []byte, vcsInfo *VCSInfo) (*Changes, error) {
+func (d *DummyHTTPServer) ApplyYamlDoc(path string, yamlDocBytes []byte, scmInfo *SCMInfo) (*Changes, error) {
 	d.capturedPath = path
 	d.capturedBytes = yamlDocBytes
 	d.capturedFilename = ""
 	return nil, nil
 }
 
-func (d *DummyHTTPServer) ApplyYamlZip(path string, zipfilename string, vcsInfo *VCSInfo) (*Changes, error) {
+func (d *DummyHTTPServer) ApplyYamlZip(path string, zipfilename string, scmInfo *SCMInfo) (*Changes, error) {
 	d.capturedPath = path
 	d.capturedBytes = nil
 	d.capturedFilename = zipfilename

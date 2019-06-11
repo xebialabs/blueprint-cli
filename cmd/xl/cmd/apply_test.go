@@ -220,7 +220,7 @@ spec:
 		defer infra.shutdown()
 		defer os.RemoveAll(filepath.Base(filename))
 
-		requireVCSinfo = true
+		includeSCMInfo = true
 
 		DoApply([]string{filename})
 
@@ -232,15 +232,15 @@ spec:
 		head, err := repository.Head()
 		check(err)
 
-		assert.Equal(t, "git", headers["X-Xebialabs-Vcs-Type"][0])
-		assert.Equal(t, "test commit", headers["X-Xebialabs-Vcs-Message"][0])
-		assert.Equal(t, "John Doe <john@doe.org>", headers["X-Xebialabs-Vcs-Author"][0])
-		assert.Equal(t, testDate.UTC().Format(time.RFC3339), headers["X-Xebialabs-Vcs-Date"][0])
-		assert.Equal(t, "xlr.yaml", headers["X-Xebialabs-Vcs-Filename"][0])
-		assert.Equal(t, head.Hash().String(), headers["X-Xebialabs-Vcs-Commit"][0])
-		assert.Equal(t, "http://github.com/xebialabs/devops-as-code", headers["X-Xebialabs-Vcs-Remote"][0])
+		assert.Equal(t, "git", headers["X-Xebialabs-Scm-Type"][0])
+		assert.Equal(t, "test commit", headers["X-Xebialabs-Scm-Message"][0])
+		assert.Equal(t, "John Doe <john@doe.org>", headers["X-Xebialabs-Scm-Author"][0])
+		assert.Equal(t, testDate.UTC().Format(time.RFC3339), headers["X-Xebialabs-Scm-Date"][0])
+		assert.Equal(t, "xlr.yaml", headers["X-Xebialabs-Scm-Filename"][0])
+		assert.Equal(t, head.Hash().String(), headers["X-Xebialabs-Scm-Commit"][0])
+		assert.Equal(t, "http://github.com/xebialabs/devops-as-code", headers["X-Xebialabs-Scm-Remote"][0])
 
-		requireVCSinfo = false
+		includeSCMInfo = false
 	})
 
 	t.Run("should send empty git info headers when flag is not sent", func(t *testing.T) {
@@ -249,20 +249,20 @@ spec:
 		defer os.RemoveAll(filepath.Base(filename))
 
 		// setting suppressed
-		requireVCSinfo = false
+		includeSCMInfo = false
 
 		DoApply([]string{filename})
 
 		assert.Equal(t, 1, len(infra.documents))
 		headers := infra.headers(0)
 
-		assert.Nil(t, headers["X-Xebialabs-Vcs-Type"])
-		assert.Nil(t, headers["X-Xebialabs-Vcs-Message"])
-		assert.Nil(t, headers["X-Xebialabs-Vcs-Author"])
-		assert.Nil(t, headers["X-Xebialabs-Vcs-Date"])
-		assert.Nil(t, headers["X-Xebialabs-Vcs-Filename"])
-		assert.Nil(t, headers["X-Xebialabs-Vcs-Commit"])
-		assert.Nil(t, headers["X-Xebialabs-Vcs-Remote"])
+		assert.Nil(t, headers["X-Xebialabs-Scm-Type"])
+		assert.Nil(t, headers["X-Xebialabs-Scm-Message"])
+		assert.Nil(t, headers["X-Xebialabs-Scm-Author"])
+		assert.Nil(t, headers["X-Xebialabs-Scm-Date"])
+		assert.Nil(t, headers["X-Xebialabs-Scm-Filename"])
+		assert.Nil(t, headers["X-Xebialabs-Scm-Commit"])
+		assert.Nil(t, headers["X-Xebialabs-Scm-Remote"])
 	})
 
 }

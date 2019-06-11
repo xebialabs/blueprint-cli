@@ -21,7 +21,7 @@ type FileWithDocuments struct {
 	Parent    *string
 	Documents []*Document
 	FileName  string
-	VCSInfo   *VCSInfo
+	SCMInfo   *SCMInfo
 }
 
 func checkForEmptyImport(importedFile string) {
@@ -74,7 +74,7 @@ func validateFileWithDocs(filesWithDocs []FileWithDocuments) {
 	})
 }
 
-func readDocumentsFromFile(fileName string, parent *string, process ToProcess, info *VCSInfo) FileWithDocuments {
+func readDocumentsFromFile(fileName string, parent *string, process ToProcess, info *SCMInfo) FileWithDocuments {
 	reader, err := os.Open(fileName)
 	if err != nil {
 		util.Fatal("Error while opening XL YAML file %s:\n%s\n", fileName, err)
@@ -99,23 +99,22 @@ func readDocumentsFromFile(fileName string, parent *string, process ToProcess, i
 	return FileWithDocuments{imports, parent, documents, fileName, info}
 }
 
-func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, process ToProcess, requireVCSinfo bool, skipDirtyCheck bool, cachedCVSInfo VCSInfo) []FileWithDocuments {
-
+func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, process ToProcess, includeSCMInfo bool, skipDirtyCheck bool, cachedSCMInfo SCMInfo) []FileWithDocuments {
 	result := make([]FileWithDocuments, 0)
 	for _, fileName := range fileNames {
 		if !seenFiles.Contains(fileName) {
-            var vcsInfo VCSInfo
-            if cachedCVSInfo == (VCSInfo{}) {
-                vcsInfo = getVCSInfo(fileName, requireVCSinfo, skipDirtyCheck)
+            var scmInfo SCMInfo
+            if cachedSCMInfo == (SCMInfo{}) {
+                scmInfo = getSCMInfo(fileName, includeSCMInfo, skipDirtyCheck)
             } else {
-                vcsInfo = cachedCVSInfo
-                vcsInfo.filename = getRelativePath(fileName, cachedCVSInfo.localPath)
+                scmInfo = cachedSCMInfo
+                scmInfo.filename = getRelativePath(fileName, cachedSCMInfo.localPath)
             }
 
-			fileWithDocuments := readDocumentsFromFile(fileName, parent, process, &vcsInfo)
+			fileWithDocuments := readDocumentsFromFile(fileName, parent, process, &scmInfo)
 			result = append(result, fileWithDocuments)
 			seenFiles.Add(fileName)
-			result = append(ParseDocuments(fileWithDocuments.Imports, seenFiles, &fileName, process, requireVCSinfo, skipDirtyCheck, vcsInfo), result...)
+			result = append(ParseDocuments(fileWithDocuments.Imports, seenFiles, &fileName, process, includeSCMInfo, skipDirtyCheck, scmInfo), result...)
 		}
 	}
 	validateFileWithDocs(result)
@@ -124,23 +123,22 @@ func ParseDocuments(fileNames []string, seenFiles mapset.Set, parent *string, pr
 
 type DocumentCallback func(*Context, FileWithDocuments, *Document)
 
-func logOrFail(requireVCSinfo bool, err error, format string, a ...interface{}) {
+func logOrFail(includeSCMInfo bool, err error, format string, a ...interface{}) {
 	if err != nil {
-		if requireVCSinfo {
+		if includeSCMInfo {
 			util.Fatal(format, a...)
 		} else {
-			util.Verbose("Ignoring VCS error: "+format, a...)
+			util.Verbose("Ignoring SCM error: "+format, a...)
 		}
 	}
 }
 
-func getVCSInfo(filename string, requireVCSinfo bool, skipDirtyCheck bool) VCSInfo {
-
-	var vcsInfo VCSInfo
-	if requireVCSinfo {
-		util.Verbose("getting vcs info for %s \n", filename)
+func getSCMInfo(filename string, includeSCMInfo bool, skipDirtyCheck bool) SCMInfo {
+	var scmInfo SCMInfo
+	if includeSCMInfo {
+		util.Verbose("getting scm info for %s \n", filename)
 		repo, err := FindRepo(filename)
-		logOrFail(requireVCSinfo, err, "Error while opening VCS for directory %s: %s.\n", filename, err)
+		logOrFail(includeSCMInfo, err, "Error while opening SCM for directory %s: %s.\n", filename, err)
 		if repo != nil {
 		    var isDirty = false
 		    if !skipDirtyCheck {
@@ -150,7 +148,7 @@ func getVCSInfo(filename string, requireVCSinfo bool, skipDirtyCheck bool) VCSIn
                     util.Fatal("Unable to determine if repo is dirty: %s \n", err)
                 }
                 if isDirty {
-                    util.Fatal("Repository dirty and VCS info is required. Please commit all untracked and modified files before applying or use the --proceed-when-dirty flag to skip dirty checking. Aborting. \n")
+                    util.Fatal("Repository dirty and SCM info is required. Please commit all untracked and modified files before applying or use the --proceed-when-dirty flag to skip dirty checking. Aborting. \n")
                 } else {
                     util.Verbose("Repository clean\n")
                 }
@@ -158,20 +156,19 @@ func getVCSInfo(filename string, requireVCSinfo bool, skipDirtyCheck bool) VCSIn
 
             commitInfo, err := repo.LatestCommitInfo()
 
-            logOrFail(requireVCSinfo, err, "Error while getting commit info: %s\n", err)
+            logOrFail(includeSCMInfo, err, "Error while getting commit info: %s\n", err)
 
             relativeFilename := getRelativePath(filename, repo.LocalPath())
 
             remote, err := repo.Remote()
 
-            vcsInfo = VCSInfo{relativeFilename, repo.Vcs(), remote,
+            scmInfo = SCMInfo{relativeFilename, repo.SCM(), remote,
                 commitInfo.Commit, commitInfo.Author, commitInfo.Date, commitInfo.Message, repo.LocalPath()}
 
-            util.Verbose("Detected VCS Info: %s - dirty %t - %s - %s - %s - %s - %s - %s \n", repo.Vcs(), isDirty, remote, relativeFilename, commitInfo.Commit, commitInfo.Author, commitInfo.Date, commitInfo.Message)
-
+            util.Verbose("Detected SCM Info: %s - dirty %t - %s - %s - %s - %s - %s - %s \n", repo.SCM(), isDirty, remote, relativeFilename, commitInfo.Commit, commitInfo.Author, commitInfo.Date, commitInfo.Message)
 		}
 	}
-	return vcsInfo
+	return scmInfo
 }
 
 func getRelativePath(fullPath string, relativePath string) string {
@@ -179,7 +176,7 @@ func getRelativePath(fullPath string, relativePath string) string {
     return string(runes[len(relativePath)+1:])
 }
 
-func ForEachDocument(operationName string, fileNames []string, values map[string]string, requireVCSinfo bool, skipDirtyCheck bool, fn DocumentCallback) {
+func ForEachDocument(operationName string, fileNames []string, values map[string]string, includeSCMInfo bool, skipDirtyCheck bool, fn DocumentCallback) {
 	homeValsFiles, e := ListHomeXlValsFiles()
 
 	if e != nil {
@@ -188,7 +185,7 @@ func ForEachDocument(operationName string, fileNames []string, values map[string
 
 	absolutePaths := util.ToAbsolutePaths(fileNames)
 	// parsing
-	docs := ParseDocuments(absolutePaths, mapset.NewSet(), nil, ToProcess{true, true, true}, requireVCSinfo, skipDirtyCheck, VCSInfo{})
+	docs := ParseDocuments(absolutePaths, mapset.NewSet(), nil, ToProcess{true, true, true}, includeSCMInfo, skipDirtyCheck, SCMInfo{})
 	for fileIdx, fileWithDocs := range docs {
 		var currentFile = util.PrintableFileName(fileWithDocs.FileName)
 		progress := fmt.Sprintf("[%d/%d]", fileIdx+1, len(docs))
@@ -207,7 +204,7 @@ func ForEachDocument(operationName string, fileNames []string, values map[string
 
 		allValsFiles := append(homeValsFiles, projectValsFiles...)
 
-		context, err := BuildContext(viper.GetViper(), &values, allValsFiles, fileWithDocs.VCSInfo, "")
+		context, err := BuildContext(viper.GetViper(), &values, allValsFiles, fileWithDocs.SCMInfo, "")
 		if err != nil {
 			util.Fatal("Error while reading configuration: %s\n", err)
 		}
