@@ -218,6 +218,16 @@ func TestParseTemplateMetadataV1(t *testing.T) {
                  saveInXlVals: true
                  description: help text
                  showValueOnSummary: true
+               - name: passEditor
+                 type: Editor
+                 description: password?
+                 secret: true
+                 useRawValue: true
+               - name: passFile
+                 type: File
+                 description: password?
+                 secret: true
+                 useRawValue: true
 
                files:
                - path: xebialabs/foo.yaml
@@ -243,6 +253,22 @@ func TestParseTemplateMetadataV1(t *testing.T) {
 			SaveInXlvals:    VarField{Bool: true, Value: "true"},
 			RevealOnSummary: VarField{Bool: true, Value: "true"},
 		}, doc.Variables[1])
+		assert.Equal(t, Variable{
+			Name:        VarField{Value: "passEditor"},
+			Label:       VarField{Value: "passEditor"},
+			Type:        VarField{Value: TypeSecretEditor},
+			Prompt:      VarField{Value: "password?"},
+			Description: VarField{Value: "password?"},
+			ReplaceAsIs: VarField{Bool: true, Value: "true"},
+		}, doc.Variables[2])
+		assert.Equal(t, Variable{
+			Name:        VarField{Value: "passFile"},
+			Label:       VarField{Value: "passFile"},
+			Type:        VarField{Value: TypeSecretFile},
+			Prompt:      VarField{Value: "password?"},
+			Description: VarField{Value: "password?"},
+			ReplaceAsIs: VarField{Bool: true, Value: "true"},
+		}, doc.Variables[3])
 		assert.Equal(t, TemplateConfig{
 			Path: "xebialabs/foo.yaml",
 		}, doc.TemplateConfigs[0])

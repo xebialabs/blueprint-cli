@@ -156,7 +156,7 @@ func (variable *Variable) validate() error {
 			return parameterValidationErrorMsg(varName, "promptIf", "value")
 		}
 	}
-	if variable.Type.Value != TypeSecret {
+	if !IsSecretType(variable.Type.Value) {
 		if variable.ReplaceAsIs != (VarField{}) {
 			return parameterValidationErrorMsg(varName, "replaceAsIs", "type=SecretInput")
 		}
@@ -342,4 +342,11 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 		return false, err
 	}
 	return dependsOnVar.Value.Bool, nil
+}
+
+func IsSecretType(typeVal string) bool {
+	if typeVal == TypeSecret || typeVal == TypeSecretEditor || typeVal == TypeSecretFile {
+		return true
+	}
+	return false
 }

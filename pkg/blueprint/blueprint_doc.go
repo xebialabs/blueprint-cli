@@ -37,15 +37,17 @@ const (
 
 // InputType constants
 const (
-	TypeInput   = "Input"
-	TypeSecret  = "SecretInput"
-	TypeEditor  = "Editor"
-	TypeFile    = "File"
-	TypeSelect  = "Select"
-	TypeConfirm = "Confirm"
+	TypeInput        = "Input"
+	TypeEditor       = "Editor"
+	TypeFile         = "File"
+	TypeSelect       = "Select"
+	TypeConfirm      = "Confirm"
+	TypeSecret       = "SecretInput"
+	TypeSecretEditor = "SecretEditor"
+	TypeSecretFile   = "SecretFile"
 )
 
-var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfirm, TypeSecret}
+var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfirm, TypeSecret, TypeSecretEditor, TypeSecretFile}
 
 type PreparedData struct {
 	TemplateData map[string]interface{}
@@ -276,7 +278,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		// do validation if needed
 		if validateExpr != "" {
 			allowEmpty := false
-			if variable.Type.Value == TypeSecret {
+			if IsSecretType(variable.Type.Value) {
 				allowEmpty = true
 			}
 			validationErr := validatePrompt(variable.Name.Value, validateExpr, allowEmpty, parameters)(value)
@@ -338,7 +340,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			util.Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Value, defaultVal)
 			answer = defaultValStr
 		}
-	case TypeEditor:
+	case TypeEditor, TypeSecretEditor:
 		err = survey.AskOne(
 			&survey.Editor{
 				Message:       prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the value of %s?", variable.Name.Value)),
@@ -351,7 +353,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
 			surveyOpts...,
 		)
-	case TypeFile:
+	case TypeFile, TypeSecretFile:
 		var filePath string
 		err = survey.AskOne(
 			&survey.Input{
@@ -541,12 +543,12 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		saveItemToTemplateDataMap(&variable, data, answer)
 	}
 
-    // Print summary table
-    // use util.Print so that this is not skipped in quiet mode
-    if useDefaultsAsValue && !usingAnswersFile {
-        util.Print("Using default values:\n")
-    }
-    util.Print(util.DataMapTable(&data.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1))
+	// Print summary table
+	// use util.Print so that this is not skipped in quiet mode
+	if useDefaultsAsValue && !usingAnswersFile {
+		util.Print("Using default values:\n")
+	}
+	util.Print(util.DataMapTable(&data.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1))
 
 	return data, nil
 }
@@ -699,12 +701,12 @@ func findVariableByName(variables *[]Variable, name string) (*Variable, error) {
 }
 
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
-	if variable.Type.Value == TypeSecret {
-	    if variable.RevealOnSummary.Bool {
-            preparedData.SummaryData[variable.Label.Value] = data
-        } else {
-            preparedData.SummaryData[variable.Label.Value] = "*****"
-        }
+	if IsSecretType(variable.Type.Value) {
+		if variable.RevealOnSummary.Bool {
+			preparedData.SummaryData[variable.Label.Value] = data
+		} else {
+			preparedData.SummaryData[variable.Label.Value] = "*****"
+		}
 
 		preparedData.Secrets[variable.Name.Value] = data
 		// Use raw value of secret field if flag is set
@@ -714,7 +716,7 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 			preparedData.TemplateData[variable.Name.Value] = fmt.Sprintf(fmtTagValue, variable.Name.Value)
 		}
 	} else {
-        preparedData.SummaryData[variable.Label.Value] = data
+		preparedData.SummaryData[variable.Label.Value] = data
 
 		// Save to values file if switch is ON
 		if variable.SaveInXlvals.Bool {
