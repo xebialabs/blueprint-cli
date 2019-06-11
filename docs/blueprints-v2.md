@@ -36,7 +36,7 @@ Parameters are defined by the blueprint creator in the `blueprint.yaml` file, it
 | Field Name | Expected value(s) | Examples | Default Value | Required | Description |
 |:--------------: |:--------------------: |------------------------------------------------------------ |:-------------: |:---------------------------------------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **name** | — | AppName | — | ✔ | Parameter name, to be used in template placeholders |
-| **type** | `Input`/<br>`SecretInput`/<br>`Select`/<br>`Confirm`/<br>`Editor`/<br>`SecretEditor`/<br>`File`/<br>`SecretFile` | | — | Required when `value` is not set | Type of the prompt input.<br> When type is `SecretInput`, `SecretEditor` or `SecretFile` the parameter is saved in `secrets.xlvals` files so that they won't be checked in GIT repo and will not be replaced with actual value by default in the template files|
+| **type** | `Input`/<br>`SecretInput`/<br>`Select`/<br>`Confirm`/<br>`Editor`/<br>`SecretEditor`/<br>`File`/<br>`SecretFile` | | — | Required when `value` is not set | Type of the prompt input(Type explanations below)<br> When type is `SecretInput`, `SecretEditor` or `SecretFile` the parameter is saved in `secrets.xlvals` files so that they won't be checked in GIT repo and will not be replaced with actual value by default in the template files|
 | **prompt** | - | What is your application name? | — | Required when `value` is not set | Question to prompt. |
 | **value** | — | `eu-west-1`/<br>`!expr "Foo == 'foo' ? 'A' : 'B'"` | — | **x** | If present, user will not be asked a question to provide value. |
 | **default** | — | `eu-west-1`/<br>-`!expr "Foo == 'foo' ? 'A' : 'B'"` | — | **x** | Default value, will be present during the question prompt. Also will be the parameter value if question is skipped. |
@@ -52,6 +52,25 @@ Parameters are defined by the blueprint creator in the `blueprint.yaml` file, it
 > Note #1: `File` type doesn't support `value` parameter. `default` parameter for this field expects to have a file path instead of final value string.
 
 > Note #2: parameters with `SecretInput`, `SecretEditor` and `SecretFile` type supports default values as well. When a `SecretInput`, `SecretEditor` or `SecretFile` parameter question is being asked to the user, the default value will be shown on the prompt as raw text, and if the user enters an empty response for the question this default value will be used instead.
+###### Types
+
+The types that can be used for inputs are below
+
+`Input`: Used for simple text or number inputs.
+
+`SecretInput`: Used for simple secret or password inputs. These are by default saved in `secrets.xlvals` files so that they won't be checked in GIT repo and will not be replaced with actual value in the template files.
+
+`Select`: Used for select inputs where user can choose from given options.
+
+`Confirm`: Used for boolean inputs.
+
+`Editor`: Used for multiline or complex text input.
+
+`SecretEditor`: Used for multiline or complex secret inputs. These are by default saved in `secrets.xlvals` files so that they won't be checked in GIT repo and will not be replaced with actual value in the template files.
+
+`File`: Used for fetching the content of a given file path.
+
+`SecretFile`: Used for fetching the content of a given file path and treat it as secret. These are by default saved in `secrets.xlvals` files so that they won't be checked in GIT repo and will not be replaced with actual value in the template files.
 
 ##### Files Fields
 
