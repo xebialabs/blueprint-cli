@@ -122,11 +122,11 @@ func transformToV2(parsedVar Variable, m *ParameterV1) Variable {
 		switch val := m.Secret.(type) {
 		case string:
 			if val == "true" {
-				parsedVar.Type.Value = TypeSecret
+				parsedVar.Type.Value = getSecretType(m.Type.(string))
 			}
 		case bool:
 			if val {
-				parsedVar.Type.Value = TypeSecret
+				parsedVar.Type.Value = getSecretType(m.Type.(string))
 			}
 		}
 	}
@@ -140,6 +140,18 @@ func transformToV2(parsedVar Variable, m *ParameterV1) Variable {
 		}
 	}
 	return parsedVar
+}
+
+func getSecretType(typeVal string) string {
+	switch typeVal {
+	case TypeInput:
+		return TypeSecret
+	case TypeEditor:
+		return TypeSecretEditor
+	case TypeFile:
+		return TypeSecretFile
+	}
+	return typeVal
 }
 
 func parseFileV1(m *FileV1) (TemplateConfig, error) {

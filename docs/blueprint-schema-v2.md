@@ -38,9 +38,9 @@ spec:
     prompt: What is your Password?
     description: this is your fancy description
     label: Password
-    type: SecretInput # a new type
-    replaceAsIs: false # renamed from useRawValue, can be used only with SecretInput (Validated)
-    revealOnSummary: false # renamed from showValueOnSummary, can be used only with SecretInput (Validated)
+    type: SecretInput # a new type along with SecretEditor & SecretFile
+    replaceAsIs: false # renamed from useRawValue, can be used only with SecretInput, SecretEditor & SecretFile (Validated)
+    revealOnSummary: false # renamed from showValueOnSummary, can be used only with SecretInput, SecretEditor & SecretFile (Validated)
     default: Foo
   # A parameter with value 
   - name: TestDepends # mandatory field (Validated)
