@@ -18,6 +18,7 @@ var roles bool
 var environments bool
 var applications bool
 var includeSecrets bool
+var includeDefaults bool
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
@@ -37,7 +38,7 @@ var generateCmd = &cobra.Command{
 }
 
 func DoGenerate(context *xl.Context) {
-	err := context.GenerateSingleDocument(generateServer, generateFilename, generatePath, generateOverride, globalPermissions, users, roles, environments, applications, includeSecrets)
+	err := context.GenerateSingleDocument(generateServer, generateFilename, generatePath, generateOverride, globalPermissions, users, roles, environments, applications, includeSecrets, includeDefaults)
 	if err != nil {
 		util.Fatal("Error while generating document: %s\n", err)
 	}
@@ -58,4 +59,5 @@ func init() {
 	generateFlags.BoolVarP(&environments, "environments", "e", false, "Add to the generated file all environments")
 	generateFlags.BoolVarP(&applications, "applications", "a", false, "Add to the generated file all the applications in system")
 	generateFlags.BoolVar(&includeSecrets, "secrets", false, "Generate a secrets.xlvals file that contains all secrets. (Requires ADMIN permissions)")
+	generateFlags.BoolVar(&includeDefaults, "defaults", false, "Include properties that have default values. (Only works for XL Deploy)")
 }

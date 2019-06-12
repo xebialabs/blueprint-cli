@@ -14,7 +14,7 @@ type DummyXLServer struct {
 	previewDocs       []Document
 }
 
-func (dummy *DummyXLServer) GenerateDoc(filename string, path string, override bool, globalPermissions bool, users bool, roles bool, environments bool, applications bool, includeSecrets bool) error {
+func (dummy *DummyXLServer) GenerateDoc(filename string, path string, override bool, globalPermissions bool, users bool, roles bool, environments bool, applications bool, includeSecrets bool, includeDefaults bool) error {
 	return nil
 }
 

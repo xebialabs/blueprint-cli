@@ -166,7 +166,7 @@ func (c *Context) PreviewSingleDocument(doc *Document, artifactsDir string) (*mo
 	return server.PreviewDoc(doc)
 }
 
-func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool, generatePermissions bool, users bool, roles bool, environments bool, applications bool, includeSecrets bool) error {
+func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool, generatePermissions bool, users bool, roles bool, environments bool, applications bool, includeSecrets bool, includeDefaults bool) error {
 	finalPath := url.QueryEscape(generatePath)
 
 	if generateServer == string(models.XLD) {
@@ -175,7 +175,7 @@ func (c *Context) GenerateSingleDocument(generateServer string, generateFilename
 		} else {
 			util.Info("Generating definitions from XL Deploy to %s\n", generateFilename)
 		}
-		return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, false, false, includeSecrets)
+		return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, false, false, includeSecrets, includeDefaults)
 	}
 
 	if generateServer == string(models.XLR) {
@@ -184,7 +184,7 @@ func (c *Context) GenerateSingleDocument(generateServer string, generateFilename
 		} else {
 			util.Info("Generating definitions from XL Release to %s\n", generateFilename)
 		}
-		return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, environments, applications, includeSecrets)
+		return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, environments, applications, includeSecrets, false)
 	}
 
 	return fmt.Errorf("unknown server type: %s", generateServer)
