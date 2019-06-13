@@ -63,11 +63,15 @@ func printTaskInfo(changes *xl.Changes) {
 			if !strings.HasSuffix(baseUrl, "/") {
 				baseUrl = baseUrl + "/"
 			}
+			startedOrCreated := "created"
+			if task.Started {
+				startedOrCreated = "started"
+			}
 			if changes.Server.Product == models.XLR {
 				urlId := strings.ReplaceAll(task.Id, "/", "-")
-				util.Info("%s%s started: %s#/releases/%s\n", util.IndentFlexible(), task.Description, baseUrl, urlId)
+				util.Info("%s%s %s: %s#/releases/%s\n", util.IndentFlexible(), task.Description, startedOrCreated, baseUrl, urlId)
 			} else if changes.Server.Product == models.XLD {
-				util.Info("%s%s started: %s#/explorer?taskId=%s\n", util.IndentFlexible(), task.Description, baseUrl, changes.Task.Id)
+				util.Info("%s%s %s: %s#/explorer?taskId=%s\n", util.IndentFlexible(), task.Description, startedOrCreated, baseUrl, changes.Task.Id)
 			} else {
 				util.Error("Unknown product %s\n", changes.Server.Product)
 			}
@@ -115,7 +119,7 @@ func newLineIfNotVerbose() {
 }
 
 func waitForTasks(context *xl.Context, doc *xl.Document, changes *xl.Changes, shouldDetach bool) {
-	if changes != nil && changes.Task != nil {
+	if changes != nil && changes.Task != nil && changes.Task.Started {
 		if shouldDetach {
 			util.Info("%sGo to the user interface to follow task %s\n", util.IndentFlexible(), changes.Task.Id)
 		} else {
@@ -216,5 +220,5 @@ func init() {
 	applyFlags.BoolVarP(&applyDetach, "detach", "d", false, "Detach the client at the moment of starting a deploy or release")
 	applyFlags.BoolVar(&nonInteractive, "non-interactive", false, "Automatically archive finished deployment tasks")
 	applyFlags.BoolVarP(&includeSCMInfo, "include-scm-info", "s", false, "Send source control management info. Fails if source control management info can not be found or source tree is dirty")
-    applyFlags.BoolVarP(&skipDirtyCheck, "proceed-when-dirty", "p",false, "Proceed with applying changes even if repository is dirty")
+	applyFlags.BoolVarP(&skipDirtyCheck, "proceed-when-dirty", "p", false, "Proceed with applying changes even if repository is dirty")
 }

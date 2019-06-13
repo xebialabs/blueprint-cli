@@ -42,6 +42,7 @@ type Errors struct {
 type TaskInfo struct {
 	Id          string
 	Description string
+	Started     bool
 }
 
 type Changes struct {
@@ -76,14 +77,14 @@ type TaskState struct {
 }
 
 type SCMInfo struct {
-	filename    string
-	scmType     string
-	remote      string
-	commit      string
-	author      string
-	date        time.Time
-	message     string
-	localPath   string
+	filename  string
+	scmType   string
+	remote    string
+	commit    string
+	author    string
+	date      time.Time
+	message   string
+	localPath string
 }
 
 func (c *Context) PrintConfiguration() {
