@@ -237,6 +237,8 @@ func (doc *Document) processCustomTag(tag *yaml.CustomTag, c *processingContext)
 		return doc.processFileTag(tag, c)
 	case "!format":
 		return doc.processFormatTag(tag, c)
+	case "!source":
+		return doc.processSourceTag(tag, c)
 	default:
 		return nil, fmt.Errorf("unknown tag %s %s", tag.Tag, tag.Value)
 	}
@@ -263,7 +265,7 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 	} else {
 		doc.normalizeFileTag(tag, c)
 
-		err := doc.validateFileTag(tag, c)
+		err := doc.validateFileTag(tag, c, "!file")
 		if err != nil {
 			return nil, err
 		}
@@ -294,16 +296,34 @@ func (doc *Document) processFileTag(tag *yaml.CustomTag, c *processingContext) (
 	}
 }
 
+func (doc *Document) processSourceTag(tag *yaml.CustomTag, c *processingContext) (interface{}, error) {
+    relativeFilename := tag.Value
+    err := util.ValidateFilePath(relativeFilename, "!source tag")
+    if err != nil {
+        return nil, err
+    }
+
+    absoluteFilename := filepath.Join(c.artifactsDir, relativeFilename)
+
+    body, err := ioutil.ReadFile(absoluteFilename)
+
+    if err != nil {
+        return nil, err
+    }
+
+    return string(body), nil
+}
+
 func (doc *Document) normalizeFileTag(tag *yaml.CustomTag, c *processingContext) {
 	tag.Value = filepath.Clean(tag.Value)
 }
 
-func (doc *Document) validateFileTag(tag *yaml.CustomTag, c *processingContext) error {
+func (doc *Document) validateFileTag(tag *yaml.CustomTag, c *processingContext, tagName string) error {
 	if c.artifactsDir == "" {
-		return fmt.Errorf("cannot process !file tags if artifactsDir has not been set")
+		return fmt.Errorf("cannot process %s tags if artifactsDir has not been set", tagName)
 	}
 	filename := tag.Value
-	return util.ValidateFilePath(filename, "!file tag")
+	return util.ValidateFilePath(filename, fmt.Sprintf("%s tag", tagName))
 }
 
 func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, relativeFilename string, c *processingContext) (interface{}, error) {

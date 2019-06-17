@@ -538,6 +538,50 @@ spec:
 		assert.Equal(t, artifactContents, string(fileContents[Applications_PetClinic_1_0_conf_file.Value]))
 	})
 
+
+    t.Run("should process !source tag", func(t *testing.T) {
+        artifactContents := "My Test Description"
+        artifactsDir := prepareArtifactsDir(t, "", "should_process_source_tags", map[string]string{
+            "mydescription.txt": artifactContents,
+        })
+        defer os.RemoveAll(artifactsDir)
+
+        yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Templates
+spec:
+  - template: MyTemplate
+    description: !source mydescription.txt`, XlrApiVersion)
+
+        doc, err := ParseYamlDocument(yamlDoc)
+        require.Nil(t, err)
+        require.NotNil(t, doc)
+        err = doc.Preprocess(nil, artifactsDir)
+        assert.Nil(t, err)
+        assert.Equal(t, artifactContents, util.TransformToMap(doc.Spec)[0]["description"])
+    })
+
+    t.Run("should give error on source tag with absolute path", func(t *testing.T) {
+        artifactContents := "My Test Description"
+        artifactsDir := prepareArtifactsDir(t, "", "should_process_source_tags", map[string]string{
+            "mydescription.txt": artifactContents,
+        })
+        defer os.RemoveAll(artifactsDir)
+
+        yamlDoc := fmt.Sprintf(`apiVersion: %s
+kind: Templates
+spec:
+  - template: MyTemplate
+    description: !source /etc/motd`, XlrApiVersion)
+
+        doc, err := ParseYamlDocument(yamlDoc)
+        require.Nil(t, err)
+        require.NotNil(t, doc)
+        err = doc.Preprocess(nil, artifactsDir)
+        assert.NotNil(t, err)
+        assert.Contains(t, err.Error(), "absolute path")
+    })
+
+
 	t.Run("should render YAML document", func(t *testing.T) {
 		yamlDoc := fmt.Sprintf(`apiVersion: %s
 kind: Applications
