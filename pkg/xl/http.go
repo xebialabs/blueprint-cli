@@ -312,7 +312,12 @@ func formatAsCodeError(response http.Response) error {
 		return printTable("Following permissions are not granted to you:", []string{"ID", "Permission"}, data)
 	}
 
-	return fmt.Errorf("\nUnexpected response: %s", *asCodeResponse.Errors.Generic)
+	genericError := "Unknown. Please check server logs."
+	if asCodeResponse.Errors.Generic != nil {
+	   genericError = *asCodeResponse.Errors.Generic
+    }
+
+	return fmt.Errorf("\nUnexpected response: %s", genericError)
 }
 
 func (server *SimpleHTTPServer) doRequest(method string, path string, headers map[string]string, body io.Reader) (*http.Response, error) {
