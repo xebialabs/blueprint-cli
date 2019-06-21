@@ -556,7 +556,7 @@ func Test_processCustomExpression(t *testing.T) {
 			true,
 		},
 		{
-			"should return result for proper awsCredentials expression",
+			"should return boolean result for proper awsCredentials expression",
 			false,
 			args{
 				"regex('^(true|false|1|0)$', awsCredentials('IsAvailable'))",
@@ -564,6 +564,19 @@ func Test_processCustomExpression(t *testing.T) {
 			},
 			true,
 			nil,
+			false,
+		},
+		{
+			"should return string result for proper awsCredentials expression",
+			false,
+			args{
+				"regex('^(true|false|1|0)$', awsCredentials('AccessKeyID'))",
+				map[string]interface{}{},
+			},
+			nil,
+			func(result interface{}) bool {
+				return result != ""
+			},
 			false,
 		},
 		{

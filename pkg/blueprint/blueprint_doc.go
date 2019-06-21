@@ -102,6 +102,9 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 					variable.Default.Bool = boolVal
 				}
 			}
+			if value == nil {
+				return ""
+			}
 			return value
 		}
 	}
@@ -142,6 +145,9 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) in
 				}
 				return fmt.Sprint(boolVal)
 			}
+			if value == nil {
+				return ""
+			}
 			return value
 		}
 	}
@@ -149,14 +155,14 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) in
 }
 
 func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabel bool) []string {
-	var options []string
+	options := []string{}
 	for _, option := range variable.Options {
 		switch option.Tag {
 		case tagFnV1:
 			opts, err := ProcessCustomFunction(option.Value)
 			if err != nil {
 				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
-				return nil
+				return options
 			}
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Value, opts)
 			options = append(options, opts...)
@@ -164,7 +170,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabe
 			opts, err := ProcessCustomExpression(option.Value, parameters)
 			if err != nil {
 				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
-				return nil
+				return options
 			}
 			switch val := opts.(type) {
 			case []string:
@@ -177,7 +183,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabe
 				}
 			default:
 				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, "Return type should be a string array")
-				return nil
+				return options
 			}
 		default:
 			if withLabel {

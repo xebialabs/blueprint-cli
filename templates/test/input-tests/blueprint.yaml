@@ -15,6 +15,7 @@ spec:
     prompt: testing?
     saveInXlvals: true
     validate: !expr "regex('(\\\\S){2,}', Test)"
+    default: !expr "awsCredentials('AccessKeyID')"
   - name: SelectTest
     type: Select
     prompt: what are you looking at bro?

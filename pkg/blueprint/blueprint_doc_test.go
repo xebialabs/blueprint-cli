@@ -139,6 +139,16 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "awsCredentials('AccessKeyID2')", Tag: tagExpressionV2},
+		}
+		defaultVal := v.GetDefaultVal(dummyData)
+		assert.Equal(t, "", defaultVal)
+	})
+
+	t.Run("should return empty string when expression tag return nil", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "aws.regs", Tag: tagExpressionV2},
 		}
 		defaultVal := v.GetDefaultVal(dummyData)
@@ -272,14 +282,14 @@ func TestGetOptions(t *testing.T) {
 		assert.True(t, len(values) > 1)
 	})
 
-	t.Run("should return nil on invalid function tag for options", func(t *testing.T) {
+	t.Run("should return empty slice on invalid function tag for options", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "aws.regs", Tag: tagFnV1}},
 		}
 		out := v.GetOptions(dummyData, true)
-		require.Nil(t, out)
+		require.Equal(t, []string{}, out)
 	})
 
 	t.Run("should return generated values for expression options tag", func(t *testing.T) {
@@ -352,7 +362,7 @@ func TestGetOptions(t *testing.T) {
 		assert.True(t, len(values) == 2)
 	})
 
-	t.Run("should return nil values for invalid return type in expression options tag", func(t *testing.T) {
+	t.Run("should return empty slices values for invalid return type in expression options tag", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
@@ -362,17 +372,17 @@ func TestGetOptions(t *testing.T) {
 			"Foo": false,
 			"Bar": []string{"test", "foo"},
 		}, true)
-		assert.Nil(t, values)
+		assert.Equal(t, []string{}, values)
 	})
 
-	t.Run("should return nil on invalid expression tag for options", func(t *testing.T) {
+	t.Run("should return empty slice on invalid expression tag for options", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "aws.regs()", Tag: tagExpressionV2}},
 		}
 		out := v.GetOptions(dummyData, true)
-		require.Nil(t, out)
+		assert.Equal(t, []string{}, out)
 	})
 }
 
