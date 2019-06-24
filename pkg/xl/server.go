@@ -18,7 +18,23 @@ type XLServer interface {
 	PreviewDoc(doc *Document) (*models.PreviewResponse, error)
 	GetTaskStatus(taskId string) (*TaskState, error)
 	GetSchema() ([]byte, error)
-	GenerateDoc(filename string, path string, override bool, generatePermissions bool, users bool, roles bool, environments bool, applications bool, includeSecrets bool, includeDefaults bool) error
+	GenerateDoc(
+		filename string,
+		path string,
+		override bool,
+		generatePermissions bool,
+		users bool,
+		roles bool,
+		environments bool,
+		applications bool,
+		includeSecrets bool,
+		includeDefaults bool,
+		ciName string,
+		templates bool,
+		dashboards bool,
+		configurations bool,
+		riskProfiles bool,
+	) error
 }
 
 type XLDeployServer struct {
@@ -59,13 +75,46 @@ func addHomeIfMissing(doc *Document, home string, key string) {
 	}
 }
 
-func (server *XLDeployServer) GenerateDoc(filename string, path string, override bool, globalPermissions bool, users bool, roles bool, environments bool, applications bool, includeSecrets bool, includeDefaults bool) error {
+func (server *XLDeployServer) GenerateDoc(
+	filename string,
+	path string,
+	override bool,
+	globalPermissions bool,
+	users bool,
+	roles bool,
+	environments bool,
+	applications bool,
+	includeSecrets bool,
+	includeDefaults bool,
+	ciName string,
+	templates bool,
+	dashboards bool,
+	configurations bool,
+	riskProfiles bool,
+) error {
 	fullPath := fmt.Sprintf("deployit/devops-as-code/generate?path=%s&globalPermissions=%t&users=%t&roles=%t&secrets=%t&defaults=%t", path, globalPermissions, users, roles, includeSecrets, includeDefaults)
 	return server.Server.GenerateYamlDoc(filename, fullPath, override)
 }
 
-func (server *XLReleaseServer) GenerateDoc(filename string, path string, override bool, globalPermissions bool, users bool, roles bool, environments bool, applications bool, includeSecrets bool, includeDefaults bool) error {
-	fullPath := fmt.Sprintf("devops-as-code/generate?path=%s&globalPermissions=%t&users=%t&roles=%t&environments=%t&applications=%t&secrets=%t", path, globalPermissions, users, roles, environments, applications, includeSecrets)
+func (server *XLReleaseServer) GenerateDoc(
+	filename string,
+	path string,
+	override bool,
+	permissions bool,
+	users bool,
+	roles bool,
+	environments bool,
+	applications bool,
+	includeSecrets bool,
+	includeDefaults bool,
+	ciName string,
+	templates bool,
+	dashboards bool,
+	configurations bool,
+	riskProfiles bool,
+) error {
+	fullPath := fmt.Sprintf("devops-as-code/generate?path=%s&permissions=%t&users=%t&roles=%t&environments=%t&applications=%t&secrets=%t&ciName=%s&templates=%t&dashboards=%t&configurations=%t&riskProfiles=%t",
+		path, permissions, users, roles, environments, applications, includeSecrets, ciName, templates, dashboards, configurations, riskProfiles)
 	return server.Server.GenerateYamlDoc(filename, fullPath, override)
 }
 

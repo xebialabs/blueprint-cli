@@ -167,26 +167,45 @@ func (c *Context) PreviewSingleDocument(doc *Document, artifactsDir string) (*mo
 	return server.PreviewDoc(doc)
 }
 
-func (c *Context) GenerateSingleDocument(generateServer string, generateFilename string, generatePath string, generateOverride bool, generatePermissions bool, users bool, roles bool, environments bool, applications bool, includeSecrets bool, includeDefaults bool) error {
+func (c *Context) GenerateSingleXLDDocument(generateFilename string, generatePath string, generateOverride bool, generatePermissions bool, users bool, roles bool, includeSecrets bool, includeDefaults bool) error {
 	finalPath := url.QueryEscape(generatePath)
 
-	if generateServer == string(models.XLD) {
-		if generatePath != "" {
-			util.Info("Generating definitions for path %s from XL Deploy to %s\n", generatePath, generateFilename)
-		} else {
-			util.Info("Generating definitions from XL Deploy to %s\n", generateFilename)
-		}
-		return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, false, false, includeSecrets, includeDefaults)
+	if generatePath != "" {
+		util.Info("Generating definitions for path %s from XL Deploy to %s\n", generatePath, generateFilename)
+	} else {
+		util.Info("Generating definitions from XL Deploy to %s\n", generateFilename)
+	}
+	return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, false, false, includeSecrets, includeDefaults, "", false, false, false, false)
+}
+
+func (c *Context) GenerateSingleXLRDocument(
+	generateFilename string,
+	generatePath string,
+	generateOverride bool,
+	users bool,
+	roles bool,
+	environments bool,
+	applications bool,
+	includeSecrets bool,
+	ciName string,
+	templates bool,
+	dashboards bool,
+	configurations bool,
+	permissions bool,
+	riskProfiles bool,
+) error {
+	finalPath := url.QueryEscape(generatePath)
+	finalName := url.QueryEscape(ciName)
+
+	if generatePath != "" {
+		util.Info("Generating definitions for path %s from XL Release to %s\n", generatePath, generateFilename)
+	} else {
+		util.Info("Generating definitions from XL Release to %s\n", generateFilename)
 	}
 
-	if generateServer == string(models.XLR) {
-		if generatePath != "" {
-			util.Info("Generating definitions for path %s from XL Release to %s\n", generatePath, generateFilename)
-		} else {
-			util.Info("Generating definitions from XL Release to %s\n", generateFilename)
-		}
-		return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, environments, applications, includeSecrets, false)
+	if len(generatePath) == 0 && !users && !roles && !environments && !applications && len(ciName) == 0 && !templates && !dashboards && !configurations && !permissions && !riskProfiles {
+		return fmt.Errorf("not possible to generate a definition without a proper input. For more information please read help section")
 	}
 
-	return fmt.Errorf("unknown server type: %s", generateServer)
+	return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride, permissions, users, roles, environments, applications, includeSecrets, false, finalName, templates, dashboards, configurations, riskProfiles)
 }
