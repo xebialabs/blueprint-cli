@@ -549,13 +549,6 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		saveItemToTemplateDataMap(&variable, data, answer)
 	}
 
-	// Print summary table
-	// use util.Print so that this is not skipped in quiet mode
-	if useDefaultsAsValue && !usingAnswersFile {
-		util.Print("Using default values:\n")
-	}
-	util.Print(util.DataMapTable(&data.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1))
-
 	return data, nil
 }
 
