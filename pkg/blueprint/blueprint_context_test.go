@@ -53,6 +53,7 @@ func GetViperConf(t *testing.T, yaml string) *viper.Viper {
 
 func getLocalTestBlueprintContext(t *testing.T) *BlueprintContext {
 	configdir, _ := ioutil.TempDir("", "xebialabsconfig")
+	configfile := filepath.Join(configdir, "config.yaml")
 	pwd, _ := os.Getwd()
 	localPath := strings.Replace(pwd, path.Join("pkg", "blueprint"), path.Join("templates", "test"), -1)
 	contextYaml := fmt.Sprintf(`
@@ -63,7 +64,7 @@ blueprint:
     type: local
     path: %s`, localPath)
 	v := GetViperConf(t, contextYaml)
-	c, err := ConstructBlueprintContext(v, configdir, DummyCLIVersion)
+	c, err := ConstructBlueprintContext(v, configfile, DummyCLIVersion)
 	if err != nil {
 		t.Error(err)
 	}
@@ -72,9 +73,10 @@ blueprint:
 
 func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 	configdir, _ := ioutil.TempDir("", "xebialabsconfig")
+	configfile := filepath.Join(configdir, "config.yaml")
 
 	v := GetViperConf(t, defaultContextYaml)
-	c, err := ConstructBlueprintContext(v, configdir, DummyCLIVersion)
+	c, err := ConstructBlueprintContext(v, configfile, DummyCLIVersion)
 	if err != nil {
 		t.Error(err)
 	}
@@ -652,6 +654,14 @@ blueprint:
     url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
 		},
 	}
+
+	confPath, err := ioutil.TempDir("", "xebialabsconfig")
+	if err != nil {
+		t.Error(err)
+	}
+	configfile := filepath.Join(confPath, "config.yaml")
+	defer os.RemoveAll(confPath)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			v := viper.New()
@@ -659,12 +669,24 @@ blueprint:
 			err := v.ReadConfig(bytes.NewBuffer([]byte(tt.vYaml)))
 			require.Nil(t, err)
 
-			got, repoName := GetDefaultBlueprintViperConfig(v)
-			c := util.SortMapStringInterface(got.AllSettings())
-			bs, err := yaml.Marshal(c)
-			bss := string(bs)
+			originalConfigBytes := []byte(tt.vYaml)
+			ioutil.WriteFile(configfile, originalConfigBytes, 0755)
+
+			gotTemp, got, repoName, err := GetDefaultBlueprintViperConfig(v, configfile)
 			require.Nil(t, err)
 			require.NotNil(t, repoName)
+			require.NotNil(t, got)
+			require.NotNil(t, gotTemp)
+
+			c := util.SortMapStringInterface(got.AllSettings())
+			bs, err := yaml.Marshal(c)
+			require.Nil(t, err)
+			bss := string(bs)
+
+			c2 := util.SortMapStringInterface(gotTemp.AllSettings())
+			bs2, err := yaml.Marshal(c2)
+			require.Nil(t, err)
+			bss2 := string(bs2)
 
 			v2 := viper.New()
 			v2.SetConfigType("yaml")
@@ -676,6 +698,7 @@ blueprint:
 			bs1s := string(bs1)
 
 			assert.Equal(t, bs1s, bss)
+			assert.Equal(t, bs1s, bss2)
 
 		})
 	}
@@ -688,16 +711,61 @@ func TestCreateOrUpdateBlueprintConfig(t *testing.T) {
 	}
 	defer os.RemoveAll(confPath)
 	configfile := filepath.Join(confPath, "config.yaml")
-	originalConfigBytes := []byte("")
-	ioutil.WriteFile(configfile, originalConfigBytes, 0755)
+
 	tests := []struct {
-		name    string
-		v       string
-		want    string
-		wantErr bool
+		name     string
+		v        string
+		vFile    string
+		want     string
+		wantFile string
+		wantErr  bool
 	}{
 		{
 			"should return unchanged config when default repo exists",
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/
+  - name: XL Github
+    type: github
+    owner: xebialabs
+    repo-name: blueprints
+    branch: master`,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/
+  - name: XL Github
+    type: github
+    owner: xebialabs
+    repo-name: blueprints
+    branch: master`,
 			`
 xl-deploy:
   username: admin
@@ -774,7 +842,120 @@ xl-release:
   url: http://localhost:5516/
   authmethod: http
 blueprint:
+  repositories:
+  - name: XL Blueprints 2
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/`,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
   current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints 2
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints 2
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
+			false,
+		},
+		{
+			"should return with default config added when default repo doesn't exist in repositories and when file config is different from current config",
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  repositories:
+  - name: XL Blueprints 2
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/`,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://xl-deploy:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://xl-release:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints 2
+  repositories:
+  - name: XL Blueprints 2
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/`,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://localhost:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://localhost:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints
+  repositories:
+  - name: XL Blueprints 2
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/
+  - name: XL Blueprints
+    type: http
+    url: https://dist.xebialabs.com/public/blueprints/${CLIVersion}/`,
+			`
+xl-deploy:
+  username: admin
+  password: admin123
+  url: http://xl-deploy:4516/
+  authmethod: http
+xl-release:
+  username: admin
+  password: admin123
+  url: http://xl-release:5516/
+  authmethod: http
+blueprint:
+  current-repository: XL Blueprints 2
   repositories:
   - name: XL Blueprints 2
     type: http
@@ -791,6 +972,9 @@ blueprint:
 			v.SetConfigType("yaml")
 			err := v.ReadConfig(bytes.NewBuffer([]byte(tt.v)))
 			require.Nil(t, err)
+
+			originalConfigBytes := []byte(tt.vFile)
+			ioutil.WriteFile(configfile, originalConfigBytes, 0755)
 
 			got, repoName, err := CreateOrUpdateBlueprintConfig(v, configfile)
 			require.Nil(t, err)
@@ -815,7 +999,16 @@ blueprint:
 			file, err := ioutil.ReadFile(configfile)
 			require.Nil(t, err)
 
-			assert.Equal(t, bs1s, string(file))
+			v3 := viper.New()
+			v3.SetConfigType("yaml")
+			err = v3.ReadConfig(bytes.NewBuffer([]byte(tt.wantFile)))
+			require.Nil(t, err)
+			v3setsSorted := util.SortMapStringInterface(v3.AllSettings())
+			bs2, err := yaml.Marshal(v3setsSorted)
+			require.Nil(t, err)
+			bs2s := string(bs2)
+
+			assert.Equal(t, bs2s, string(file))
 		})
 	}
 }
