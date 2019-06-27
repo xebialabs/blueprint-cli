@@ -57,13 +57,41 @@ func GetDefaultBlueprintConfData() ConfData {
 	return ConfData{models.DefaultBlueprintRepositoryName, []ConfMap{defaultBlueprintRepo}}
 }
 
-func GetDefaultBlueprintViperConfig(v *viper.Viper) (*viper.Viper, string) {
+func GetDefaultBlueprintViperConfig(v *viper.Viper, configPath string) (*viper.Viper, *viper.Viper, string, error) {
 	activeRepoName := v.GetString(ViperKeyBlueprintCurrentRepository)
 	if activeRepoName == "" {
 		activeRepoName = models.DefaultBlueprintRepositoryName
 		v.Set(ViperKeyBlueprintCurrentRepository, activeRepoName)
 	}
 
+	repositories := GetRepositoriesWithDefault(v)
+	v.Set(RepositoryConfigKey, repositories)
+
+	// existing config file on disk
+	var vFromConfig *viper.Viper
+	if WriteConfigFile && util.PathExists(configPath, false) {
+		vFromConfig = viper.New()
+		vFromConfig.SetConfigType("yaml")
+		bytesread, err := ioutil.ReadFile(configPath)
+		if err != nil {
+			return v, nil, "", err
+		}
+		err = vFromConfig.ReadConfig(bytes.NewBuffer(bytesread))
+		if err != nil {
+			return v, nil, "", err
+		}
+		if vFromConfig != nil {
+			if vFromConfig.GetString(ViperKeyBlueprintCurrentRepository) == "" {
+				vFromConfig.Set(ViperKeyBlueprintCurrentRepository, models.DefaultBlueprintRepositoryName)
+			}
+			repositoriesFromConfig := GetRepositoriesWithDefault(vFromConfig)
+			vFromConfig.Set(RepositoryConfigKey, repositoriesFromConfig)
+		}
+	}
+	return v, vFromConfig, activeRepoName, nil
+}
+
+func GetRepositoriesWithDefault(v *viper.Viper) []ConfMap {
 	repositories := make([]ConfMap, 0)
 	err := v.UnmarshalKey(RepositoryConfigKey, &repositories)
 	if err != nil || repositories == nil || len(repositories) == 0 {
@@ -73,18 +101,20 @@ func GetDefaultBlueprintViperConfig(v *viper.Viper) (*viper.Viper, string) {
 			repositories = append(repositories, defaultBlueprintRepo)
 		}
 	}
-	v.Set(RepositoryConfigKey, repositories)
-	return v, activeRepoName
+	return repositories
 }
 
 // WriteConfigFile is used to suppress writing real config files during test
 var WriteConfigFile = true
 
 func CreateOrUpdateBlueprintConfig(v *viper.Viper, configPath string) (*viper.Viper, string, error) {
-	v, activeRepoName := GetDefaultBlueprintViperConfig(v)
-
-	if WriteConfigFile {
-		c := util.SortMapStringInterface(v.AllSettings())
+	v, vFromConfig, activeRepoName, err := GetDefaultBlueprintViperConfig(v, configPath)
+	if err != nil {
+		return v, activeRepoName, err
+	}
+	if WriteConfigFile && vFromConfig != nil {
+		// write to existing config file
+		c := util.SortMapStringInterface(vFromConfig.AllSettings())
 		yamlBytes, err := yaml.Marshal(c)
 		if err != nil {
 			return v, activeRepoName, err

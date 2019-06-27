@@ -113,7 +113,7 @@ spec:
 - name: App1
 `, xl.XlrApiVersion, xl.XldApiVersion))
 		blueprint.WriteConfigFile = false
-		v, _ := blueprint.GetDefaultBlueprintViperConfig(viper.GetViper())
+		v, _, _, _ := blueprint.GetDefaultBlueprintViperConfig(viper.GetViper(), "")
 		infra := CreateTestInfra(v)
 		defer infra.shutdown()
 
