@@ -40,7 +40,7 @@ func DoUp(context *xl.Context, branchVersion string) {
 }
 
 func init() {
-	rootCmd.AddCommand(upCmd)
+	// rootCmd.AddCommand(upCmd)
 
 	upFlags := upCmd.Flags()
 	upFlags.StringVarP(&upLocalMode, "local", "l", "", "Enable local file mode, by default remote file mode is used")
