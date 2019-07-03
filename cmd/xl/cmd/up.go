@@ -25,7 +25,7 @@ var upCmd = &cobra.Command{
 	},
 }
 
-var upLocalMode bool
+var upLocalMode string
 var upQuickSetup bool
 var upAdvancedSetup bool
 var upBlueprintTemplate string
@@ -40,10 +40,10 @@ func DoUp(context *xl.Context, branchVersion string) {
 }
 
 func init() {
-	//rootCmd.AddCommand(upCmd)
+	rootCmd.AddCommand(upCmd)
 
 	upFlags := upCmd.Flags()
-	upFlags.BoolVarP(&upLocalMode, "local", "l", false, "Enable local file mode, by default remote file mode is used")
+	upFlags.StringVarP(&upLocalMode, "local", "l", "", "Enable local file mode, by default remote file mode is used")
 	upFlags.StringVarP(&upBlueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local folder path")
 	upFlags.BoolVarP(&upQuickSetup, "quick-setup", "", false, "Quickly run setup with all default values")
 	upFlags.BoolVarP(&upAdvancedSetup, "advanced-setup", "", false, "Advanced setup")

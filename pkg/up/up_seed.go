@@ -21,7 +21,7 @@ var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 var applyValues map[string]string
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode bool, quickSetup bool, advancedSetup bool, blueprintTemplate string, cfgOverridden bool, upAnswerFile string, noCleanup bool, branchVersion string) {
+func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup bool, advancedSetup bool, blueprintTemplate string, cfgOverridden bool, upAnswerFile string, noCleanup bool, branchVersion string) {
 	if upAnswerFile == "" {
 		if !(quickSetup || advancedSetup) {
 			// ask for setup mode.
@@ -42,12 +42,13 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode bool, quickSetup bo
 
 	var err error
 	blueprintContext := context.BlueprintContext
-	if upLocalMode {
-		blueprintContext, blueprintTemplate, err = getLocalContext(blueprintTemplate)
+
+	if upLocalMode != "" {
+		blueprintContext, err = blueprint.ConstructLocalBlueprintContext(upLocalMode)
 		if err != nil {
 			util.Fatal("Error while creating local blueprint context: %s \n", err)
 		}
-	} else if !upLocalMode && !cfgOverridden {
+	} else if upLocalMode == "" && !cfgOverridden {
 		blueprintTemplate = DefaultInfraBlueprintTemplate
 		repo := getRepo(branchVersion)
 		blueprintContext.ActiveRepo = &repo
