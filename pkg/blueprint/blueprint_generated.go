@@ -2,6 +2,9 @@ package blueprint
 
 import (
 	"sort"
+	"strings"
+
+	"github.com/xebialabs/xl-cli/pkg/models"
 
 	"github.com/xebialabs/xl-cli/pkg/util"
 
@@ -76,6 +79,8 @@ func (generatedBlueprint *GeneratedBlueprint) Cleanup() error {
 	// Reverse the directories
 	sort.Sort(sort.Reverse(sort.StringSlice(directories)))
 
+	xebialabsDir := ""
+
 	for _, dir := range directories {
 		util.Verbose("[file] Removing directory %s\n", dir)
 		if util.PathExists(dir, true) {
@@ -83,9 +88,23 @@ func (generatedBlueprint *GeneratedBlueprint) Cleanup() error {
 				if err := os.Remove(dir); err != nil {
 					return err
 				}
+			} else {
+				if strings.HasSuffix(dir, models.BlueprintOutputDir) {
+					xebialabsDir = dir
+				}
 			}
 		}
 	}
+
+	// Manually remove the xebialabs directory
+	if xebialabsDir != "" {
+		if empty, _ := isDirectoryEmpty(xebialabsDir); empty {
+			if err := os.Remove(xebialabsDir); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 

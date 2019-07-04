@@ -243,12 +243,12 @@ func prepareMergedTemplateData(
 		}
 	}
 
-    // Print summary table
-    // use util.Print so that this is not skipped in quiet mode
-    if useDefaultsAsValue && answersFile == "" {
-        util.Print("Using default values:\n")
-    }
-    util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1))
+	// Print summary table
+	// use util.Print so that this is not skipped in quiet mode
+	if useDefaultsAsValue && answersFile == "" {
+		util.Print("Using default values:\n")
+	}
+	util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1))
 
 	if !SkipFinalPrompt {
 		// Final prompt from user to start generation process
