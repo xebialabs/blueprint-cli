@@ -26,6 +26,7 @@ func GetFileContent(filePath string) string {
 	}
 	return string(f)
 }
+
 func RemoveFiles(glob string) {
 	files, err := filepath.Glob(glob)
 	if err != nil {
@@ -37,6 +38,7 @@ func RemoveFiles(glob string) {
 		}
 	}
 }
+
 func GetTestTemplateDir(blueprint string) string {
 	pwd, _ := os.Getwd()
 	return strings.Replace(pwd, path.Join("pkg", "blueprint"), path.Join("templates", "test", blueprint), -1)
@@ -426,6 +428,106 @@ func TestInstantiateBlueprint(t *testing.T) {
 		}
 
 	})
+
+	t.Run("should create output files for valid test nested templates composed from local path", func(t *testing.T) {
+		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
+		defer gb.Cleanup()
+		// This can be used to debug a local blueprint if you have the repo in ../blueprints relative to xl-cli
+		/* pwd, _ := os.Getwd()
+		BlueprintTestPath = strings.Replace(pwd, path.Join("xl-cli", "pkg", "blueprint"), path.Join("blueprints"), -1)
+		err := InstantiateBlueprint(
+			"gcp/microservice-ecommerce",
+			getLocalTestBlueprintContext(t),
+			gb,
+			BlueprintTestPath+"/gcp/microservice-ecommerce/__test__/answers-with-cluster-with-cicd.yaml",
+			false,
+			true,
+			false,
+		) */
+		err := InstantiateBlueprint(
+			"compose-nested",
+			getLocalTestBlueprintContext(t),
+			gb,
+			"",
+			false,
+			true,
+			false,
+		)
+		require.Nil(t, err)
+
+		// assertions
+		assert.False(t, util.PathExists("xld-environment.yml", false))   // this file is skipped when composing
+		assert.True(t, util.PathExists("xld-infrastructure.yml", false)) // this comes from composed blueprint 'defaults-as-values'
+		assert.False(t, util.PathExists("xlr-pipeline.yml", false))      // this file is renamed when composing
+		assert.True(t, util.PathExists("xlr-pipeline-new2.yml", false))  // this comes from composed blueprint 'defaults-as-values'
+		assert.True(t, util.PathExists("xlr-pipeline-new.yml", false))   // this comes from composed blueprint 'valid-no-prompt'
+		assert.True(t, util.PathExists("xlr-pipeline-4.yml", false))     // this comes from blueprint 'composed'
+
+		// these files are from the main blueprint 'composed'
+		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, secretsFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, gitignoreFile))
+
+		infraFile := GetFileContent("xld-infrastructure.yml")
+		// the values are overridden by the last blueprint composed
+		infraChecks := []string{
+			fmt.Sprintf("- name: %s-ecs-fargate-cluster", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-vpc", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-subnet-ipv4-az-1a", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-route-table", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-security-group", "TestApp"),
+			fmt.Sprintf("- name: %s-targetgroup", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-alb", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-db-subnet-group", "TestApp"),
+			fmt.Sprintf("- name: %s-ecs-dictionary", "TestApp"),
+			"MYSQL_DB_ADDRESS: '{{%address%}}'",
+		}
+		for _, infraCheck := range infraChecks {
+			assert.Contains(t, infraFile, infraCheck)
+		}
+
+		// the values are overridden by the last blueprint composed
+		// Check if only secret marked fields are in values.xlvals
+		secretsFileContent := GetFileContent(models.BlueprintOutputDir + string(os.PathSeparator) + secretsFile)
+
+		assert.Contains(t, secretsFileContent, "AWSAccessKey = accesskey")
+		assert.Contains(t, secretsFileContent, "AWSAccessSecret = accesssecret")
+		assert.NotContains(t, secretsFileContent, "SuperSecret = invisible")
+
+		// check __test__ directory is not there
+		_, err = os.Stat("__test__")
+		assert.True(t, os.IsNotExist(err))
+
+		// check values file
+		valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
+		valueMap := map[string]string{
+			"Test":               "TestComposeTrue", // value from parameterOverride using !expr "TestCompose"
+			"TestFoo":            "hello",           // value from parameterOverride
+			"TestCompose":        "TestComposeTrue", // value from parameterOverride using !expr "TestComposeTrue"
+			"ClientCert":         "this is a multiline\\ntext\\n\\nwith escape chars\\n",
+			"AppName":            "TestApp",
+			"SuperSecret":        "supersecret",
+			"AWSRegion":          "eu-central-1",
+			"DiskSize":           "10",
+			"DiskSizeWithBuffer": "125.6",
+			"ShouldNotBeThere":   "",
+		}
+		for k, v := range valueMap {
+			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+
+		// check secrets file
+		secretsFile := GetFileContent(path.Join(gb.OutputDir, secretsFile))
+		secretsMap := map[string]string{
+			"AWSAccessKey":    "accesskey",
+			"AWSAccessSecret": "accesssecret",
+		}
+		for k, v := range secretsMap {
+			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+
+	})
+
 	// V1 schema test
 	t.Run("should create output files for valid test template from local path for schema V1", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
@@ -487,7 +589,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 func TestShouldSkipFile(t *testing.T) {
 	type args struct {
 		templateConfig TemplateConfig
-		variables      *[]Variable
+		params         map[string]interface{}
 	}
 	tests := []struct {
 		name    string
@@ -508,8 +610,8 @@ func TestShouldSkipFile(t *testing.T) {
 			"should return true if dependsOn is defined and its value is false",
 			args{
 				TemplateConfig{Path: "foo.yaml", DependsOn: VarField{Value: "foo"}},
-				&[]Variable{
-					{Name: VarField{Value: "foo"}, Value: VarField{Bool: false}},
+				map[string]interface{}{
+					"foo": false,
 				},
 			},
 			true,
@@ -519,8 +621,8 @@ func TestShouldSkipFile(t *testing.T) {
 			"should return true if dependsOnFalse is defined and its value is true",
 			args{
 				TemplateConfig{Path: "foo.yaml", DependsOn: VarField{Value: "foo", InvertBool: true}},
-				&[]Variable{
-					{Name: VarField{Value: "foo"}, Value: VarField{Bool: true}},
+				map[string]interface{}{
+					"foo": true,
 				},
 			},
 			true,
@@ -530,7 +632,7 @@ func TestShouldSkipFile(t *testing.T) {
 			"should return error if dependsOn value cannot be processed",
 			args{
 				TemplateConfig{Path: "foo.yaml", DependsOn: VarField{Value: "foo", InvertBool: true}},
-				&[]Variable{},
+				map[string]interface{}{},
 			},
 			false,
 			true,
@@ -538,7 +640,7 @@ func TestShouldSkipFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := shouldSkipFile(tt.args.templateConfig, tt.args.variables, dummyData)
+			got, err := shouldSkipFile(tt.args.templateConfig, tt.args.params)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("shouldSkipFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -562,6 +664,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 		blueprints       map[string]*models.BlueprintRemote
 		templatePath     string
 		dependsOn        VarField
+		parentName       string
 	}
 	type ComposedBlueprintPtr = []*ComposedBlueprint
 	tests := []struct {
@@ -578,6 +681,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 				blueprints,
 				"test",
 				VarField{},
+				"",
 			},
 			"",
 			nil,
@@ -590,10 +694,12 @@ func Test_getBlueprintConfig(t *testing.T) {
 				blueprints,
 				"aws/monolith",
 				VarField{},
+				"",
 			},
 			"Test Project",
 			ComposedBlueprintPtr{
 				{
+					Name: "aws/monolith",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -619,10 +725,13 @@ func Test_getBlueprintConfig(t *testing.T) {
 				blueprints,
 				"aws/compose",
 				VarField{},
+				"",
 			},
 			"Test Project",
 			ComposedBlueprintPtr{
 				{
+					Name:   "aws/monolith",
+					Parent: "aws/compose",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -645,6 +754,8 @@ func Test_getBlueprintConfig(t *testing.T) {
 					},
 				},
 				{
+					Name:   "aws/compose",
+					Parent: "",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -697,6 +808,8 @@ func Test_getBlueprintConfig(t *testing.T) {
 					},
 				},
 				{
+					Name:   "aws/datalake",
+					Parent: "aws/compose",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -722,7 +835,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotArray, got, err := getBlueprintConfig(tt.args.blueprintContext, tt.args.blueprints, tt.args.templatePath, tt.args.dependsOn)
+			gotArray, got, err := getBlueprintConfig(tt.args.blueprintContext, tt.args.blueprints, tt.args.templatePath, tt.args.dependsOn, tt.args.parentName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getBlueprintConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -743,10 +856,12 @@ func Test_composeBlueprints(t *testing.T) {
 	require.NotNil(t, blueprints)
 
 	type args struct {
+		blueprintName    string
 		blueprintDoc     *BlueprintConfig
 		blueprintContext *BlueprintContext
 		blueprints       map[string]*models.BlueprintRemote
 		dependsOn        VarField
+		parentName       string
 	}
 
 	type ComposedBlueprintPtr = []*ComposedBlueprint
@@ -759,6 +874,7 @@ func Test_composeBlueprints(t *testing.T) {
 		{
 			"should error when invalid config is passed",
 			args{
+				"aws/test",
 				&BlueprintConfig{
 					Include: []IncludedBlueprintProcessed{
 						{
@@ -770,6 +886,7 @@ func Test_composeBlueprints(t *testing.T) {
 				repo,
 				blueprints,
 				VarField{},
+				"bpParent",
 			},
 			nil,
 			true,
@@ -777,6 +894,7 @@ func Test_composeBlueprints(t *testing.T) {
 		{
 			"should not fail when blueprints with empty param or files are passed",
 			args{
+				"aws/test",
 				&BlueprintConfig{
 					ApiVersion: "xl/v2",
 					Kind:       "Blueprint",
@@ -801,9 +919,12 @@ func Test_composeBlueprints(t *testing.T) {
 				repo,
 				blueprints,
 				VarField{},
+				"bpParent",
 			},
 			ComposedBlueprintPtr{
 				{
+					Name:   "aws/test",
+					Parent: "bpParent",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -827,6 +948,8 @@ func Test_composeBlueprints(t *testing.T) {
 					},
 				},
 				{
+					Name:   "aws/emptyfiles",
+					Parent: "aws/test",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -839,6 +962,8 @@ func Test_composeBlueprints(t *testing.T) {
 					},
 				},
 				{
+					Name:   "aws/emptyparams",
+					Parent: "aws/test",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -857,6 +982,7 @@ func Test_composeBlueprints(t *testing.T) {
 		{
 			"should compose the given blueprints together in after stage by default",
 			args{
+				"aws/test",
 				&BlueprintConfig{
 					ApiVersion: "xl/v2",
 					Kind:       "Blueprint",
@@ -892,9 +1018,12 @@ func Test_composeBlueprints(t *testing.T) {
 				repo,
 				blueprints,
 				VarField{},
+				"bpParent",
 			},
 			ComposedBlueprintPtr{
 				{
+					Name:   "aws/test",
+					Parent: "bpParent",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -929,6 +1058,8 @@ func Test_composeBlueprints(t *testing.T) {
 					},
 				},
 				{
+					Name:   "aws/datalake",
+					Parent: "aws/test",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -950,6 +1081,7 @@ func Test_composeBlueprints(t *testing.T) {
 		{
 			"should compose the given blueprints together in before and after stage accordingly",
 			args{
+				"aws/test",
 				&BlueprintConfig{
 					ApiVersion: "xl/v2",
 					Kind:       "Blueprint",
@@ -1007,9 +1139,12 @@ func Test_composeBlueprints(t *testing.T) {
 				repo,
 				blueprints,
 				VarField{},
+				"bpParent",
 			},
 			ComposedBlueprintPtr{
 				{
+					Name:   "aws/monolith",
+					Parent: "aws/test",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -1026,6 +1161,8 @@ func Test_composeBlueprints(t *testing.T) {
 					},
 				},
 				{
+					Name:   "aws/test",
+					Parent: "bpParent",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -1082,6 +1219,8 @@ func Test_composeBlueprints(t *testing.T) {
 					},
 				},
 				{
+					Name:   "aws/datalake",
+					Parent: "aws/test",
 					BlueprintConfig: &BlueprintConfig{
 						ApiVersion: "xl/v2",
 						Kind:       "Blueprint",
@@ -1103,7 +1242,7 @@ func Test_composeBlueprints(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := composeBlueprints(tt.args.blueprintDoc, tt.args.blueprintContext, tt.args.blueprints, tt.args.dependsOn)
+			got, err := composeBlueprints(tt.args.blueprintName, tt.args.blueprintDoc, tt.args.blueprintContext, tt.args.blueprints, tt.args.dependsOn, tt.args.parentName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("composeBlueprints() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1116,7 +1255,6 @@ func Test_composeBlueprints(t *testing.T) {
 func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 	type args struct {
 		dependsOn  VarField
-		variables  *[]Variable
 		mergedData *PreparedData
 	}
 	tests := []struct {
@@ -1129,7 +1267,6 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 			"should return true when depends on is not defined",
 			args{
 				VarField{},
-				&[]Variable{},
 				&PreparedData{},
 			},
 			true,
@@ -1139,7 +1276,6 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 			"should return false when there is error",
 			args{
 				VarField{Value: "Foo"},
-				&[]Variable{},
 				&PreparedData{},
 			},
 			false,
@@ -1149,7 +1285,6 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 			"should return true when VarField evaluates to true",
 			args{
 				VarField{Value: "1 > 0", Tag: tagExpressionV2},
-				&[]Variable{},
 				&PreparedData{},
 			},
 			true,
@@ -1159,7 +1294,6 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 			"should return false when VarField evaluates to false",
 			args{
 				VarField{Value: "1 > 2", Tag: tagExpressionV2},
-				&[]Variable{},
 				&PreparedData{},
 			},
 			false,
@@ -1169,14 +1303,11 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 			"should return true when VarField evaluates to true based on variable lookup",
 			args{
 				VarField{Value: "Foo"},
-				&[]Variable{
-					Variable{
-						Name:  VarField{Value: "Foo"},
-						Label: VarField{Value: "Foo"},
-						Value: VarField{Value: "true", Bool: true},
+				&PreparedData{
+					TemplateData: map[string]interface{}{
+						"Foo": true,
 					},
 				},
-				&PreparedData{},
 			},
 			true,
 			false,
@@ -1185,7 +1316,6 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 			"should return true when VarField evaluates to true based on variable lookup in expression",
 			args{
 				VarField{Value: "Foo > 2", Tag: tagExpressionV2},
-				&[]Variable{},
 				&PreparedData{
 					TemplateData: map[string]interface{}{
 						"Foo": "3",
@@ -1198,7 +1328,7 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := evaluateAndSkipIfDependsOnIsFalse(tt.args.dependsOn, tt.args.variables, tt.args.mergedData)
+			got, err := evaluateAndSkipIfDependsOnIsFalse(tt.args.dependsOn, tt.args.mergedData)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("evaluateAndCheckDependsOnIsTrue() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1304,41 +1434,41 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 				Kind:       "Blueprint",
 				Metadata:   Metadata{Name: "Test Project"},
 				Include: []IncludedBlueprintProcessed{
-                    {
-                        Blueprint: "aws/monolith",
-                        Stage:     "before",
-                        ParameterOverrides: []Variable{
-                            {
-                                Name:      VarField{Value: "Test"},
-                                Value:     VarField{Value: "hello"},
-                                DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"},
-                            },
-                        },
-                        FileOverrides: []TemplateConfig{
-                            {
-                                Path:      "xld-infrastructure.yml.tmpl",
-                                DependsOn: VarField{Value: "false", Tag: tagExpressionV2},
-                            },
-                        },
-                    },
-                    {
-                        Blueprint: "aws/datalake",
-                        Stage:     "after",
-                        ParameterOverrides: []Variable{
-                            {
-                                Name:  VarField{Value: "Foo"},
-                                Value: VarField{Value: "hello"},
-                            },
-                        },
-                        DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
-                        FileOverrides: []TemplateConfig{
-                            {
-                                Path:      "xlr-pipeline.yml",
-                                RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
-                                DependsOn: VarField{Value: "TestDepends"},
-                            },
-                        },
-                    },
+					{
+						Blueprint: "aws/monolith",
+						Stage:     "before",
+						ParameterOverrides: []Variable{
+							{
+								Name:      VarField{Value: "Test"},
+								Value:     VarField{Value: "hello"},
+								DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"},
+							},
+						},
+						FileOverrides: []TemplateConfig{
+							{
+								Path:      "xld-infrastructure.yml.tmpl",
+								DependsOn: VarField{Value: "false", Tag: tagExpressionV2},
+							},
+						},
+					},
+					{
+						Blueprint: "aws/datalake",
+						Stage:     "after",
+						ParameterOverrides: []Variable{
+							{
+								Name:  VarField{Value: "Foo"},
+								Value: VarField{Value: "hello"},
+							},
+						},
+						DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
+						FileOverrides: []TemplateConfig{
+							{
+								Path:      "xlr-pipeline.yml",
+								RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
+								DependsOn: VarField{Value: "TestDepends"},
+							},
+						},
+					},
 				},
 				Variables: []Variable{
 					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"}},
@@ -1428,6 +1558,67 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 					{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose-2/xld-environment.yml.tmpl"},
 					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/compose-2/xld-infrastructure.yml.tmpl"},
 					{Path: "xlr-pipeline.yml", FullPath: "aws/compose-2/xlr-pipeline.yml"},
+				},
+			},
+			false,
+		},
+		{
+			"should return processed data for nested composed blueprint",
+			args{
+				repo,
+				blueprints,
+				"aws/compose-3",
+				"",
+				false,
+				false,
+				[]survey.AskOpt{},
+			},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"Bar": "hello", "Test": "hello"},
+				SummaryData:  map[string]interface{}{"Bar": "hello", "Test": "hello"},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{"Test": "hello"},
+			},
+			&BlueprintConfig{
+				ApiVersion: "xl/v2",
+				Kind:       "Blueprint",
+				Metadata:   Metadata{Name: "Test Project"},
+				Include: []IncludedBlueprintProcessed{
+					{
+						Blueprint: "aws/compose",
+						Stage:     "before",
+						ParameterOverrides: []Variable{
+							{
+								Name:      VarField{Value: "Bar"},
+								Value:     VarField{Value: "hello"},
+								DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"},
+							},
+						},
+					},
+					{
+						Blueprint: "aws/compose-2",
+						Stage:     "after",
+						ParameterOverrides: []Variable{
+							{
+								Name:      VarField{Value: "Bar"},
+								Value:     VarField{Value: "hello"},
+								DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"},
+							},
+						},
+						DependsOn: VarField{Tag: tagExpressionV2, Value: "2 < 1"},
+					},
+				},
+				Variables: []Variable{
+					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"}},
+					{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "hello"}, DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"}},
+				},
+				TemplateConfigs: []TemplateConfig{
+					{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
+					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Value: "false", Tag: tagExpressionV2}},
+					{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
+					{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
+					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/compose/xld-infrastructure.yml.tmpl"},
+					{Path: "xlr-pipeline.yml", FullPath: "aws/compose/xlr-pipeline.yml"},
 				},
 			},
 			false,

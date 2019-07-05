@@ -855,7 +855,7 @@ func TestParseDependsOnValue(t *testing.T) {
 			Type:      VarField{Value: TypeInput},
 			DependsOn: VarField{Value: "aws.creds", Tag: tagFnV1},
 		}
-		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
+		_, err := ParseDependsOnValue(v.DependsOn, dummyData)
 		require.NotNil(t, err)
 	})
 	t.Run("should return valid value for DependsOn field from function", func(t *testing.T) {
@@ -865,7 +865,7 @@ func TestParseDependsOnValue(t *testing.T) {
 			Type:      VarField{Value: TypeInput},
 			DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: tagFnV1},
 		}
-		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
+		_, err := ParseDependsOnValue(v.DependsOn, dummyData)
 		require.Nil(t, err)
 	})
 	t.Run("should error when invalid expression in DependsOn", func(t *testing.T) {
@@ -875,7 +875,7 @@ func TestParseDependsOnValue(t *testing.T) {
 			Type:      VarField{Value: TypeInput},
 			DependsOn: VarField{Value: "aws.creds", Tag: tagExpressionV2},
 		}
-		_, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, dummyData)
+		_, err := ParseDependsOnValue(v.DependsOn, dummyData)
 		require.NotNil(t, err)
 	})
 	t.Run("should return parsed bool value for DependsOn field from expression", func(t *testing.T) {
@@ -886,29 +886,18 @@ func TestParseDependsOnValue(t *testing.T) {
 			DependsOn: VarField{Value: "Foo > 10", Tag: tagExpressionV2},
 		}
 
-		val, err := ParseDependsOnValue(v.DependsOn, &[]Variable{}, map[string]interface{}{
+		val, err := ParseDependsOnValue(v.DependsOn, map[string]interface{}{
 			"Foo": 100,
 		})
 		require.Nil(t, err)
 		require.True(t, val)
 	})
 	t.Run("should return bool value from referenced var for dependsOn field", func(t *testing.T) {
-		vars := make([]Variable, 2)
-		vars[0] = Variable{
-			Name:  VarField{Value: "confirm"},
-			Label: VarField{Value: "confirm"},
-			Type:  VarField{Value: TypeConfirm},
-			Value: VarField{Bool: true, Value: "true"},
-		}
-		vars[1] = Variable{
-			Name:      VarField{Value: "test"},
-			Label:     VarField{Value: "test"},
-			Type:      VarField{Value: TypeInput},
-			DependsOn: VarField{Value: "confirm"},
-		}
-		val, err := ParseDependsOnValue(vars[1].DependsOn, &vars, dummyData)
+		val, err := ParseDependsOnValue(VarField{Value: "confirm"}, map[string]interface{}{
+			"confirm": true,
+		})
 		require.Nil(t, err)
-		assert.Equal(t, vars[0].Value.Bool, val)
+		assert.Equal(t, true, val)
 	})
 }
 

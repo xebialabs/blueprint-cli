@@ -300,7 +300,7 @@ func setVariableField(field *reflect.Value, val interface{}, varField VarField) 
 }
 
 // ParseDependsOnValue parse the functions and expressions set on the dependsOn fields
-func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
+func ParseDependsOnValue(varField VarField, parameters map[string]interface{}) (bool, error) {
 	tagVal := varField.Tag
 	fieldVal := varField.Value
 	switch tagVal {
@@ -337,11 +337,18 @@ func ParseDependsOnValue(varField VarField, variables *[]Variable, parameters ma
 		}
 		return false, fmt.Errorf("Expression [%s] result is invalid for a boolean field", fieldVal)
 	}
-	dependsOnVar, err := findVariableByName(variables, fieldVal)
+	dependsOnVar, err := findVariableByName(parameters, fieldVal)
 	if err != nil {
 		return false, err
 	}
-	return dependsOnVar.Value.Bool, nil
+	return dependsOnVar.(bool), nil
+}
+
+func findVariableByName(parameters map[string]interface{}, name string) (interface{}, error) {
+	if util.MapContainsKeyWithValInterface(parameters, name) {
+		return parameters[name], nil
+	}
+	return nil, fmt.Errorf("no variable found in list by name [%s]", name)
 }
 
 func IsSecretType(typeVal string) bool {
