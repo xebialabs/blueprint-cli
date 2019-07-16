@@ -1,0 +1,24 @@
+apiVersion: xl/v2
+kind: Blueprint
+metadata:
+  name: Test Project nested compose
+  description: Is just a test blueprint project
+  author: XebiaLabs
+  version: 2.0
+spec:
+  parameters:
+  - name: TestComposeTrue
+    value: TestComposeTrue
+    saveInXlvals: true
+  - name: TestComposeFalse
+    value: TestComposeTrue
+    saveInXlvals: true
+
+  includeAfter:
+  - blueprint: composed
+    includeIf: !expr "true"
+    parameterOverrides:
+    - name: TestCompose
+      value: !expr "TestComposeTrue"
+  - blueprint: defaults-as-values
+    includeIf: !expr "false"

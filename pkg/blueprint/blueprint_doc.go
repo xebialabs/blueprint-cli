@@ -9,16 +9,16 @@ import (
 	"strconv"
 	"strings"
 
+	funk "github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/version"
+	survey "gopkg.in/AlecAivazis/survey.v1"
 
-	"github.com/thoas/go-funk"
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/osHelper"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/yaml"
-	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 // Constants
@@ -463,7 +463,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 
 		// skip question based on DependsOn fields
 		if !util.IsStringEmpty(variable.DependsOn.Value) {
-			dependsOnVal, err := ParseDependsOnValue(variable.DependsOn, &blueprintDoc.Variables, data.TemplateData)
+			dependsOnVal, err := ParseDependsOnValue(variable.DependsOn, data.TemplateData)
 			if err != nil {
 				return nil, err
 			}
@@ -688,15 +688,6 @@ func prepareQuestionText(desc string, fallbackQuestion string) string {
 		return desc
 	}
 	return fallbackQuestion
-}
-
-func findVariableByName(variables *[]Variable, name string) (*Variable, error) {
-	for _, variable := range *variables {
-		if variable.Name.Value == name {
-			return &variable, nil
-		}
-	}
-	return nil, fmt.Errorf("no variable found in list by name [%s]", name)
 }
 
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {

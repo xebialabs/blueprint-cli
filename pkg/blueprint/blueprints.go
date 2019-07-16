@@ -39,8 +39,10 @@ const (
 var ignoredPaths = []string{"__test__"}
 
 type ComposedBlueprint struct {
+	Name            string
 	BlueprintConfig *BlueprintConfig
 	DependsOn       VarField
+	Parent          string
 }
 
 func getFuncMaps() template.FuncMap {
@@ -49,9 +51,9 @@ func getFuncMaps() template.FuncMap {
 	return funcMaps
 }
 
-func shouldSkipFile(templateConfig TemplateConfig, variables *[]Variable, parameters map[string]interface{}) (bool, error) {
+func shouldSkipFile(templateConfig TemplateConfig, parameters map[string]interface{}) (bool, error) {
 	if !util.IsStringEmpty(templateConfig.DependsOn.Value) {
-		dependsOnVal, err := ParseDependsOnValue(templateConfig.DependsOn, variables, parameters)
+		dependsOnVal, err := ParseDependsOnValue(templateConfig.DependsOn, parameters)
 		if err != nil {
 			return false, err
 		}
@@ -133,7 +135,7 @@ func InstantiateBlueprint(
 
 	// execute each template file found
 	for _, config := range blueprintDoc.TemplateConfigs {
-		skipFile, err := shouldSkipFile(config, &blueprintDoc.Variables, preparedData.TemplateData)
+		skipFile, err := shouldSkipFile(config, preparedData.TemplateData)
 		if err != nil {
 			return err
 		}
@@ -206,7 +208,7 @@ func prepareMergedTemplateData(
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
 	// get blueprint definition
-	blueprintDocs, masterBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprints, templatePath, VarField{})
+	blueprintDocs, masterBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprints, templatePath, VarField{}, "")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -218,11 +220,23 @@ func prepareMergedTemplateData(
 		Metadata:   masterBlueprintDoc.Metadata,
 		Include:    masterBlueprintDoc.Include,
 	}
+	// A map holding skipped blueprint names
+	var skippedBlueprints []string
 	for _, blueprintDoc := range blueprintDocs {
-		// Evaluate dependsOn
-		ok, err := evaluateAndSkipIfDependsOnIsFalse(blueprintDoc.DependsOn, &mergedBlueprintDoc.Variables, mergedData)
-		if err != nil {
-			return nil, nil, err
+		var ok = true
+		// skip child templates when parents are skipped
+		for _, v := range skippedBlueprints {
+			if blueprintDoc.Parent == v {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			// Evaluate dependsOn
+			ok, err = evaluateAndSkipIfDependsOnIsFalse(blueprintDoc.DependsOn, mergedData)
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 		if ok {
 			// ask for user input
@@ -240,6 +254,8 @@ func prepareMergedTemplateData(
 			mergedBlueprintDoc.Variables = append(mergedBlueprintDoc.Variables, blueprintDoc.BlueprintConfig.Variables...)
 			// append files
 			mergedBlueprintDoc.TemplateConfigs = append(mergedBlueprintDoc.TemplateConfigs, blueprintDoc.BlueprintConfig.TemplateConfigs...)
+		} else {
+			skippedBlueprints = append(skippedBlueprints, blueprintDoc.Name)
 		}
 	}
 
@@ -265,18 +281,18 @@ func prepareMergedTemplateData(
 	return mergedData, mergedBlueprintDoc, nil
 }
 
-func evaluateAndSkipIfDependsOnIsFalse(dependsOn VarField, variables *[]Variable, mergedData *PreparedData) (bool, error) {
+func evaluateAndSkipIfDependsOnIsFalse(dependsOn VarField, mergedData *PreparedData) (bool, error) {
 	if util.IsStringEmpty(dependsOn.Value) {
 		return true, nil
 	}
-	dependsOnVal, err := ParseDependsOnValue(dependsOn, variables, mergedData.TemplateData)
+	dependsOnVal, err := ParseDependsOnValue(dependsOn, mergedData.TemplateData)
 	if err != nil {
 		return false, err
 	}
 	return dependsOnVal, nil
 }
 
-func getBlueprintConfig(blueprintContext *BlueprintContext, blueprints map[string]*models.BlueprintRemote, templatePath string, dependsOn VarField) ([]*ComposedBlueprint, *BlueprintConfig, error) {
+func getBlueprintConfig(blueprintContext *BlueprintContext, blueprints map[string]*models.BlueprintRemote, templatePath string, dependsOn VarField, parentBlueprint string) ([]*ComposedBlueprint, *BlueprintConfig, error) {
 	util.Verbose("[cmd] Parsing Blueprint from %s\n", templatePath)
 	blueprintDocs := make([]*ComposedBlueprint, 0)
 	blueprint := blueprints[templatePath]
@@ -286,21 +302,21 @@ func getBlueprintConfig(blueprintContext *BlueprintContext, blueprints map[strin
 	}
 
 	util.Verbose("[compose] Found %d included blueprints\n", len(masterBlueprintDoc.Include))
-	blueprintDocs, err = composeBlueprints(masterBlueprintDoc, blueprintContext, blueprints, dependsOn)
+	blueprintDocs, err = composeBlueprints(templatePath, masterBlueprintDoc, blueprintContext, blueprints, dependsOn, parentBlueprint)
 	if err != nil {
 		return nil, nil, err
 	}
 	return blueprintDocs, masterBlueprintDoc, nil
 }
 
-func composeBlueprints(blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprints map[string]*models.BlueprintRemote, dependsOn VarField) ([]*ComposedBlueprint, error) {
+func composeBlueprints(blueprintName string, blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprints map[string]*models.BlueprintRemote, dependsOn VarField, parentBlueprint string) ([]*ComposedBlueprint, error) {
 	blueprintDocs := make([]*ComposedBlueprint, 0)
 	// add the master blueprint
-	blueprintDocs = append(blueprintDocs, &ComposedBlueprint{blueprintDoc, dependsOn})
+	blueprintDocs = append(blueprintDocs, &ComposedBlueprint{blueprintName, blueprintDoc, dependsOn, parentBlueprint})
 	for _, included := range blueprintDoc.Include {
 		util.Verbose("[compose] Fetch included blueprint %s\n", included.Blueprint)
 		// fetch blueprint from current repo
-		composedBlueprintDocs, currentBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprints, included.Blueprint, included.DependsOn)
+		composedBlueprintDocs, currentBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprints, included.Blueprint, included.DependsOn, blueprintName)
 		if err != nil {
 			return nil, err
 		}

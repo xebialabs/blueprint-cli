@@ -1,3 +1,8 @@
+// DONT REMOVE THIS COMMENT BLOCK ITS USED TO CONTROL THE INCLUSION OF THIS FEATURE
+// BUILD THE PROJECT WITH -PincludeXlUp TO GET A VERSION OF THE CLI WITH THE UP COMMAND
+//
+// +build includeXlUp
+
 package cmd
 
 import (
@@ -40,7 +45,7 @@ func DoUp(context *xl.Context, branchVersion string) {
 }
 
 func init() {
-	//rootCmd.AddCommand(upCmd)
+	rootCmd.AddCommand(upCmd)
 
 	upFlags := upCmd.Flags()
 	upFlags.StringVarP(&upLocalMode, "local", "l", "", "Enable local file mode, by default remote file mode is used")

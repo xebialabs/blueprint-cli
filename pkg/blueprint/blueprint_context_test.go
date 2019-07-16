@@ -51,18 +51,22 @@ func GetViperConf(t *testing.T, yaml string) *viper.Viper {
 	return v
 }
 
+var BlueprintTestPath = ""
+
 func getLocalTestBlueprintContext(t *testing.T) *BlueprintContext {
 	configdir, _ := ioutil.TempDir("", "xebialabsconfig")
 	configfile := filepath.Join(configdir, "config.yaml")
-	pwd, _ := os.Getwd()
-	localPath := strings.Replace(pwd, path.Join("pkg", "blueprint"), path.Join("templates", "test"), -1)
+	if BlueprintTestPath == "" {
+		pwd, _ := os.Getwd()
+		BlueprintTestPath = strings.Replace(pwd, path.Join("pkg", "blueprint"), path.Join("templates", "test"), -1)
+	}
 	contextYaml := fmt.Sprintf(`
 blueprint:
   current-repository: Test
   repositories:
   - name: Test
     type: local
-    path: %s`, localPath)
+    path: %s`, BlueprintTestPath)
 	v := GetViperConf(t, contextYaml)
 	c, err := ConstructBlueprintContext(v, configfile, DummyCLIVersion)
 	if err != nil {
@@ -85,9 +89,9 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 	httpmock.RegisterResponder(
 		"GET",
 		mockEndpoint+"index.json",
-		httpmock.NewStringResponder(200, `["aws/monolith", "aws/datalake", "aws/compose", "aws/compose-2", "aws/emptyfiles", "aws/emptyparams"]`),
+		httpmock.NewStringResponder(200, `["aws/monolith", "aws/datalake", "aws/compose", "aws/compose-2", "aws/compose-3", "aws/emptyfiles", "aws/emptyparams"]`),
 	)
-
+	// aws / monolith
 	yaml := `
       apiVersion: xl/v2
       kind: Blueprint
@@ -116,7 +120,7 @@ func getMockHttpBlueprintContext(t *testing.T) *BlueprintContext {
 		httpmock.NewStringResponder(200, `sample test text
 with a new line`),
 	)
-
+	// aws/datalake
 	yaml = `
     apiVersion: xl/v2
     kind: Blueprint
@@ -137,7 +141,7 @@ with a new line`),
 		mockEndpoint+"aws/datalake/blueprint.yaml",
 		httpmock.NewStringResponder(200, yaml),
 	)
-
+	// aws/emptyfiles
 	yaml = `
     apiVersion: xl/v2
     kind: Blueprint
@@ -154,7 +158,7 @@ with a new line`),
 		mockEndpoint+"aws/emptyfiles/blueprint.yaml",
 		httpmock.NewStringResponder(200, yaml),
 	)
-
+	//aws/emptyparams
 	yaml = `
     apiVersion: xl/v2
     kind: Blueprint
@@ -170,7 +174,7 @@ with a new line`),
 		mockEndpoint+"aws/emptyparams/blueprint.yaml",
 		httpmock.NewStringResponder(200, yaml),
 	)
-
+	// aws/compose
 	yaml = `
       apiVersion: xl/v2
       kind: Blueprint
@@ -211,7 +215,7 @@ with a new line`),
 		mockEndpoint+"aws/compose/blueprint.yaml",
 		httpmock.NewStringResponder(200, yaml),
 	)
-
+	// aws/compose-2
 	yaml = `
       apiVersion: xl/v2
       kind: Blueprint
@@ -253,6 +257,34 @@ with a new line`),
 	httpmock.RegisterResponder(
 		"GET",
 		mockEndpoint+"aws/compose-2/blueprint.yaml",
+		httpmock.NewStringResponder(200, yaml),
+	)
+
+	// aws/compose-3
+	yaml = `
+      apiVersion: xl/v2
+      kind: Blueprint
+      metadata:
+        name: Test Project
+
+      spec:
+        includeBefore:
+        - blueprint: aws/compose
+          parameterOverrides:
+          - name: Bar
+            value: hello
+            promptIf: !expr "2 > 1"
+        includeAfter:
+        - blueprint: aws/compose-2
+          includeIf: !expr "2 < 1"
+          parameterOverrides:
+          - name: Bar
+            value: hello
+            promptIf: !expr "2 > 1"`
+
+	httpmock.RegisterResponder(
+		"GET",
+		mockEndpoint+"aws/compose-3/blueprint.yaml",
 		httpmock.NewStringResponder(200, yaml),
 	)
 
@@ -449,7 +481,7 @@ func TestBlueprintContext_initCurrentRepoClient(t *testing.T) {
 		blueprints, err := repo.initCurrentRepoClient()
 		require.Nil(t, err)
 		require.NotNil(t, blueprints)
-		require.Len(t, blueprints, 6)
+		require.Len(t, blueprints, 7)
 	})
 }
 
@@ -464,7 +496,7 @@ func TestBlueprintContext_parseRepositoryTree(t *testing.T) {
 	}{
 		{
 			"should fetch 2 blueprints",
-			6,
+			7,
 			false,
 		},
 	}
