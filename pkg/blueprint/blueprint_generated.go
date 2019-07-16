@@ -66,13 +66,16 @@ func (generatedBlueprint *GeneratedBlueprint) GetOutputFile(fileName string) (*o
 // Cleanup will cleanup all generated blueprint files
 func (generatedBlueprint *GeneratedBlueprint) Cleanup() error {
 	var directories []string
+
 	// Clean all files first
 	for _, file := range generatedBlueprint.GeneratedFiles {
 		if isDir, _ := isDirectory(file); isDir {
 			directories = append(directories, file)
 		} else if util.PathExists(file, false) {
-			if err := os.Remove(file); err != nil {
-				return err
+			if !(strings.Index(file, "cm_answer_file_auto") != -1 || strings.Index(file, "merged_answer_file") != -1) {
+				if err := os.Remove(file); err != nil {
+					return err
+				}
 			}
 		}
 	}
