@@ -2,6 +2,9 @@ package blueprint
 
 import (
 	"sort"
+	"strings"
+
+	"github.com/xebialabs/xl-cli/pkg/models"
 
 	"github.com/xebialabs/xl-cli/pkg/util"
 
@@ -63,18 +66,23 @@ func (generatedBlueprint *GeneratedBlueprint) GetOutputFile(fileName string) (*o
 // Cleanup will cleanup all generated blueprint files
 func (generatedBlueprint *GeneratedBlueprint) Cleanup() error {
 	var directories []string
+
 	// Clean all files first
 	for _, file := range generatedBlueprint.GeneratedFiles {
 		if isDir, _ := isDirectory(file); isDir {
 			directories = append(directories, file)
 		} else if util.PathExists(file, false) {
-			if err := os.Remove(file); err != nil {
-				return err
+			if !(strings.Index(file, "cm_answer_file_auto") != -1 || strings.Index(file, "merged_answer_file") != -1) {
+				if err := os.Remove(file); err != nil {
+					return err
+				}
 			}
 		}
 	}
 	// Reverse the directories
 	sort.Sort(sort.Reverse(sort.StringSlice(directories)))
+
+	xebialabsDir := ""
 
 	for _, dir := range directories {
 		util.Verbose("[file] Removing directory %s\n", dir)
@@ -83,9 +91,23 @@ func (generatedBlueprint *GeneratedBlueprint) Cleanup() error {
 				if err := os.Remove(dir); err != nil {
 					return err
 				}
+			} else {
+				if strings.HasSuffix(dir, models.BlueprintOutputDir) {
+					xebialabsDir = dir
+				}
 			}
 		}
 	}
+
+	// Manually remove the xebialabs directory
+	if xebialabsDir != "" {
+		if empty, _ := isDirectoryEmpty(xebialabsDir); empty {
+			if err := os.Remove(xebialabsDir); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 

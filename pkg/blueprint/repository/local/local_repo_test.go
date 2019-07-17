@@ -183,6 +183,12 @@ func TestFindRelatedBlueprintDir(t *testing.T) {
 			"/path/to/blueprint/test",
 		},
 		{
+			"should find related blueprint dir given full path in windows",
+			[]string{"C:\\Users\\path\\to\\blueprint\\test", "C:\\Users\\path\\to\\blueprint\\another", "C:\\Users\\path\\to\\blueprint\\yet-another"},
+			"C:\\Users\\path\\to\\blueprint\\test\\file.yaml",
+			"C:\\Users\\path\\to\\blueprint\\test",
+		},
+		{
 			"should return empty given full path of a non-blueprint file",
 			[]string{"/path/to/blueprint/test", "/path/to/blueprint/another", "/path/to/blueprint/yet-another"},
 			"/path/to/blueprint/non-blueprint/file.yaml",

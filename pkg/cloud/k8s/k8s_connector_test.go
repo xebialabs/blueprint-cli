@@ -37,14 +37,6 @@ func TestIsPropertyPresent(t *testing.T) {
 }
 
 func TestClusterIDorDefaultCluster(t *testing.T) {
-	t.Run("should get the cluster id when the cluster name is given", func(t *testing.T) {
-		clusterMap := make(map[string]string)
-		clusterMap["eksClusterName"] = "arn:aws:6d996843a19cba481fc798705119203b.sk1.eu-west-1.eks.amazonaws.com/some-random-cluster-id"
-
-		clusterID := getClusterIDFromClusterName(clusterMap)
-
-		assert.Equal(t, clusterID, "some-random-cluster-id")
-	})
 
 	t.Run("should get the default cluster id when the cluster name is not given", func(t *testing.T) {
 		clusterMap := make(map[string]string)
@@ -55,13 +47,13 @@ func TestClusterIDorDefaultCluster(t *testing.T) {
 		assert.Equal(t, clusterID, "xl-up-master")
 	})
 
-	t.Run("should get the default cluster id when the cluster name is not correct", func(t *testing.T) {
+	t.Run("should get the default cluster id when the cluster name is given", func(t *testing.T) {
 		clusterMap := make(map[string]string)
-		clusterMap["eksClusterName"] = "https://6d996843a19cba481fc798705119203b.sk1.eu-west-1.eks.amazonaws.com/"
+		clusterMap["eksClusterName"] = "test-xl-cluster"
 
 		clusterID := getClusterIDFromClusterName(clusterMap)
 
-		assert.Equal(t, clusterID, "xl-up-master")
+		assert.Equal(t, clusterID, "test-xl-cluster")
 	})
 }
 

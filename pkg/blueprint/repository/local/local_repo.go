@@ -175,7 +175,7 @@ func (repo *LocalBlueprintRepository) GetFileContents(filePath string) (*[]byte,
 // utility functions
 func findRelatedBlueprintDir(blueprintDirs []string, fullPath string) string {
 	for _, blueprintDir := range blueprintDirs {
-		if match, _ := regexp.MatchString("[/\\\\]?"+blueprintDir+"[/\\\\]", fullPath); match {
+		if match, _ := regexp.MatchString("[\\\\/]{0,2}"+strings.Replace(blueprintDir, "\\", "\\\\", -1)+"[\\\\/]{1,2}", fullPath); match {
 			return blueprintDir
 		}
 	}

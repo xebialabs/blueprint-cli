@@ -91,7 +91,7 @@ func getRepo(branchVersion string) repository.BlueprintRepository {
 	return repo
 }
 
-func createFileFromConfigMap(answerMapFromConfigMap map[string]string) {
+func createLicenseAndKeystore(answerMapFromConfigMap map[string]string) {
 	createFile("xlrLic", "xl-release.lic", answerMapFromConfigMap)
 	createFile("xldLic", "deploy-it.lic", answerMapFromConfigMap)
 	createFile("xlKeyStore", "keystore.jceks", answerMapFromConfigMap)

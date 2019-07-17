@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -161,9 +160,10 @@ func IsPropertyPresent(propertyName string, answerMap map[string]string) bool {
 
 func getClusterIDFromClusterName(answerMap map[string]string) string {
 	clusterName := answerMap["eksClusterName"]
-	slashIndex := strings.LastIndex(clusterName, "/")
-	if slashIndex != -1 && slashIndex < len(clusterName)-1 {
-		return clusterName[slashIndex+1:]
-	}
+
+	if clusterName != "" {
+	    return clusterName
+    }
+
 	return "xl-up-master"
 }
