@@ -985,6 +985,116 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"should fail when using incomplete answers file in strict mode",
+			BlueprintConfig{
+				Variables: []Variable{
+					{
+						Name:    VarField{Value: "input1"},
+						Label:   VarField{Value: "input1"},
+						Type:    VarField{Value: "Input"},
+						Value:   VarField{Bool: false, Value: "val1"},
+						Default: VarField{Bool: false, Value: "default1"},
+					},
+					{
+						Name:    VarField{Value: "input2"},
+						Label:   VarField{Value: "input 2"},
+						Type:    VarField{Value: "SecretInput"},
+						Default: VarField{Bool: false, Value: "default2"},
+					},
+					{
+						Name:  VarField{Value: "input3"},
+						Label: VarField{Value: "input 3"},
+						Type:  VarField{Value: "Input"},
+					},
+					{
+						Name:  VarField{Value: "input4"},
+						Label: VarField{Value: "input 4"},
+						Type:  VarField{Value: "Input"},
+					},
+					{
+						Name:  VarField{Value: "input5"},
+						Label: VarField{Value: "input 4"},
+						Type:  VarField{Value: "Input"},
+					},
+				},
+			},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, false},
+			nil,
+			true,
+		},
+		{
+			"should use answers file when available",
+			BlueprintConfig{
+				Variables: []Variable{
+					{
+						Name:    VarField{Value: "input1"},
+						Label:   VarField{Value: "input1"},
+						Type:    VarField{Value: "Input"},
+						Value:   VarField{Bool: false, Value: "val1"},
+						Default: VarField{Bool: false, Value: "default1"},
+					},
+					{
+						Name:    VarField{Value: "input2"},
+						Label:   VarField{Value: "input 2"},
+						Type:    VarField{Value: "SecretInput"},
+						Default: VarField{Bool: false, Value: "default2"},
+					},
+					{
+						Name:  VarField{Value: "input3"},
+						Label: VarField{Value: "input 3"},
+						Type:  VarField{Value: "Input"},
+					},
+				},
+			},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, false},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "input2": "!value input2", "input3": "ans3"},
+				SummaryData:  map[string]interface{}{"input1": "val1", "input 2": "*****", "input 3": "ans3"},
+				Secrets:      map[string]interface{}{"input2": "ans2"},
+				Values:       map[string]interface{}{},
+			},
+			false,
+		},
+		{
+			"should use answers file when available along with default data",
+			BlueprintConfig{
+				Variables: []Variable{
+					{
+						Name:    VarField{Value: "input1"},
+						Label:   VarField{Value: "input1"},
+						Type:    VarField{Value: "Input"},
+						Value:   VarField{Bool: false, Value: "val1"},
+						Default: VarField{Bool: false, Value: "default1"},
+					},
+					{
+						Name:    VarField{Value: "input2"},
+						Label:   VarField{Value: "input 2"},
+						Type:    VarField{Value: "SecretInput"},
+						Default: VarField{Bool: false, Value: "default2"},
+					},
+					{
+						Name:  VarField{Value: "input3"},
+						Label: VarField{Value: "input 3"},
+						Type:  VarField{Value: "Input"},
+					},
+					{
+						Name:    VarField{Value: "input5"},
+						Label:   VarField{Value: "input 5"},
+						Type:    VarField{Value: "Input"},
+						Default: VarField{Bool: false, Value: "default5"},
+					},
+				},
+			},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, true},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "input2": "!value input2", "input3": "ans3", "input5": "default5"},
+				SummaryData:  map[string]interface{}{"input1": "val1", "input 2": "*****", "input 3": "ans3", "input 5": "default5"},
+				Secrets:      map[string]interface{}{"input2": "ans2"},
+				Values:       map[string]interface{}{},
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -504,10 +504,6 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 				saveItemToTemplateDataMap(&variable, data, answer)
 				util.Info("[dataPrep] Using answer file value [%v] for variable [%s]\n", answer, variable.Name.Value)
 				continue
-			} else {
-				if strictAnswers {
-					return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Value)
-				} // do not return error when in non-strict answers mode, instead ask user input for the variable value
 			}
 		}
 
@@ -528,6 +524,10 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 			}
 			saveItemToTemplateDataMap(&variable, data, finalVal)
 			continue
+		}
+		// do not return error when in non-strict answers mode, instead ask user input for the variable value
+		if usingAnswersFile && strictAnswers {
+			return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Value)
 		}
 
 		// ask question based on type to get value - on the following conditions in order
