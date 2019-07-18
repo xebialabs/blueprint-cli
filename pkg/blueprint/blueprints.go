@@ -116,21 +116,27 @@ func InstantiateBlueprint(
 		}
 	}
 
+	createXebiaLabsFolder := !blueprintDoc.Metadata.SuppressXebiaLabsFolder
+
 	// save prepared data to values & secrets files
-	err = writeConfigToFile(valuesFileHeader, preparedData.Values, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, valuesFile))
-	if err != nil {
-		return err
-	}
-	err = writeConfigToFile(secretsFileHeader, preparedData.Secrets, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, secretsFile))
-	if err != nil {
-		return err
+	if createXebiaLabsFolder || len(preparedData.Values) != 0 {
+		err = writeConfigToFile(valuesFileHeader, preparedData.Values, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, valuesFile))
+		if err != nil {
+			return err
+		}
 	}
 
-	// generate .gitignore file
-	gitignoreData := secretsFile
-	err = writeDataToFile(generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, gitignoreFile), &gitignoreData)
-	if err != nil {
-		return err
+	if createXebiaLabsFolder || len(preparedData.Secrets) != 0 {
+		err = writeConfigToFile(secretsFileHeader, preparedData.Secrets, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, secretsFile))
+		if err != nil {
+			return err
+		}
+		// generate .gitignore file
+		gitignoreData := secretsFile
+		err = writeDataToFile(generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, gitignoreFile), &gitignoreData)
+		if err != nil {
+			return err
+		}
 	}
 
 	// execute each template file found

@@ -11,11 +11,12 @@ type BlueprintConfig struct {
 }
 
 type Metadata struct {
-	Name         string
-	Description  string
-	Author       string
-	Version      string
-	Instructions string
+	Name                    string
+	Description             string
+	Author                  string
+	Version                 string
+	Instructions            string
+	SuppressXebiaLabsFolder bool
 }
 
 type Variable struct {

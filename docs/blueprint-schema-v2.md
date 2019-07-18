@@ -11,7 +11,8 @@ metadata:
   # not used at the moment, serves as documentation
   author: XebiaLabs 
   # not used at the moment, serves as documentation
-  version: 2.0 
+  version: 2.0
+  suppressXebiaLabsFolder: false
   instructions: This is instructions
 
 # rename !expression to !expr in v2

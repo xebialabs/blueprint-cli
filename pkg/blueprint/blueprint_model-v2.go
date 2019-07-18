@@ -9,11 +9,13 @@ type BlueprintYamlV2 struct {
 }
 
 type MetadataV2 struct {
-	Name         string `yaml:"name"`
-	Description  string `yaml:"description"`
-	Author       string `yaml:"author"`
-	Version      string `yaml:"version"`
-	Instructions string `yaml:"instructions"`
+	Name                    string `yaml:"name"`
+	Description             string `yaml:"description"`
+	Author                  string `yaml:"author"`
+	Version                 string `yaml:"version"`
+	Instructions            string `yaml:"instructions"`
+    SuppressXebiaLabsFolder bool   `yaml:"suppressXebiaLabsFolder"`
+
 }
 
 type SpecV2 struct {

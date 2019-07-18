@@ -342,6 +342,50 @@ func TestInstantiateBlueprint(t *testing.T) {
 
 	})
 
+	t.Run("should create output files for valid test template with SuppressXebiaLabsFolder enabled", func(t *testing.T) {
+		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
+		defer gb.Cleanup()
+		err := InstantiateBlueprint(
+			"valid-no-prompt-suppress-xebia-labs-folder",
+			getLocalTestBlueprintContext(t),
+			gb,
+			"",
+			false,
+			false,
+			false,
+		)
+		require.Nil(t, err)
+
+		// assertions
+		assert.FileExists(t, "xld-environment.yml")
+		assert.FileExists(t, "xld-infrastructure.yml")
+		assert.FileExists(t, "xlr-pipeline-2.yml")
+		assert.False(t, util.PathExists("xlr-pipeline.yml", false))
+
+		assert.False(t, util.PathExists(path.Join(gb.OutputDir, valuesFile), false))
+		assert.False(t, util.PathExists(path.Join(gb.OutputDir, secretsFile), false))
+		assert.False(t, util.PathExists(path.Join(gb.OutputDir, gitignoreFile), false))
+
+		envFile := GetFileContent("xld-environment.yml")
+		assert.Contains(t, envFile, fmt.Sprintf("region: %s", "us-west"))
+		infraFile := GetFileContent("xld-infrastructure.yml")
+		infraChecks := []string{
+			fmt.Sprintf("- name: %s-ecs-fargate-cluster", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-vpc", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-subnet-ipv4-az-1a", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-route-table", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-security-group", "testApp"),
+			fmt.Sprintf("- name: %s-targetgroup", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-alb", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-db-subnet-group", "testApp"),
+			fmt.Sprintf("- name: %s-ecs-dictionary", "testApp"),
+			"MYSQL_DB_ADDRESS: '{{%address%}}'",
+		}
+		for _, infraCheck := range infraChecks {
+			assert.Contains(t, infraFile, infraCheck)
+		}
+	})
+
 	t.Run("should create output files for valid test template composed from local path", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()

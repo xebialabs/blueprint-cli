@@ -48,11 +48,12 @@ func parseTemplateMetadataV2(ymlContent *[]byte, templatePath string, blueprintR
 
 func (yamlDoc *BlueprintYamlV2) parseToMetadata() Metadata {
 	return Metadata{
-		Name:         yamlDoc.Metadata.Name,
-		Description:  yamlDoc.Metadata.Description,
-		Author:       yamlDoc.Metadata.Author,
-		Version:      yamlDoc.Metadata.Version,
-		Instructions: yamlDoc.Metadata.Instructions,
+		Name:                    yamlDoc.Metadata.Name,
+		Description:             yamlDoc.Metadata.Description,
+		Author:                  yamlDoc.Metadata.Author,
+		Version:                 yamlDoc.Metadata.Version,
+		Instructions:            yamlDoc.Metadata.Instructions,
+		SuppressXebiaLabsFolder: yamlDoc.Metadata.SuppressXebiaLabsFolder,
 	}
 }
 
