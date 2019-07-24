@@ -206,7 +206,17 @@ var functions = map[string]govaluate.ExpressionFunction{
 		   - getkeyfilelocation
 		*/
 		module := fmt.Sprintf("%v", args[0])
-		return osHelper.GetPropertyByName(module)
+		result, err := osHelper.GetPropertyByName(module)
+
+		if err != nil {
+			return nil, fmt.Errorf("Error when executing expression function '%s', %s", module, err.Error())
+		}
+
+		if module == "_defaultapiserverurl" {
+			return result[0], nil
+		}
+
+		return result, err
 	},
 
 	// xl up helper functions
