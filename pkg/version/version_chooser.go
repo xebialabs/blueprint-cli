@@ -57,15 +57,3 @@ func GetPropertyByName(module string, params ...string) (interface{}, error) {
         return nil, fmt.Errorf("%s is not a valid UP helper module", module)
     }
 }
-
-// CallVersionFuncByName calls related UP module function with parameters provided
-// to be deprecated after v9.0
-func CallVersionFuncByName(module string, params ...string) (models.FnResult, error) {
-	switch strings.ToLower(module) {
-	case _ShowApplicableVersions:
-		url, _ := showVersions(params)
-		return &VersionFnResult{versions: url}, nil
-	default:
-		return nil, fmt.Errorf("%s is not a valid UP module", module)
-	}
-}

@@ -206,21 +206,11 @@ var functions = map[string]govaluate.ExpressionFunction{
 		   - getkeyfilelocation
 		*/
 		module := fmt.Sprintf("%v", args[0])
-		result, err := osHelper.GetPropertyByName(module)
-
-		if err != nil {
-			return nil, fmt.Errorf("Error when executing expression function '%s', %s", module, err.Error())
-		}
-
-		if module == "_defaultapiserverurl" {
-			return result[0], nil
-		}
-
-		return result, err
+		return osHelper.GetPropertyByName(module)
 	},
 
 	// xl up helper functions
-	"xlUp": func(args ...interface{}) (interface{}, error) {
+	"version": func(args ...interface{}) (interface{}, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("invalid number of arguments for  expression function 'xlUp', expecting 1 (module name) got %d", len(args))
 		}

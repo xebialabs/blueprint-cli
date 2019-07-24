@@ -725,12 +725,12 @@ func Test_processCustomExpression(t *testing.T) {
 			false,
 		},
 
-		// up helper functions
+		// version helper functions
 		{
-			"should error on empty module for xlUp expression",
+			"should error on empty module for version expression",
 			false,
 			args{
-				"xlUp()",
+				"version()",
 				map[string]interface{}{},
 			},
 			nil,
@@ -738,10 +738,10 @@ func Test_processCustomExpression(t *testing.T) {
 			true,
 		},
 		{
-			"should error on unknown module for xlUp expression",
+			"should error on unknown module for version expression",
 			false,
 			args{
-				"xlUp('unknown')",
+				"version('unknown')",
 				map[string]interface{}{},
 			},
 			nil,
@@ -749,10 +749,10 @@ func Test_processCustomExpression(t *testing.T) {
 			true,
 		},
 		{
-			"should return list of versions for valid xlUp expression",
+			"should return list of versions for valid version expression",
 			false,
 			args{
-				"xlUp('_showapplicableversions')",
+				"version('_showapplicableversions')",
 				map[string]interface{}{},
 			},
 			nil,

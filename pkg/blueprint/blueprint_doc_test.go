@@ -511,20 +511,6 @@ func TestProcessCustomFunction_AWS(t *testing.T) {
 	})
 }
 
-//OS
-func TestProcessCustomFunction_OS(t *testing.T) {
-	t.Run("should error on unknown OS module", func(t *testing.T) {
-		_, err := ProcessCustomFunction("os.test()")
-		require.NotNil(t, err)
-		assert.Equal(t, "test is not a valid OS module", err.Error())
-	})
-	t.Run("should return an URL for os._defaultapiserverurl function", func(t *testing.T) {
-		apiServerURL, err := ProcessCustomFunction("os._defaultapiserverurl()")
-		require.Nil(t, err)
-		assert.Len(t, apiServerURL, 1)
-	})
-}
-
 // K8S
 func TestProcessCustomFunction_K8S(t *testing.T) {
 	defer os.RemoveAll("test")
