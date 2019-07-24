@@ -84,7 +84,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 			models.AvailableVersion = k8s.GetRequiredPropertyFromMap("prevVersion", answerMapFromConfigMap)
 		}
 
-		createLicenseAndKeystore(answerMapFromConfigMap)
+		createLicenseAndKeystore(answerMapFromConfigMap, gb)
 
 		createYamlFileFromMap(answerMapFromConfigMap, AnswerFileFromKubernetes)
 	} else {

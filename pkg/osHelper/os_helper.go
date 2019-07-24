@@ -1,27 +1,27 @@
 package osHelper
 
 import (
-    "fmt"
-    "log"
-    "os"
-    "path/filepath"
-    "runtime"
-    "strings"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 
-    "github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
 const (
 	_DefaultApiServerUrl = "_defaultapiserverurl"
 	Os                   = "_operatingsystem"
-    CertFileLocation     = "getcertfilelocation"
-    KeyFileLocation      = "getkeyfilelocation"
+	CertFileLocation     = "getcertfilelocation"
+	KeyFileLocation      = "getkeyfilelocation"
 )
 
 type OSFnResult struct {
 	kubeURL          []string
 	os               []string
-    certFileLocation []string
+	certFileLocation []string
 	keyFileLocation  []string
 }
 
@@ -41,10 +41,10 @@ func (result *OSFnResult) GetResult(module string, attr string, index int) ([]st
 		return result.kubeURL, nil
 	case Os:
 		return result.os, nil
-    case CertFileLocation:
-        return result.certFileLocation, nil
-    case KeyFileLocation:
-        return result.keyFileLocation, nil
+	case CertFileLocation:
+		return result.certFileLocation, nil
+	case KeyFileLocation:
+		return result.keyFileLocation, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid OS module", module)
 	}
@@ -65,43 +65,43 @@ func DefaultApiServerUrl(ios IOperatingSystem) ([]string, error) {
 }
 
 func GetLocation(file string) []string {
-    dir, err := os.Getwd()
-    if err != nil {
-        log.Fatal(err)
-    }
-    return []string{filepath.Join(dir, file)}
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return []string{filepath.Join(dir, models.BlueprintOutputDir, file)}
 }
 
 func GetPropertyByName(module string) (interface{}, error) {
-    switch strings.ToLower(module) {
-    case _DefaultApiServerUrl:
-        url, _ := DefaultApiServerUrl(&OperatingSystem{})
-        return url, nil
-    case Os:
-        return GetOperatingSystem(), nil
-    case CertFileLocation:
-        return GetLocation("cert.crt"), nil
-    case KeyFileLocation:
-        return GetLocation("cert.key"), nil
-    default:
-        return nil, fmt.Errorf("%s is not a valid OS module", module)
-    }
+	switch strings.ToLower(module) {
+	case _DefaultApiServerUrl:
+		url, _ := DefaultApiServerUrl(&OperatingSystem{})
+		return url, nil
+	case Os:
+		return GetOperatingSystem(), nil
+	case CertFileLocation:
+		return GetLocation("cert.crt"), nil
+	case KeyFileLocation:
+		return GetLocation("cert.key"), nil
+	default:
+		return nil, fmt.Errorf("%s is not a valid OS module", module)
+	}
 }
 
 // CallOSFuncByName calls related OS module function with parameters provided
 // to be deprecated after 9.0
 func CallOSFuncByName(module string, params ...string) (models.FnResult, error) {
-    switch strings.ToLower(module) {
-    case _DefaultApiServerUrl:
-        url, _ := DefaultApiServerUrl(&OperatingSystem{})
-        return &OSFnResult{kubeURL: url}, nil
-    case Os:
-        return &OSFnResult{os: []string{GetOperatingSystem()}}, nil
-    case CertFileLocation:
-        return &OSFnResult{certFileLocation: GetLocation("cert.crt")}, nil
-    case KeyFileLocation:
-        return &OSFnResult{keyFileLocation: GetLocation("cert.key")}, nil
-    default:
-        return nil, fmt.Errorf("%s is not a valid OS module", module)
-    }
+	switch strings.ToLower(module) {
+	case _DefaultApiServerUrl:
+		url, _ := DefaultApiServerUrl(&OperatingSystem{})
+		return &OSFnResult{kubeURL: url}, nil
+	case Os:
+		return &OSFnResult{os: []string{GetOperatingSystem()}}, nil
+	case CertFileLocation:
+		return &OSFnResult{certFileLocation: GetLocation("cert.crt")}, nil
+	case KeyFileLocation:
+		return &OSFnResult{keyFileLocation: GetLocation("cert.key")}, nil
+	default:
+		return nil, fmt.Errorf("%s is not a valid OS module", module)
+	}
 }

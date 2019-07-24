@@ -91,18 +91,20 @@ func getRepo(branchVersion string) repository.BlueprintRepository {
 	return repo
 }
 
-func createLicenseAndKeystore(answerMapFromConfigMap map[string]string) {
-	createFile("xlrLic", "xl-release.lic", answerMapFromConfigMap)
-	createFile("xldLic", "deploy-it.lic", answerMapFromConfigMap)
-	createFile("xlKeyStore", "keystore.jceks", answerMapFromConfigMap)
+func createLicenseAndKeystore(answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) {
+	createFileAndUpdateKey("xlrLic", "xl-release.lic", answerMapFromConfigMap, gb)
+	createFileAndUpdateKey("xldLic", "deploy-it.lic", answerMapFromConfigMap, gb)
+	createFileAndUpdateKey("xlKeyStore", "keystore.jceks", answerMapFromConfigMap, gb)
 }
 
-func createFile(propertyName, fileName string, answerMapFromConfigMap map[string]string) {
+func createFileAndUpdateKey(propertyName, fileName string, answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) {
 	if k8s.IsPropertyPresent(propertyName, answerMapFromConfigMap) {
 		util.Verbose("writing %s", fileName)
 		content := k8s.DecodeBase64(k8s.GetRequiredPropertyFromMap(propertyName, answerMapFromConfigMap))
-		ioutil.WriteFile(fileName, []byte(content), 0640)
-		answerMapFromConfigMap[propertyName] = fileName
+		location := filepath.Join(models.BlueprintOutputDir, fileName)
+		ioutil.WriteFile(location, []byte(content), 0640)
+		answerMapFromConfigMap[propertyName] = location
+		gb.GeneratedFiles = append(gb.GeneratedFiles, location)
 	}
 }
 
