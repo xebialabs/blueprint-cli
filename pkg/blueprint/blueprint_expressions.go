@@ -210,7 +210,7 @@ var functions = map[string]govaluate.ExpressionFunction{
 	},
 
 	// xl up helper functions
-	"xlUp": func(args ...interface{}) (interface{}, error) {
+	"version": func(args ...interface{}) (interface{}, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("invalid number of arguments for  expression function 'xlUp', expecting 1 (module name) got %d", len(args))
 		}

@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
 const (
@@ -19,10 +17,10 @@ const (
 )
 
 type OSFnResult struct {
-	kubeURL          []string
-	os               []string
-	certFileLocation []string
-	keyFileLocation  []string
+	kubeURL          string
+	os               string
+	certFileLocation string
+	keyFileLocation  string
 }
 
 type OperatingSystem struct{}
@@ -35,7 +33,7 @@ type IOperatingSystem interface {
 	getOs() string
 }
 
-func (result *OSFnResult) GetResult(module string, attr string, index int) ([]string, error) {
+func (result *OSFnResult) GetResult(module string, attr string, index int) (string, error) {
 	switch module {
 	case _DefaultApiServerUrl:
 		return result.kubeURL, nil
@@ -46,7 +44,7 @@ func (result *OSFnResult) GetResult(module string, attr string, index int) ([]st
 	case KeyFileLocation:
 		return result.keyFileLocation, nil
 	default:
-		return nil, fmt.Errorf("%s is not a valid OS module", module)
+		return "", fmt.Errorf("%s is not a valid OS module", module)
 	}
 }
 
@@ -54,53 +52,34 @@ func GetOperatingSystem() string {
 	return runtime.GOOS
 }
 
-func DefaultApiServerUrl(ios IOperatingSystem) ([]string, error) {
+func DefaultApiServerUrl(ios IOperatingSystem) string {
 	if ios.getOs() == "windows" {
-		return []string{"https://host.docker.internal:6445"}, nil
+		return "https://host.docker.internal:6445"
 	} else if ios.getOs() == "darwin" {
-		return []string{"https://host.docker.internal:6443"}, nil
+		return "https://host.docker.internal:6443"
 	} else {
-		return []string{""}, nil
+		return ""
 	}
 }
 
-func GetLocation(file string) []string {
+func GetLocation(file string) string {
 	dir, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
-	return []string{filepath.Join(dir, models.BlueprintOutputDir, file)}
+	return filepath.Join(dir, file)
 }
 
 func GetPropertyByName(module string) (interface{}, error) {
 	switch strings.ToLower(module) {
 	case _DefaultApiServerUrl:
-		url, _ := DefaultApiServerUrl(&OperatingSystem{})
-		return url, nil
+		return DefaultApiServerUrl(&OperatingSystem{}), nil
 	case Os:
 		return GetOperatingSystem(), nil
 	case CertFileLocation:
 		return GetLocation("cert.crt"), nil
 	case KeyFileLocation:
 		return GetLocation("cert.key"), nil
-	default:
-		return nil, fmt.Errorf("%s is not a valid OS module", module)
-	}
-}
-
-// CallOSFuncByName calls related OS module function with parameters provided
-// to be deprecated after 9.0
-func CallOSFuncByName(module string, params ...string) (models.FnResult, error) {
-	switch strings.ToLower(module) {
-	case _DefaultApiServerUrl:
-		url, _ := DefaultApiServerUrl(&OperatingSystem{})
-		return &OSFnResult{kubeURL: url}, nil
-	case Os:
-		return &OSFnResult{os: []string{GetOperatingSystem()}}, nil
-	case CertFileLocation:
-		return &OSFnResult{certFileLocation: GetLocation("cert.crt")}, nil
-	case KeyFileLocation:
-		return &OSFnResult{keyFileLocation: GetLocation("cert.key")}, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid OS module", module)
 	}

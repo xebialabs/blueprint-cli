@@ -1,24 +1,22 @@
 package blueprint
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strconv"
-	"strings"
+    "fmt"
+    "io/ioutil"
+    "os"
+    "path/filepath"
+    "regexp"
+    "strconv"
+    "strings"
 
-	funk "github.com/thoas/go-funk"
-	"github.com/xebialabs/xl-cli/pkg/version"
-	survey "gopkg.in/AlecAivazis/survey.v1"
+    "github.com/thoas/go-funk"
+    "gopkg.in/AlecAivazis/survey.v1"
 
-	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
-	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/osHelper"
-	"github.com/xebialabs/xl-cli/pkg/util"
-	"github.com/xebialabs/yaml"
+    "github.com/xebialabs/xl-cli/pkg/cloud/aws"
+    "github.com/xebialabs/xl-cli/pkg/cloud/k8s"
+    "github.com/xebialabs/xl-cli/pkg/models"
+    "github.com/xebialabs/xl-cli/pkg/util"
+    "github.com/xebialabs/yaml"
 )
 
 // Constants
@@ -758,18 +756,6 @@ func ProcessCustomFunction(fnStr string) ([]string, error) {
 					return nil, err
 				}
 				return k8sResult.GetResult(module, attr, index)
-			case FnOs:
-				osResult, err := osHelper.CallOSFuncByName(module, params...)
-				if err != nil {
-					return nil, err
-				}
-				return osResult.GetResult(module, attr, index)
-			case FnVersion:
-				versionResult, err := version.CallVersionFuncByName(module, params...)
-				if err != nil {
-					return nil, err
-				}
-				return versionResult.GetResult(module, attr, index)
 			default:
 				return nil, fmt.Errorf("unknown function type: %s", domain)
 			}
