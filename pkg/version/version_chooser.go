@@ -41,7 +41,7 @@ func showVersions(params []string) ([]string, error) {
 	var applicableVersion []string
 
 	for _, version := range availableVersions {
-		if currentVersion < util.ParseVersion(version, 4) {
+		if currentVersion <= util.ParseVersion(version, 4) {
 			applicableVersion = append(applicableVersion, version)
 		}
 	}

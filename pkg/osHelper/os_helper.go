@@ -1,23 +1,23 @@
 package osHelper
 
 import (
-    "fmt"
-    "log"
-    "os"
-    "path/filepath"
-    "runtime"
-    "strings"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 const (
 	_DefaultApiServerUrl = "_defaultapiserverurl"
 	Os                   = "_operatingsystem"
-    CertFileLocation     = "getcertfilelocation"
-    KeyFileLocation      = "getkeyfilelocation"
+	CertFileLocation     = "getcertfilelocation"
+	KeyFileLocation      = "getkeyfilelocation"
 )
 
 type OSFnResult struct {
-    kubeURL          string
+	kubeURL          string
 	os               string
 	certFileLocation string
 	keyFileLocation  string
@@ -71,16 +71,16 @@ func GetLocation(file string) string {
 }
 
 func GetPropertyByName(module string) (interface{}, error) {
-    switch strings.ToLower(module) {
-    case _DefaultApiServerUrl:
-        return DefaultApiServerUrl(&OperatingSystem{}), nil
-    case Os:
-        return GetOperatingSystem(), nil
-    case CertFileLocation:
-        return GetLocation("cert.crt"), nil
-    case KeyFileLocation:
-        return GetLocation("cert.key"), nil
-    default:
-        return nil, fmt.Errorf("%s is not a valid OS module", module)
-    }
+	switch strings.ToLower(module) {
+	case _DefaultApiServerUrl:
+		return DefaultApiServerUrl(&OperatingSystem{}), nil
+	case Os:
+		return GetOperatingSystem(), nil
+	case CertFileLocation:
+		return GetLocation("cert.crt"), nil
+	case KeyFileLocation:
+		return GetLocation("cert.key"), nil
+	default:
+		return nil, fmt.Errorf("%s is not a valid OS module", module)
+	}
 }

@@ -101,10 +101,8 @@ func (generatedBlueprint *GeneratedBlueprint) Cleanup() error {
 
 	// Manually remove the xebialabs directory
 	if xebialabsDir != "" {
-		if empty, _ := isDirectoryEmpty(xebialabsDir); empty {
-			if err := os.Remove(xebialabsDir); err != nil {
-				return err
-			}
+		if err := os.Remove(models.BlueprintOutputDir); err != nil {
+			return err
 		}
 	}
 
