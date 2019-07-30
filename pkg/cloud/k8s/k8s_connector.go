@@ -115,10 +115,10 @@ func connectToK8s(answerMap map[string]string) *restclient.Config {
 		config.CertFile = GetRequiredPropertyFromMap("K8sClientCertFile", answerMap)
 	}
 
-	if IsPropertyPresent("K8sClientCertKey", answerMap) {
-		config.KeyData = DecodeBase64(GetRequiredPropertyFromMap("K8sClientCertKey", answerMap))
+	if IsPropertyPresent("K8sClientKey", answerMap) {
+		config.KeyData = DecodeBase64(GetRequiredPropertyFromMap("K8sClientKey", answerMap))
 	} else {
-		config.KeyFile = GetRequiredPropertyFromMap("K8sClientCertKeyFile", answerMap)
+		config.KeyFile = GetRequiredPropertyFromMap("K8sClientKeyFile", answerMap)
 	}
 
 	// TODO check this connection param
