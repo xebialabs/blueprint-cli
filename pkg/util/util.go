@@ -176,6 +176,27 @@ func ExtractStringKeysFromMap(m map[string]interface{}) (keys []string) {
 	return
 }
 
+func isNumDot(s string) bool {
+	for _, v := range s {
+		if !((v >= 48 && v <= 57) || v == 46) {
+			return false
+		}
+	}
+	return true
+}
+
+func GetVersionFromImageTag(version string) (string, error) {
+	i := strings.Index(version, ":")
+	if i != -1 && len(version) > (i+1) {
+		versionTag := version[i+1:]
+		if isNumDot(versionTag) {
+			return versionTag, nil
+		}
+		return version, fmt.Errorf("Version tag %s is not valid", versionTag)
+	}
+	return version, fmt.Errorf("Version tag is missing")
+}
+
 func ParseVersion(version string, digits int) int64 {
 	strList := strings.Split(version, ".")
 	format := fmt.Sprintf("%%s%%0%ds", digits)

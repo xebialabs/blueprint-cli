@@ -211,15 +211,31 @@ var functions = map[string]govaluate.ExpressionFunction{
 
 	// xl up helper functions
 	"version": func(args ...interface{}) (interface{}, error) {
-		if len(args) != 1 {
+		if len(args) < 1 {
 			return nil, fmt.Errorf("invalid number of arguments for  expression function 'xlUp', expecting 1 (module name) got %d", len(args))
 		}
-
 		/* Available modules:
 		   - _showapplicableversions
+		   - checkversion
+		   - getversionfromtag
 		*/
+		var params []string
 		module := fmt.Sprintf("%v", args[0])
-		return upHelper.GetPropertyByName(module)
+
+		if len(args) == 3 && module == "checkversion" {
+			params = append(params, fmt.Sprintf("%v", args[1]))
+			params = append(params, fmt.Sprintf("%v", args[2]))
+		}
+
+		if len(args) == 2 && module == "getversionfromtag" {
+			params = append(params, fmt.Sprintf("%v", args[1]))
+		}
+
+		result, err := upHelper.GetPropertyByName(module, params...)
+		if err != nil {
+			return nil, fmt.Errorf("Error when executing expression function '%s', %s", module, err.Error())
+		}
+		return result, nil
 	},
 }
 

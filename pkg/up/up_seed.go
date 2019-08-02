@@ -75,13 +75,22 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 		}
 
 		// Strip the version information
-		if k8s.IsPropertyPresent("xlVersion", answerMapFromConfigMap) {
-			models.AvailableVersion = k8s.GetRequiredPropertyFromMap("xlVersion", answerMapFromConfigMap)
+		models.AvailableVersion = getVersion(answerMapFromConfigMap, "xlVersion", "prevVersion")
+		if models.AvailableVersion != "" {
 			answerMapFromConfigMap["xlVersion"] = ""
 			answerMapFromConfigMap["prevVersion"] = models.AvailableVersion
-			util.Verbose("Version %s is existing.\n", models.AvailableVersion)
-		} else if k8s.IsPropertyPresent("prevVersion", answerMapFromConfigMap) {
-			models.AvailableVersion = k8s.GetRequiredPropertyFromMap("prevVersion", answerMapFromConfigMap)
+		}
+
+		models.AvailableXlrVersion = getVersion(answerMapFromConfigMap, "xlrVersion", "prevXlrVersion")
+		if models.AvailableXlrVersion != "" {
+			answerMapFromConfigMap["xlrVersion"] = ""
+			answerMapFromConfigMap["prevXlrVersion"] = models.AvailableXlrVersion
+		}
+
+		models.AvailableXldVersion = getVersion(answerMapFromConfigMap, "xldVersion", "prevXldVersion")
+		if models.AvailableXldVersion != "" {
+			answerMapFromConfigMap["xldVersion"] = ""
+			answerMapFromConfigMap["prevXldVersion"] = models.AvailableXldVersion
 		}
 
 		createLicenseAndKeystore(answerMapFromConfigMap, gb)
@@ -121,6 +130,17 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 
 	runAndCaptureResponse(pullSeedImage)
 	runAndCaptureResponse(runSeed())
+}
+
+func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) string {
+	var version string
+	if k8s.IsPropertyPresent(key, answerMapFromConfigMap) {
+		version = k8s.GetRequiredPropertyFromMap(key, answerMapFromConfigMap)
+		util.Verbose("Version %s is existing.\n", version)
+	} else if k8s.IsPropertyPresent(prevKey, answerMapFromConfigMap) {
+		version = k8s.GetRequiredPropertyFromMap(prevKey, answerMapFromConfigMap)
+	}
+	return version
 }
 
 func getAnswerFile(upAnswerFile string) string {

@@ -150,6 +150,28 @@ func VersionCheck(autoAnswerFile map[string]string, providedAnswerFile map[strin
 		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
 	}
 
+	if k8s.IsPropertyPresent("xlrVersion", providedAnswerFile) {
+		var versionFromKubernetesConfigMap string
+		versionFromAnswerFileProvided := k8s.GetRequiredPropertyFromMap("xlrVersion", providedAnswerFile)
+
+		if k8s.IsPropertyPresent("prevXlrVersion", autoAnswerFile) {
+			versionFromKubernetesConfigMap = k8s.GetRequiredPropertyFromMap("prevXlrVersion", autoAnswerFile)
+		}
+
+		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
+	}
+
+	if k8s.IsPropertyPresent("xldVersion", providedAnswerFile) {
+		var versionFromKubernetesConfigMap string
+		versionFromAnswerFileProvided := k8s.GetRequiredPropertyFromMap("xldVersion", providedAnswerFile)
+
+		if k8s.IsPropertyPresent("prevXldVersion", autoAnswerFile) {
+			versionFromKubernetesConfigMap = k8s.GetRequiredPropertyFromMap("prevXldVersion", autoAnswerFile)
+		}
+
+		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
+	}
+
 	return "", nil
 }
 

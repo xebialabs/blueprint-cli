@@ -364,6 +364,97 @@ func TestParseVersion(t *testing.T) {
 	})
 }
 
+func TestGetVersion(t *testing.T) {
+	t.Run("should get version when Docker image tag version is semver", func(t *testing.T) {
+		actual, _ := GetVersionFromImageTag("test:1.0.0")
+		expected := "1.0.0"
+
+		assert.Equal(t, actual, expected)
+
+		actual, _ = GetVersionFromImageTag("test:8.5.1")
+		expected = "8.5.1"
+		assert.Equal(t, actual, expected)
+
+		actual, _ = GetVersionFromImageTag("test:9.9.1000")
+		expected = "9.9.1000"
+
+		assert.Equal(t, actual, expected)
+
+		actual, _ = GetVersionFromImageTag("test:8.6.0")
+		expected = "8.6.0"
+
+		assert.Equal(t, actual, expected)
+
+		actual, _ = GetVersionFromImageTag("test:9999.9999.9999")
+		expected = "9999.9999.9999"
+
+		assert.Equal(t, actual, expected)
+	})
+
+	t.Run("should throw an error when Docker image tag version is not semver", func(t *testing.T) {
+		_, err := GetVersionFromImageTag("test:latest")
+		expected := fmt.Errorf("Version tag latest is not valid")
+
+		assert.Equal(t, err, expected)
+
+		_, err = GetVersionFromImageTag("test:beta")
+		expected = fmt.Errorf("Version tag beta is not valid")
+
+		assert.Equal(t, err, expected)
+	})
+
+	t.Run("should throw an error when there is no Docker image tag version", func(t *testing.T) {
+		_, err := GetVersionFromImageTag("test:")
+		expected := fmt.Errorf("Version tag is missing")
+
+		assert.Equal(t, err, expected)
+
+		_, err = GetVersionFromImageTag("test")
+		expected = fmt.Errorf("Version tag is missing")
+
+		assert.Equal(t, err, expected)
+	})
+}
+
+func TestIsNumDot(t *testing.T) {
+	t.Run("should validate the version information", func(t *testing.T) {
+		actual := isNumDot("2.0.0")
+		expected := true
+
+		assert.Equal(t, actual, expected)
+
+		actual = isNumDot("8.5.1")
+		assert.Equal(t, actual, expected)
+
+		actual = isNumDot("9.9.1000")
+		assert.Equal(t, actual, expected)
+
+		actual = isNumDot("8.6.0")
+		assert.Equal(t, actual, expected)
+
+		actual = isNumDot("9999.9999.9999")
+		assert.Equal(t, actual, expected)
+	})
+
+	t.Run("should not validate the version information", func(t *testing.T) {
+		actual := isNumDot("latest")
+		expected := false
+
+		assert.Equal(t, actual, expected)
+
+		actual = isNumDot("alpha-13.4")
+		assert.Equal(t, actual, expected)
+
+		actual = isNumDot("beta-v2")
+		assert.Equal(t, actual, expected)
+
+		actual = isNumDot("v2")
+		assert.Equal(t, actual, expected)
+
+		actual = isNumDot("2.2.1v")
+		assert.Equal(t, actual, expected)
+	})
+}
 func TestMergeStructFields(t *testing.T) {
 	type SampleSub struct {
 		A string

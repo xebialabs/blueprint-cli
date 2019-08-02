@@ -162,8 +162,8 @@ func getClusterIDFromClusterName(answerMap map[string]string) string {
 	clusterName := answerMap["eksClusterName"]
 
 	if clusterName != "" {
-	    return clusterName
-    }
+		return clusterName
+	}
 
 	return "xl-up-master"
 }
