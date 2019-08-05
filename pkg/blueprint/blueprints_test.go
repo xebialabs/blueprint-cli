@@ -110,6 +110,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			false,
 			false,
+			true,
 		)
 
 		require.NotNil(t, err)
@@ -127,6 +128,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			false,
 			false,
+			true,
 		)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter AppName must have a 'prompt' field", err.Error())
@@ -143,6 +145,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 			false,
 			false,
+			true,
 		)
 		require.Nil(t, err)
 
@@ -200,6 +203,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			false,
 			false,
+            true,
 		)
 		require.Nil(t, err)
 
@@ -244,6 +248,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			true,
 			false,
+            true,
 		)
 		require.Nil(t, err)
 
@@ -297,6 +302,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			false,
 			false,
+            true,
 		)
 		require.Nil(t, err)
 
@@ -353,6 +359,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			false,
 			false,
+            true,
 		)
 		require.Nil(t, err)
 
@@ -397,6 +404,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			true,
 			false,
+            true,
 		)
 		require.Nil(t, err)
 
@@ -496,6 +504,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			true,
 			false,
+            true,
 		)
 		require.Nil(t, err)
 
@@ -584,6 +593,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			false,
 			false,
+            true,
 		)
 		require.Nil(t, err)
 
@@ -1670,7 +1680,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := prepareMergedTemplateData(tt.args.blueprintContext, tt.args.blueprints, tt.args.templatePath, tt.args.answersFile, tt.args.strictAnswers, tt.args.useDefaultsAsValue, tt.args.surveyOpts...)
+			got, got1, err := prepareMergedTemplateData(tt.args.blueprintContext, tt.args.blueprints, tt.args.templatePath, tt.args.answersFile, tt.args.strictAnswers, tt.args.useDefaultsAsValue, true, tt.args.surveyOpts...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("prepareMergedTemplateData() error = %v, wantErr %v", err, tt.wantErr)
 				return

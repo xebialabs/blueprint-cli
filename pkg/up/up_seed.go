@@ -57,7 +57,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 	gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 
 	// Infra blueprint
-	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true)
+	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true, false)
 	if err != nil {
 		util.Fatal("Error while creating Infrastructure Blueprint: %s \n", err)
 	}
@@ -117,7 +117,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 
 	upAnswerFile = getAnswerFile(upAnswerFile)
 
-	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true)
+	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true, true)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s \n", err)
 	}

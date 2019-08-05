@@ -74,6 +74,7 @@ func InstantiateBlueprint(
 	strictAnswers bool,
 	useDefaultsAsValue bool,
 	fromUpCommand bool,
+	printSummaryTable bool,
 	surveyOpts ...survey.AskOpt,
 ) error {
 	var err error
@@ -94,14 +95,14 @@ func InstantiateBlueprint(
 		}
 	}
 
-	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, templatePath, answersFile, strictAnswers, useDefaultsAsValue, surveyOpts...)
+	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, templatePath, answersFile, strictAnswers, useDefaultsAsValue, printSummaryTable, surveyOpts...)
 	if err != nil {
 		return err
 	}
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
 	// if this is use-defaults mode, show used default values as table
-	if useDefaultsAsValue && fromUpCommand {
+	if useDefaultsAsValue && fromUpCommand && printSummaryTable {
 		// Final prompt from user to start generation process
 		toContinue := false
 		question := models.UpFinalPrompt
@@ -211,6 +212,7 @@ func prepareMergedTemplateData(
 	answersFile string,
 	strictAnswers bool,
 	useDefaultsAsValue bool,
+	printSummaryTable bool,
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
 	// get blueprint definition
@@ -266,11 +268,14 @@ func prepareMergedTemplateData(
 	}
 
 	// Print summary table
-	// use util.Print so that this is not skipped in quiet mode
-	if useDefaultsAsValue && answersFile == "" {
-		util.Print("Using default values:\n")
-	}
-	util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1))
+	if printSummaryTable {
+        // use util.Print so that this is not skipped in quiet mode
+        if useDefaultsAsValue && answersFile == "" {
+            util.Print("Using default values:\n")
+        }
+
+        util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1))
+    }
 
 	if !SkipFinalPrompt {
 		// Final prompt from user to start generation process
