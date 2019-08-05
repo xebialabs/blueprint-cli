@@ -335,7 +335,7 @@ func (doc *Document) writeFileOrDir(tag *yaml.CustomTag, relativeFilename string
 	}
 
 	counter := c.IncrementCounter()
-	zipEntryFilename := filepath.Join(counter, filepath.Base(relativeFilename))
+	zipEntryFilename := fmt.Sprintf("%s/%s", counter, filepath.Base(relativeFilename))
 	tag.Value = zipEntryFilename
 
 	mode := fi.Mode()
