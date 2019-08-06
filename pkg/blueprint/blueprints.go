@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -66,6 +67,30 @@ func shouldSkipFile(templateConfig TemplateConfig, parameters map[string]interfa
 		return !dependsOnVal, nil
 	}
 	return false, nil
+}
+
+func (config *TemplateConfig) ProcessExpression(parameters map[string]interface{}) error {
+	fieldsToSkip := []string{""} // these fields have special processing
+	configR := reflect.ValueOf(config).Elem()
+	typeOfT := configR.Type()
+	// iterate over the struct fields and map them
+	for i := 0; i < configR.NumField(); i++ {
+		fieldR := configR.Field(i)
+		fieldName := typeOfT.Field(i).Name
+		value := fieldR.Interface()
+		field := reflect.ValueOf(config).Elem().FieldByName(strings.Title(fieldName))
+		if !util.IsStringInSlice(fieldName, fieldsToSkip) && field.IsValid() {
+			switch val := value.(type) {
+			case VarField:
+				procVal, err := GetProcessedExpressionValue(val, parameters)
+				if err != nil {
+					return fmt.Errorf("Error while processing !expr [%s] for [%s] of [%s]. %s", val.Value, fieldName, config.Path, err.Error())
+				}
+				field.Set(reflect.ValueOf(procVal))
+			}
+		}
+	}
+	return nil
 }
 
 // InstantiateBlueprint is entry point for the cli command
@@ -144,6 +169,7 @@ func InstantiateBlueprint(
 
 	// execute each template file found
 	for _, config := range blueprintDoc.TemplateConfigs {
+		config.ProcessExpression(preparedData.TemplateData)
 		skipFile, err := shouldSkipFile(config, preparedData.TemplateData)
 		if err != nil {
 			return err
@@ -296,10 +322,14 @@ func prepareMergedTemplateData(
 }
 
 func evaluateAndSkipIfDependsOnIsFalse(dependsOn VarField, mergedData *PreparedData) (bool, error) {
-	if util.IsStringEmpty(dependsOn.Value) {
+	procDependsOn, err := GetProcessedExpressionValue(dependsOn, mergedData.TemplateData)
+	if err != nil {
+		return false, err
+	}
+	if util.IsStringEmpty(procDependsOn.Value) {
 		return true, nil
 	}
-	dependsOnVal, err := ParseDependsOnValue(dependsOn, mergedData.TemplateData)
+	dependsOnVal, err := ParseDependsOnValue(procDependsOn, mergedData.TemplateData)
 	if err != nil {
 		return false, err
 	}
