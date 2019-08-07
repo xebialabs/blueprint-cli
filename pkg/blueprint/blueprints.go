@@ -2,7 +2,6 @@ package blueprint
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -36,8 +35,6 @@ const (
 	secretsFile       = "secrets.xlvals"
 	secretsFileHeader = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
 	gitignoreFile     = ".gitignore"
-	skipOperation     = "skip"
-	renameOperation   = "rename"
 )
 
 var ignoredPaths = []string{"__test__"}
@@ -411,15 +408,6 @@ func findTemplateConfig(configs []TemplateConfig, path string) int {
 		}
 	}
 	return -1
-}
-
-func createDirectoryIfNeeded(fileName string) error {
-	dir, _ := filepath.Split(fileName)
-	if dir != "" && !util.PathExists(dir, true) {
-		util.Verbose("[file] Creating sub-directory %s\n", dir)
-		return os.MkdirAll(dir, os.ModePerm)
-	}
-	return nil
 }
 
 // --utility functions
