@@ -95,7 +95,7 @@ func InstantiateBlueprint(
 		}
 	}
 
-	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, templatePath, answersFile, strictAnswers, useDefaultsAsValue, printSummaryTable, surveyOpts...)
+	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, templatePath, answersFile, strictAnswers, useDefaultsAsValue, printSummaryTable, fromUpCommand, surveyOpts...)
 	if err != nil {
 		return err
 	}
@@ -213,6 +213,7 @@ func prepareMergedTemplateData(
 	strictAnswers bool,
 	useDefaultsAsValue bool,
 	printSummaryTable bool,
+    fromUpCommand bool,
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
 	// get blueprint definition
@@ -274,7 +275,7 @@ func prepareMergedTemplateData(
             util.Print("Using default values:\n")
         }
 
-        util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1))
+        util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1, fromUpCommand))
     }
 
 	if !SkipFinalPrompt {

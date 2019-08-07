@@ -1,22 +1,22 @@
 package blueprint
 
 import (
-    "fmt"
-    "io/ioutil"
-    "os"
-    "path/filepath"
-    "regexp"
-    "strconv"
-    "strings"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 
-    "github.com/thoas/go-funk"
-    "gopkg.in/AlecAivazis/survey.v1"
+	"github.com/thoas/go-funk"
+	"gopkg.in/AlecAivazis/survey.v1"
 
-    "github.com/xebialabs/xl-cli/pkg/cloud/aws"
-    "github.com/xebialabs/xl-cli/pkg/cloud/k8s"
-    "github.com/xebialabs/xl-cli/pkg/models"
-    "github.com/xebialabs/xl-cli/pkg/util"
-    "github.com/xebialabs/yaml"
+	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
+	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
+	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/yaml"
 )
 
 // Constants
@@ -694,6 +694,10 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 			preparedData.SummaryData[variable.Label.Value] = data
 		} else {
 			preparedData.SummaryData[variable.Label.Value] = "*****"
+			if data == "" || data == "none" {
+				originalValue := "orig-" + variable.Label.Value
+				preparedData.SummaryData[originalValue] = data
+			}
 		}
 
 		preparedData.Secrets[variable.Name.Value] = data

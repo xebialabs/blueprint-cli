@@ -203,7 +203,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			false,
 			false,
-            true,
+			true,
 		)
 		require.Nil(t, err)
 
@@ -248,7 +248,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			true,
 			false,
-            true,
+			true,
 		)
 		require.Nil(t, err)
 
@@ -302,7 +302,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			false,
 			false,
-            true,
+			true,
 		)
 		require.Nil(t, err)
 
@@ -359,7 +359,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			false,
 			false,
-            true,
+			true,
 		)
 		require.Nil(t, err)
 
@@ -404,7 +404,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			true,
 			false,
-            true,
+			true,
 		)
 		require.Nil(t, err)
 
@@ -504,7 +504,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			true,
 			false,
-            true,
+			true,
 		)
 		require.Nil(t, err)
 
@@ -593,7 +593,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			false,
 			false,
 			false,
-            true,
+			true,
 		)
 		require.Nil(t, err)
 
@@ -1680,7 +1680,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := prepareMergedTemplateData(tt.args.blueprintContext, tt.args.blueprints, tt.args.templatePath, tt.args.answersFile, tt.args.strictAnswers, tt.args.useDefaultsAsValue, true, tt.args.surveyOpts...)
+			got, got1, err := prepareMergedTemplateData(tt.args.blueprintContext, tt.args.blueprints, tt.args.templatePath, tt.args.answersFile, tt.args.strictAnswers, tt.args.useDefaultsAsValue, true, false, tt.args.surveyOpts...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("prepareMergedTemplateData() error = %v, wantErr %v", err, tt.wantErr)
 				return
