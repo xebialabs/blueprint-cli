@@ -175,6 +175,11 @@ var functions = map[string]govaluate.ExpressionFunction{
 		// - 0: Config attribute name [ClusterServer, ClusterInsecureSkipTLSVerify, ContextCluster, ContextNamespace, ContextUser, UserClientCertificateData, UserClientKeyData, IsAvailable]
 		// - 1: Context name [optional]
 		attr := fmt.Sprintf("%v", args[0])
+
+		if attr == "IsConfigAvailable" {
+			return k8s.IsKubeConfigFilePresent(), nil
+		}
+
 		contextName := ""
 		if len(args) == 2 {
 			contextName = fmt.Sprintf("%v", args[1])

@@ -79,6 +79,7 @@ func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]s
 		if attr == "IsAvailable" {
 			return []string{strconv.FormatBool(result != nil && result.Cluster.Server != "")}, nil
 		}
+
 		// return attribute
 		attrVal := result.GetConfigField(attr)
 		return []string{attrVal}, nil
@@ -88,28 +89,28 @@ func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]s
 }
 
 func (result *K8SFnResult) GetConfigField(attr string) string {
-    flatFields := FlattenFields(*result)
-    for k, field := range flatFields {
-        knorm := strings.ToLower(strings.Replace(k, "_", "", -1))
-        attrnorm := strings.ToLower(strings.Replace(attr, "_", "", -1))
-        if knorm == attrnorm {
-            if val, ok := SpecialHandling[k]; ok {
-                if val == "bool" {
-                    return strconv.FormatBool(field.Bool())
-                }
-                if val == "encoded" {
-                    data, err := base64.StdEncoding.DecodeString(field.String())
-                    if err != nil {
-                        util.Verbose("[k8s] Error while decoding value for [%s] is: %v\n", k, err)
-                        return field.String()
-                    }
-                    return string(data)
-                }
-            }
-            return field.String()
-        }
-    }
-    return ""
+	flatFields := FlattenFields(*result)
+	for k, field := range flatFields {
+		knorm := strings.ToLower(strings.Replace(k, "_", "", -1))
+		attrnorm := strings.ToLower(strings.Replace(attr, "_", "", -1))
+		if knorm == attrnorm {
+			if val, ok := SpecialHandling[k]; ok {
+				if val == "bool" {
+					return strconv.FormatBool(field.Bool())
+				}
+				if val == "encoded" {
+					data, err := base64.StdEncoding.DecodeString(field.String())
+					if err != nil {
+						util.Verbose("[k8s] Error while decoding value for [%s] is: %v\n", k, err)
+						return field.String()
+					}
+					return string(data)
+				}
+			}
+			return field.String()
+		}
+	}
+	return ""
 }
 
 var SpecialHandling = map[string]string{
@@ -176,6 +177,19 @@ func GetKubeConfigFile() ([]byte, error) {
 	}
 	// read file from path and return string
 	return ioutil.ReadFile(configPath)
+}
+func IsKubeConfigFilePresent() bool {
+	// check if KUBECONFIG is set in environment
+	configPath := os.Getenv("KUBECONFIG")
+	if configPath == "" {
+		// if KUBECONFIG is not set find path based on OS
+		home, err := homedir.Dir()
+		if err != nil {
+			return false
+		}
+		configPath = filepath.Join(home, ".kube", "config")
+	}
+	return configPath != ""
 }
 
 func ParseKubeConfig(kubeConfigYaml []byte) (K8sConfig, error) {

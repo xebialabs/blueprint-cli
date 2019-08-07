@@ -55,6 +55,7 @@ type getCallerIdentityWrapper struct {
 }
 
 func connectToEKS(answerMap map[string]string) *restclient.Config {
+    fmt.Println("Connecting to EKS")
 	clusterID := getClusterIDFromClusterName(answerMap)
 
 	sess, err := session.NewSessionWithOptions(session.Options{
@@ -109,18 +110,22 @@ func connectToK8s(answerMap map[string]string) *restclient.Config {
 		panic(err.Error())
 	}
 
-	if IsPropertyPresent("K8sClientCert", answerMap) {
-		config.CertData = DecodeBase64(GetRequiredPropertyFromMap("K8sClientCert", answerMap))
-	} else {
-		config.CertFile = GetRequiredPropertyFromMap("K8sClientCertFile", answerMap)
-	}
+    if IsPropertyPresent("K8sToken", answerMap) {
+        config.BearerToken = GetRequiredPropertyFromMap("K8sToken", answerMap)
+    } else {
 
-	if IsPropertyPresent("K8sClientKey", answerMap) {
-		config.KeyData = DecodeBase64(GetRequiredPropertyFromMap("K8sClientKey", answerMap))
-	} else {
-		config.KeyFile = GetRequiredPropertyFromMap("K8sClientKeyFile", answerMap)
-	}
+        if IsPropertyPresent("K8sClientCert", answerMap) {
+            config.CertData = DecodeBase64(GetRequiredPropertyFromMap("K8sClientCert", answerMap))
+        } else {
+            config.CertFile = GetRequiredPropertyFromMap("K8sClientCertFile", answerMap)
+        }
 
+        if IsPropertyPresent("K8sClientKey", answerMap) {
+            config.KeyData = DecodeBase64(GetRequiredPropertyFromMap("K8sClientKey", answerMap))
+        } else {
+            config.KeyFile = GetRequiredPropertyFromMap("K8sClientKeyFile", answerMap)
+        }
+    }
 	// TODO check this connection param
 	config.TLSClientConfig.Insecure = true
 
