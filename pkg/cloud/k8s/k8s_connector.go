@@ -3,7 +3,9 @@ package k8s
 import (
 	"encoding/base64"
 	"fmt"
-	"os"
+    "github.com/aws/aws-sdk-go/aws"
+    "github.com/aws/aws-sdk-go/aws/credentials"
+    "os"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -58,14 +60,36 @@ func connectToEKS(answerMap map[string]string) *restclient.Config {
     fmt.Println("Connecting to EKS")
 	clusterID := getClusterIDFromClusterName(answerMap)
 
-	sess, err := session.NewSessionWithOptions(session.Options{
-		AssumeRoleTokenProvider: stdinStderrTokenProvider,
-		SharedConfigState:       session.SharedConfigEnable,
-	})
+	var sess *session.Session
+    var err error
 
-	if err != nil {
-		util.Fatal("could not create session: %v", err)
-	}
+	if IsPropertyPresent("AWSAccessKey", answerMap) {
+	    var region string
+
+	    if IsPropertyPresent("AWSRegion", answerMap) {
+	        region = GetRequiredPropertyFromMap("AWSRegion", answerMap)
+        } else {
+            region = "eu-west-1"
+        }
+
+	    sess, err = session.NewSession(&aws.Config{
+	        Region:         aws.String(region),
+	        Credentials:    credentials.NewStaticCredentials(
+	            GetRequiredPropertyFromMap("AWSAccessKey", answerMap),
+	            GetRequiredPropertyFromMap("AWSAccessSecret", answerMap),
+	            "",
+            ),
+        })
+    } else {
+        sess, err = session.NewSessionWithOptions(session.Options{
+            AssumeRoleTokenProvider: stdinStderrTokenProvider,
+            SharedConfigState:       session.SharedConfigEnable,
+        })
+    }
+
+    if err != nil {
+        util.Fatal("could not create session: %v", err)
+    }
 
 	stsAPI := sts.New(sess)
 

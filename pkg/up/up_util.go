@@ -1,20 +1,20 @@
 package up
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
+    "fmt"
+    "io/ioutil"
+    "os"
+    "path/filepath"
+    "runtime"
+    "strings"
 
-	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
+    "github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 
-	"github.com/xebialabs/xl-cli/pkg/blueprint"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+    "github.com/xebialabs/xl-cli/pkg/blueprint"
+    "github.com/xebialabs/xl-cli/pkg/blueprint/repository"
+    "github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
+    "github.com/xebialabs/xl-cli/pkg/models"
+    "github.com/xebialabs/xl-cli/pkg/util"
 )
 
 const (

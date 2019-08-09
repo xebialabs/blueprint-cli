@@ -1,12 +1,12 @@
 package up
 
 import (
-	"github.com/xebialabs/xl-cli/pkg/blueprint"
-	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
-	"github.com/xebialabs/xl-cli/pkg/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	restclient "k8s.io/client-go/rest"
+    "github.com/xebialabs/xl-cli/pkg/blueprint"
+    "github.com/xebialabs/xl-cli/pkg/cloud/k8s"
+    "github.com/xebialabs/xl-cli/pkg/util"
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+    "k8s.io/client-go/kubernetes"
+    restclient "k8s.io/client-go/rest"
 )
 
 // The namespace to use
