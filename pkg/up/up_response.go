@@ -14,10 +14,14 @@ func runAndCaptureResponse(cmd models.Command) {
 
 	if outStr != "" {
 		createLogFile("xl-seed-log.txt", outStr)
-		index := strings.Index(outStr, "***************")
+		stars := "***************"
+		index := strings.Index(outStr, stars)
+
 		if index != -1 {
+		    // Flip the string, get the "first" instance of the ****** stuff, then get the position
+            lastIndex := strings.LastIndex(outStr, stars)
 			completedTask = true
-			util.Info(outStr[index:])
+			util.Info(outStr[index:lastIndex + len(stars)])
 		}
 	}
 
