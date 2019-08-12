@@ -179,14 +179,17 @@ func decideVersionMatch(installedVersion string, newVersion string) (string, err
 	installed := util.ParseVersion(installedVersion, 4)
 	versionToInstall := util.ParseVersion(newVersion, 4)
 
-	switch {
-	case installed > versionToInstall:
-		return "", fmt.Errorf("cannot downgrade the deployment from %s to %s", installedVersion, newVersion)
-	case installed < versionToInstall:
-		return fmt.Sprintf("upgrading from %s to %s", installedVersion, newVersion), nil
-	case installed == versionToInstall:
-		return "", fmt.Errorf("the given version %s already exists", installedVersion)
-	}
+	if installed != 0 {
+        switch {
+        case installed > versionToInstall:
+            return "", fmt.Errorf("cannot downgrade the deployment from %s to %s", installedVersion, newVersion)
+        case installed < versionToInstall:
+            return fmt.Sprintf("upgrading from %s to %s", installedVersion, newVersion), nil
+        case installed == versionToInstall:
+            return "", fmt.Errorf("the given version %s already exists", installedVersion)
+        }
+    }
+
 
 	return "", nil
 }
