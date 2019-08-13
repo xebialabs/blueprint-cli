@@ -34,7 +34,7 @@ func showVersions(params []string) ([]string, error) {
 	}
 
 	// TODO find a better way to handle this...
-	availableVersions := []string{"8.5.3", "8.6.1"}
+	availableVersions := []string{"8.6.1", "9.0.2"}
 
 	if currentVersion == int64(0) {
 		return availableVersions, nil
