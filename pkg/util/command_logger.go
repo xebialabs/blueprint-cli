@@ -31,19 +31,24 @@ func logCapture(w io.Writer, d []byte, s *spinner.Spinner) {
 	if strings.Index(eventLog, generatedPlan) != -1 {
 		currentTask = getCurrentTask(eventLog, strings.Index(eventLog, generatedPlan))
 		if currentTask != "" {
-			start := getIndexPlusLen(eventLog, "* Deploy")
+			start := getIndexPlusLen(eventLog, "# [Serial] Deploy")
+			end := strings.Index(eventLog, phaseLogEnd)
+
+			if start < 0 {
+				start = getIndexPlusLen(eventLog, "* Deploy")
+			}
+
+			if start < 0 {
+				start = getIndexPlusLen(eventLog, "# [Serial] Update")
+			}
 
 			if start < 0 {
 				start = getIndexPlusLen(eventLog, "* Update")
 			}
 
-			if start >= 0 {
-					end := strings.Index(eventLog[start:], phaseLogEnd)
-					if start >= 0 && end >= 0 {
-						end = start + end
-						ctDesc = eventLog[start:end]
-						write(getCurrentStage(false, true), s, w)
-					}
+			if start >= 0 && end >= 0 {
+				ctDesc = eventLog[start:end]
+				write(getCurrentStage(false, true), s, w)
 			}
 		}
 	}
