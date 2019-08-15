@@ -324,10 +324,19 @@ func ParseDependsOnValue(varField VarField, parameters map[string]interface{}) (
 		}
 		return dependsOnVal, nil
 	case tagExpressionV1, tagExpressionV2:
-		if varField.InvertBool {
-			return !varField.Bool, nil
+		value, err := ProcessCustomExpression(fieldVal, parameters)
+		if err != nil {
+			return false, err
 		}
-		return varField.Bool, nil
+		dependsOnVal, ok := value.(bool)
+		if ok {
+			util.Verbose("[expression] Processed value of expression [%s] is: %v\n", fieldVal, dependsOnVal)
+			if varField.InvertBool {
+				return !dependsOnVal, nil
+			}
+			return dependsOnVal, nil
+		}
+		return false, fmt.Errorf("Expression [%s] result is invalid for a boolean field", fieldVal)
 	}
 	dependsOnVar, err := findVariableByName(parameters, fieldVal)
 	if err != nil {

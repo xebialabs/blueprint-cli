@@ -99,7 +99,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Name: VarField{Value: "test"},
 			Type: VarField{Value: TypeInput},
 		}
-		defaultVal := v.GetDefaultVal()
+		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
 	})
 
@@ -109,7 +109,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "default_val"},
 		}
-		defaultVal := v.GetDefaultVal()
+		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "default_val", defaultVal)
 	})
 
@@ -119,7 +119,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "aws.regs", Tag: tagFnV1},
 		}
-		defaultVal := v.GetDefaultVal()
+		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
 	})
 
@@ -129,20 +129,29 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
-		defaultVal := v.GetDefaultVal()
+		defaultVal := v.GetDefaultVal(dummyData)
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
 		sort.Strings(regionsList)
 		assert.Equal(t, regionsList[0], defaultVal)
+	})
+
+	t.Run("should return empty string when invalid expression tag in default field", func(t *testing.T) {
+		v := Variable{
+			Name:    VarField{Value: "test"},
+			Type:    VarField{Value: TypeInput},
+			Default: VarField{Value: "awsCredentials('AccessKeyID2')", Tag: tagExpressionV2},
+		}
+		defaultVal := v.GetDefaultVal(dummyData)
+		assert.Equal(t, "", defaultVal)
 	})
 
 	t.Run("should return empty string when expression tag return nil", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeInput},
-			Default: VarField{Value: "Foo", Tag: tagExpressionV2},
+			Default: VarField{Value: "aws.regs", Tag: tagExpressionV2},
 		}
-		v.ProcessExpression(map[string]interface{}{"Foo": nil})
-		defaultVal := v.GetDefaultVal()
+		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "", defaultVal)
 	})
 
@@ -152,19 +161,17 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "'foo' + 'bar'", Tag: tagExpressionV2},
 		}
-		v.ProcessExpression(dummyData)
-		defaultVal := v.GetDefaultVal()
+		defaultVal := v.GetDefaultVal(dummyData)
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "Foo > 10", Tag: tagExpressionV2},
 		}
-		v.ProcessExpression(map[string]interface{}{
+		defaultVal = v.GetDefaultVal(map[string]interface{}{
 			"Foo": 100,
 		})
-		defaultVal = v.GetDefaultVal()
-		assert.Equal(t, "true", defaultVal)
+		assert.True(t, defaultVal.(bool))
 	})
 }
 
@@ -175,7 +182,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "testing"},
 		}
-		val := v.GetValueFieldVal()
+		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "testing", val)
 	})
 
@@ -185,7 +192,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "aws.regs", Tag: tagFnV1},
 		}
-		val := v.GetValueFieldVal()
+		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "", val)
 	})
 
@@ -195,7 +202,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
-		val := v.GetValueFieldVal()
+		val := v.GetValueFieldVal(dummyData)
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
 		sort.Strings(regionsList)
 		assert.Equal(t, regionsList[0], val)
@@ -205,10 +212,9 @@ func TestGetValueFieldVal(t *testing.T) {
 		v := Variable{
 			Name:  VarField{Value: "test"},
 			Type:  VarField{Value: TypeInput},
-			Value: VarField{Value: "Foo", Tag: tagExpressionV2},
+			Value: VarField{Value: "aws.regs()", Tag: tagExpressionV2},
 		}
-		v.ProcessExpression(map[string]interface{}{"Foo": nil})
-		val := v.GetValueFieldVal()
+		val := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "", val)
 	})
 
@@ -218,18 +224,16 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "'foo' + 'bar'", Tag: tagExpressionV2},
 		}
-		v.ProcessExpression(dummyData)
-		defaultVal := v.GetValueFieldVal()
+		defaultVal := v.GetValueFieldVal(dummyData)
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
 			Name:  VarField{Value: "test"},
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "Foo > 10", Tag: tagExpressionV2},
 		}
-		v.ProcessExpression(map[string]interface{}{
+		defaultVal = v.GetValueFieldVal(map[string]interface{}{
 			"Foo": 100,
 		})
-		defaultVal = v.GetValueFieldVal()
 		assert.Equal(t, "true", defaultVal)
 	})
 }
@@ -1212,86 +1216,6 @@ func Test_getOptionTextWithLabel(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getOptionTextWithLabel(tt.option); got != tt.want {
 				t.Errorf("getOptionTextWithLabel() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestVariable_ProcessExpression(t *testing.T) {
-	tests := []struct {
-		name       string
-		variable   Variable
-		parameters map[string]interface{}
-		want       Variable
-		wantErr    bool
-	}{
-		{
-			"should throw error when expression is invalid",
-			Variable{
-				Name:  VarField{Value: "Test"},
-				Label: VarField{Value: "True ? 'A' : 'B'", Tag: tagExpressionV2},
-			},
-			map[string]interface{}{},
-			Variable{
-				Name:  VarField{Value: "Test"},
-				Label: VarField{Value: "A", Tag: tagExpressionV2},
-			},
-			true,
-		},
-		{
-			"should process expressions in variable fields",
-			Variable{
-				Name:        VarField{Value: "Test"},
-				Label:       VarField{Value: "true ? 'A' : 'B'", Tag: tagExpressionV2},
-				Description: VarField{Value: "Foo > 5 ? 5 : 'B'", Tag: tagExpressionV2},
-				Value:       VarField{Value: "Foo > 5 ? 5.8 : 'B'", Tag: tagExpressionV2},
-			},
-			map[string]interface{}{
-				"Foo": 10,
-			},
-			Variable{
-				Name:        VarField{Value: "Test"},
-				Label:       VarField{Value: "A", Tag: tagExpressionV2},
-				Description: VarField{Value: "5.000000", Tag: tagExpressionV2},
-				Value:       VarField{Value: "5.800000", Tag: tagExpressionV2},
-			},
-			false,
-		},
-		{
-			"should process expressions in variable fields skipping validate & options",
-			Variable{
-				Name:      VarField{Value: "Test"},
-				Label:     VarField{Value: "true ? 'A' : 'B'", Tag: tagExpressionV2},
-				DependsOn: VarField{Value: "Foo > 5", Tag: tagExpressionV2},
-				Validate:  VarField{Value: "Foo > 5", Tag: tagExpressionV2},
-				Options: []VarField{
-					{Value: "true ? 'A' : 'B'", Tag: tagExpressionV2},
-					{Value: "Foo > 5 ? 'B' : 'C'", Tag: tagExpressionV2},
-				},
-			},
-			map[string]interface{}{
-				"Foo": 10,
-			},
-			Variable{
-				Name:      VarField{Value: "Test"},
-				Label:     VarField{Value: "A", Tag: tagExpressionV2},
-				DependsOn: VarField{Value: "true", Bool: true, Tag: tagExpressionV2},
-				Validate:  VarField{Value: "Foo > 5", Tag: tagExpressionV2},
-				Options: []VarField{
-					{Value: "true ? 'A' : 'B'", Tag: tagExpressionV2},
-					{Value: "Foo > 5 ? 'B' : 'C'", Tag: tagExpressionV2},
-				},
-			},
-			false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.variable.ProcessExpression(tt.parameters)
-			if tt.wantErr {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, tt.want, tt.variable)
 			}
 		})
 	}

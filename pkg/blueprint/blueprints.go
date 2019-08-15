@@ -2,8 +2,8 @@ package blueprint
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -32,6 +32,8 @@ const (
 	secretsFile       = "secrets.xlvals"
 	secretsFileHeader = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
 	gitignoreFile     = ".gitignore"
+	skipOperation     = "skip"
+	renameOperation   = "rename"
 )
 
 var ignoredPaths = []string{"__test__"}
@@ -61,30 +63,6 @@ func shouldSkipFile(templateConfig TemplateConfig, parameters map[string]interfa
 		return !dependsOnVal, nil
 	}
 	return false, nil
-}
-
-func (config *TemplateConfig) ProcessExpression(parameters map[string]interface{}) error {
-	fieldsToSkip := []string{""} // these fields have special processing
-	configR := reflect.ValueOf(config).Elem()
-	typeOfT := configR.Type()
-	// iterate over the struct fields and map them
-	for i := 0; i < configR.NumField(); i++ {
-		fieldR := configR.Field(i)
-		fieldName := typeOfT.Field(i).Name
-		value := fieldR.Interface()
-		field := reflect.ValueOf(config).Elem().FieldByName(strings.Title(fieldName))
-		if !util.IsStringInSlice(fieldName, fieldsToSkip) && field.IsValid() {
-			switch val := value.(type) {
-			case VarField:
-				procVal, err := GetProcessedExpressionValue(val, parameters)
-				if err != nil {
-					return fmt.Errorf("Error while processing !expr [%s] for [%s] of [%s]. %s", val.Value, fieldName, config.Path, err.Error())
-				}
-				field.Set(reflect.ValueOf(procVal))
-			}
-		}
-	}
-	return nil
 }
 
 // InstantiateBlueprint is entry point for the cli command
@@ -164,7 +142,6 @@ func InstantiateBlueprint(
 
 	// execute each template file found
 	for _, config := range blueprintDoc.TemplateConfigs {
-		config.ProcessExpression(preparedData.TemplateData)
 		skipFile, err := shouldSkipFile(config, preparedData.TemplateData)
 		if err != nil {
 			return err
@@ -236,7 +213,7 @@ func prepareMergedTemplateData(
 	strictAnswers bool,
 	useDefaultsAsValue bool,
 	printSummaryTable bool,
-    fromUpCommand bool,
+	fromUpCommand bool,
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
 	// get blueprint definition
@@ -293,13 +270,13 @@ func prepareMergedTemplateData(
 
 	// Print summary table
 	if printSummaryTable {
-        // use util.Print so that this is not skipped in quiet mode
-        if useDefaultsAsValue && answersFile == "" {
-            util.Print("Using default values:\n")
-        }
+		// use util.Print so that this is not skipped in quiet mode
+		if useDefaultsAsValue && answersFile == "" {
+			util.Print("Using default values:\n")
+		}
 
-        util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1, fromUpCommand))
-    }
+		util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1, fromUpCommand))
+	}
 
 	if !SkipFinalPrompt {
 		// Final prompt from user to start generation process
@@ -317,14 +294,10 @@ func prepareMergedTemplateData(
 }
 
 func evaluateAndSkipIfDependsOnIsFalse(dependsOn VarField, mergedData *PreparedData) (bool, error) {
-	procDependsOn, err := GetProcessedExpressionValue(dependsOn, mergedData.TemplateData)
-	if err != nil {
-		return false, err
-	}
-	if util.IsStringEmpty(procDependsOn.Value) {
+	if util.IsStringEmpty(dependsOn.Value) {
 		return true, nil
 	}
-	dependsOnVal, err := ParseDependsOnValue(procDependsOn, mergedData.TemplateData)
+	dependsOnVal, err := ParseDependsOnValue(dependsOn, mergedData.TemplateData)
 	if err != nil {
 		return false, err
 	}
@@ -406,6 +379,15 @@ func findTemplateConfig(configs []TemplateConfig, path string) int {
 		}
 	}
 	return -1
+}
+
+func createDirectoryIfNeeded(fileName string) error {
+	dir, _ := filepath.Split(fileName)
+	if dir != "" && !util.PathExists(dir, true) {
+		util.Verbose("[file] Creating sub-directory %s\n", dir)
+		return os.MkdirAll(dir, os.ModePerm)
+	}
+	return nil
 }
 
 // --utility functions
