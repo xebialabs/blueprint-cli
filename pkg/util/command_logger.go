@@ -33,6 +33,7 @@ func logCapture(w io.Writer, d []byte, s *spinner.Spinner) {
 		if currentTask != "" {
 			start := getIndexPlusLen(eventLog, "# [Serial] Deploy")
 			end := strings.Index(eventLog, phaseLogEnd)
+
 			if start < 0 {
 				start = getIndexPlusLen(eventLog, "* Deploy")
 			}
@@ -46,36 +47,51 @@ func logCapture(w io.Writer, d []byte, s *spinner.Spinner) {
 			}
 
 			if start >= 0 && end >= 0 {
-				s.Stop()
 				ctDesc = eventLog[start:end]
-				w.Write([]byte("Deploying " + ctDesc + "\n\n"))
-				s.Start()
+				write(getCurrentStage(false, true), s, w)
 			}
 		}
 	}
 
 	if strings.Index(eventLog, failExecutedLog) != -1 {
-		s.Stop()
 		if deploy {
-			w.Write([]byte("Failed deploying for " + ctDesc + "\n\n"))
-			w.Write([]byte("Undeploying " + ctDesc + "\n\n"))
+			write("Failed deploying for ", s, w)
 			deploy = false
+			write(getCurrentStage(false, deploy), s, w)
 		} else {
-			w.Write([]byte("Failed undeploying for " + ctDesc + "\n\n"))
+			write("Failed undeploying for ", s, w)
 		}
-		s.Start()
 	}
 
 	if strings.Index(eventLog, executedLog) != -1 {
-		s.Stop()
-		if deploy {
-			w.Write([]byte("Deployed " + ctDesc + "\n\n"))
-		} else {
-			w.Write([]byte("Undeployed " + ctDesc + "\n\n"))
-		}
-		s.Start()
+		write(getCurrentStage(true, deploy), s, w)
 	}
 }
+
+func getCurrentStage(isExecuted, deploy bool) string {
+	currentStage := "Deploy"
+	if !deploy {
+		currentStage = "Undeploy"
+	}
+
+	if isExecuted {
+		currentStage += "ed"
+	} else {
+		currentStage += "ing"
+	}
+
+	return currentStage
+}
+
+
+func write(currentStage string, s *spinner.Spinner, w io.Writer) {
+	if ctDesc != "" {
+			s.Stop()
+			w.Write([]byte(currentStage + ctDesc + "\n\n"))
+			s.Start()
+	}
+}
+
 func getIndexPlusLen(eventLog string, ident string) int {
 	index := strings.Index(eventLog, ident)
 	if index >= 0 {
