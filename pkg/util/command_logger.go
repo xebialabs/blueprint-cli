@@ -171,6 +171,7 @@ func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (stri
 					}, &cancel, nil)
 				if cancel {
 					s.Stop()
+					StopAndRemoveContainer(s)
 					os.Exit(1)
 				} else {
 					s.Start()
@@ -203,4 +204,21 @@ func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (stri
 	}
 
 	return outStr, errStr
+}
+
+func StopAndRemoveContainer(s *spinner.Spinner) {
+	Verbose("stopping the container")
+
+	stopContainer := models.Command{
+		Name: "docker",
+		Args: []string{"stop", "xl-seed"},
+	}
+	ExecuteCommandAndShowLogs(stopContainer, s)
+
+	Verbose("removing the container")
+	rmContainer := models.Command{
+		Name: "docker",
+		Args: []string{"rm", "xl-seed"},
+	}
+	ExecuteCommandAndShowLogs(rmContainer, s)
 }

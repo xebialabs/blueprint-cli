@@ -1,20 +1,20 @@
 package up
 
 import (
-    "fmt"
-    "io/ioutil"
-    "os"
-    "path/filepath"
-    "runtime"
-    "strings"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 
-    "github.com/xebialabs/xl-cli/pkg/cloud/k8s"
+	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 
-    "github.com/xebialabs/xl-cli/pkg/blueprint"
-    "github.com/xebialabs/xl-cli/pkg/blueprint/repository"
-    "github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
-    "github.com/xebialabs/xl-cli/pkg/models"
-    "github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
+	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 const (
@@ -44,7 +44,7 @@ func runSeed() models.Command {
 
 	return models.Command{
 		Name: Docker,
-		Args: []string{"run", "-v", dir + ":/data", SeedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
+		Args: []string{"run", "--name", "xl-seed", "-v", dir + ":/data", SeedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"},
 	}
 }
 
@@ -180,16 +180,15 @@ func decideVersionMatch(installedVersion string, newVersion string) (string, err
 	versionToInstall := util.ParseVersion(newVersion, 4)
 
 	if installed != 0 {
-        switch {
-        case installed > versionToInstall:
-            return "", fmt.Errorf("cannot downgrade the deployment from %s to %s", installedVersion, newVersion)
-        case installed < versionToInstall:
-            return fmt.Sprintf("upgrading from %s to %s", installedVersion, newVersion), nil
-        case installed == versionToInstall:
-            return "", fmt.Errorf("the given version %s already exists", installedVersion)
-        }
-    }
-
+		switch {
+		case installed > versionToInstall:
+			return "", fmt.Errorf("cannot downgrade the deployment from %s to %s", installedVersion, newVersion)
+		case installed < versionToInstall:
+			return fmt.Sprintf("upgrading from %s to %s", installedVersion, newVersion), nil
+		case installed == versionToInstall:
+			return "", fmt.Errorf("the given version %s already exists", installedVersion)
+		}
+	}
 
 	return "", nil
 }

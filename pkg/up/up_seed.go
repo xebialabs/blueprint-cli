@@ -115,6 +115,8 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 		defer gb.Cleanup()
 	}
 
+	defer util.StopAndRemoveContainer(s)
+
 	upAnswerFile = getAnswerFile(upAnswerFile)
 
 	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true, true)

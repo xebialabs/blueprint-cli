@@ -1,10 +1,11 @@
 package up
 
 import (
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
 	"os"
 	"strings"
+
+	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 func runAndCaptureResponse(cmd models.Command) {
@@ -18,16 +19,17 @@ func runAndCaptureResponse(cmd models.Command) {
 		index := strings.Index(outStr, stars)
 
 		if index != -1 {
-		    // Flip the string, get the "first" instance of the ****** stuff, then get the position
-            lastIndex := strings.LastIndex(outStr, stars)
+			// Flip the string, get the "first" instance of the ****** stuff, then get the position
+			lastIndex := strings.LastIndex(outStr, stars)
 			completedTask = true
-			util.Info(outStr[index:lastIndex + len(stars)])
+			util.Info(outStr[index : lastIndex+len(stars)])
 		}
 	}
 
 	if errorStr != "" {
 		createLogFile("xl-seed-error.txt", errorStr)
 		s.Stop()
+		util.StopAndRemoveContainer(s)
 		if !completedTask {
 			util.Fatal("Error while running xl up: \n %s", errorStr)
 		}
