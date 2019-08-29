@@ -30,31 +30,26 @@ var upCmd = &cobra.Command{
 	},
 }
 
-var upLocalMode string
-var upQuickSetup bool
-var upAdvancedSetup bool
-var upBlueprintTemplate string
-var upAnswerFile string
-var cfgOverridden bool
-var noCleanup bool
+var upParams = up.UpParams{}
 
 // DoUp executes the up command
 func DoUp(context *xl.Context, branchVersion string) {
 	util.Verbose("Running XL Seed\n")
-	up.InvokeBlueprintAndSeed(context, upLocalMode, upQuickSetup, upAdvancedSetup, upBlueprintTemplate, cfgOverridden, upAnswerFile, noCleanup, branchVersion)
+	up.InvokeBlueprintAndSeed(context, upParams, branchVersion)
 }
 
 func init() {
 	rootCmd.AddCommand(upCmd)
 
 	upFlags := upCmd.Flags()
-	upFlags.StringVarP(&upLocalMode, "local", "l", "", "Enable local file mode, by default remote file mode is used")
-	upFlags.StringVarP(&upBlueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local folder path")
-	upFlags.BoolVarP(&upQuickSetup, "quick-setup", "", false, "Quickly run setup with all default values")
-	upFlags.BoolVarP(&upAdvancedSetup, "advanced-setup", "", false, "Advanced setup")
-	upFlags.StringVarP(&upAnswerFile, "answers", "a", "", "The file containing answers for the questions")
-	upFlags.BoolVarP(&cfgOverridden, "dev", "d", false, "Enable dev mode, uses repository config from your local config instead")
-	upFlags.BoolVar(&noCleanup, "no-cleanup", false, "Leave generated files on the filesystem")
+	upFlags.StringVarP(&upParams.localMode, "local", "l", "", "Enable local file mode, by default remote file mode is used")
+	upFlags.StringVarP(&upParams.blueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local folder path")
+	upFlags.BoolVarP(&upParams.quickSetup, "quick-setup", "", false, "Quickly run setup with all default values")
+	upFlags.BoolVarP(&upParams.advancedSetup, "advanced-setup", "", false, "Advanced setup")
+	upFlags.StringVarP(&upParams.answerFile, "answers", "a", "", "The file containing answers for the questions")
+	upFlags.BoolVarP(&upParams.cfgOverridden, "dev", "d", false, "Enable dev mode, uses repository config from your local config instead")
+	upFlags.BoolVar(&upParams.noCleanup, "no-cleanup", false, "Leave generated files on the filesystem")
+	upFlags.BoolVar(&upParams.destroy, "destroy", false, "Undeploy the deployed resources")
 	err := upFlags.MarkHidden("dev")
 	if err != nil {
 		util.Error("error setting up cmd flags: %s\n", err.Error())
