@@ -228,7 +228,6 @@ func TestInstantiateBlueprint(t *testing.T) {
 		// check secrets file
 		secretsFile := GetFileContent(path.Join(gb.OutputDir, secretsFile))
 		secretsMap := map[string]string{
-			"AWSAccessKey":         "testKey",
 			"AWSAccessSecret":      "testSecret",
 			"AWSAccessSuperSecret": "superSecret",
 		}

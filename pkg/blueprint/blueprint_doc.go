@@ -48,10 +48,14 @@ const (
 var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfirm, TypeSecret, TypeSecretEditor, TypeSecretFile}
 
 type PreparedData struct {
+	// Storing values for all fields
 	TemplateData map[string]interface{}
-	SummaryData  map[string]interface{}
-	Values       map[string]interface{}
-	Secrets      map[string]interface{}
+	// Used to store data to be shown in summary table
+	SummaryData map[string]interface{}
+	// Used to store data to be saved in values.xlvals
+	Values map[string]interface{}
+	// Used to store data to be saved in secrets.xlvals
+	Secrets map[string]interface{}
 }
 
 func NewPreparedData() *PreparedData {
@@ -673,7 +677,7 @@ func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsO
 		if defaultVal == "" && currentVar.Type.Value == TypeConfirm {
 			defaultVal = false
 		}
-
+		currentVar.Meta.PromptSkipped = true
 		saveItemToTemplateDataMap(currentVar, dataMap, defaultVal)
 		util.Verbose("[dataPrep] Skipping question for parameter [%s] because PromptIf [%s] value is %t\n", currentVar.Name.Value, dependsOnVal, condition)
 		return true
@@ -689,18 +693,18 @@ func prepareQuestionText(desc string, fallbackQuestion string) string {
 }
 
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
-	if IsSecretType(variable.Type.Value) {
-		if variable.RevealOnSummary.Bool {
-			preparedData.SummaryData[variable.Label.Value] = data
-		} else {
-			preparedData.SummaryData[variable.Label.Value] = "*****"
-			if data == "" || data == "none" {
-				originalValue := "orig-" + variable.Label.Value
-				preparedData.SummaryData[originalValue] = data
-			}
-		}
+	skipParam := variable.IgnoreIfSkipped.Bool && variable.Meta.PromptSkipped
 
-		preparedData.Secrets[variable.Name.Value] = data
+	if IsSecretType(variable.Type.Value) {
+		if !skipParam {
+			if variable.RevealOnSummary.Bool || data == "" {
+				preparedData.SummaryData[variable.Label.Value] = data
+			} else {
+				preparedData.SummaryData[variable.Label.Value] = "*****"
+			}
+
+			preparedData.Secrets[variable.Name.Value] = data
+		}
 		// Use raw value of secret field if flag is set
 		if variable.ReplaceAsIs.Bool {
 			preparedData.TemplateData[variable.Name.Value] = data
@@ -708,11 +712,13 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 			preparedData.TemplateData[variable.Name.Value] = fmt.Sprintf(fmtTagValue, variable.Name.Value)
 		}
 	} else {
-		preparedData.SummaryData[variable.Label.Value] = data
+		if !skipParam {
+			preparedData.SummaryData[variable.Label.Value] = data
 
-		// Save to values file if switch is ON
-		if variable.SaveInXlvals.Bool {
-			preparedData.Values[variable.Name.Value] = data
+			// Save to values file if switch is ON
+			if variable.SaveInXlvals.Bool {
+				preparedData.Values[variable.Name.Value] = data
+			}
 		}
 		preparedData.TemplateData[variable.Name.Value] = data
 	}

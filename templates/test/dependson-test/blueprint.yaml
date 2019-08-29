@@ -22,6 +22,8 @@ spec:
     description: What is the AWS Access Key ID?
     promptIf: !expr "!UseAWSCredentialsFromSystem"
     default: testKey
+    ignoreIfSkipped: true
+
   - name: AWSAccessSecret
     type: SecretInput
     prompt: AWSAccessSecret?

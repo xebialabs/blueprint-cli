@@ -60,7 +60,7 @@ func DataMapTable(dataMap *map[string]interface{}, align string, keyWidth, valWi
 			val = string(val[:valWidth-2]) + ".."
 		}
 
-		if !fromUpCommand || isEmptyValue(dataMap, k, val) {
+		if !fromUpCommand || !isEmptyValue(dataMap, k, val) {
 			sb.WriteString(fmt.Sprintf(rowFormat,
 				leftSpacer,
 				strings.Repeat(" ", padding),
@@ -78,15 +78,9 @@ func DataMapTable(dataMap *map[string]interface{}, align string, keyWidth, valWi
 }
 
 func isEmptyValue(dataMap *map[string]interface{}, key, val string) bool {
-	if val == "*****" {
-		originalKey := "orig-" + key
-		val = fmt.Sprintf("%v", (*dataMap)[originalKey])
-	}
+	val = strings.ToLower(strings.Trim(val, " "))
 
-	val = strings.Trim(val, " ")
-	val = strings.ToLower(val)
-
-	return val != "" && val != "none"
+	return val == ""
 }
 
 func Verbose(format string, a ...interface{}) {
