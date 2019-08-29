@@ -1,20 +1,20 @@
 package up
 
 import (
-	"io/ioutil"
-	"log"
-	"strings"
-	"time"
+    "io/ioutil"
+    "log"
+    "strings"
+    "time"
 
-	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
+    "github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 
-	"github.com/xebialabs/xl-cli/pkg/xl"
-	"gopkg.in/yaml.v2"
+    "github.com/xebialabs/xl-cli/pkg/xl"
+    "gopkg.in/yaml.v2"
 
-	"github.com/briandowns/spinner"
-	"github.com/xebialabs/xl-cli/pkg/blueprint"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+    "github.com/briandowns/spinner"
+    "github.com/xebialabs/xl-cli/pkg/blueprint"
+    "github.com/xebialabs/xl-cli/pkg/models"
+    "github.com/xebialabs/xl-cli/pkg/util"
 )
 
 var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
@@ -56,13 +56,15 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 
 	gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 
+	answerFileToBlueprint := upAnswerFile
+
 	if upAnswerFile != "" {
 		generateAnswerFile(upAnswerFile, gb)
-		upAnswerFile = GeneratedAnswerFile
+        answerFileToBlueprint = TempAnswerFile
 	}
 
 	// Infra blueprint
-	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true, false)
+	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, answerFileToBlueprint, false, quickSetup, true, false)
 	if err != nil {
 		util.Fatal("Error while creating Infrastructure Blueprint: %s \n", err)
 	}
@@ -121,7 +123,13 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 
 	defer util.StopAndRemoveContainer(s)
 
-	upAnswerFile = getAnswerFile(upAnswerFile)
+    if upAnswerFile != "" {
+        upAnswerFile = getAnswerFile(TempAnswerFile)
+        gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
+    } else {
+        upAnswerFile = getAnswerFile(upAnswerFile)
+    }
+
 
 	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true, true)
 	if err != nil {
@@ -141,7 +149,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 func generateAnswerFile(upAnswerFile string, gb *blueprint.GeneratedBlueprint) {
 	answerMap := convertAnswerFileToMap(upAnswerFile)
 	generateLicenseAndKeystore(answerMap, gb)
-	convertMapToAnswerFile(answerMap, GeneratedAnswerFile)
+	convertMapToAnswerFile(answerMap, TempAnswerFile)
 }
 
 func convertAnswerFileToMap(answerFilePath string) map[string]string {

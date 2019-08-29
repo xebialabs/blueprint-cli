@@ -27,6 +27,7 @@ const (
 	DefaultInfraBlueprintTemplate = "xl-infra"
 	DefaultBlueprintTemplate      = "xl-up"
 	GeneratedAnswerFile           = "cm_answer_file_auto.yaml"
+	TempAnswerFile                = "temp_answer_file_auto.yaml"
 	MergedAnswerFile              = "merged_answer_file.yaml"
 	ConfigMapName                 = "answers-config-map"
 	DataFile                      = "answers.yaml"
@@ -108,7 +109,9 @@ func GenerateFileAndUpdateProperty(propertyName, newPropertyValue string, answer
 	if k8s.IsPropertyPresent(propertyName, answerMapFromConfigMap) {
 		propertyValue := k8s.GetRequiredPropertyFromMap(propertyName, answerMapFromConfigMap)
 
-		if !isBase64Encoded(propertyValue) {
+		isBase64 := isBase64Encoded(propertyValue)
+
+		if !isBase64 {
 			f, err := ioutil.ReadFile(propertyValue)
 			if err != nil {
 				util.Fatal("Error reading the value of %s - %s", propertyName, err)
@@ -117,9 +120,24 @@ func GenerateFileAndUpdateProperty(propertyName, newPropertyValue string, answer
 		}
 
 		util.Verbose("writing %s", newPropertyValue)
-		newValue := k8s.DecodeBase64(propertyValue)
+
+        if _, err := os.Stat(models.BlueprintOutputDir); os.IsNotExist(err) {
+            err := os.Mkdir(models.BlueprintOutputDir, os.ModePerm)
+            if err != nil {
+                util.Fatal("Error creating %s folder", models.BlueprintOutputDir, err)
+            }
+        }
+
 		location := filepath.Join(models.BlueprintOutputDir, newPropertyValue)
-		err := ioutil.WriteFile(location, []byte(newValue), 0640)
+
+		var err error
+
+		if isBase64 {
+            err = ioutil.WriteFile(location, k8s.DecodeBase64(propertyValue), 0640)
+        } else {
+            err = ioutil.WriteFile(location, []byte(propertyValue), 0640)
+        }
+
 		if err != nil {
 			util.Fatal("Error creating file %s - %s", newPropertyValue, err)
 		}
