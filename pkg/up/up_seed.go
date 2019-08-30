@@ -1,20 +1,20 @@
 package up
 
 import (
-    "io/ioutil"
-    "log"
-    "strings"
-    "time"
+	"io/ioutil"
+	"log"
+	"strings"
+	"time"
 
-    "github.com/xebialabs/xl-cli/pkg/cloud/k8s"
+	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 
-    "github.com/xebialabs/xl-cli/pkg/xl"
-    "gopkg.in/yaml.v2"
+	"github.com/xebialabs/xl-cli/pkg/xl"
+	"gopkg.in/yaml.v2"
 
-    "github.com/briandowns/spinner"
-    "github.com/xebialabs/xl-cli/pkg/blueprint"
-    "github.com/xebialabs/xl-cli/pkg/models"
-    "github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/briandowns/spinner"
+	"github.com/xebialabs/xl-cli/pkg/blueprint"
+	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
@@ -60,7 +60,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 
 	if upAnswerFile != "" {
 		generateAnswerFile(upAnswerFile, gb)
-        answerFileToBlueprint = TempAnswerFile
+		answerFileToBlueprint = TempAnswerFile
 	}
 
 	// Infra blueprint
@@ -123,13 +123,13 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 
 	defer util.StopAndRemoveContainer(s)
 
-    if upAnswerFile != "" {
-        upAnswerFile = getAnswerFile(TempAnswerFile)
-        gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
-    } else {
-        upAnswerFile = getAnswerFile(upAnswerFile)
-    }
-
+	if upAnswerFile != "" {
+		upAnswerFile = getAnswerFile(TempAnswerFile)
+		gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
+		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
+	} else {
+		upAnswerFile = getAnswerFile(upAnswerFile)
+	}
 
 	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true, true)
 	if err != nil {
@@ -150,6 +150,7 @@ func generateAnswerFile(upAnswerFile string, gb *blueprint.GeneratedBlueprint) {
 	answerMap := convertAnswerFileToMap(upAnswerFile)
 	generateLicenseAndKeystore(answerMap, gb)
 	convertMapToAnswerFile(answerMap, TempAnswerFile)
+	gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
 }
 
 func convertAnswerFileToMap(answerFilePath string) map[string]string {

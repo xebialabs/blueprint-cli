@@ -121,22 +121,22 @@ func GenerateFileAndUpdateProperty(propertyName, newPropertyValue string, answer
 
 		util.Verbose("writing %s", newPropertyValue)
 
-        if _, err := os.Stat(models.BlueprintOutputDir); os.IsNotExist(err) {
-            err := os.Mkdir(models.BlueprintOutputDir, os.ModePerm)
-            if err != nil {
-                util.Fatal("Error creating %s folder", models.BlueprintOutputDir, err)
-            }
-        }
+		if _, err := os.Stat(models.BlueprintOutputDir); os.IsNotExist(err) {
+			err := os.Mkdir(models.BlueprintOutputDir, os.ModePerm)
+			if err != nil {
+				util.Fatal("Error creating %s folder", models.BlueprintOutputDir, err)
+			}
+		}
 
 		location := filepath.Join(models.BlueprintOutputDir, newPropertyValue)
 
 		var err error
 
 		if isBase64 {
-            err = ioutil.WriteFile(location, k8s.DecodeBase64(propertyValue), 0640)
-        } else {
-            err = ioutil.WriteFile(location, []byte(propertyValue), 0640)
-        }
+			err = ioutil.WriteFile(location, k8s.DecodeBase64(propertyValue), 0640)
+		} else {
+			err = ioutil.WriteFile(location, []byte(propertyValue), 0640)
+		}
 
 		if err != nil {
 			util.Fatal("Error creating file %s - %s", newPropertyValue, err)
