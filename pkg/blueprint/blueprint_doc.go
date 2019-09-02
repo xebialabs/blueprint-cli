@@ -499,10 +499,10 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 					return nil, err
 				}
 
-				// if we have a valid answer, skip user input
 				if variable.Type.Value == TypeConfirm {
 					blueprintDoc.Variables[i] = variable
 				}
+				// if we have a valid answer, save it and skip user input
 				saveItemToTemplateDataMap(&variable, data, answer)
 				util.Info("[dataPrep] Using answer file value [%v] for variable [%s]\n", answer, variable.Name.Value)
 				continue
@@ -693,11 +693,11 @@ func prepareQuestionText(desc string, fallbackQuestion string) string {
 }
 
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
-	skipParam := variable.IgnoreIfSkipped.Bool && variable.Meta.PromptSkipped
+	skipParam := variable.IgnoreIfSkipped.Bool && (variable.Meta.PromptSkipped || data == nil || data == "")
 
 	if IsSecretType(variable.Type.Value) {
 		if !skipParam {
-			if variable.RevealOnSummary.Bool || data == "" {
+			if variable.RevealOnSummary.Bool {
 				preparedData.SummaryData[variable.Label.Value] = data
 			} else {
 				preparedData.SummaryData[variable.Label.Value] = "*****"

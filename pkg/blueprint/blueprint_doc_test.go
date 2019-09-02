@@ -1256,29 +1256,6 @@ func Test_saveItemToTemplateDataMap(t *testing.T) {
 			},
 		},
 		{
-			"should save secrets as \"\" in PreparedData when data is \"\"",
-			args{
-				&Variable{
-					Name:  VarField{Value: "Test"},
-					Label: VarField{Value: "Test"},
-					Type:  VarField{Value: "SecretInput"},
-				},
-				&PreparedData{
-					TemplateData: map[string]interface{}{"input1": "val1"},
-					SummaryData:  map[string]interface{}{"input1": "val1"},
-					Secrets:      map[string]interface{}{},
-					Values:       map[string]interface{}{},
-				},
-				"",
-			},
-			PreparedData{
-				TemplateData: map[string]interface{}{"input1": "val1", "Test": "!value Test"},
-				SummaryData:  map[string]interface{}{"input1": "val1", "Test": ""},
-				Secrets:      map[string]interface{}{"Test": ""},
-				Values:       map[string]interface{}{},
-			},
-		},
-		{
 			"should save secrets as as it is in PreparedData when RevealOnSummary & ReplaceAsIs is true",
 			args{
 				&Variable{
@@ -1349,6 +1326,30 @@ func Test_saveItemToTemplateDataMap(t *testing.T) {
 					Values:       map[string]interface{}{},
 				},
 				"foo",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": "!value Test"},
+				SummaryData:  map[string]interface{}{"input1": "val1"},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{},
+			},
+		},
+		{
+			"should skip secret in SummaryData & Secrets when IgnoreIfSkipped is true & value is nil",
+			args{
+				&Variable{
+					Name:            VarField{Value: "Test"},
+					Label:           VarField{Value: "Test"},
+					IgnoreIfSkipped: VarField{Bool: true},
+					Type:            VarField{Value: "SecretInput"},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"",
 			},
 			PreparedData{
 				TemplateData: map[string]interface{}{"input1": "val1", "Test": "!value Test"},
