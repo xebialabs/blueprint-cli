@@ -528,7 +528,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 			continue
 		}
 		// do not return error when in non-strict answers mode, instead ask user input for the variable value
-		if usingAnswersFile && strictAnswers {
+		if usingAnswersFile && strictAnswers && !variable.IgnoreIfSkipped.Bool {
 			return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Value)
 		}
 
@@ -539,7 +539,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		// * if answers file is not present or isPartial is set to TRUE and answer not found on file for the variable
 		util.Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Value, variable.Type.Value)
 		var answer interface{}
-		if !SkipUserInput {
+		if !SkipUserInput && (!variable.IgnoreIfSkipped.Bool && variable.Prompt != (VarField{}) && variable.Prompt.Value != "") {
 			answer, err = variable.GetUserInput(defaultVal, data.TemplateData, surveyOpts...)
 		}
 		if err != nil {
@@ -707,6 +707,9 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 		}
 		// Use raw value of secret field if flag is set
 		if variable.ReplaceAsIs.Bool {
+			if data == nil {
+				data = ""
+			}
 			preparedData.TemplateData[variable.Name.Value] = data
 		} else {
 			preparedData.TemplateData[variable.Name.Value] = fmt.Sprintf(fmtTagValue, variable.Name.Value)
@@ -718,6 +721,14 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 			// Save to values file if switch is ON
 			if variable.SaveInXlvals.Bool {
 				preparedData.Values[variable.Name.Value] = data
+			}
+		}
+		if data == nil {
+			switch variable.Type.Value {
+			case TypeConfirm:
+				data = false
+			case TypeInput, TypeEditor, TypeFile, TypeSelect:
+				data = ""
 			}
 		}
 		preparedData.TemplateData[variable.Name.Value] = data

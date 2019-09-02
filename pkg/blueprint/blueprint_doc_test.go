@@ -1000,7 +1000,7 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 					},
 					{
 						Name:  VarField{Value: "input5"},
-						Label: VarField{Value: "input 4"},
+						Label: VarField{Value: "input 5"},
 						Type:  VarField{Value: "Input"},
 					},
 				},
@@ -1008,6 +1008,50 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 			args{GetTestTemplateDir("answer-input-2.yaml"), true, false},
 			nil,
 			true,
+		},
+		{
+			"should not fail when using incomplete answers file in strict mode where the variable has ignoreIfSkipped true",
+			BlueprintConfig{
+				Variables: []Variable{
+					{
+						Name:    VarField{Value: "input1"},
+						Label:   VarField{Value: "input1"},
+						Type:    VarField{Value: "Input"},
+						Value:   VarField{Bool: false, Value: "val1"},
+						Default: VarField{Bool: false, Value: "default1"},
+					},
+					{
+						Name:    VarField{Value: "input2"},
+						Label:   VarField{Value: "input 2"},
+						Type:    VarField{Value: "SecretInput"},
+						Default: VarField{Bool: false, Value: "default2"},
+					},
+					{
+						Name:  VarField{Value: "input3"},
+						Label: VarField{Value: "input 3"},
+						Type:  VarField{Value: "Input"},
+					},
+					{
+						Name:  VarField{Value: "input4"},
+						Label: VarField{Value: "input 4"},
+						Type:  VarField{Value: "Input"},
+					},
+					{
+						Name:            VarField{Value: "input5"},
+						Label:           VarField{Value: "input 5"},
+						Type:            VarField{Value: "Input"},
+						IgnoreIfSkipped: VarField{Bool: true},
+					},
+				},
+			},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, false},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "input2": "!value input2", "input3": "ans3", "input4": "ans4", "input5": ""},
+				SummaryData:  map[string]interface{}{"input1": "val1", "input 2": "*****", "input 3": "ans3", "input 4": "ans4"},
+				Secrets:      map[string]interface{}{"input2": "ans2"},
+				Values:       map[string]interface{}{},
+			},
+			false,
 		},
 		{
 			"should use answers file when available",
