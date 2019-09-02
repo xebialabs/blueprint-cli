@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -25,7 +26,9 @@ const (
 	XlUpBlueprint                 = "xl-up-blueprint"
 	DefaultInfraBlueprintTemplate = "xl-infra"
 	DefaultBlueprintTemplate      = "xl-up"
-	AnswerFileFromKubernetes      = "cm_answer_file_auto.yaml"
+	GeneratedAnswerFile           = "cm_answer_file_auto.yaml"
+	TempAnswerFile                = "temp_answer_file_auto.yaml"
+	MergedAnswerFile              = "merged_answer_file.yaml"
 	ConfigMapName                 = "answers-config-map"
 	DataFile                      = "answers.yaml"
 )
@@ -91,18 +94,53 @@ func getRepo(branchVersion string) repository.BlueprintRepository {
 	return repo
 }
 
-func createLicenseAndKeystore(answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) {
-	createFileAndUpdateKey("xlrLic", "xl-release.lic", answerMapFromConfigMap, gb)
-	createFileAndUpdateKey("xldLic", "deploy-it.lic", answerMapFromConfigMap, gb)
-	createFileAndUpdateKey("xlKeyStore", "keystore.jceks", answerMapFromConfigMap, gb)
+func generateLicenseAndKeystore(answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) {
+	GenerateFileAndUpdateProperty("xlrLic", "xl-release.lic", answerMapFromConfigMap, gb)
+	GenerateFileAndUpdateProperty("xldLic", "deploy-it.lic", answerMapFromConfigMap, gb)
+	GenerateFileAndUpdateProperty("xlKeyStore", "keystore.jceks", answerMapFromConfigMap, gb)
 }
 
-func createFileAndUpdateKey(propertyName, fileName string, answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) {
+func isBase64Encoded(content string) bool {
+	re := regexp.MustCompile(`^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$`)
+	return re.Match([]byte(content))
+}
+
+func GenerateFileAndUpdateProperty(propertyName, newPropertyValue string, answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) {
 	if k8s.IsPropertyPresent(propertyName, answerMapFromConfigMap) {
-		util.Verbose("writing %s", fileName)
-		content := k8s.DecodeBase64(k8s.GetRequiredPropertyFromMap(propertyName, answerMapFromConfigMap))
-		location := filepath.Join(models.BlueprintOutputDir, fileName)
-		ioutil.WriteFile(location, []byte(content), 0640)
+		propertyValue := k8s.GetRequiredPropertyFromMap(propertyName, answerMapFromConfigMap)
+
+		isBase64 := isBase64Encoded(propertyValue)
+
+		if !isBase64 {
+			f, err := ioutil.ReadFile(propertyValue)
+			if err != nil {
+				util.Fatal("Error reading the value of %s - %s", propertyName, err)
+			}
+			propertyValue = string(f)
+		}
+
+		util.Verbose("writing %s", newPropertyValue)
+
+		if _, err := os.Stat(models.BlueprintOutputDir); os.IsNotExist(err) {
+			err := os.Mkdir(models.BlueprintOutputDir, os.ModePerm)
+			if err != nil {
+				util.Fatal("Error creating %s folder", models.BlueprintOutputDir, err)
+			}
+		}
+
+		location := filepath.Join(models.BlueprintOutputDir, newPropertyValue)
+
+		var err error
+
+		if isBase64 {
+			err = ioutil.WriteFile(location, k8s.DecodeBase64(propertyValue), 0640)
+		} else {
+			err = ioutil.WriteFile(location, []byte(propertyValue), 0640)
+		}
+
+		if err != nil {
+			util.Fatal("Error creating file %s - %s", newPropertyValue, err)
+		}
 		answerMapFromConfigMap[propertyName] = location
 		gb.GeneratedFiles = append(gb.GeneratedFiles, location)
 	}

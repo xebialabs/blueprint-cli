@@ -56,8 +56,15 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 
 	gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 
+	answerFileToBlueprint := upAnswerFile
+
+	if upAnswerFile != "" {
+		generateAnswerFile(upAnswerFile, gb)
+		answerFileToBlueprint = TempAnswerFile
+	}
+
 	// Infra blueprint
-	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true, false)
+	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, answerFileToBlueprint, false, quickSetup, true, false)
 	if err != nil {
 		util.Fatal("Error while creating Infrastructure Blueprint: %s \n", err)
 	}
@@ -93,9 +100,8 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 			answerMapFromConfigMap["prevXldVersion"] = models.AvailableXldVersion
 		}
 
-		createLicenseAndKeystore(answerMapFromConfigMap, gb)
-
-		createYamlFileFromMap(answerMapFromConfigMap, AnswerFileFromKubernetes)
+		generateLicenseAndKeystore(answerMapFromConfigMap, gb)
+		convertMapToAnswerFile(answerMapFromConfigMap, GeneratedAnswerFile)
 	} else {
 		util.Verbose("Install workflow started")
 	}
@@ -117,7 +123,13 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 
 	defer util.StopAndRemoveContainer(s)
 
-	upAnswerFile = getAnswerFile(upAnswerFile)
+	if upAnswerFile != "" {
+		upAnswerFile = getAnswerFile(TempAnswerFile)
+		gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
+		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
+	} else {
+		upAnswerFile = getAnswerFile(upAnswerFile)
+	}
 
 	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true, true)
 	if err != nil {
@@ -134,6 +146,41 @@ func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup 
 	runAndCaptureResponse(runSeed())
 }
 
+func generateAnswerFile(upAnswerFile string, gb *blueprint.GeneratedBlueprint) {
+	answerMap := convertAnswerFileToMap(upAnswerFile)
+	generateLicenseAndKeystore(answerMap, gb)
+	convertMapToAnswerFile(answerMap, TempAnswerFile)
+	gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
+}
+
+func convertAnswerFileToMap(answerFilePath string) map[string]string {
+	answerMap := make(map[string]string)
+
+	contents, err := ioutil.ReadFile(answerFilePath)
+
+	if err != nil {
+		util.Fatal("Error reading answer file %s: %s", answerFilePath, err)
+	}
+
+	if err := yaml.Unmarshal(contents, &answerMap); err != nil {
+		util.Fatal("Error converting answer file %s", err)
+	}
+
+	return answerMap
+}
+
+func convertMapToAnswerFile(contents map[string]string, filename string) {
+	yamlBytes, err := yaml.Marshal(contents)
+	if err != nil {
+		util.Fatal("Error when marshalling the answer map to yaml %s", err.Error())
+	}
+
+	err = ioutil.WriteFile(filename, yamlBytes, 0640)
+	if err != nil {
+		util.Fatal("Error when creating an answer file %s", err.Error())
+	}
+}
+
 func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) string {
 	var version string
 	if k8s.IsPropertyPresent(key, answerMapFromConfigMap) {
@@ -148,40 +195,24 @@ func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) s
 func getAnswerFile(upAnswerFile string) string {
 	// If the answer file is provided merge them and use the merged file as the answer file
 	if upAnswerFile != "" {
-
 		newAnswerMap, isConflict := mergeAnswerFiles(upAnswerFile)
-
 		if isConflict {
 			isAnswerFileClash := askOverrideAnswerFile()
 			if !isAnswerFileClash {
-				util.Fatal("Quitting deployment due to conflicting files")
+				util.Fatal("Quitting deployment due to conflict in files.")
 			}
 		}
-		upAnswerFile = "merged_answer_file.yaml"
-
-		createYamlFileFromMap(newAnswerMap, upAnswerFile)
-
+		upAnswerFile = MergedAnswerFile
+		convertMapToAnswerFile(newAnswerMap, upAnswerFile)
 	} else {
-		upAnswerFile = AnswerFileFromKubernetes
+		upAnswerFile = GeneratedAnswerFile
 	}
 	return upAnswerFile
 }
 
-func createYamlFileFromMap(contents map[string]string, filename string) {
-	yamlBytes, err := yaml.Marshal(contents)
-	if err != nil {
-		util.Fatal("Error when marshalling the answer map to yaml %s", err.Error())
-	}
-
-	err = ioutil.WriteFile(filename, yamlBytes, 0640)
-	if err != nil {
-		util.Fatal("Error when creating an answer file %s", err.Error())
-	}
-}
-
 func mergeAnswerFiles(upAnswerFile string) (map[string]string, bool) {
 
-	autoAnswerFile, err := blueprint.GetValuesFromAnswersFile(AnswerFileFromKubernetes)
+	autoAnswerFile, err := blueprint.GetValuesFromAnswersFile(GeneratedAnswerFile)
 	if err != nil {
 		util.Fatal(err.Error())
 	}

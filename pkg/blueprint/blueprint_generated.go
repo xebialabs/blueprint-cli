@@ -72,7 +72,7 @@ func (generatedBlueprint *GeneratedBlueprint) Cleanup() error {
 		if isDir, _ := isDirectory(file); isDir {
 			directories = append(directories, file)
 		} else if util.PathExists(file, false) {
-			if !(strings.Index(file, "cm_answer_file_auto") != -1 || strings.Index(file, "merged_answer_file") != -1) {
+			if !(strings.Index(file, "generated_answers.yaml") != -1) {
 				if err := os.Remove(file); err != nil {
 					return err
 				}
