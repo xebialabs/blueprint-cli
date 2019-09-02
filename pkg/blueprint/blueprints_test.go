@@ -234,6 +234,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		for k, v := range secretsMap {
 			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
 		}
+		assert.NotContains(t, secretsFile, "AWSAccessKey")
 	})
 
 	t.Run("should create output files for valid test template in use defaults as values mode", func(t *testing.T) {
