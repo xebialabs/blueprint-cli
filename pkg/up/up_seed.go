@@ -2,7 +2,6 @@ package up
 
 import (
 	"io/ioutil"
-	"log"
 	"strings"
 	"time"
 
@@ -59,7 +58,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upParams UpParams, branchVersio
 		defer gb.Cleanup()
 	}
 
-	answerFileToBlueprint := upParams.upAnswerFile
+	answerFileToBlueprint := upParams.answerFile
 
 	if answerFileToBlueprint != "" {
 		generateAnswerFile(answerFileToBlueprint, gb)
@@ -67,7 +66,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upParams UpParams, branchVersio
 	}
 
 	// Infra blueprint
-	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, answerFileToBlueprint, false, quickSetup, true, false)
+	err = blueprint.InstantiateBlueprint(upParams.blueprintTemplate, blueprintContext, gb, answerFileToBlueprint, false, upParams.quickSetup, true, false)
 	if err != nil {
 		util.Fatal("Error while creating Infrastructure Blueprint: %s \n", err)
 	}
@@ -111,7 +110,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upParams UpParams, branchVersio
 	}
 
 	util.IsQuiet = true
-	runApplicationBlueprint(upParams, blueprintContext, gb)
+	runApplicationBlueprint(&upParams, blueprintContext, gb, branchVersion)
 	util.IsQuiet = false
 
 	applyFilesAndSave()
@@ -126,12 +125,12 @@ func parseConfigMap(configMap string) map[string]string {
 	util.Verbose("%s", configMap)
 	answerMapFromConfigMap := make(map[string]string)
 	if err := yaml.Unmarshal([]byte(configMap), &answerMapFromConfigMap); err != nil {
-		log.Fatal("Error parsing configMap: %s \n", err)
+		util.Fatal("Error parsing configMap: %s \n", err)
 	}
 	return answerMapFromConfigMap
 }
 
-func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint) {
+func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint, branchVersion string) {
 	// Switch blueprint once the infrastructure is done.
 	if upParams.blueprintTemplate != "" {
 		upParams.blueprintTemplate = strings.Replace(upParams.blueprintTemplate, DefaultInfraBlueprintTemplate, DefaultBlueprintTemplate, 1)
@@ -141,15 +140,15 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 		blueprintContext.ActiveRepo = &repo
 	}
 
-	if upParams.upAnswerFile != "" {
-		upParams.upAnswerFile = getAnswerFile(TempAnswerFile)
+	if upParams.answerFile != "" {
+		upParams.answerFile = getAnswerFile(TempAnswerFile)
 		gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
 		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
 	} else {
-		upParams.upAnswerFile = getAnswerFile(upParams.upAnswerFile)
+		upParams.answerFile = getAnswerFile(upParams.answerFile)
 	}
 
-	err = blueprint.InstantiateBlueprint(upParams.blueprintTemplate, blueprintContext, gb, upParams.answerFile, false, upParams.quickSetup, true, true)
+	err := blueprint.InstantiateBlueprint(upParams.blueprintTemplate, blueprintContext, gb, upParams.answerFile, false, upParams.quickSetup, true, true)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s \n", err)
 	}

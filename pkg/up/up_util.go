@@ -130,7 +130,7 @@ func GenerateFileAndUpdateProperty(propertyName, newPropertyValue string, answer
 		if _, err := os.Stat(models.BlueprintOutputDir); os.IsNotExist(err) {
 			err := os.Mkdir(models.BlueprintOutputDir, os.ModePerm)
 			if err != nil {
-				util.Fatal("Error creating %s folder", models.BlueprintOutputDir, err)
+				util.Fatal("Error creating %s folder - %s", models.BlueprintOutputDir, err)
 			}
 		}
 
