@@ -1514,3 +1514,58 @@ func Test_saveItemToTemplateDataMap(t *testing.T) {
 		})
 	}
 }
+
+func Test_shouldAskForInput(t *testing.T) {
+	tests := []struct {
+		name     string
+		variable Variable
+		want     bool
+	}{
+		{
+			"should return false when SkipUserInput is set true",
+			func() Variable {
+				SkipUserInput = true
+				return Variable{}
+			}(),
+			false,
+		},
+		{
+			"should return false when prompt is empty",
+			Variable{
+				IgnoreIfSkipped: VarField{Bool: true},
+			},
+			false,
+		},
+		{
+			"should return false when prompt is present and value is empty",
+			Variable{
+				IgnoreIfSkipped: VarField{Bool: true},
+				Prompt:          VarField{Value: ""},
+			},
+			false,
+		},
+		{
+			"should return true when prompt value is present",
+			Variable{
+				IgnoreIfSkipped: VarField{Bool: true},
+				Prompt:          VarField{Value: "foo"},
+			},
+			true,
+		},
+		{
+			"should return true when IgnoreIfSkipped is false",
+			Variable{
+				IgnoreIfSkipped: VarField{Bool: false},
+			},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := shouldAskForInput(tt.variable); got != tt.want {
+				t.Errorf("shouldAskForInput() = %v, want %v", got, tt.want)
+			}
+			SkipUserInput = false // reset the field
+		})
+	}
+}

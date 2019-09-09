@@ -539,7 +539,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		// * if answers file is not present or isPartial is set to TRUE and answer not found on file for the variable
 		util.Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Value, variable.Type.Value)
 		var answer interface{}
-		if !SkipUserInput && (!variable.IgnoreIfSkipped.Bool && variable.Prompt != (VarField{}) && variable.Prompt.Value != "") {
+		if shouldAskForInput(variable) {
 			answer, err = variable.GetUserInput(defaultVal, data.TemplateData, surveyOpts...)
 		}
 		if err != nil {
@@ -554,7 +554,17 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 	return data, nil
 }
 
-// get values from answers file
+func shouldAskForInput(variable Variable) bool {
+	if SkipUserInput {
+		return false
+	}
+	if variable.IgnoreIfSkipped.Bool {
+		return variable.Prompt != (VarField{}) && variable.Prompt.Value != ""
+	}
+	return true
+}
+
+// GetValuesFromAnswersFile get values from answers file
 func GetValuesFromAnswersFile(answersFilePath string) (map[string]string, error) {
 	if util.PathExists(answersFilePath, false) {
 		// read file contents

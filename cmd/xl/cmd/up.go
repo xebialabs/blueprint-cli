@@ -35,15 +35,15 @@ var upParams = up.UpParams{}
 // DoUp executes the up command
 func DoUp(context *xl.Context, branchVersion string) {
 	util.Verbose("Running XL Seed\n")
-	up.InvokeBlueprintAndSeed(context, upParams, branchVersion)
+	up.InvokeBlueprintAndSeed(context.BlueprintContext, upParams, branchVersion)
 }
 
 func init() {
 	rootCmd.AddCommand(upCmd)
 
 	upFlags := upCmd.Flags()
-	upFlags.StringVarP(&upParams.LocalMode, "local", "l", "", "Enable local file mode, by default remote file mode is used")
-	upFlags.StringVarP(&upParams.BlueprintTemplate, "blueprint", "b", "", "The folder containing the blueprint to use; this can be a folder path relative to the remote blueprint repository or a local folder path")
+	upFlags.StringVarP(&upParams.LocalMode, "local", "l", "", "Provide local file path where blueprints are located, by default a remote repository is used")
+	upFlags.StringVarP(&upParams.BlueprintTemplate, "blueprint", "b", "", "The folder containing the xl-infra blueprint; this can be a folder path relative to the remote blueprint repository or a local folder path provided using -l flag")
 	upFlags.BoolVarP(&upParams.QuickSetup, "quick-setup", "", false, "Quickly run setup with all default values")
 	upFlags.BoolVarP(&upParams.AdvancedSetup, "advanced-setup", "", false, "Advanced setup")
 	upFlags.StringVarP(&upParams.AnswerFile, "answers", "a", "", "The file containing answers for the questions")

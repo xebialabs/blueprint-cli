@@ -7,7 +7,6 @@ import (
 
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 
-	"github.com/xebialabs/xl-cli/pkg/xl"
 	"gopkg.in/yaml.v2"
 
 	"github.com/briandowns/spinner"
@@ -19,10 +18,15 @@ import (
 var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 var applyValues map[string]string
 
-// InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(context *xl.Context, upParams UpParams, branchVersion string) {
+var SkipSeed = false
+var SkipKube = false
 
-	defer util.StopAndRemoveContainer(s)
+// InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
+func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, branchVersion string) {
+
+	if !SkipSeed {
+		defer util.StopAndRemoveContainer(s)
+	}
 
 	if upParams.AnswerFile == "" {
 		if !(upParams.QuickSetup || upParams.AdvancedSetup) && !upParams.Destroy {
@@ -39,14 +43,13 @@ func InvokeBlueprintAndSeed(context *xl.Context, upParams UpParams, branchVersio
 	util.IsQuiet = true
 
 	var err error
-	blueprintContext := context.BlueprintContext
 
-	if upParams.LocalMode != "" {
-		blueprintContext, err = blueprint.ConstructLocalBlueprintContext(upParams.LocalMode)
+	if upParams.LocalPath != "" {
+		blueprintContext, err = blueprint.ConstructLocalBlueprintContext(upParams.LocalPath)
 		if err != nil {
 			util.Fatal("Error while creating local blueprint context: %s \n", err)
 		}
-	} else if upParams.LocalMode == "" && !upParams.CfgOverridden {
+	} else if upParams.LocalPath == "" && !upParams.CfgOverridden {
 		upParams.BlueprintTemplate = DefaultInfraBlueprintTemplate
 		repo := getRepo(branchVersion)
 		blueprintContext.ActiveRepo = &repo
@@ -72,7 +75,10 @@ func InvokeBlueprintAndSeed(context *xl.Context, upParams UpParams, branchVersio
 	}
 	util.IsQuiet = false
 
-	configMap := getKubeConfigMap()
+    configMap := ""
+    if !SkipKube {
+        configMap = getKubeConfigMap()
+    }
 
 	if upParams.Destroy {
 		InvokeDestroy(blueprintContext, upParams, branchVersion, configMap, gb)
@@ -117,8 +123,10 @@ func InvokeBlueprintAndSeed(context *xl.Context, upParams UpParams, branchVersio
 
 	util.Info("Generated files for deployment successfully! \nSpinning up xl seed! \n")
 
-	runAndCaptureResponse(pullSeedImage)
-	runAndCaptureResponse(runSeed(false))
+    if !SkipSeed {
+		runAndCaptureResponse(pullSeedImage)
+		runAndCaptureResponse(runSeed(false))
+	}
 }
 
 func parseConfigMap(configMap string) map[string]string {
