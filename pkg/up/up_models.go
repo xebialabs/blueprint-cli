@@ -1,12 +1,12 @@
 package up
 
 type UpParams struct {
-	localMode         string
-	quickSetup        bool
-	advancedSetup     bool
-	blueprintTemplate string
-	answerFile        string
-	cfgOverridden     bool
-	noCleanup         bool
-	destroy           bool
+	LocalMode         string
+	QuickSetup        bool
+	AdvancedSetup     bool
+	BlueprintTemplate string
+	AnswerFile        string
+	CfgOverridden     bool
+	NoCleanup         bool
+	Destroy           bool
 }

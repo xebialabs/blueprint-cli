@@ -24,13 +24,13 @@ func InvokeBlueprintAndSeed(context *xl.Context, upParams UpParams, branchVersio
 
 	defer util.StopAndRemoveContainer(s)
 
-	if upParams.answerFile == "" {
-		if !(upParams.quickSetup || upParams.advancedSetup) && !upParams.destroy {
+	if upParams.AnswerFile == "" {
+		if !(upParams.QuickSetup || upParams.AdvancedSetup) && !upParams.Destroy {
 			// ask for setup mode.
 			mode := askSetupMode()
 
 			if mode == "quick" {
-				upParams.quickSetup = true
+				upParams.QuickSetup = true
 			}
 		}
 	}
@@ -41,24 +41,24 @@ func InvokeBlueprintAndSeed(context *xl.Context, upParams UpParams, branchVersio
 	var err error
 	blueprintContext := context.BlueprintContext
 
-	if upParams.localMode != "" {
-		blueprintContext, err = blueprint.ConstructLocalBlueprintContext(upParams.localMode)
+	if upParams.LocalMode != "" {
+		blueprintContext, err = blueprint.ConstructLocalBlueprintContext(upParams.LocalMode)
 		if err != nil {
 			util.Fatal("Error while creating local blueprint context: %s \n", err)
 		}
-	} else if upParams.localMode == "" && !upParams.cfgOverridden {
-		upParams.blueprintTemplate = DefaultInfraBlueprintTemplate
+	} else if upParams.LocalMode == "" && !upParams.CfgOverridden {
+		upParams.BlueprintTemplate = DefaultInfraBlueprintTemplate
 		repo := getRepo(branchVersion)
 		blueprintContext.ActiveRepo = &repo
 	}
 
 	gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 
-	if !upParams.noCleanup {
+	if !upParams.NoCleanup {
 		defer gb.Cleanup()
 	}
 
-	answerFileToBlueprint := upParams.answerFile
+	answerFileToBlueprint := upParams.AnswerFile
 
 	if answerFileToBlueprint != "" {
 		generateAnswerFile(answerFileToBlueprint, gb)
@@ -66,7 +66,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upParams UpParams, branchVersio
 	}
 
 	// Infra blueprint
-	err = blueprint.InstantiateBlueprint(upParams.blueprintTemplate, blueprintContext, gb, answerFileToBlueprint, false, upParams.quickSetup, true, false)
+	err = blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, answerFileToBlueprint, false, upParams.QuickSetup, true, false)
 	if err != nil {
 		util.Fatal("Error while creating Infrastructure Blueprint: %s \n", err)
 	}
@@ -74,7 +74,7 @@ func InvokeBlueprintAndSeed(context *xl.Context, upParams UpParams, branchVersio
 
 	configMap := getKubeConfigMap()
 
-	if upParams.destroy {
+	if upParams.Destroy {
 		InvokeDestroy(blueprintContext, upParams, branchVersion, configMap, gb)
 		return
 	}
@@ -132,23 +132,23 @@ func parseConfigMap(configMap string) map[string]string {
 
 func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint, branchVersion string) {
 	// Switch blueprint once the infrastructure is done.
-	if upParams.blueprintTemplate != "" {
-		upParams.blueprintTemplate = strings.Replace(upParams.blueprintTemplate, DefaultInfraBlueprintTemplate, DefaultBlueprintTemplate, 1)
+	if upParams.BlueprintTemplate != "" {
+		upParams.BlueprintTemplate = strings.Replace(upParams.BlueprintTemplate, DefaultInfraBlueprintTemplate, DefaultBlueprintTemplate, 1)
 	} else {
-		upParams.blueprintTemplate = DefaultBlueprintTemplate
+		upParams.BlueprintTemplate = DefaultBlueprintTemplate
 		repo := getRepo(branchVersion)
 		blueprintContext.ActiveRepo = &repo
 	}
 
-	if upParams.answerFile != "" {
-		upParams.answerFile = getAnswerFile(TempAnswerFile)
+	if upParams.AnswerFile != "" {
+		upParams.AnswerFile = getAnswerFile(TempAnswerFile)
 		gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
 		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
 	} else {
-		upParams.answerFile = getAnswerFile(upParams.answerFile)
+		upParams.AnswerFile = getAnswerFile(upParams.AnswerFile)
 	}
 
-	err := blueprint.InstantiateBlueprint(upParams.blueprintTemplate, blueprintContext, gb, upParams.answerFile, false, upParams.quickSetup, true, true)
+	err := blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, upParams.AnswerFile, false, upParams.QuickSetup, true, true)
 	if err != nil {
 		util.Fatal("Error while creating Blueprint: %s \n", err)
 	}
