@@ -1,0 +1,37 @@
+K8sSetup: Plain multinode K8s cluster
+useKubeconfig: false
+apiServerURL: https://k8s.com:6443
+K8sClientCertFile: ./up_util.go
+K8sClientKeyFile: ./up_util.go
+K8sClientCert: ./up_util.go
+K8sClientKey: ./up_util.go
+InstallXLD: true
+InstallXLR: true
+xldAdminPass: password
+xldLic: ./up_util.go
+xldDbName: xl-deploy
+xldDbUser: xl-deploy
+xldDbPass: xl-deploy
+nsfServerHost: nfs-test.com
+nsfSharePath: /xebialabs
+xlrAdminPass: password
+xlrLic: ./up_util.go
+xlrDbName: xl-release
+xlrDbUser: xl-release
+xlrDbPass: xl-release
+xlrReportDbName: xl-release-report
+xlrReportDbUser: xl-release-report
+xlrReportDbPass: xl-release-report
+xlKeyStore: ./up_util.go
+xlKeyStorePass: test123
+xlVersion: 8.6.1
+InstallMonitoring: true
+monitoringUser: mon-user
+monitoringUserPass: mon-pass
+postgresMaxConn: 400
+postgresSharedBuff: 612MB
+postgresEffectCacheSize: 2GB
+postgresSyncCommit: "off"
+postgresMaxWallSize: 512MB
+OsType: linux
+K8sAuthentication: Client key/certificate [Path to files]

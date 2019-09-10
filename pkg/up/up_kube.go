@@ -11,37 +11,43 @@ import (
 // The namespace to use
 const NAMESPACE = "xebialabs"
 
-func getKubeClient() *kubernetes.Clientset {
+func getKubeClient() (*kubernetes.Clientset, error) {
 	answerMap, err := blueprint.GetValuesFromAnswersFile(GeneratedAnswerFile)
 	if err != nil {
-		util.Fatal("Error reading answer file: %s\n", err.Error())
+		return nil, err
 	}
 
-	config := k8s.GetK8sConfiguration(answerMap)
-
+	config, err := k8s.GetK8sConfiguration(answerMap)
+	if err != nil {
+		return nil, err
+	}
 	util.Verbose("Got the configuration...\n")
 
-	client, err := kubernetes.NewForConfig(config)
-
-	if err != nil {
-		util.Fatal("Error creating kubernetes client: %s\n", err.Error())
-	}
-	return client
+    client, err := kubernetes.NewForConfig(config)
+    if err != nil {
+        return nil, fmt.Errorf("error creating kubernetes client: %s", err)
+    }
+    return client
 }
 
-func getKubeConfigMap() string {
-	// Step 1 Get connection
-	client := getKubeClient()
-
+func getKubeConfigMap() (string, error) {
+    // Step 1 Get connection
+    client, err := getKubeClient()
+    if err != nil {
+		return "", err
+	}
 	// Step 2 Check for namespace
-	isNamespaceAvailable := checkForNameSpace(client, NAMESPACE)
-
+	isNamespaceAvailable, err := checkForNameSpace(client, NAMESPACE)
+	if err != nil {
+		return "", err
+	}
+	// Step 3 Check for version
 	if isNamespaceAvailable {
-		util.Verbose("the namespace %s is available...\n", NAMESPACE)
+        util.Verbose("the namespace %s is available...\n", NAMESPACE)
 
 		cm, err := client.CoreV1().ConfigMaps(NAMESPACE).List(metav1.ListOptions{})
 		if err != nil {
-			util.Fatal(err.Error())
+			return "", err
 		}
 
 		var out string
@@ -52,23 +58,23 @@ func getKubeConfigMap() string {
 			}
 		}
 		// Returning the data in the config map
-		return out
+		return out, nil
 	}
 
-	return ""
+	return "", nil
 }
 
-func checkForNameSpace(client *kubernetes.Clientset, namespace string) bool {
+func checkForNameSpace(client *kubernetes.Clientset, namespace string) (bool, error) {
 
 	ns, err := client.CoreV1().Namespaces().List(metav1.ListOptions{})
 	if err != nil {
-		util.Fatal("Error while fetching namespaces: %s\n", err.Error())
+		return false, err
 	}
 
 	for _, n := range ns.Items {
 		if n.Name == namespace {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }

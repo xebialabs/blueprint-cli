@@ -3,14 +3,14 @@ package k8s
 import (
 	"encoding/base64"
 	"fmt"
-    "github.com/aws/aws-sdk-go/aws"
-    "github.com/aws/aws-sdk-go/aws/credentials"
-    "os"
+	"os"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/xebialabs/xl-cli/pkg/util"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -56,40 +56,46 @@ type getCallerIdentityWrapper struct {
 	} `json:"GetCallerIdentityResponse"`
 }
 
-func connectToEKS(answerMap map[string]string) *restclient.Config {
-    fmt.Println("Connecting to EKS")
+func connectToEKS(answerMap map[string]string) (*restclient.Config, error) {
+	fmt.Println("Connecting to EKS")
 	clusterID := getClusterIDFromClusterName(answerMap)
 
 	var sess *session.Session
-    var err error
+	var err error
 
 	if IsPropertyPresent("AWSAccessKey", answerMap) {
-	    var region string
+		var region string
 
-	    if IsPropertyPresent("AWSRegion", answerMap) {
-	        region = GetRequiredPropertyFromMap("AWSRegion", answerMap)
-        } else {
-            region = "eu-west-1"
-        }
+		if IsPropertyPresent("AWSRegion", answerMap) {
+			region, err = GetRequiredPropertyFromMap("AWSRegion", answerMap)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			region = "eu-west-1"
+		}
+		AWSAccessKey, err := GetRequiredPropertyFromMap("AWSAccessKey", answerMap)
+		if err != nil {
+			return nil, err
+		}
+		AWSAccessSecret, err := GetRequiredPropertyFromMap("AWSAccessSecret", answerMap)
+		if err != nil {
+			return nil, err
+		}
+		sess, err = session.NewSession(&aws.Config{
+			Region:      aws.String(region),
+			Credentials: credentials.NewStaticCredentials(AWSAccessKey, AWSAccessSecret, ""),
+		})
+	} else {
+		sess, err = session.NewSessionWithOptions(session.Options{
+			AssumeRoleTokenProvider: stdinStderrTokenProvider,
+			SharedConfigState:       session.SharedConfigEnable,
+		})
+	}
 
-	    sess, err = session.NewSession(&aws.Config{
-	        Region:         aws.String(region),
-	        Credentials:    credentials.NewStaticCredentials(
-	            GetRequiredPropertyFromMap("AWSAccessKey", answerMap),
-	            GetRequiredPropertyFromMap("AWSAccessSecret", answerMap),
-	            "",
-            ),
-        })
-    } else {
-        sess, err = session.NewSessionWithOptions(session.Options{
-            AssumeRoleTokenProvider: stdinStderrTokenProvider,
-            SharedConfigState:       session.SharedConfigEnable,
-        })
-    }
-
-    if err != nil {
-        util.Fatal("could not create session: %v", err)
-    }
+	if err != nil {
+		return nil, fmt.Errorf("could not create session: %v", err)
+	}
 
 	stsAPI := sts.New(sess)
 
@@ -98,27 +104,28 @@ func connectToEKS(answerMap map[string]string) *restclient.Config {
 
 	presignedURLString, err := request.Presign(requestPresignParam)
 	if err != nil {
-		util.Fatal("Cannot parse the request %s", err)
+		return nil, fmt.Errorf("Cannot parse the request %s", err)
 	}
 
 	tokenExpiration := time.Now().Local().Add(presignedURLExpiration - 1*time.Minute)
 	t := Token{v1Prefix + base64.RawURLEncoding.EncodeToString([]byte(presignedURLString)), tokenExpiration}
 
-	url := GetRequiredPropertyFromMap("apiServerURL", answerMap)
-
+	url, err := GetRequiredPropertyFromMap("apiServerURL", answerMap)
+	if err != nil {
+		return nil, err
+	}
 	config, err := clientcmd.BuildConfigFromFlags(url, "")
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
-
 	config.TLSClientConfig.Insecure = true
 	config.BearerToken = t.Token
 
-	return config
+	return config, nil
 }
 
 // GetK8sConfiguration gets the Kubernetes connection configuration
-func GetK8sConfiguration(answerMap map[string]string) *restclient.Config {
+func GetK8sConfiguration(answerMap map[string]string) (*restclient.Config, error) {
 	if answerMap["IsEKS"] == "true" {
 		return connectToEKS(answerMap)
 	}
@@ -126,34 +133,59 @@ func GetK8sConfiguration(answerMap map[string]string) *restclient.Config {
 	return connectToK8s(answerMap)
 }
 
-func connectToK8s(answerMap map[string]string) *restclient.Config {
-	url := GetRequiredPropertyFromMap("apiServerURL", answerMap)
-
+func connectToK8s(answerMap map[string]string) (*restclient.Config, error) {
+	url, err := GetRequiredPropertyFromMap("apiServerURL", answerMap)
+	if err != nil {
+		return nil, err
+	}
 	config, err := clientcmd.BuildConfigFromFlags(url, "")
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
-    if IsPropertyPresent("K8sToken", answerMap) {
-        config.BearerToken = GetRequiredPropertyFromMap("K8sToken", answerMap)
-    } else {
+	if IsPropertyPresent("K8sToken", answerMap) {
+		config.BearerToken, err = GetRequiredPropertyFromMap("K8sToken", answerMap)
+		if err != nil {
+			return nil, err
+		}
+	} else {
 
-        if IsPropertyPresent("K8sClientCert", answerMap) {
-            config.CertData = DecodeBase64(GetRequiredPropertyFromMap("K8sClientCert", answerMap))
-        } else {
-            config.CertFile = GetRequiredPropertyFromMap("K8sClientCertFile", answerMap)
-        }
+		if IsPropertyPresent("K8sClientCert", answerMap) {
+			data, err := GetRequiredPropertyFromMap("K8sClientCert", answerMap)
+			if err != nil {
+				return nil, err
+			}
+			config.CertData, err = DecodeBase64(data)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			config.CertFile, err = GetRequiredPropertyFromMap("K8sClientCertFile", answerMap)
+			if err != nil {
+				return nil, err
+			}
+		}
 
-        if IsPropertyPresent("K8sClientKey", answerMap) {
-            config.KeyData = DecodeBase64(GetRequiredPropertyFromMap("K8sClientKey", answerMap))
-        } else {
-            config.KeyFile = GetRequiredPropertyFromMap("K8sClientKeyFile", answerMap)
-        }
-    }
+		if IsPropertyPresent("K8sClientKey", answerMap) {
+			data, err := GetRequiredPropertyFromMap("K8sClientKey", answerMap)
+			if err != nil {
+				return nil, err
+			}
+			config.KeyData, err = DecodeBase64(data)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			config.KeyFile, err = GetRequiredPropertyFromMap("K8sClientKeyFile", answerMap)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	// TODO check this connection param
 	config.TLSClientConfig.Insecure = true
 
-	return config
+	return config, nil
 }
 
 func stdinStderrTokenProvider() (string, error) {
@@ -163,20 +195,20 @@ func stdinStderrTokenProvider() (string, error) {
 	return v, err
 }
 
-func DecodeBase64(data string) []byte {
+func DecodeBase64(data string) ([]byte, error) {
 	decode, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		util.Fatal("Error decoding the certificates")
+		return nil, fmt.Errorf("error decoding the certificates %s", err)
 	}
-	return decode
+	return decode, nil
 }
 
-func GetRequiredPropertyFromMap(propertyName string, answerMap map[string]string) string {
+func GetRequiredPropertyFromMap(propertyName string, answerMap map[string]string) (string, error) {
 	value := answerMap[propertyName]
 	if value == "" {
-		util.Fatal("The property %s is required to connect with Kubernetes", propertyName)
+		return "", fmt.Errorf("the property %s is required to connect with Kubernetes", propertyName)
 	}
-	return value
+	return value, nil
 }
 
 func IsPropertyPresent(propertyName string, answerMap map[string]string) bool {

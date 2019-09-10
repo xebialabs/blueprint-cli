@@ -102,7 +102,7 @@ func InstantiateBlueprint(
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
 	// if this is use-defaults mode, show used default values as table
-	if useDefaultsAsValue && fromUpCommand && printSummaryTable {
+	if useDefaultsAsValue && fromUpCommand && printSummaryTable && !SkipFinalPrompt {
 		// Final prompt from user to start generation process
 		toContinue := false
 		question := models.UpFinalPrompt

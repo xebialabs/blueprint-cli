@@ -59,10 +59,12 @@ func (server *XLReleaseServer) AcceptsDoc(doc *Document) bool {
 }
 
 func (server *XLDeployServer) PreprocessDoc(doc *Document) {
-	addHomeIfMissing(doc, server.ApplicationsHome, "Applications-home")
-	addHomeIfMissing(doc, server.EnvironmentsHome, "Environments-home")
-	addHomeIfMissing(doc, server.InfrastructureHome, "Infrastructure-home")
-	addHomeIfMissing(doc, server.ConfigurationHome, "Configuration-home")
+	if server != nil {
+		addHomeIfMissing(doc, server.ApplicationsHome, "Applications-home")
+		addHomeIfMissing(doc, server.EnvironmentsHome, "Environments-home")
+		addHomeIfMissing(doc, server.InfrastructureHome, "Infrastructure-home")
+		addHomeIfMissing(doc, server.ConfigurationHome, "Configuration-home")
+	}
 }
 
 func (server *XLReleaseServer) PreprocessDoc(doc *Document) {

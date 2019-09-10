@@ -38,11 +38,11 @@ var pullSeedImage = models.Command{
 	Args: []string{"pull", SeedImage},
 }
 
-func runSeed(undeploy bool) models.Command {
+func runSeed(undeploy bool) (models.Command, error) {
 	dir, err := os.Getwd()
 
 	if err != nil {
-		util.Fatal("Error while getting current work directory")
+		return models.Command{}, fmt.Errorf("error while getting current work directory: %s", err)
 	}
 
 	command := []string{"run", "--name", "xl-seed", "-v", dir + ":/data", SeedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"}
@@ -54,7 +54,7 @@ func runSeed(undeploy bool) models.Command {
 	return models.Command{
 		Name: Docker,
 		Args: command,
-	}
+	}, nil
 }
 
 func getLocalContext(templatePath string) (*blueprint.BlueprintContext, string, error) {
@@ -84,7 +84,7 @@ func getLocalContext(templatePath string) (*blueprint.BlueprintContext, string, 
 	return blueprintContext, blueprintTemplate, nil
 }
 
-func getRepo(branchVersion string) repository.BlueprintRepository {
+func getRepo(branchVersion string) (repository.BlueprintRepository, error) {
 
 	repo, err := github.NewGitHubBlueprintRepository(map[string]string{
 		"name":      XlUpBlueprint,
@@ -94,16 +94,26 @@ func getRepo(branchVersion string) repository.BlueprintRepository {
 	})
 
 	if err != nil {
-		util.Fatal("Error while creating Blueprint: %s \n", err)
+		return nil, fmt.Errorf("error while creating Blueprint: %s", err)
 	}
 
-	return repo
+	return repo, nil
 }
 
-func generateLicenseAndKeystore(answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) {
-	GenerateFileAndUpdateProperty("xlrLic", "xl-release.lic", answerMapFromConfigMap, gb)
-	GenerateFileAndUpdateProperty("xldLic", "deploy-it.lic", answerMapFromConfigMap, gb)
-	GenerateFileAndUpdateProperty("xlKeyStore", "keystore.jceks", answerMapFromConfigMap, gb)
+func generateLicenseAndKeystore(answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) error {
+	err := GenerateFileAndUpdateProperty("xlrLic", "xl-release.lic", answerMapFromConfigMap, gb)
+	if err != nil {
+		return err
+	}
+	err = GenerateFileAndUpdateProperty("xldLic", "deploy-it.lic", answerMapFromConfigMap, gb)
+	if err != nil {
+		return err
+	}
+	err = GenerateFileAndUpdateProperty("xlKeyStore", "keystore.jceks", answerMapFromConfigMap, gb)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func isBase64Encoded(content string) bool {
@@ -111,16 +121,18 @@ func isBase64Encoded(content string) bool {
 	return re.Match([]byte(content))
 }
 
-func GenerateFileAndUpdateProperty(propertyName, newPropertyValue string, answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) {
+func GenerateFileAndUpdateProperty(propertyName, newPropertyValue string, answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) error {
 	if k8s.IsPropertyPresent(propertyName, answerMapFromConfigMap) {
-		propertyValue := k8s.GetRequiredPropertyFromMap(propertyName, answerMapFromConfigMap)
-
+		propertyValue, err := k8s.GetRequiredPropertyFromMap(propertyName, answerMapFromConfigMap)
+		if err != nil {
+			return err
+		}
 		isBase64 := isBase64Encoded(propertyValue)
 
 		if !isBase64 {
 			f, err := ioutil.ReadFile(propertyValue)
 			if err != nil {
-				util.Fatal("Error reading the value of %s - %s", propertyName, err)
+				return fmt.Errorf("error reading the value of %s - %s", propertyName, err)
 			}
 			propertyValue = string(f)
 		}
@@ -130,26 +142,29 @@ func GenerateFileAndUpdateProperty(propertyName, newPropertyValue string, answer
 		if _, err := os.Stat(models.BlueprintOutputDir); os.IsNotExist(err) {
 			err := os.Mkdir(models.BlueprintOutputDir, os.ModePerm)
 			if err != nil {
-				util.Fatal("Error creating %s folder - %s", models.BlueprintOutputDir, err)
+				return fmt.Errorf("error creating %s folder - %s", models.BlueprintOutputDir, err)
 			}
 		}
 
 		location := filepath.Join(models.BlueprintOutputDir, newPropertyValue)
 
-		var err error
-
 		if isBase64 {
-			err = ioutil.WriteFile(location, k8s.DecodeBase64(propertyValue), 0640)
+			out, err := k8s.DecodeBase64(propertyValue)
+			if err != nil {
+				return err
+			}
+			err = ioutil.WriteFile(location, out, 0640)
 		} else {
 			err = ioutil.WriteFile(location, []byte(propertyValue), 0640)
 		}
 
 		if err != nil {
-			util.Fatal("Error creating file %s - %s", newPropertyValue, err)
+			return fmt.Errorf("error creating file %s - %s", newPropertyValue, err)
 		}
 		answerMapFromConfigMap[propertyName] = location
 		gb.GeneratedFiles = append(gb.GeneratedFiles, location)
 	}
+	return nil
 }
 
 func mergeMaps(autoAnswerFile, providedAnswerFile map[string]string) (map[string]string, bool) {
@@ -185,10 +200,16 @@ func VersionCheck(autoAnswerFile map[string]string, providedAnswerFile map[strin
 	// Strip the version information - if the value is provided to the up command.
 	if k8s.IsPropertyPresent("xlVersion", providedAnswerFile) {
 		var versionFromKubernetesConfigMap string
-		versionFromAnswerFileProvided := k8s.GetRequiredPropertyFromMap("xlVersion", providedAnswerFile)
+		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("xlVersion", providedAnswerFile)
+		if err != nil {
+			return "", err
+		}
 
 		if k8s.IsPropertyPresent("prevVersion", autoAnswerFile) {
-			versionFromKubernetesConfigMap = k8s.GetRequiredPropertyFromMap("prevVersion", autoAnswerFile)
+			versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("prevVersion", autoAnswerFile)
+			if err != nil {
+				return "", err
+			}
 		}
 
 		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
@@ -196,10 +217,16 @@ func VersionCheck(autoAnswerFile map[string]string, providedAnswerFile map[strin
 
 	if k8s.IsPropertyPresent("xlrVersion", providedAnswerFile) {
 		var versionFromKubernetesConfigMap string
-		versionFromAnswerFileProvided := k8s.GetRequiredPropertyFromMap("xlrVersion", providedAnswerFile)
+		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("xlrVersion", providedAnswerFile)
+		if err != nil {
+			return "", err
+		}
 
 		if k8s.IsPropertyPresent("prevXlrVersion", autoAnswerFile) {
-			versionFromKubernetesConfigMap = k8s.GetRequiredPropertyFromMap("prevXlrVersion", autoAnswerFile)
+			versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("prevXlrVersion", autoAnswerFile)
+			if err != nil {
+				return "", err
+			}
 		}
 
 		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
@@ -207,10 +234,13 @@ func VersionCheck(autoAnswerFile map[string]string, providedAnswerFile map[strin
 
 	if k8s.IsPropertyPresent("xldVersion", providedAnswerFile) {
 		var versionFromKubernetesConfigMap string
-		versionFromAnswerFileProvided := k8s.GetRequiredPropertyFromMap("xldVersion", providedAnswerFile)
+		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("xldVersion", providedAnswerFile)
 
 		if k8s.IsPropertyPresent("prevXldVersion", autoAnswerFile) {
-			versionFromKubernetesConfigMap = k8s.GetRequiredPropertyFromMap("prevXldVersion", autoAnswerFile)
+			versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("prevXldVersion", autoAnswerFile)
+			if err != nil {
+				return "", err
+			}
 		}
 
 		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)

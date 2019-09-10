@@ -6,16 +6,18 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 	"testing"
-
-	"github.com/xebialabs/xl-cli/pkg/xl"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-cli/pkg/xl"
 	"github.com/xebialabs/yaml"
 )
 
@@ -134,4 +136,104 @@ func check(e error) {
 	if e != nil {
 		panic(e)
 	}
+}
+
+func GetViperConf(t *testing.T, yaml string) *viper.Viper {
+	configdir, err := ioutil.TempDir("", "xebialabsconfig")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(configdir)
+	configfile := filepath.Join(configdir, "config.yaml")
+	originalConfigBytes := []byte(yaml)
+	ioutil.WriteFile(configfile, originalConfigBytes, 0755)
+
+	v := viper.New()
+	v.SetConfigFile(configfile)
+	v.ReadInConfig()
+	return v
+}
+
+var BlueprintTestPath = ""
+
+func getLocalTestBlueprintContext(t *testing.T) *blueprint.BlueprintContext {
+	configdir, _ := ioutil.TempDir("", "xebialabsconfig")
+	configfile := filepath.Join(configdir, "config.yaml")
+	v := GetViperConf(t, "")
+	c, err := blueprint.ConstructBlueprintContext(v, configfile, "9.0.0")
+	if err != nil {
+		t.Error(err)
+	}
+	return c
+}
+
+func GetTestTemplateDir(blueprint string) string {
+	pwd, _ := os.Getwd()
+	return strings.Replace(pwd, path.Join("pkg", "up"), path.Join("templates", "test", blueprint), -1)
+}
+
+func TestInvokeBlueprintAndSeed(t *testing.T) {
+	SkipSeed = true
+	SkipKube = true
+	blueprint.SkipFinalPrompt = true
+
+	t.Run("should create output files for valid xl-up template with answers file", func(t *testing.T) {
+		// This can be used to debug a local blueprint if you have the repo in ../xl-up-blueprint relative to xl-cli
+		// pwd, _ := os.Getwd()
+		// BlueprintTestPath = strings.Replace(pwd, path.Join("xl-cli", "pkg", "up"), path.Join("xl-up-blueprint"), -1)
+		err := InvokeBlueprintAndSeed(
+			getLocalTestBlueprintContext(t),
+			"../../../xl-up-blueprint",
+			true,
+			false,
+			"xl-infra",
+			false,
+			GetTestTemplateDir("answer-xl-up.yaml"),
+			false,
+			"",
+		)
+		require.Nil(t, err)
+
+		// assertions
+		// assert.FileExists(t, "xld-environment.yml")
+		// assert.FileExists(t, "xld-infrastructure.yml")
+		// assert.FileExists(t, "xlr-pipeline.yml")
+		// assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
+		// assert.FileExists(t, path.Join(gb.OutputDir, secretsFile))
+		// assert.FileExists(t, path.Join(gb.OutputDir, gitignoreFile))
+
+		// // check __test__ directory is not there
+		// _, err = os.Stat("__test__")
+		// assert.True(t, os.IsNotExist(err))
+
+		// // check encoded string value in env template
+		// envTemplateFile := GetFileContent("xld-environment.yml")
+		// assert.Contains(t, envTemplateFile, fmt.Sprintf("accessSecret: %s", b64.StdEncoding.EncodeToString([]byte("accesssecret"))))
+
+		// // check values file
+		// valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
+		// valueMap := map[string]string{
+		// 	"Test":               "testing",
+		// 	"ClientCert":         "FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5\\nQJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ\\n",
+		// 	"AppName":            "TestApp",
+		// 	"SuperSecret":        "invisible",
+		// 	"AWSRegion":          "eu-central-1",
+		// 	"DiskSize":           "100",
+		// 	"DiskSizeWithBuffer": "125.1",
+		// 	"ShouldNotBeThere":   "",
+		// }
+		// for k, v := range valueMap {
+		// 	assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+		// }
+
+		// // check secrets file
+		// secretsFile := GetFileContent(path.Join(gb.OutputDir, secretsFile))
+		// secretsMap := map[string]string{
+		// 	"AWSAccessKey":    "accesskey",
+		// 	"AWSAccessSecret": "accesssecret",
+		// }
+		// for k, v := range secretsMap {
+		// 	assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+		// }
+	})
 }

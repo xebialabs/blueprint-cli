@@ -1,6 +1,7 @@
 package up
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -8,11 +9,13 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
-func runAndCaptureResponse(cmd models.Command) {
+func runAndCaptureResponse(cmd models.Command) error {
 
 	completedTask := false
-	outStr, errorStr := util.ExecuteCommandAndShowLogs(cmd, s)
-
+	outStr, errorStr, err := util.ExecuteCommandAndShowLogs(cmd, s)
+	if err != nil {
+		return err
+	}
 	if outStr != "" {
 		createLogFile("xl-seed-log.txt", outStr)
 		stars := "***************"
@@ -27,21 +30,27 @@ func runAndCaptureResponse(cmd models.Command) {
 	}
 
 	if errorStr != "" {
-		createLogFile("xl-seed-error.txt", errorStr)
+		err := createLogFile("xl-seed-error.txt", errorStr)
+		if err != nil {
+			return err
+		}
 		s.Stop()
 		util.StopAndRemoveContainer(s)
 		if !completedTask {
-			util.Fatal("Error while running xl up: \n %s", errorStr)
+			return fmt.Errorf("error while running xl up: \n %s", errorStr)
 		}
 	}
-
+	return nil
 }
 
-func createLogFile(fileName string, contents string) {
+func createLogFile(fileName string, contents string) error {
 	f, err := os.Create(fileName)
 	if err != nil {
-		util.Fatal(" Error creating a file %s \n", err)
+		return fmt.Errorf("error creating a file %s", err)
 	}
-	f.WriteString(contents)
-	f.Close()
+	_, err = f.WriteString(contents)
+	if err != nil {
+		return err
+	}
+	return f.Close()
 }

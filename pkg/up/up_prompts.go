@@ -2,9 +2,9 @@ package up
 
 import "gopkg.in/AlecAivazis/survey.v1"
 
-func askSetupMode(surveyOpts ...survey.AskOpt) string {
+func askSetupMode(surveyOpts ...survey.AskOpt) (string, error) {
 	answer := ""
-	survey.AskOne(
+	err := survey.AskOne(
 		&survey.Select{
 			Message: "Select the setup mode?",
 			Options: []string{"advanced", "quick"},
@@ -14,12 +14,12 @@ func askSetupMode(surveyOpts ...survey.AskOpt) string {
 		survey.Required,
 		surveyOpts...,
 	)
-	return answer
+	return answer, err
 }
 
-func askOverrideAnswerFile(surveyOpts ...survey.AskOpt) bool {
+func askOverrideAnswerFile(surveyOpts ...survey.AskOpt) (bool, error) {
 	answer := true
-	survey.AskOne(
+	err := survey.AskOne(
 		&survey.Confirm{
 			Message: "Parameters in the existing answer file will be overridden by the answer file saved in  Kubernetes, Do you want to continue?",
 			Default: true,
@@ -28,5 +28,5 @@ func askOverrideAnswerFile(surveyOpts ...survey.AskOpt) bool {
 		survey.Required,
 		surveyOpts...,
 	)
-	return answer
+	return answer, err
 }
