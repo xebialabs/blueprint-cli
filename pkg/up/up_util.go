@@ -85,13 +85,18 @@ func getLocalContext(templatePath string) (*blueprint.BlueprintContext, string, 
 	return blueprintContext, blueprintTemplate, nil
 }
 
-func getRepo(branchVersion string) (repository.BlueprintRepository, error) {
+func getTokenFromEnv() string {
+	return os.Getenv("XL_UP_GITHUB_TOKEN")
+}
+
+func getRepo(gitBranch string) (repository.BlueprintRepository, error) {
 
 	repo, err := github.NewGitHubBlueprintRepository(map[string]string{
 		"name":      XlUpBlueprint,
 		"repo-name": XlUpBlueprint,
 		"owner":     Xebialabs,
-		"branch":    branchVersion,
+		"branch":    gitBranch,
+		"token":     getTokenFromEnv(),
 	})
 
 	if err != nil {

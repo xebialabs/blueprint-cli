@@ -29,7 +29,7 @@ var SkipKube = false
 var SkipPrompts = false
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, branchVersion string, gb *blueprint.GeneratedBlueprint) error {
+func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, gitBranch string, gb *blueprint.GeneratedBlueprint) error {
 
 	if !SkipSeed {
 		defer util.StopAndRemoveContainer(s)
@@ -62,7 +62,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		}
 	} else if upParams.LocalPath == "" && !upParams.CfgOverridden {
 		upParams.BlueprintTemplate = DefaultInfraBlueprintTemplate
-		repo, err := getRepo(branchVersion)
+		repo, err := getRepo(gitBranch)
 		if err != nil {
 			return err
 		}
@@ -95,7 +95,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	if upParams.Destroy {
-		// InvokeDestroy(blueprintContext, upParams, branchVersion, configMap, gb)
+		// InvokeDestroy(blueprintContext, upParams, gitBranch, configMap, gb)
 		return nil
 	}
 
@@ -148,7 +148,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	util.IsQuiet = true
-	err = runApplicationBlueprint(&upParams, blueprintContext, gb, branchVersion)
+	err = runApplicationBlueprint(&upParams, blueprintContext, gb, gitBranch)
 	if err != nil {
 		return err
 	}
@@ -188,14 +188,14 @@ func parseConfigMap(configMap string) (map[string]string, error) {
 	return answerMapFromConfigMap, nil
 }
 
-func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint, branchVersion string) error {
+func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint, gitBranch string) error {
 	var err error
 	// Switch blueprint once the infrastructure is done.
 	if upParams.BlueprintTemplate != "" {
 		upParams.BlueprintTemplate = strings.Replace(upParams.BlueprintTemplate, DefaultInfraBlueprintTemplate, DefaultBlueprintTemplate, 1)
 	} else {
 		upParams.BlueprintTemplate = DefaultBlueprintTemplate
-		repo, err := getRepo(branchVersion)
+		repo, err := getRepo(gitBranch)
 		if err != nil {
 			return err
 		}

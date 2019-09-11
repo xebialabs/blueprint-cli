@@ -177,7 +177,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			getLocalTestBlueprintContext(t),
 			UpParams{
 				// enable for local testing
-				LocalPath:         "../../../xl-up-blueprint",
+				// LocalPath:         "../../../xl-up-blueprint",
 				BlueprintTemplate: "xl-infra",
 				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
 				QuickSetup:        true,
@@ -186,7 +186,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				NoCleanup:         false,
 				Destroy:           false,
 			},
-			"",
+			"beta",
 			gb,
 		)
 

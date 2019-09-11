@@ -35,11 +35,11 @@ var upCmd = &cobra.Command{
 var upParams = up.UpParams{}
 
 // DoUp executes the up command
-func DoUp(context *xl.Context, branchVersion string) {
+func DoUp(context *xl.Context, gitBranch string) {
 	util.Verbose("Running XL Seed\n")
 	gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 
-	err := up.InvokeBlueprintAndSeed(context.BlueprintContext, upParams, branchVersion, gb)
+	err := up.InvokeBlueprintAndSeed(context.BlueprintContext, upParams, gitBranch, gb)
 	if err != nil {
 		util.Fatal("Error while running xl-up: %s\n", err)
 	}
