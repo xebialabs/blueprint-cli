@@ -140,28 +140,10 @@ func check(e error) {
 	}
 }
 
-func GetViperConf(t *testing.T, yaml string) *viper.Viper {
-	configdir, err := ioutil.TempDir("", "xebialabsconfig")
-	if err != nil {
-		t.Error(err)
-	}
-	defer os.RemoveAll(configdir)
-	configfile := filepath.Join(configdir, "config.yaml")
-	originalConfigBytes := []byte(yaml)
-	ioutil.WriteFile(configfile, originalConfigBytes, 0755)
-
-	v := viper.New()
-	v.SetConfigFile(configfile)
-	v.ReadInConfig()
-	return v
-}
-
-var BlueprintTestPath = ""
-
 func getLocalTestBlueprintContext(t *testing.T) *blueprint.BlueprintContext {
 	configdir, _ := ioutil.TempDir("", "xebialabsconfig")
 	configfile := filepath.Join(configdir, "config.yaml")
-	v := GetViperConf(t, "")
+	v := viper.New()
 	c, err := blueprint.ConstructBlueprintContext(v, configfile, "9.0.0")
 	if err != nil {
 		t.Error(err)
@@ -181,9 +163,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 	blueprint.SkipFinalPrompt = true
 
 	t.Run("should create output files for valid xl-up template with answers file", func(t *testing.T) {
-		// This can be used to debug a local blueprint if you have the repo in ../xl-up-blueprint relative to xl-cli
-		// pwd, _ := os.Getwd()
-		// BlueprintTestPath = strings.Replace(pwd, path.Join("xl-cli", "pkg", "up"), path.Join("xl-up-blueprint"), -1)
 		gb, err := InvokeBlueprintAndSeed(
 			getLocalTestBlueprintContext(t),
 			UpParams{
@@ -203,23 +182,42 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		require.Nil(t, err)
 
 		// assertions
-		// assert.FileExists(t, "xld-environment.yml")
-		// assert.FileExists(t, "xld-infrastructure.yml")
-		// assert.FileExists(t, "xlr-pipeline.yml")
-		// assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
-		// assert.FileExists(t, path.Join(gb.OutputDir, secretsFile))
-		// assert.FileExists(t, path.Join(gb.OutputDir, gitignoreFile))
 
-		// // check __test__ directory is not there
-		// _, err = os.Stat("__test__")
-		// assert.True(t, os.IsNotExist(err))
+		// certs
+		assert.FileExists(t, "cert.crt")
+		assert.FileExists(t, "cert.key")
 
-		// // check encoded string value in env template
-		// envTemplateFile := GetFileContent("xld-environment.yml")
-		// assert.Contains(t, envTemplateFile, fmt.Sprintf("accessSecret: %s", b64.StdEncoding.EncodeToString([]byte("accesssecret"))))
+		//answer files
+		assert.FileExists(t, GeneratedAnswerFile)
+		assert.FileExists(t, GeneratedFinalAnswerFile)
+		assert.FileExists(t, MergedAnswerFile)
+		assert.FileExists(t, TempAnswerFile)
+
+		//xl files
+		assert.FileExists(t, "xebialabs.yaml")
+		assert.FileExists(t, path.Join(gb.OutputDir, "values.xlvals"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "secrets.xlvals"))
+		assert.FileExists(t, path.Join(gb.OutputDir, ".gitignore"))
+
+		assert.FileExists(t, path.Join(gb.OutputDir, "answers.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "common.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "deploy-it.lic"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "xl-release.lic"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "deployments.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "keystore.jceks"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "xl-deploy.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "xl-release.yaml"))
+
+		// check __test__ directory is not there
+		_, err = os.Stat("__test__")
+		assert.True(t, os.IsNotExist(err))
+
+		// // check encoded string value in commom.yaml
+		// commonFile := GetFileContent("common.yaml")
+		// assert.Contains(t, commonFile, fmt.Sprintf("accessSecret: %s", b64.StdEncoding.EncodeToString([]byte("accesssecret"))))
 
 		// // check values file
-		// valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
+		// valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
 		// valueMap := map[string]string{
 		// 	"Test":               "testing",
 		// 	"ClientCert":         "FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5\\nQJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ\\n",
@@ -235,7 +233,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		// }
 
 		// // check secrets file
-		// secretsFile := GetFileContent(path.Join(gb.OutputDir, secretsFile))
+		// secretsFile := GetFileContent(path.Join(gb.OutputDir, "secrets.xlvals"))
 		// secretsMap := map[string]string{
 		// 	"AWSAccessKey":    "accesskey",
 		// 	"AWSAccessSecret": "accesssecret",
