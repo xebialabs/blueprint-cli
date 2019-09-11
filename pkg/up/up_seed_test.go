@@ -89,8 +89,8 @@ func CreateTestInfra(viper *viper.Viper) *TestInfra {
 func TestFakeApplyFiles(t *testing.T) {
 	t.Run("should not change the file tag", func(t *testing.T) {
 
+		defer os.RemoveAll(blueprintDir)
 		if !util.PathExists(blueprintDir, true) {
-			defer os.RemoveAll(blueprintDir)
 			err := os.Mkdir(blueprintDir, os.ModePerm)
 			check(err)
 		}
