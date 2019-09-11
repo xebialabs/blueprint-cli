@@ -40,7 +40,7 @@ func DoUp(context *xl.Context, branchVersion string) {
 		util.Fatal("Error while running xl-up: %s\n", err)
 	}
 	if !upParams.NoCleanup {
-		defer gb.Cleanup()
+		defer gb.Cleanup(up.GeneratedFinalAnswerFile)
 	}
 }
 

@@ -64,7 +64,7 @@ func (generatedBlueprint *GeneratedBlueprint) GetOutputFile(fileName string) (*o
 }
 
 // Cleanup will cleanup all generated blueprint files
-func (generatedBlueprint *GeneratedBlueprint) Cleanup() error {
+func (generatedBlueprint *GeneratedBlueprint) Cleanup(filesSkipped ...string) error {
 	var directories []string
 
 	// Clean all files first
@@ -72,7 +72,7 @@ func (generatedBlueprint *GeneratedBlueprint) Cleanup() error {
 		if isDir, _ := isDirectory(file); isDir {
 			directories = append(directories, file)
 		} else if util.PathExists(file, false) {
-			if !(strings.Index(file, "generated_answers.yaml") != -1) {
+			if !util.IsStringInSlice(file, filesSkipped) {
 				if err := os.Remove(file); err != nil {
 					return err
 				}
