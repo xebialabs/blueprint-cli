@@ -89,9 +89,11 @@ func CreateTestInfra(viper *viper.Viper) *TestInfra {
 func TestFakeApplyFiles(t *testing.T) {
 	t.Run("should not change the file tag", func(t *testing.T) {
 
-		err := os.Mkdir(blueprintDir, os.ModePerm)
-		defer os.RemoveAll(blueprintDir)
-		check(err)
+		if !util.PathExists(blueprintDir, true) {
+			defer os.RemoveAll(blueprintDir)
+			err := os.Mkdir(blueprintDir, os.ModePerm)
+			check(err)
+		}
 
 		xlvFile, err := os.Create(filepath.Join(blueprintDir, "prop1.xlvals"))
 		check(err)
@@ -175,13 +177,14 @@ func GetTestTemplateDir(blueprint string) string {
 func TestInvokeBlueprintAndSeed(t *testing.T) {
 	SkipSeed = true
 	SkipKube = true
+	SkipPrompts = true
 	blueprint.SkipFinalPrompt = true
 
 	t.Run("should create output files for valid xl-up template with answers file", func(t *testing.T) {
 		// This can be used to debug a local blueprint if you have the repo in ../xl-up-blueprint relative to xl-cli
 		// pwd, _ := os.Getwd()
 		// BlueprintTestPath = strings.Replace(pwd, path.Join("xl-cli", "pkg", "up"), path.Join("xl-up-blueprint"), -1)
-		err := InvokeBlueprintAndSeed(
+		gb, err := InvokeBlueprintAndSeed(
 			getLocalTestBlueprintContext(t),
 			UpParams{
 				LocalPath:         "../../../xl-up-blueprint",
@@ -195,6 +198,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			},
 			"",
 		)
+		defer gb.Cleanup()
+
 		require.Nil(t, err)
 
 		// assertions

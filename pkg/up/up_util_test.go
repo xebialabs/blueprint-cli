@@ -31,8 +31,7 @@ func TestGetLocalContext(t *testing.T) {
 func TestGetRepo(t *testing.T) {
 	t.Run("should return repo with a branch name", func(t *testing.T) {
 		repo, err := getRepo("xl-up")
-		assert.Equal(t, "", err.Error())
-		require.NotNil(t, err)
+		require.Nil(t, err)
 		fmt.Println(repo.GetInfo())
 		assert.Equal(t, repo.GetName(), XlUpBlueprint)
 		assert.Equal(t, repo.GetProvider(), "github")

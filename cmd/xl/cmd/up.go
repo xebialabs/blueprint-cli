@@ -35,9 +35,12 @@ var upParams = up.UpParams{}
 // DoUp executes the up command
 func DoUp(context *xl.Context, branchVersion string) {
 	util.Verbose("Running XL Seed\n")
-    err := up.InvokeBlueprintAndSeed(context.BlueprintContext, upParams, branchVersion)
+	gb, err := up.InvokeBlueprintAndSeed(context.BlueprintContext, upParams, branchVersion)
 	if err != nil {
 		util.Fatal("Error while running xl-up: %s\n", err)
+	}
+	if !upParams.NoCleanup {
+		defer gb.Cleanup()
 	}
 }
 
