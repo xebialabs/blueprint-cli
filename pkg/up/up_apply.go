@@ -59,7 +59,10 @@ func applyFilesAndSave() error {
 			fileContents = append(fileContents, existingFileContents...)
 		}
 
-		return ioutil.WriteFile(fileWithDocs.FileName, fileContents, 0644)
+		err = ioutil.WriteFile(fileWithDocs.FileName, fileContents, 0644)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
