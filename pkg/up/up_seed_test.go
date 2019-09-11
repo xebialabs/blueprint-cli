@@ -156,6 +156,14 @@ func GetTestTemplateDir(blueprint string) string {
 	return strings.Replace(pwd, path.Join("pkg", "up"), path.Join("templates", "test", blueprint), -1)
 }
 
+func GetFileContent(filePath string) string {
+	f, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		panic(err)
+	}
+	return string(f)
+}
+
 func TestInvokeBlueprintAndSeed(t *testing.T) {
 	SkipSeed = true
 	SkipKube = true
@@ -168,12 +176,13 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		err := InvokeBlueprintAndSeed(
 			getLocalTestBlueprintContext(t),
 			UpParams{
+				// enable for local testing
 				LocalPath:         "../../../xl-up-blueprint",
+				BlueprintTemplate: "xl-infra",
+				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
 				QuickSetup:        true,
 				AdvancedSetup:     false,
-				BlueprintTemplate: "xl-infra",
 				CfgOverridden:     false,
-				AnswerFile:        GetTestTemplateDir("answer-xl-up.yaml"),
 				NoCleanup:         false,
 				Destroy:           false,
 			},
@@ -214,34 +223,50 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		_, err = os.Stat("__test__")
 		assert.True(t, os.IsNotExist(err))
 
-		// // check encoded string value in commom.yaml
-		// commonFile := GetFileContent("common.yaml")
-		// assert.Contains(t, commonFile, fmt.Sprintf("accessSecret: %s", b64.StdEncoding.EncodeToString([]byte("accesssecret"))))
+		// check encoded string value in commom.yaml
+		commonFile := GetFileContent(path.Join(gb.OutputDir, "common.yaml"))
+		assert.Contains(t, commonFile, fmt.Sprintf("tlsCert: %s", `|
+      -----BEGIN CERTIFICATE-----
+      MIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw
+      LzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz
+      MB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz
+      OTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B
+      AQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8
+      igrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH
+      +5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna
+      8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD
+      wZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV
+      E/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV
+      HQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA
+      hdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH
+      72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN
+      EYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw
+      OP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l
+      hHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9
+      LxjYOSJ5loUikwq6lQBA5Q==
+      -----END CERTIFICATE-----`))
 
-		// // check values file
-		// valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
-		// valueMap := map[string]string{
-		// 	"Test":               "testing",
-		// 	"ClientCert":         "FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5\\nQJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ\\n",
-		// 	"AppName":            "TestApp",
-		// 	"SuperSecret":        "invisible",
-		// 	"AWSRegion":          "eu-central-1",
-		// 	"DiskSize":           "100",
-		// 	"DiskSizeWithBuffer": "125.1",
-		// 	"ShouldNotBeThere":   "",
-		// }
-		// for k, v := range valueMap {
-		// 	assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
-		// }
+		// check values file
+		valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
+		valueMap := map[string]string{
+			"K8sClientCertFile": "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\nMB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz\\nOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B\\nAQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8\\nigrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH\\n+5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna\\n8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD\\nwZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV\\nE/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV\\nHQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA\\nhdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH\\n72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN\\nEYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw\\nOP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l\\nhHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9\\nLxjYOSJ5loUikwq6lQBA5Q==\\n-----END CERTIFICATE-----\\n",
+			"InstallMonitoring": "true",
+			"K8sAuthentication": "Client key/certificate [Path to files]",
+			"postgresMaxConn":   "400",
+			"xlVersion":         "8.6.1",
+		}
+		for k, v := range valueMap {
+			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+		}
 
-		// // check secrets file
-		// secretsFile := GetFileContent(path.Join(gb.OutputDir, "secrets.xlvals"))
-		// secretsMap := map[string]string{
-		// 	"AWSAccessKey":    "accesskey",
-		// 	"AWSAccessSecret": "accesssecret",
-		// }
-		// for k, v := range secretsMap {
-		// 	assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
-		// }
+		// check secrets file
+		secretsFile := GetFileContent(path.Join(gb.OutputDir, "secrets.xlvals"))
+		secretsMap := map[string]string{
+			"K8sClientCert":      "Li4vLi4vdGVtcGxhdGVzL3Rlc3QveGwtdXAvY2VydA==",
+			"monitoringUserPass": "mon-pass",
+		}
+		for k, v := range secretsMap {
+			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+		}
 	})
 }
