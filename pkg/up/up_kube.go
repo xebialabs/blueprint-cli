@@ -1,6 +1,8 @@
 package up
 
 import (
+	"fmt"
+
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/xl-cli/pkg/util"
@@ -23,17 +25,17 @@ func getKubeClient() (*kubernetes.Clientset, error) {
 	}
 	util.Verbose("Got the configuration...\n")
 
-    client, err := kubernetes.NewForConfig(config)
-    if err != nil {
-        return nil, fmt.Errorf("error creating kubernetes client: %s", err)
-    }
-    return client
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("error creating kubernetes client: %s", err)
+	}
+	return client, nil
 }
 
 func getKubeConfigMap() (string, error) {
-    // Step 1 Get connection
-    client, err := getKubeClient()
-    if err != nil {
+	// Step 1 Get connection
+	client, err := getKubeClient()
+	if err != nil {
 		return "", err
 	}
 	// Step 2 Check for namespace
@@ -43,7 +45,7 @@ func getKubeConfigMap() (string, error) {
 	}
 	// Step 3 Check for version
 	if isNamespaceAvailable {
-        util.Verbose("the namespace %s is available...\n", NAMESPACE)
+		util.Verbose("the namespace %s is available...\n", NAMESPACE)
 
 		cm, err := client.CoreV1().ConfigMaps(NAMESPACE).List(metav1.ListOptions{})
 		if err != nil {

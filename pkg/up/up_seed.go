@@ -89,24 +89,24 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 	util.IsQuiet = false
 
-    configMap := ""
-    if !SkipKube {
-        configMap, err = getKubeConfigMap()
-        if err != nil {
+	configMap := ""
+	if !SkipKube {
+		configMap, err = getKubeConfigMap()
+		if err != nil {
 			return err
 		}
-    }
+	}
 
 	if upParams.Destroy {
-		InvokeDestroy(blueprintContext, upParams, branchVersion, configMap, gb)
-		return
+		// InvokeDestroy(blueprintContext, upParams, branchVersion, configMap, gb)
+		return nil
 	}
 
 	if configMap != "" {
 		util.Verbose("Update workflow started.... \n")
 
-        answerMapFromConfigMap, err := parseConfigMap(configMap)
-        if err != nil {
+		answerMapFromConfigMap, err := parseConfigMap(configMap)
+		if err != nil {
 			return err
 		}
 
@@ -151,10 +151,10 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	util.IsQuiet = true
-    err = runApplicationBlueprint(&upParams, blueprintContext, gb, branchVersion)
-    if err != nil {
-        return err
-    }
+	err = runApplicationBlueprint(&upParams, blueprintContext, gb, branchVersion)
+	if err != nil {
+		return err
+	}
 	util.IsQuiet = false
 
 	err = applyFilesAndSave()
@@ -164,7 +164,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 	util.Info("Generated files for deployment successfully! \nSpinning up xl seed! \n")
 
-    if !SkipSeed {
+	if !SkipSeed {
 		err = runAndCaptureResponse(pullSeedImage)
 		if err != nil {
 			return err
@@ -181,16 +181,17 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	return nil
 }
 
-func parseConfigMap(configMap string) map[string]string {
+func parseConfigMap(configMap string) (map[string]string, error) {
 	util.Verbose("%s", configMap)
-    answerMapFromConfigMap := make(map[string]string)
-    if err := yaml.Unmarshal([]byte(configMap), &answerMapFromConfigMap); err != nil {
-        return nil, fmt.Errorf("error parsing configMap: %s", err)
-    }
+	answerMapFromConfigMap := make(map[string]string)
+	if err := yaml.Unmarshal([]byte(configMap), &answerMapFromConfigMap); err != nil {
+		return nil, fmt.Errorf("error parsing configMap: %s", err)
+	}
 	return answerMapFromConfigMap, nil
 }
 
 func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint, branchVersion string) error {
+	var err error
 	// Switch blueprint once the infrastructure is done.
 	if upParams.BlueprintTemplate != "" {
 		upParams.BlueprintTemplate = strings.Replace(upParams.BlueprintTemplate, DefaultInfraBlueprintTemplate, DefaultBlueprintTemplate, 1)
@@ -201,26 +202,27 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 			return err
 		}
 		blueprintContext.ActiveRepo = &repo
-    }
+	}
 
 	if upParams.AnswerFile != "" {
-        upParams.AnswerFile, err = getAnswerFile(TempAnswerFile)
-        if err != nil {
+		upParams.AnswerFile, err = getAnswerFile(TempAnswerFile)
+		if err != nil {
 			return err
 		}
 		gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
 		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
 	} else {
-        upParams.AnswerFile, err = getAnswerFile(upParams.AnswerFile)
-        if err != nil {
+		upParams.AnswerFile, err = getAnswerFile(upParams.AnswerFile)
+		if err != nil {
 			return err
 		}
 	}
 
-	err := blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, upParams.AnswerFile, false, upParams.QuickSetup, true, true)
+	err = blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, upParams.AnswerFile, false, upParams.QuickSetup, true, true)
 	if err != nil {
 		return fmt.Errorf("error while creating Blueprint: %s", err)
 	}
+	return nil
 }
 
 func generateAnswerFile(upAnswerFile string, gb *blueprint.GeneratedBlueprint) error {

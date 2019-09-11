@@ -183,13 +183,16 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		// BlueprintTestPath = strings.Replace(pwd, path.Join("xl-cli", "pkg", "up"), path.Join("xl-up-blueprint"), -1)
 		err := InvokeBlueprintAndSeed(
 			getLocalTestBlueprintContext(t),
-			"../../../xl-up-blueprint",
-			true,
-			false,
-			"xl-infra",
-			false,
-			GetTestTemplateDir("answer-xl-up.yaml"),
-			false,
+			UpParams{
+				LocalPath:         "../../../xl-up-blueprint",
+				QuickSetup:        true,
+				AdvancedSetup:     false,
+				BlueprintTemplate: "xl-infra",
+				CfgOverridden:     false,
+				AnswerFile:        GetTestTemplateDir("answer-xl-up.yaml"),
+				NoCleanup:         false,
+				Destroy:           false,
+			},
 			"",
 		)
 		require.Nil(t, err)

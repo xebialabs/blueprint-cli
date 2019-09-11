@@ -1,7 +1,7 @@
 package up
 
 type UpParams struct {
-	LocalMode         string
+	LocalPath         string
 	QuickSetup        bool
 	AdvancedSetup     bool
 	BlueprintTemplate string
