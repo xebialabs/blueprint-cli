@@ -29,13 +29,11 @@ var SkipKube = false
 var SkipPrompts = false
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, branchVersion string) (*blueprint.GeneratedBlueprint, error) {
+func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, branchVersion string, gb *blueprint.GeneratedBlueprint) error {
 
 	if !SkipSeed {
 		defer util.StopAndRemoveContainer(s)
 	}
-
-	gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 
 	if upParams.AnswerFile == "" {
 		if !(upParams.QuickSetup || upParams.AdvancedSetup) && !upParams.Destroy {
@@ -43,7 +41,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			mode, err := askSetupMode()
 
 			if err != nil {
-				return gb, err
+				return err
 			}
 
 			if mode == "quick" {
@@ -60,13 +58,13 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	if upParams.LocalPath != "" {
 		blueprintContext, err = blueprint.ConstructLocalBlueprintContext(upParams.LocalPath)
 		if err != nil {
-			return gb, fmt.Errorf("error while creating local blueprint context: %s", err)
+			return fmt.Errorf("error while creating local blueprint context: %s", err)
 		}
 	} else if upParams.LocalPath == "" && !upParams.CfgOverridden {
 		upParams.BlueprintTemplate = DefaultInfraBlueprintTemplate
 		repo, err := getRepo(branchVersion)
 		if err != nil {
-			return gb, err
+			return err
 		}
 		blueprintContext.ActiveRepo = &repo
 	}
@@ -76,7 +74,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	if answerFileToBlueprint != "" {
 		err = generateAnswerFile(answerFileToBlueprint, gb)
 		if err != nil {
-			return gb, err
+			return err
 		}
 		answerFileToBlueprint = TempAnswerFile
 	}
@@ -84,7 +82,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	// Infra blueprint
 	err = blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, answerFileToBlueprint, false, upParams.QuickSetup, true, false)
 	if err != nil {
-		return gb, fmt.Errorf("error while creating Infrastructure Blueprint: %s", err)
+		return fmt.Errorf("error while creating Infrastructure Blueprint: %s", err)
 	}
 	util.IsQuiet = false
 
@@ -92,13 +90,13 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	if !SkipKube {
 		configMap, err = getKubeConfigMap()
 		if err != nil {
-			return gb, err
+			return err
 		}
 	}
 
 	if upParams.Destroy {
 		// InvokeDestroy(blueprintContext, upParams, branchVersion, configMap, gb)
-		return gb, nil
+		return nil
 	}
 
 	if configMap != "" {
@@ -106,13 +104,13 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 		answerMapFromConfigMap, err := parseConfigMap(configMap)
 		if err != nil {
-			return gb, err
+			return err
 		}
 
 		// Strip the version information
 		models.AvailableVersion, err = getVersion(answerMapFromConfigMap, "xlVersion", "prevVersion")
 		if err != nil {
-			return gb, err
+			return err
 		}
 		if models.AvailableVersion != "" {
 			answerMapFromConfigMap["xlVersion"] = ""
@@ -121,7 +119,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 		models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "xlrVersion", "prevXlrVersion")
 		if err != nil {
-			return gb, err
+			return err
 		}
 		if models.AvailableXlrVersion != "" {
 			answerMapFromConfigMap["xlrVersion"] = ""
@@ -130,7 +128,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 		models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "xldVersion", "prevXldVersion")
 		if err != nil {
-			return gb, err
+			return err
 		}
 		if models.AvailableXldVersion != "" {
 			answerMapFromConfigMap["xldVersion"] = ""
@@ -139,11 +137,11 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 		err = generateLicenseAndKeystore(answerMapFromConfigMap, gb)
 		if err != nil {
-			return gb, err
+			return err
 		}
 		err = convertMapToAnswerFile(answerMapFromConfigMap, GeneratedAnswerFile)
 		if err != nil {
-			return gb, err
+			return err
 		}
 	} else {
 		util.Verbose("Install workflow started")
@@ -152,32 +150,33 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	util.IsQuiet = true
 	err = runApplicationBlueprint(&upParams, blueprintContext, gb, branchVersion)
 	if err != nil {
-		return gb, err
+		return err
 	}
 	util.IsQuiet = false
 
 	err = applyFilesAndSave()
 	if err != nil {
-		return gb, err
+		return err
 	}
 
-	util.Info("Generated files for deployment successfully! \nSpinning up xl seed! \n")
+	util.Info("Generated files for deployment successfully! \n")
 
 	if !SkipSeed {
+		util.Info("Spinning up xl seed! \n")
 		err = runAndCaptureResponse(pullSeedImage)
 		if err != nil {
-			return gb, err
+			return err
 		}
 		seed, err := runSeed(false)
 		if err != nil {
-			return gb, err
+			return err
 		}
 		err = runAndCaptureResponse(seed)
 		if err != nil {
-			return gb, err
+			return err
 		}
 	}
-	return gb, nil
+	return nil
 }
 
 func parseConfigMap(configMap string) (map[string]string, error) {

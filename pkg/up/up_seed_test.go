@@ -163,7 +163,9 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 	blueprint.SkipFinalPrompt = true
 
 	t.Run("should create output files for valid xl-up template with answers file", func(t *testing.T) {
-		gb, err := InvokeBlueprintAndSeed(
+		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
+		defer gb.Cleanup()
+		err := InvokeBlueprintAndSeed(
 			getLocalTestBlueprintContext(t),
 			UpParams{
 				LocalPath:         "../../../xl-up-blueprint",
@@ -176,8 +178,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				Destroy:           false,
 			},
 			"",
+			gb,
 		)
-		defer gb.Cleanup()
 
 		require.Nil(t, err)
 
