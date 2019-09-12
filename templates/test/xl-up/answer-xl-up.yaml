@@ -1,4 +1,4 @@
-K8sSetup: Plain multinode K8s cluster
+K8sSetup: PlainK8SCluster
 useKubeconfig: false
 apiServerURL: https://k8s.com:6443
 K8sAuthentication: Client key/certificate [Path to files]
