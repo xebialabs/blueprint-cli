@@ -463,7 +463,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		// process default field value
 		defaultVal := variable.GetDefaultVal(data.TemplateData)
 
-		// skip question based on DependsOn fields
+		// skip question based on DependsOn fields, the default value if present is set as value
 		if !util.IsStringEmpty(variable.DependsOn.Value) {
 			dependsOnVal, err := ParseDependsOnValue(variable.DependsOn, data.TemplateData)
 			if err != nil {
@@ -707,6 +707,8 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 
 	if IsSecretType(variable.Type.Value) {
 		if !skipParam {
+			util.Verbose("[dataPrep] Skipping secret parameter [%s] from summary-table/value-files because IgnoreIfSkipped is true and PromptIf is false\n", variable.Name.Value)
+
 			if variable.RevealOnSummary.Bool {
 				preparedData.SummaryData[variable.Label.Value] = data
 			} else {
@@ -726,6 +728,8 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 		}
 	} else {
 		if !skipParam {
+			util.Verbose("[dataPrep] Skipping parameter [%s] from summary-table/value-files because IgnoreIfSkipped is true and PromptIf is false\n", variable.Name.Value)
+
 			preparedData.SummaryData[variable.Label.Value] = data
 
 			// Save to values file if switch is ON
