@@ -23,6 +23,9 @@ import (
 // SkipFinalPrompt is used in tests to skip the confirmation prompt
 var SkipFinalPrompt = false
 
+// SkipUpFinalPrompt is used in tests to skip the confirmation prompt from xl-up
+var SkipUpFinalPrompt = false
+
 // SkipUserInput is used in tests to skip the user input
 var SkipUserInput = false
 
@@ -101,8 +104,8 @@ func InstantiateBlueprint(
 	}
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
-	// if this is use-defaults mode, show used default values as table
-	if useDefaultsAsValue && fromUpCommand && printSummaryTable && !SkipFinalPrompt {
+	// if this is use-defaults mode, ask confirmation for xl-up
+	if useDefaultsAsValue && fromUpCommand && printSummaryTable && !SkipUpFinalPrompt {
 		// Final prompt from user to start generation process
 		toContinue := false
 		question := models.UpFinalPrompt
@@ -112,8 +115,7 @@ func InstantiateBlueprint(
 			return err
 		}
 		if !toContinue {
-			util.Fatal("xl up command cancelled \n")
-			return nil
+			return fmt.Errorf("xl up execution cancelled")
 		}
 	}
 

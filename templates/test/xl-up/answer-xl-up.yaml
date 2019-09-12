@@ -33,5 +33,6 @@ postgresSharedBuff: 612MB
 postgresEffectCacheSize: 2GB
 postgresSyncCommit: "off"
 postgresMaxWallSize: 512MB
+PostgresqlWorkHostpath: some/path
 OsType: linux
 K8sAuthentication: Client key/certificate [Path to files]

@@ -169,6 +169,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 	SkipKube = true
 	SkipPrompts = true
 	blueprint.SkipFinalPrompt = true
+	blueprint.SkipUpFinalPrompt = true
 
 	t.Run("should create output files for valid xl-up template with answers file", func(t *testing.T) {
 		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
