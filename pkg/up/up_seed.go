@@ -108,30 +108,30 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		}
 
 		// Strip the version information
-		models.AvailableVersion, err = getVersion(answerMapFromConfigMap, "xlVersion", "prevVersion")
+		models.AvailableVersion, err = getVersion(answerMapFromConfigMap, "XlVersion", "prevVersion")
 		if err != nil {
 			return err
 		}
 		if models.AvailableVersion != "" {
-			answerMapFromConfigMap["xlVersion"] = ""
+			answerMapFromConfigMap["XlVersion"] = ""
 			answerMapFromConfigMap["prevVersion"] = models.AvailableVersion
 		}
 
-		models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "xlrVersion", "prevXlrVersion")
+		models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrVersion", "prevXlrVersion")
 		if err != nil {
 			return err
 		}
 		if models.AvailableXlrVersion != "" {
-			answerMapFromConfigMap["xlrVersion"] = ""
+			answerMapFromConfigMap["XlrVersion"] = ""
 			answerMapFromConfigMap["prevXlrVersion"] = models.AvailableXlrVersion
 		}
 
-		models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "xldVersion", "prevXldVersion")
+		models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "XldVersion", "prevXldVersion")
 		if err != nil {
 			return err
 		}
 		if models.AvailableXldVersion != "" {
-			answerMapFromConfigMap["xldVersion"] = ""
+			answerMapFromConfigMap["XldVersion"] = ""
 			answerMapFromConfigMap["prevXldVersion"] = models.AvailableXldVersion
 		}
 

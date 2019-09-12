@@ -41,7 +41,7 @@ func TestClusterIDorDefaultCluster(t *testing.T) {
 
 	t.Run("should get the default cluster id when the cluster name is not given", func(t *testing.T) {
 		clusterMap := make(map[string]string)
-		clusterMap["eksClusterName"] = ""
+		clusterMap["EksClusterName"] = ""
 
 		clusterID := getClusterIDFromClusterName(clusterMap)
 
@@ -50,7 +50,7 @@ func TestClusterIDorDefaultCluster(t *testing.T) {
 
 	t.Run("should get the default cluster id when the cluster name is given", func(t *testing.T) {
 		clusterMap := make(map[string]string)
-		clusterMap["eksClusterName"] = "test-xl-cluster"
+		clusterMap["EksClusterName"] = "test-xl-cluster"
 
 		clusterID := getClusterIDFromClusterName(clusterMap)
 
