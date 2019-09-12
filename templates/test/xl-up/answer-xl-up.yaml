@@ -1,6 +1,7 @@
 K8sSetup: Plain multinode K8s cluster
 useKubeconfig: false
 apiServerURL: https://k8s.com:6443
+K8sAuthentication: Client key/certificate [Path to files]
 K8sClientCertFile: ../../templates/test/xl-up/cert
 K8sClientKeyFile: ../../templates/test/xl-up/cert
 K8sClientCert: ../../templates/test/xl-up/cert
@@ -35,4 +36,3 @@ postgresSyncCommit: "off"
 postgresMaxWallSize: 512MB
 PostgresqlWorkHostpath: some/path
 OsType: linux
-K8sAuthentication: Client key/certificate [Path to files]
