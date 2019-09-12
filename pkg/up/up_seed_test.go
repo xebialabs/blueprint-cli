@@ -252,7 +252,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		valueMap := map[string]string{
 			"xlrLic":            "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\nMB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz\\nOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B\\nAQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8\\nigrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH\\n+5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna\\n8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD\\nwZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV\\nE/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV\\nHQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA\\nhdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH\\n72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN\\nEYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw\\nOP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l\\nhHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9\\nLxjYOSJ5loUikwq6lQBA5Q==\\n-----END CERTIFICATE-----\\n",
 			"InstallMonitoring": "true",
-			"K8sAuthentication": "Client key/certificate [Path to files]",
+			"K8sAuthentication": "FilePath",
 			"postgresMaxConn":   "400",
 			"xlVersion":         "8.6.1",
 		}
