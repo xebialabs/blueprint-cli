@@ -48,10 +48,14 @@ const (
 var validTypes = []string{TypeInput, TypeEditor, TypeFile, TypeSelect, TypeConfirm, TypeSecret, TypeSecretEditor, TypeSecretFile}
 
 type PreparedData struct {
+	// Storing values for all fields
 	TemplateData map[string]interface{}
-	SummaryData  map[string]interface{}
-	Values       map[string]interface{}
-	Secrets      map[string]interface{}
+	// Used to store data to be shown in summary table
+	SummaryData map[string]interface{}
+	// Used to store data to be saved in values.xlvals
+	Values map[string]interface{}
+	// Used to store data to be saved in secrets.xlvals
+	Secrets map[string]interface{}
 }
 
 func NewPreparedData() *PreparedData {
@@ -459,7 +463,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		// process default field value
 		defaultVal := variable.GetDefaultVal(data.TemplateData)
 
-		// skip question based on DependsOn fields
+		// skip question based on DependsOn fields, the default value if present is set as value
 		if !util.IsStringEmpty(variable.DependsOn.Value) {
 			dependsOnVal, err := ParseDependsOnValue(variable.DependsOn, data.TemplateData)
 			if err != nil {
@@ -495,10 +499,10 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 					return nil, err
 				}
 
-				// if we have a valid answer, skip user input
 				if variable.Type.Value == TypeConfirm {
 					blueprintDoc.Variables[i] = variable
 				}
+				// if we have a valid answer, save it and skip user input
 				saveItemToTemplateDataMap(&variable, data, answer)
 				util.Info("[dataPrep] Using answer file value [%v] for variable [%s]\n", answer, variable.Name.Value)
 				continue
@@ -524,7 +528,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 			continue
 		}
 		// do not return error when in non-strict answers mode, instead ask user input for the variable value
-		if usingAnswersFile && strictAnswers {
+		if usingAnswersFile && strictAnswers && !variable.IgnoreIfSkipped.Bool {
 			return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Value)
 		}
 
@@ -535,7 +539,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		// * if answers file is not present or isPartial is set to TRUE and answer not found on file for the variable
 		util.Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Value, variable.Type.Value)
 		var answer interface{}
-		if !SkipUserInput {
+		if shouldAskForInput(variable) {
 			answer, err = variable.GetUserInput(defaultVal, data.TemplateData, surveyOpts...)
 		}
 		if err != nil {
@@ -550,7 +554,17 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 	return data, nil
 }
 
-// get values from answers file
+func shouldAskForInput(variable Variable) bool {
+	if SkipUserInput {
+		return false
+	}
+	if variable.IgnoreIfSkipped.Bool {
+		return variable.Prompt != (VarField{}) && variable.Prompt.Value != ""
+	}
+	return true
+}
+
+// GetValuesFromAnswersFile get values from answers file
 func GetValuesFromAnswersFile(answersFilePath string) (map[string]string, error) {
 	if util.PathExists(answersFilePath, false) {
 		// read file contents
@@ -673,7 +687,7 @@ func skipQuestionOnCondition(currentVar *Variable, dependsOnVal string, dependsO
 		if defaultVal == "" && currentVar.Type.Value == TypeConfirm {
 			defaultVal = false
 		}
-
+		currentVar.Meta.PromptSkipped = true
 		saveItemToTemplateDataMap(currentVar, dataMap, defaultVal)
 		util.Verbose("[dataPrep] Skipping question for parameter [%s] because PromptIf [%s] value is %t\n", currentVar.Name.Value, dependsOnVal, condition)
 		return true
@@ -689,30 +703,47 @@ func prepareQuestionText(desc string, fallbackQuestion string) string {
 }
 
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
-	if IsSecretType(variable.Type.Value) {
-		if variable.RevealOnSummary.Bool {
-			preparedData.SummaryData[variable.Label.Value] = data
-		} else {
-			preparedData.SummaryData[variable.Label.Value] = "*****"
-			if data == "" || data == "none" {
-				originalValue := "orig-" + variable.Label.Value
-				preparedData.SummaryData[originalValue] = data
-			}
-		}
+	skipParam := variable.IgnoreIfSkipped.Bool && (variable.Meta.PromptSkipped || data == nil || data == "")
 
-		preparedData.Secrets[variable.Name.Value] = data
+	if IsSecretType(variable.Type.Value) {
+		if !skipParam {
+			util.Verbose("[dataPrep] Skipping secret parameter [%s] from summary-table/value-files because IgnoreIfSkipped is true and PromptIf is false\n", variable.Name.Value)
+
+			if variable.RevealOnSummary.Bool {
+				preparedData.SummaryData[variable.Label.Value] = data
+			} else {
+				preparedData.SummaryData[variable.Label.Value] = "*****"
+			}
+
+			preparedData.Secrets[variable.Name.Value] = data
+		}
 		// Use raw value of secret field if flag is set
 		if variable.ReplaceAsIs.Bool {
+			if data == nil {
+				data = ""
+			}
 			preparedData.TemplateData[variable.Name.Value] = data
 		} else {
 			preparedData.TemplateData[variable.Name.Value] = fmt.Sprintf(fmtTagValue, variable.Name.Value)
 		}
 	} else {
-		preparedData.SummaryData[variable.Label.Value] = data
+		if !skipParam {
+			util.Verbose("[dataPrep] Skipping parameter [%s] from summary-table/value-files because IgnoreIfSkipped is true and PromptIf is false\n", variable.Name.Value)
 
-		// Save to values file if switch is ON
-		if variable.SaveInXlvals.Bool {
-			preparedData.Values[variable.Name.Value] = data
+			preparedData.SummaryData[variable.Label.Value] = data
+
+			// Save to values file if switch is ON
+			if variable.SaveInXlvals.Bool {
+				preparedData.Values[variable.Name.Value] = data
+			}
+		}
+		if data == nil {
+			switch variable.Type.Value {
+			case TypeConfirm:
+				data = false
+			case TypeInput, TypeEditor, TypeFile, TypeSelect:
+				data = ""
+			}
 		}
 		preparedData.TemplateData[variable.Name.Value] = data
 	}

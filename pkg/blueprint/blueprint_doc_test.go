@@ -1000,7 +1000,7 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 					},
 					{
 						Name:  VarField{Value: "input5"},
-						Label: VarField{Value: "input 4"},
+						Label: VarField{Value: "input 5"},
 						Type:  VarField{Value: "Input"},
 					},
 				},
@@ -1008,6 +1008,50 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 			args{GetTestTemplateDir("answer-input-2.yaml"), true, false},
 			nil,
 			true,
+		},
+		{
+			"should not fail when using incomplete answers file in strict mode where the variable has ignoreIfSkipped true",
+			BlueprintConfig{
+				Variables: []Variable{
+					{
+						Name:    VarField{Value: "input1"},
+						Label:   VarField{Value: "input1"},
+						Type:    VarField{Value: "Input"},
+						Value:   VarField{Bool: false, Value: "val1"},
+						Default: VarField{Bool: false, Value: "default1"},
+					},
+					{
+						Name:    VarField{Value: "input2"},
+						Label:   VarField{Value: "input 2"},
+						Type:    VarField{Value: "SecretInput"},
+						Default: VarField{Bool: false, Value: "default2"},
+					},
+					{
+						Name:  VarField{Value: "input3"},
+						Label: VarField{Value: "input 3"},
+						Type:  VarField{Value: "Input"},
+					},
+					{
+						Name:  VarField{Value: "input4"},
+						Label: VarField{Value: "input 4"},
+						Type:  VarField{Value: "Input"},
+					},
+					{
+						Name:            VarField{Value: "input5"},
+						Label:           VarField{Value: "input 5"},
+						Type:            VarField{Value: "Input"},
+						IgnoreIfSkipped: VarField{Bool: true},
+					},
+				},
+			},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, false},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "input2": "!value input2", "input3": "ans3", "input4": "ans4", "input5": ""},
+				SummaryData:  map[string]interface{}{"input1": "val1", "input 2": "*****", "input 3": "ans3", "input 4": "ans4"},
+				Secrets:      map[string]interface{}{"input2": "ans2"},
+				Values:       map[string]interface{}{},
+			},
+			false,
 		},
 		{
 			"should use answers file when available",
@@ -1217,6 +1261,311 @@ func Test_getOptionTextWithLabel(t *testing.T) {
 			if got := getOptionTextWithLabel(tt.option); got != tt.want {
 				t.Errorf("getOptionTextWithLabel() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func Test_saveItemToTemplateDataMap(t *testing.T) {
+	type args struct {
+		variable     *Variable
+		preparedData *PreparedData
+		data         interface{}
+	}
+	tests := []struct {
+		name      string
+		args      args
+		exprected PreparedData
+	}{
+		{
+			"should save secrets as *** in PreparedData",
+			args{
+				&Variable{
+					Name:  VarField{Value: "Test"},
+					Label: VarField{Value: "Test"},
+					Type:  VarField{Value: "SecretInput"},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"foo",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": "!value Test"},
+				SummaryData:  map[string]interface{}{"input1": "val1", "Test": "*****"},
+				Secrets:      map[string]interface{}{"Test": "foo"},
+				Values:       map[string]interface{}{},
+			},
+		},
+		{
+			"should save secrets as as it is in PreparedData when RevealOnSummary & ReplaceAsIs is true",
+			args{
+				&Variable{
+					Name:            VarField{Value: "Test"},
+					Label:           VarField{Value: "Test"},
+					RevealOnSummary: VarField{Bool: true},
+					ReplaceAsIs:     VarField{Bool: true},
+					Type:            VarField{Value: "SecretInput"},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"foo",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": "foo"},
+				SummaryData:  map[string]interface{}{"input1": "val1", "Test": "foo"},
+				Secrets:      map[string]interface{}{"Test": "foo"},
+				Values:       map[string]interface{}{},
+			},
+		},
+		{
+			"should not skip secret in SummaryData & Secrets when IgnoreIfSkipped is true & PromptIf is true",
+			args{
+				&Variable{
+					Name:            VarField{Value: "Test"},
+					Label:           VarField{Value: "Test"},
+					IgnoreIfSkipped: VarField{Bool: true},
+					Type:            VarField{Value: "SecretInput"},
+					Meta: VariableMeta{
+						PromptSkipped: false,
+					},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"foo",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": "!value Test"},
+				SummaryData:  map[string]interface{}{"input1": "val1", "Test": "*****"},
+				Secrets:      map[string]interface{}{"Test": "foo"},
+				Values:       map[string]interface{}{},
+			},
+		},
+		{
+			"should skip secret in SummaryData & Secrets when IgnoreIfSkipped is true & PromptIf is false",
+			args{
+				&Variable{
+					Name:            VarField{Value: "Test"},
+					Label:           VarField{Value: "Test"},
+					IgnoreIfSkipped: VarField{Bool: true},
+					Type:            VarField{Value: "SecretInput"},
+					Meta: VariableMeta{
+						PromptSkipped: true,
+					},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"foo",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": "!value Test"},
+				SummaryData:  map[string]interface{}{"input1": "val1"},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{},
+			},
+		},
+		{
+			"should skip secret in SummaryData & Secrets when IgnoreIfSkipped is true & value is nil",
+			args{
+				&Variable{
+					Name:            VarField{Value: "Test"},
+					Label:           VarField{Value: "Test"},
+					IgnoreIfSkipped: VarField{Bool: true},
+					Type:            VarField{Value: "SecretInput"},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": "!value Test"},
+				SummaryData:  map[string]interface{}{"input1": "val1"},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{},
+			},
+		},
+		// non secret variables
+		{
+			"should save variable in PreparedData",
+			args{
+				&Variable{
+					Name:  VarField{Value: "Test"},
+					Label: VarField{Value: "Test"},
+					Type:  VarField{Value: "Input"},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"foo",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": "foo"},
+				SummaryData:  map[string]interface{}{"input1": "val1", "Test": "foo"},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{},
+			},
+		},
+		{
+			"should save variable in PreparedData when SaveInXlvals is true",
+			args{
+				&Variable{
+					Name:         VarField{Value: "Test"},
+					Label:        VarField{Value: "Test"},
+					Type:         VarField{Value: "Input"},
+					SaveInXlvals: VarField{Bool: true},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"foo",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": "foo"},
+				SummaryData:  map[string]interface{}{"input1": "val1", "Test": "foo"},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{"Test": "foo"},
+			},
+		},
+		{
+			"should not skip variable in SummaryData & Values when IgnoreIfSkipped is true & PromptIf is true",
+			args{
+				&Variable{
+					Name:            VarField{Value: "Test"},
+					Label:           VarField{Value: "Test"},
+					IgnoreIfSkipped: VarField{Bool: true},
+					SaveInXlvals:    VarField{Bool: true},
+					Type:            VarField{Value: "Input"},
+					Meta: VariableMeta{
+						PromptSkipped: false,
+					},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"foo",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": "foo"},
+				SummaryData:  map[string]interface{}{"input1": "val1", "Test": "foo"},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{"Test": "foo"},
+			},
+		},
+		{
+			"should skip secret in SummaryData & Secrets when IgnoreIfSkipped is true & PromptIf is false",
+			args{
+				&Variable{
+					Name:            VarField{Value: "Test"},
+					Label:           VarField{Value: "Test"},
+					IgnoreIfSkipped: VarField{Bool: true},
+					SaveInXlvals:    VarField{Bool: true},
+					Type:            VarField{Value: "Input"},
+					Meta: VariableMeta{
+						PromptSkipped: true,
+					},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"foo",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": "foo"},
+				SummaryData:  map[string]interface{}{"input1": "val1"},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			saveItemToTemplateDataMap(tt.args.variable, tt.args.preparedData, tt.args.data)
+			assert.Equal(t, tt.exprected, *tt.args.preparedData)
+		})
+	}
+}
+
+func Test_shouldAskForInput(t *testing.T) {
+	tests := []struct {
+		name     string
+		variable Variable
+		want     bool
+	}{
+		{
+			"should return false when SkipUserInput is set true",
+			func() Variable {
+				SkipUserInput = true
+				return Variable{}
+			}(),
+			false,
+		},
+		{
+			"should return false when prompt is empty",
+			Variable{
+				IgnoreIfSkipped: VarField{Bool: true},
+			},
+			false,
+		},
+		{
+			"should return false when prompt is present and value is empty",
+			Variable{
+				IgnoreIfSkipped: VarField{Bool: true},
+				Prompt:          VarField{Value: ""},
+			},
+			false,
+		},
+		{
+			"should return true when prompt value is present",
+			Variable{
+				IgnoreIfSkipped: VarField{Bool: true},
+				Prompt:          VarField{Value: "foo"},
+			},
+			true,
+		},
+		{
+			"should return true when IgnoreIfSkipped is false",
+			Variable{
+				IgnoreIfSkipped: VarField{Bool: false},
+			},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := shouldAskForInput(tt.variable); got != tt.want {
+				t.Errorf("shouldAskForInput() = %v, want %v", got, tt.want)
+			}
+			SkipUserInput = false // reset the field
 		})
 	}
 }

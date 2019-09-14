@@ -14,8 +14,7 @@ type MetadataV2 struct {
 	Author                  string `yaml:"author"`
 	Version                 string `yaml:"version"`
 	Instructions            string `yaml:"instructions"`
-    SuppressXebiaLabsFolder bool   `yaml:"suppressXebiaLabsFolder"`
-
+	SuppressXebiaLabsFolder bool   `yaml:"suppressXebiaLabsFolder"`
 }
 
 type SpecV2 struct {
@@ -39,6 +38,7 @@ type ParameterV2 struct {
 	Prompt          interface{}   `yaml:"prompt"`
 	Description     interface{}   `yaml:"description"`
 	Label           interface{}   `yaml:"label"`
+	IgnoreIfSkipped interface{}   `yaml:"ignoreIfSkipped"`
 }
 
 type FileV2 struct {

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -83,12 +84,11 @@ func getCurrentStage(isExecuted, deploy bool) string {
 	return currentStage
 }
 
-
 func write(currentStage string, s *spinner.Spinner, w io.Writer) {
 	if ctDesc != "" {
-			s.Stop()
-			w.Write([]byte(currentStage + ctDesc + "\n\n"))
-			s.Start()
+		s.Stop()
+		w.Write([]byte(currentStage + ctDesc + "\n\n"))
+		s.Start()
 	}
 }
 
@@ -148,7 +148,7 @@ func copyAndCapture(w io.Writer, r io.Reader, s *spinner.Spinner) ([]byte, error
 	}
 }
 
-func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (string, string) {
+func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (string, string, error) {
 	cmd := exec.Command(command.Name, command.Args...)
 	if !IsVerbose {
 		s.Start()
@@ -159,12 +159,17 @@ func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (stri
 	var stdout, stderr []byte
 	var errStdout, errStderr error
 
-	stdoutIn, _ := cmd.StdoutPipe()
-	stderrIn, _ := cmd.StderrPipe()
-
-	err := cmd.Start()
+	stdoutIn, err := cmd.StdoutPipe()
 	if err != nil {
-		Fatal("cmd.Start() failed with '%s' \n", err)
+		return "", "", err
+	}
+	stderrIn, err := cmd.StderrPipe()
+	if err != nil {
+		return "", "", err
+	}
+	err = cmd.Start()
+	if err != nil {
+		return "", "", fmt.Errorf("cmd.Start() failed with '%s'", err)
 	}
 
 	var wg sync.WaitGroup
@@ -219,7 +224,7 @@ func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (stri
 		s.Stop()
 	}
 
-	return outStr, errStr
+	return outStr, errStr, nil
 }
 
 func StopAndRemoveContainer(s *spinner.Spinner) {

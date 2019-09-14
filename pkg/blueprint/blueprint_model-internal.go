@@ -33,6 +33,12 @@ type Variable struct {
 	Validate        VarField
 	Description     VarField
 	Label           VarField
+	IgnoreIfSkipped VarField
+	Meta            VariableMeta
+}
+
+type VariableMeta struct {
+	PromptSkipped bool
 }
 
 // TemplateConfig holds the merged template file definitions with repository info

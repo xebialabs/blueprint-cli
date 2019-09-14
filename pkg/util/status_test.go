@@ -104,8 +104,8 @@ func TestDataMapTable(t *testing.T) {
 		assert.Equal(t, expected, DataMapTable(&data, TableAlignLeft, 30, 50, "", 1, true))
 	})
 
-	t.Run("should print valid data table and remove none values (left aligned)", func(t *testing.T) {
-		data := map[string]interface{}{"test": "*****", "userName": "none", "confirm": true}
+	t.Run("should print valid data table and remove space values (left aligned)", func(t *testing.T) {
+		data := map[string]interface{}{"test": "*****", "userName": " ", "confirm": true}
 		expected :=
 			` -------------------------------- ----------------------------------------------------
 | LABEL                          | VALUE                                              |
@@ -116,30 +116,4 @@ func TestDataMapTable(t *testing.T) {
 `
 		assert.Equal(t, expected, DataMapTable(&data, TableAlignLeft, 30, 50, "", 1, true))
 	})
-
-    t.Run("should print valid data table and remove space values (left aligned)", func(t *testing.T) {
-        data := map[string]interface{}{"test": "*****", "userName": " ", "confirm": true}
-        expected :=
-            ` -------------------------------- ----------------------------------------------------
-| LABEL                          | VALUE                                              |
- -------------------------------- ----------------------------------------------------
-| confirm                        | true                                               |
-| test                           | *****                                              |
- -------------------------------- ----------------------------------------------------
-`
-        assert.Equal(t, expected, DataMapTable(&data, TableAlignLeft, 30, 50, "", 1, true))
-    })
-
-    t.Run("should print valid data table and remove None values (left aligned)", func(t *testing.T) {
-        data := map[string]interface{}{"test": "*****", "userName": "None", "confirm": true}
-        expected :=
-            ` -------------------------------- ----------------------------------------------------
-| LABEL                          | VALUE                                              |
- -------------------------------- ----------------------------------------------------
-| confirm                        | true                                               |
-| test                           | *****                                              |
- -------------------------------- ----------------------------------------------------
-`
-        assert.Equal(t, expected, DataMapTable(&data, TableAlignLeft, 30, 50, "", 1, true))
-    })
 }

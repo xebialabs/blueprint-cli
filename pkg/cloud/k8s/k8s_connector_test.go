@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsPropertyPresent(t *testing.T) {
@@ -62,6 +63,8 @@ func TestGetRequiredPropertyFromMap(t *testing.T) {
 		answerMap := make(map[string]string)
 		answerMap["one"] = "one"
 
-		assert.Equal(t, GetRequiredPropertyFromMap("one", answerMap), "one")
+		out, err := GetRequiredPropertyFromMap("one", answerMap)
+		require.Nil(t, err)
+		assert.Equal(t, out, "one")
 	})
 }

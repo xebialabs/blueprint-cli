@@ -12,11 +12,14 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
-func applyFilesAndSave() {
+func applyFilesAndSave() error {
 
-	files := getYamlFiles()
+	files, err := getYamlFiles()
+	if err != nil {
+		return err
+	}
 
-	docs := xl.ParseDocuments(util.ToAbsolutePaths(files), mapset.NewSet(), nil, xl.ToProcess{false, true, true}, false, false, xl.SCMInfo{} )
+	docs := xl.ParseDocuments(util.ToAbsolutePaths(files), mapset.NewSet(), nil, xl.ToProcess{false, true, true}, false, false, xl.SCMInfo{})
 
 	for _, fileWithDocs := range docs {
 		var applyFile = util.PrintableFileName(fileWithDocs.FileName)
@@ -29,18 +32,24 @@ func applyFilesAndSave() {
 			util.Verbose("Applying %s \n", applyFile)
 		}
 
-		allValueFiles := getValueFiles(fileWithDocs.FileName)
+		allValueFiles, err := getValueFiles(fileWithDocs.FileName)
+		if err != nil {
+			return err
+		}
 
 		context, err := xl.BuildContext(viper.GetViper(), &applyValues, allValueFiles, nil, "")
 
 		if err != nil {
-			util.Fatal("Error while reading configuration: %s \n", err)
+			return fmt.Errorf("error while reading configuration: %s", err)
 		}
 
 		applyDir := filepath.Dir(fileWithDocs.FileName)
 
 		for index, doc := range fileWithDocs.Documents {
-			existingFileContents, _ := context.ProcessSingleDocumentAndGetContents(doc, applyDir, fileWithDocs.FileName)
+			existingFileContents, err := context.ProcessSingleDocumentAndGetContents(doc, applyDir, fileWithDocs.FileName)
+			if err != nil {
+				return err
+			}
 
 			if index != len(fileWithDocs.Documents)-1 {
 				fileSeparator := []byte("\n---\n")
@@ -50,12 +59,16 @@ func applyFilesAndSave() {
 			fileContents = append(fileContents, existingFileContents...)
 		}
 
-		ioutil.WriteFile(fileWithDocs.FileName, fileContents, 0644)
+		err = ioutil.WriteFile(fileWithDocs.FileName, fileContents, 0644)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // searches for YAML / YML files inside xebialabs and kubernetes folder
-func getYamlFiles() []string {
+func getYamlFiles() ([]string, error) {
 	var ymlFiles []string
 
 	folders := []string{Xebialabs, Kubernetes}
@@ -66,27 +79,27 @@ func getYamlFiles() []string {
 			files, err := filepath.Glob(glob)
 
 			if err != nil {
-				util.Fatal("Error while finding YAML files: %s \n", err)
+				return nil, fmt.Errorf("error while finding YAML files: %s", err)
 			}
 
 			ymlFiles = append(ymlFiles, files...)
 		}
 	}
-	return ymlFiles
+	return ymlFiles, nil
 }
 
-func getValueFiles(fileName string) []string {
+func getValueFiles(fileName string) ([]string, error) {
 	homeValueFiles, err := xl.ListHomeXlValsFiles()
 
 	if err != nil {
-		util.Fatal("Error while reading value files from home: %s \n", err)
+		return nil, fmt.Errorf("error while reading value files from home: %s", err)
 	}
 
 	relativeValueFiles, err := xl.ListRelativeXlValsFiles(filepath.Dir(fileName))
 
 	if err != nil {
-		util.Fatal("Error while reading value files from xl: %s \n", err)
+		return nil, fmt.Errorf("error while reading value files from xl: %s", err)
 	}
 
-	return append(homeValueFiles, relativeValueFiles...)
+	return append(homeValueFiles, relativeValueFiles...), nil
 }

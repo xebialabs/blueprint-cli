@@ -1,43 +1,55 @@
 package up
 
 import (
+	"fmt"
+
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	restclient "k8s.io/client-go/rest"
 )
 
 // The namespace to use
 const NAMESPACE = "xebialabs"
 
-func connectToKube() string {
+func getKubeClient() (*kubernetes.Clientset, error) {
 	answerMap, err := blueprint.GetValuesFromAnswersFile(GeneratedAnswerFile)
 	if err != nil {
-		util.Fatal(err.Error())
+		return nil, err
 	}
 
-	// Step 1 Check connection
-	config := k8s.GetK8sConfiguration(answerMap)
+	config, err := k8s.GetK8sConfiguration(answerMap)
+	if err != nil {
+		return nil, err
+	}
 	util.Verbose("Got the configuration...\n")
 
-	// Step 2 Check for namespace
-	isNamespaceAvailable := checkForNameSpace(config, NAMESPACE)
-	if isNamespaceAvailable {
-		util.Verbose("the namespace %s is available...\n", NAMESPACE)
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("error creating kubernetes client: %s", err)
 	}
+	return client, nil
+}
 
+func getKubeConfigMap() (string, error) {
+	// Step 1 Get connection
+	client, err := getKubeClient()
+	if err != nil {
+		return "", err
+	}
+	// Step 2 Check for namespace
+	isNamespaceAvailable, err := checkForNameSpace(client, NAMESPACE)
+	if err != nil {
+		return "", err
+	}
 	// Step 3 Check for version
 	if isNamespaceAvailable {
-		client, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			panic(err.Error())
-		}
+		util.Verbose("the namespace %s is available...\n", NAMESPACE)
 
 		cm, err := client.CoreV1().ConfigMaps(NAMESPACE).List(metav1.ListOptions{})
 		if err != nil {
-			panic(err.Error())
+			return "", err
 		}
 
 		var out string
@@ -48,27 +60,23 @@ func connectToKube() string {
 			}
 		}
 		// Returning the data in the config map
-		return out
+		return out, nil
 	}
 
-	return ""
+	return "", nil
 }
 
-func checkForNameSpace(config *restclient.Config, namespace string) bool {
-	client, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
+func checkForNameSpace(client *kubernetes.Clientset, namespace string) (bool, error) {
 
 	ns, err := client.CoreV1().Namespaces().List(metav1.ListOptions{})
 	if err != nil {
-		panic(err.Error())
+		return false, err
 	}
 
 	for _, n := range ns.Items {
 		if n.Name == namespace {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }

@@ -1,14 +1,13 @@
 package up
 
 import (
+	"fmt"
 	"io/ioutil"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 
-	"github.com/xebialabs/xl-cli/pkg/xl"
 	"gopkg.in/yaml.v2"
 
 	"github.com/briandowns/spinner"
@@ -20,212 +19,317 @@ import (
 var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 var applyValues map[string]string
 
+// SkipSeed when set to true will skip running xl-seed docker images
+var SkipSeed = false
+
+// SkipKube can be set to true to skip kubernetes connection activities
+var SkipKube = false
+
+// SkipPrompts can be set to true to skip asking prompts
+var SkipPrompts = false
+
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(context *xl.Context, upLocalMode string, quickSetup bool, advancedSetup bool, blueprintTemplate string, cfgOverridden bool, upAnswerFile string, noCleanup bool, branchVersion string) {
-	if upAnswerFile == "" {
-		if !(quickSetup || advancedSetup) {
+func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, gitBranch string, gb *blueprint.GeneratedBlueprint) error {
+
+	if !SkipSeed {
+		defer util.StopAndRemoveContainer(s)
+	}
+
+	if upParams.AnswerFile == "" {
+		if !(upParams.QuickSetup || upParams.AdvancedSetup) && !upParams.Destroy {
 			// ask for setup mode.
-			mode := askSetupMode()
+			mode, err := askSetupMode()
+
+			if err != nil {
+				return err
+			}
 
 			if mode == "quick" {
-				quickSetup = true
-			} else {
-				advancedSetup = true
+				upParams.QuickSetup = true
 			}
 		}
-	} else {
-		advancedSetup = true
 	}
 
 	blueprint.SkipFinalPrompt = true
 	util.IsQuiet = true
 
 	var err error
-	blueprintContext := context.BlueprintContext
 
-	if upLocalMode != "" {
-		blueprintContext, err = blueprint.ConstructLocalBlueprintContext(upLocalMode)
+	if upParams.LocalPath != "" {
+		blueprintContext, err = blueprint.ConstructLocalBlueprintContext(upParams.LocalPath)
 		if err != nil {
-			util.Fatal("Error while creating local blueprint context: %s \n", err)
+			return fmt.Errorf("error while creating local blueprint context: %s", err)
 		}
-	} else if upLocalMode == "" && !cfgOverridden {
-		blueprintTemplate = DefaultInfraBlueprintTemplate
-		repo := getRepo(branchVersion)
+	} else if upParams.LocalPath == "" && !upParams.CfgOverridden {
+		upParams.BlueprintTemplate = DefaultInfraBlueprintTemplate
+		repo, err := getRepo(gitBranch)
+		if err != nil {
+			return err
+		}
 		blueprintContext.ActiveRepo = &repo
 	}
 
-	gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
+	answerFileToBlueprint := upParams.AnswerFile
 
-	answerFileToBlueprint := upAnswerFile
-
-	if upAnswerFile != "" {
-		generateAnswerFile(upAnswerFile, gb)
+	if answerFileToBlueprint != "" {
+		err = generateAnswerFile(answerFileToBlueprint, gb)
+		if err != nil {
+			return err
+		}
 		answerFileToBlueprint = TempAnswerFile
 	}
 
 	// Infra blueprint
-	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, answerFileToBlueprint, false, quickSetup, true, false)
+	err = blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, answerFileToBlueprint, false, upParams.QuickSetup, true, false)
 	if err != nil {
-		util.Fatal("Error while creating Infrastructure Blueprint: %s \n", err)
+		return fmt.Errorf("error while creating Infrastructure Blueprint: %s", err)
 	}
 	util.IsQuiet = false
 
-	configMap := connectToKube()
+	configMap := ""
+	if !SkipKube {
+		configMap, err = getKubeConfigMap()
+		if err != nil {
+			return err
+		}
+	}
+
+	if upParams.Destroy {
+		// InvokeDestroy(blueprintContext, upParams, gitBranch, configMap, gb)
+		return nil
+	}
 
 	if configMap != "" {
 		util.Verbose("Update workflow started.... \n")
-		util.Verbose("%s", configMap)
 
-		answerMapFromConfigMap := make(map[string]string)
-		if err := yaml.Unmarshal([]byte(configMap), &answerMapFromConfigMap); err != nil {
-			log.Fatal(err)
+		answerMapFromConfigMap, err := parseConfigMap(configMap)
+		if err != nil {
+			return err
 		}
 
 		// Strip the version information
-		models.AvailableVersion = getVersion(answerMapFromConfigMap, "xlVersion", "prevVersion")
+		models.AvailableVersion, err = getVersion(answerMapFromConfigMap, "xlVersion", "prevVersion")
+		if err != nil {
+			return err
+		}
 		if models.AvailableVersion != "" {
 			answerMapFromConfigMap["xlVersion"] = ""
 			answerMapFromConfigMap["prevVersion"] = models.AvailableVersion
 		}
 
-		models.AvailableXlrVersion = getVersion(answerMapFromConfigMap, "xlrVersion", "prevXlrVersion")
+		models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "xlrVersion", "prevXlrVersion")
+		if err != nil {
+			return err
+		}
 		if models.AvailableXlrVersion != "" {
 			answerMapFromConfigMap["xlrVersion"] = ""
 			answerMapFromConfigMap["prevXlrVersion"] = models.AvailableXlrVersion
 		}
 
-		models.AvailableXldVersion = getVersion(answerMapFromConfigMap, "xldVersion", "prevXldVersion")
+		models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "xldVersion", "prevXldVersion")
+		if err != nil {
+			return err
+		}
 		if models.AvailableXldVersion != "" {
 			answerMapFromConfigMap["xldVersion"] = ""
 			answerMapFromConfigMap["prevXldVersion"] = models.AvailableXldVersion
 		}
 
-		generateLicenseAndKeystore(answerMapFromConfigMap, gb)
-		convertMapToAnswerFile(answerMapFromConfigMap, GeneratedAnswerFile)
+		err = generateLicenseAndKeystore(answerMapFromConfigMap, gb)
+		if err != nil {
+			return err
+		}
+		err = convertMapToAnswerFile(answerMapFromConfigMap, GeneratedAnswerFile)
+		if err != nil {
+			return err
+		}
 	} else {
 		util.Verbose("Install workflow started")
 	}
 
 	util.IsQuiet = true
+	err = runApplicationBlueprint(&upParams, blueprintContext, gb, gitBranch)
+	if err != nil {
+		return err
+	}
+	util.IsQuiet = false
 
+	err = applyFilesAndSave()
+	if err != nil {
+		return err
+	}
+
+	util.Info("Generated files for deployment successfully! \n")
+
+	if !SkipSeed {
+		util.Info("Spinning up xl seed! \n")
+		err = runAndCaptureResponse(pullSeedImage)
+		if err != nil {
+			return err
+		}
+		seed, err := runSeed(false)
+		if err != nil {
+			return err
+		}
+		err = runAndCaptureResponse(seed)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func parseConfigMap(configMap string) (map[string]string, error) {
+	util.Verbose("%s", configMap)
+	answerMapFromConfigMap := make(map[string]string)
+	if err := yaml.Unmarshal([]byte(configMap), &answerMapFromConfigMap); err != nil {
+		return nil, fmt.Errorf("error parsing configMap: %s", err)
+	}
+	return answerMapFromConfigMap, nil
+}
+
+func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint, gitBranch string) error {
+	var err error
 	// Switch blueprint once the infrastructure is done.
-	if blueprintTemplate != "" {
-		blueprintTemplate = strings.Replace(blueprintTemplate, DefaultInfraBlueprintTemplate, DefaultBlueprintTemplate, 1)
+	if upParams.BlueprintTemplate != "" {
+		upParams.BlueprintTemplate = strings.Replace(upParams.BlueprintTemplate, DefaultInfraBlueprintTemplate, DefaultBlueprintTemplate, 1)
 	} else {
-		blueprintTemplate = DefaultBlueprintTemplate
-		repo := getRepo(branchVersion)
+		upParams.BlueprintTemplate = DefaultBlueprintTemplate
+		repo, err := getRepo(gitBranch)
+		if err != nil {
+			return err
+		}
 		blueprintContext.ActiveRepo = &repo
 	}
 
-	if !noCleanup {
-		defer gb.Cleanup()
-	}
-
-	defer util.StopAndRemoveContainer(s)
-
-	if upAnswerFile != "" {
-		upAnswerFile = getAnswerFile(TempAnswerFile)
+	if upParams.AnswerFile != "" {
+		upParams.AnswerFile, err = getAnswerFile(TempAnswerFile)
+		if err != nil {
+			return err
+		}
 		gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
 		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
 	} else {
-		upAnswerFile = getAnswerFile(upAnswerFile)
+		upParams.AnswerFile, err = getAnswerFile(upParams.AnswerFile)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, gb, upAnswerFile, false, quickSetup, true, true)
+	err = blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, upParams.AnswerFile, false, upParams.QuickSetup, true, true)
 	if err != nil {
-		util.Fatal("Error while creating Blueprint: %s \n", err)
+		return fmt.Errorf("error while creating Blueprint: %s", err)
 	}
-
-	util.IsQuiet = false
-
-	applyFilesAndSave()
-
-	util.Info("Generated files for deployment successfully! \nSpinning up xl seed! \n")
-
-	runAndCaptureResponse(pullSeedImage)
-	runAndCaptureResponse(runSeed())
+	return nil
 }
 
-func generateAnswerFile(upAnswerFile string, gb *blueprint.GeneratedBlueprint) {
-	answerMap := convertAnswerFileToMap(upAnswerFile)
-	generateLicenseAndKeystore(answerMap, gb)
-	convertMapToAnswerFile(answerMap, TempAnswerFile)
+func generateAnswerFile(upAnswerFile string, gb *blueprint.GeneratedBlueprint) error {
+	answerMap, err := convertAnswerFileToMap(upAnswerFile)
+	if err != nil {
+		return err
+	}
+	err = generateLicenseAndKeystore(answerMap, gb)
+	if err != nil {
+		return err
+	}
+	err = convertMapToAnswerFile(answerMap, TempAnswerFile)
+	if err != nil {
+		return err
+	}
 	gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
+	return nil
 }
 
-func convertAnswerFileToMap(answerFilePath string) map[string]string {
+func convertAnswerFileToMap(answerFilePath string) (map[string]string, error) {
 	answerMap := make(map[string]string)
 
 	contents, err := ioutil.ReadFile(answerFilePath)
 
 	if err != nil {
-		util.Fatal("Error reading answer file %s: %s", answerFilePath, err)
+		return nil, fmt.Errorf("error reading answer file %s: %s", answerFilePath, err)
 	}
 
 	if err := yaml.Unmarshal(contents, &answerMap); err != nil {
-		util.Fatal("Error converting answer file %s", err)
+		return nil, fmt.Errorf("error converting answer file %s", err)
 	}
 
-	return answerMap
+	return answerMap, nil
 }
 
-func convertMapToAnswerFile(contents map[string]string, filename string) {
+func convertMapToAnswerFile(contents map[string]string, filename string) error {
 	yamlBytes, err := yaml.Marshal(contents)
 	if err != nil {
-		util.Fatal("Error when marshalling the answer map to yaml %s", err.Error())
+		fmt.Errorf("error when marshalling the answer map to yaml %s", err.Error())
 	}
 
 	err = ioutil.WriteFile(filename, yamlBytes, 0640)
 	if err != nil {
-		util.Fatal("Error when creating an answer file %s", err.Error())
+		fmt.Errorf("error when creating an answer file %s", err.Error())
 	}
+	return nil
 }
 
-func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) string {
+func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) (string, error) {
 	var version string
+	var err error
 	if k8s.IsPropertyPresent(key, answerMapFromConfigMap) {
-		version = k8s.GetRequiredPropertyFromMap(key, answerMapFromConfigMap)
+		version, err = k8s.GetRequiredPropertyFromMap(key, answerMapFromConfigMap)
+		if err != nil {
+			return "", err
+		}
 		util.Verbose("Version %s is existing.\n", version)
 	} else if k8s.IsPropertyPresent(prevKey, answerMapFromConfigMap) {
-		version = k8s.GetRequiredPropertyFromMap(prevKey, answerMapFromConfigMap)
+		version, err = k8s.GetRequiredPropertyFromMap(prevKey, answerMapFromConfigMap)
+		if err != nil {
+			return "", err
+		}
 	}
-	return version
+	return version, nil
 }
 
-func getAnswerFile(upAnswerFile string) string {
+func getAnswerFile(answerFile string) (string, error) {
 	// If the answer file is provided merge them and use the merged file as the answer file
-	if upAnswerFile != "" {
-		newAnswerMap, isConflict := mergeAnswerFiles(upAnswerFile)
+	if answerFile != "" {
+		newAnswerMap, isConflict, err := mergeAnswerFiles(answerFile)
+		if err != nil {
+			return "", err
+		}
 		if isConflict {
-			isAnswerFileClash := askOverrideAnswerFile()
+			isAnswerFileClash, err := askOverrideAnswerFile()
+			if err != nil {
+				return "", err
+			}
 			if !isAnswerFileClash {
-				util.Fatal("Quitting deployment due to conflict in files.")
+				fmt.Errorf("quitting deployment due to conflict in files")
 			}
 		}
-		upAnswerFile = MergedAnswerFile
-		convertMapToAnswerFile(newAnswerMap, upAnswerFile)
+		answerFile = MergedAnswerFile
+		err = convertMapToAnswerFile(newAnswerMap, answerFile)
+		if err != nil {
+			return "", err
+		}
 	} else {
-		upAnswerFile = GeneratedAnswerFile
+		answerFile = GeneratedAnswerFile
 	}
-	return upAnswerFile
+	return answerFile, nil
 }
 
-func mergeAnswerFiles(upAnswerFile string) (map[string]string, bool) {
+func mergeAnswerFiles(answerFile string) (map[string]string, bool, error) {
 
 	autoAnswerFile, err := blueprint.GetValuesFromAnswersFile(GeneratedAnswerFile)
 	if err != nil {
-		util.Fatal(err.Error())
+		return nil, false, err
 	}
 
-	providedAnswerFile, err := blueprint.GetValuesFromAnswersFile(upAnswerFile)
+	providedAnswerFile, err := blueprint.GetValuesFromAnswersFile(answerFile)
 	if err != nil {
-		util.Fatal(err.Error())
+		return nil, false, err
 	}
 
 	msg, err := VersionCheck(autoAnswerFile, providedAnswerFile)
 
 	if err != nil {
-		util.Fatal(err.Error())
+		return nil, false, err
 	}
 
 	if msg != "" {
@@ -233,6 +337,6 @@ func mergeAnswerFiles(upAnswerFile string) (map[string]string, bool) {
 	} else {
 		util.Verbose("No version provided, will ask the version in the application blueprint")
 	}
-
-	return mergeMaps(autoAnswerFile, providedAnswerFile)
+	mergedAnswerFile, isConflict := mergeMaps(autoAnswerFile, providedAnswerFile)
+	return mergedAnswerFile, isConflict, nil
 }
