@@ -110,7 +110,7 @@ func connectToEKS(answerMap map[string]string) (*restclient.Config, error) {
 	tokenExpiration := time.Now().Local().Add(presignedURLExpiration - 1*time.Minute)
 	t := Token{v1Prefix + base64.RawURLEncoding.EncodeToString([]byte(presignedURLString)), tokenExpiration}
 
-	url, err := GetRequiredPropertyFromMap("apiServerURL", answerMap)
+	url, err := GetRequiredPropertyFromMap("ApiServerURL", answerMap)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func GetK8sConfiguration(answerMap map[string]string) (*restclient.Config, error
 }
 
 func connectToK8s(answerMap map[string]string) (*restclient.Config, error) {
-	url, err := GetRequiredPropertyFromMap("apiServerURL", answerMap)
+	url, err := GetRequiredPropertyFromMap("ApiServerURL", answerMap)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ func IsPropertyPresent(propertyName string, answerMap map[string]string) bool {
 }
 
 func getClusterIDFromClusterName(answerMap map[string]string) string {
-	clusterName := answerMap["eksClusterName"]
+	clusterName := answerMap["EksClusterName"]
 
 	if clusterName != "" {
 		return clusterName

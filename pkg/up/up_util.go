@@ -107,15 +107,15 @@ func getRepo(gitBranch string) (repository.BlueprintRepository, error) {
 }
 
 func generateLicenseAndKeystore(answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) error {
-	err := GenerateFileAndUpdateProperty("xlrLic", "xl-release.lic", answerMapFromConfigMap, gb)
+	err := GenerateFileAndUpdateProperty("XlrLic", "xl-release.lic", answerMapFromConfigMap, gb)
 	if err != nil {
 		return err
 	}
-	err = GenerateFileAndUpdateProperty("xldLic", "deploy-it.lic", answerMapFromConfigMap, gb)
+	err = GenerateFileAndUpdateProperty("XldLic", "deploy-it.lic", answerMapFromConfigMap, gb)
 	if err != nil {
 		return err
 	}
-	err = GenerateFileAndUpdateProperty("xlKeyStore", "keystore.jceks", answerMapFromConfigMap, gb)
+	err = GenerateFileAndUpdateProperty("XlKeyStore", "keystore.jceks", answerMapFromConfigMap, gb)
 	if err != nil {
 		return err
 	}
@@ -204,9 +204,9 @@ func mergeMaps(autoAnswerFile, providedAnswerFile map[string]string) (map[string
 
 func VersionCheck(autoAnswerFile map[string]string, providedAnswerFile map[string]string) (string, error) {
 	// Strip the version information - if the value is provided to the up command.
-	if k8s.IsPropertyPresent("xlVersion", providedAnswerFile) {
+	if k8s.IsPropertyPresent("XlVersion", providedAnswerFile) {
 		var versionFromKubernetesConfigMap string
-		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("xlVersion", providedAnswerFile)
+		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("XlVersion", providedAnswerFile)
 		if err != nil {
 			return "", err
 		}
@@ -221,9 +221,9 @@ func VersionCheck(autoAnswerFile map[string]string, providedAnswerFile map[strin
 		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
 	}
 
-	if k8s.IsPropertyPresent("xlrVersion", providedAnswerFile) {
+	if k8s.IsPropertyPresent("XlrVersion", providedAnswerFile) {
 		var versionFromKubernetesConfigMap string
-		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("xlrVersion", providedAnswerFile)
+		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("XlrVersion", providedAnswerFile)
 		if err != nil {
 			return "", err
 		}
@@ -238,9 +238,9 @@ func VersionCheck(autoAnswerFile map[string]string, providedAnswerFile map[strin
 		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
 	}
 
-	if k8s.IsPropertyPresent("xldVersion", providedAnswerFile) {
+	if k8s.IsPropertyPresent("XldVersion", providedAnswerFile) {
 		var versionFromKubernetesConfigMap string
-		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("xldVersion", providedAnswerFile)
+		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("XldVersion", providedAnswerFile)
 
 		if k8s.IsPropertyPresent("prevXldVersion", autoAnswerFile) {
 			versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("prevXldVersion", autoAnswerFile)
