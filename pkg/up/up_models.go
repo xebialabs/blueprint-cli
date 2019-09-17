@@ -8,5 +8,5 @@ type UpParams struct {
 	AnswerFile        string
 	CfgOverridden     bool
 	NoCleanup         bool
-	Destroy           bool
+	Undeploy          bool
 }

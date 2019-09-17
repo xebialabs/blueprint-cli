@@ -59,7 +59,7 @@ func init() {
 	upFlags.StringVarP(&upParams.AnswerFile, "answers", "a", "", "The file containing answers for the questions")
 	upFlags.BoolVarP(&upParams.CfgOverridden, "dev", "d", false, "Enable dev mode, uses repository config from your local config instead")
 	upFlags.BoolVar(&upParams.NoCleanup, "no-cleanup", false, "Leave generated files on the filesystem")
-	upFlags.BoolVar(&upParams.Destroy, "destroy", false, "Undeploy the deployed resources")
+	upFlags.BoolVar(&upParams.Undeploy, "undeploy", false, "Undeploy the deployed resources")
 	err := upFlags.MarkHidden("dev")
 	if err != nil {
 		util.Error("error setting up cmd flags: %s\n", err.Error())

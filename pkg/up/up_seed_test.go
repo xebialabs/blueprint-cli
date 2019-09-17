@@ -185,7 +185,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				AdvancedSetup:     false,
 				CfgOverridden:     false,
 				NoCleanup:         false,
-				Destroy:           false,
+				Undeploy:          false,
 			},
 			"beta",
 			gb,
@@ -269,5 +269,28 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		for k, v := range secretsMap {
 			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
 		}
+	})
+
+	t.Run("should error when passing --undeploy flag for non existing config", func(t *testing.T) {
+		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
+		defer gb.Cleanup()
+		err := InvokeBlueprintAndSeed(
+			getLocalTestBlueprintContext(t),
+			UpParams{
+				// enable for local testing
+				// LocalPath:         "../../../xl-up-blueprint",
+				BlueprintTemplate: "xl-infra",
+				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
+				QuickSetup:        true,
+				AdvancedSetup:     false,
+				CfgOverridden:     false,
+				NoCleanup:         false,
+				Undeploy:          true,
+			},
+			"beta",
+			gb,
+		)
+
+		require.NotNil(t, err)
 	})
 }

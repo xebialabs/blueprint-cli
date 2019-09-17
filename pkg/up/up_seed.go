@@ -36,7 +36,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	if upParams.AnswerFile == "" {
-		if !(upParams.QuickSetup || upParams.AdvancedSetup) && !upParams.Destroy {
+		if !(upParams.QuickSetup || upParams.AdvancedSetup) && !upParams.Undeploy {
 			// ask for setup mode.
 			mode, err := askSetupMode()
 
@@ -94,45 +94,46 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		}
 	}
 
-	if upParams.Destroy {
-		// InvokeDestroy(blueprintContext, upParams, gitBranch, configMap, gb)
-		return nil
-	}
-
 	if configMap != "" {
-		util.Verbose("Update workflow started.... \n")
+		if upParams.Undeploy {
+			util.Verbose("Undeploy workflow started.... \n")
+		} else {
+			util.Verbose("Update workflow started.... \n")
+		}
 
 		answerMapFromConfigMap, err := parseConfigMap(configMap)
 		if err != nil {
 			return err
 		}
 
-		// Strip the version information
-		models.AvailableVersion, err = getVersion(answerMapFromConfigMap, "XlVersion", "prevVersion")
-		if err != nil {
-			return err
-		}
-		if models.AvailableVersion != "" {
-			answerMapFromConfigMap["XlVersion"] = ""
-			answerMapFromConfigMap["prevVersion"] = models.AvailableVersion
-		}
+		if !upParams.Undeploy {
+			// Strip the version information
+			models.AvailableVersion, err = getVersion(answerMapFromConfigMap, "xlVersion", "prevVersion")
+			if err != nil {
+				return err
+			}
+			if models.AvailableVersion != "" {
+				answerMapFromConfigMap["XlVersion"] = ""
+				answerMapFromConfigMap["prevVersion"] = models.AvailableVersion
+			}
 
-		models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrVersion", "prevXlrVersion")
-		if err != nil {
-			return err
-		}
-		if models.AvailableXlrVersion != "" {
-			answerMapFromConfigMap["XlrVersion"] = ""
-			answerMapFromConfigMap["prevXlrVersion"] = models.AvailableXlrVersion
-		}
+			models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "xlrVersion", "prevXlrVersion")
+			if err != nil {
+				return err
+			}
+			if models.AvailableXlrVersion != "" {
+				answerMapFromConfigMap["XlrVersion"] = ""
+				answerMapFromConfigMap["prevXlrVersion"] = models.AvailableXlrVersion
+			}
 
-		models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "XldVersion", "prevXldVersion")
-		if err != nil {
-			return err
-		}
-		if models.AvailableXldVersion != "" {
-			answerMapFromConfigMap["XldVersion"] = ""
-			answerMapFromConfigMap["prevXldVersion"] = models.AvailableXldVersion
+			models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "xldVersion", "prevXldVersion")
+			if err != nil {
+				return err
+			}
+			if models.AvailableXldVersion != "" {
+				answerMapFromConfigMap["XldVersion"] = ""
+				answerMapFromConfigMap["prevXldVersion"] = models.AvailableXldVersion
+			}
 		}
 
 		err = generateLicenseAndKeystore(answerMapFromConfigMap, gb)
@@ -144,6 +145,9 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			return err
 		}
 	} else {
+		if upParams.Undeploy {
+			return fmt.Errorf("no resources found. Nothing to un-deploy")
+		}
 		util.Verbose("Install workflow started")
 	}
 
@@ -159,7 +163,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		return err
 	}
 
-	util.Info("Generated files for deployment successfully! \n")
+	util.Info("Generated files successfully! \n")
 
 	if !SkipSeed {
 		util.Info("Spinning up xl seed! \n")
@@ -167,7 +171,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err != nil {
 			return err
 		}
-		seed, err := runSeed(false)
+		seed, err := runSeed(upParams.Undeploy)
 		if err != nil {
 			return err
 		}

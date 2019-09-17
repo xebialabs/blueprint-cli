@@ -49,7 +49,7 @@ func runSeed(undeploy bool) (models.Command, error) {
 	command := []string{"run", "--name", "xl-seed", "-v", dir + ":/data", SeedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"}
 
 	if undeploy {
-		command = append(command, "--undeploy", "--undeploy-ns")
+		command = append(command, "--undeploy")
 	}
 
 	return models.Command{
