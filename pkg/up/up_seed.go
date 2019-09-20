@@ -126,7 +126,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 				answerMapFromConfigMap["prevXldOfficialVersion"] = models.AvailableOfficialXldVersion
 			}
 
-			models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "xlrVersion", "prevXlrVersion")
+			models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrVersion", "prevXlrVersion")
 			if err != nil {
 				return err
 			}
@@ -135,7 +135,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 				answerMapFromConfigMap["prevXlrVersion"] = models.AvailableXlrVersion
 			}
 
-			models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "xldVersion", "prevXldVersion")
+			models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "XldVersion", "prevXldVersion")
 			if err != nil {
 				return err
 			}
