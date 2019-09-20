@@ -1,0 +1,1110 @@
+{
+    "pagelen": 50,
+    "values": [
+        {
+            "path": "aws",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "azure",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/azure/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/azure/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "aws/datalake",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/datalake/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/datalake/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "devsecops",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/devsecops/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/devsecops/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "docker",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/docker/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/docker/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "gcp",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/gcp/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/gcp/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "kubernetes",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/kubernetes/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/kubernetes/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "xl-devops-platform",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl-devops-platform/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl-devops-platform/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "mimetype": null,
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/CONTRIBUTING.md"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/CONTRIBUTING.md?format=meta"
+                },
+                "history": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/filehistory/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/CONTRIBUTING.md"
+                }
+            },
+            "path": "CONTRIBUTING.md",
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            },
+            "attributes": [],
+            "type": "commit_file",
+            "size": 3107
+        },
+        {
+            "mimetype": null,
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/Jenkinsfile"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/Jenkinsfile?format=meta"
+                },
+                "history": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/filehistory/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/Jenkinsfile"
+                }
+            },
+            "path": "Jenkinsfile",
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            },
+            "attributes": [],
+            "type": "commit_file",
+            "size": 1391
+        },
+        {
+            "mimetype": "text/plain",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/LICENSE.txt"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/LICENSE.txt?format=meta"
+                },
+                "history": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/filehistory/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/LICENSE.txt"
+                }
+            },
+            "path": "LICENSE.txt",
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            },
+            "attributes": [],
+            "type": "commit_file",
+            "size": 11369
+        },
+        {
+            "mimetype": null,
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/README.md"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/README.md?format=meta"
+                },
+                "history": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/filehistory/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/README.md"
+                }
+            },
+            "path": "README.md",
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            },
+            "attributes": [],
+            "type": "commit_file",
+            "size": 3902
+        },
+        {
+            "mimetype": null,
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/Releasefile.groovy"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/Releasefile.groovy?format=meta"
+                },
+                "history": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/filehistory/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/Releasefile.groovy"
+                }
+            },
+            "path": "Releasefile.groovy",
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            },
+            "attributes": [],
+            "type": "commit_file",
+            "size": 3317
+        },
+        {
+            "mimetype": "text/x-python",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/generate_index.py"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/generate_index.py?format=meta"
+                },
+                "history": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/filehistory/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/generate_index.py"
+                }
+            },
+            "path": "generate_index.py",
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            },
+            "attributes": [],
+            "type": "commit_file",
+            "size": 815
+        },
+        {
+            "mimetype": "text/x-python",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/integration_tests.py"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/integration_tests.py?format=meta"
+                },
+                "history": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/filehistory/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/integration_tests.py"
+                }
+            },
+            "path": "integration_tests.py",
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            },
+            "attributes": [],
+            "type": "commit_file",
+            "size": 11386
+        },
+        {
+            "mimetype": null,
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl?format=meta"
+                },
+                "history": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/filehistory/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl"
+                }
+            },
+            "path": "xl",
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            },
+            "attributes": [
+                "executable",
+                "binary"
+            ],
+            "type": "commit_file",
+            "size": 35211306
+        },
+        {
+            "mimetype": null,
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xlw"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xlw?format=meta"
+                },
+                "history": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/filehistory/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xlw"
+                }
+            },
+            "path": "xlw",
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            },
+            "attributes": [
+                "executable"
+            ],
+            "type": "commit_file",
+            "size": 1416
+        },
+        {
+            "path": "aws/basic-eks-cluster",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/basic-eks-cluster/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/basic-eks-cluster/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "aws/basic-lambda",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/basic-lambda/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/basic-lambda/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "aws/datalake",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/datalake/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/datalake/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "aws/elastic-beanstalk",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/elastic-beanstalk/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/elastic-beanstalk/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "aws/intermediate-eks-cluster",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/intermediate-eks-cluster/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/intermediate-eks-cluster/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "aws/microservice-ecommerce",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/microservice-ecommerce/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/microservice-ecommerce/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "aws/monolith-terraform",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/monolith-terraform/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/monolith-terraform/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "aws/monolith",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/monolith/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/monolith/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "azure/app-service-docker-app",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/azure/app-service-docker-app/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/azure/app-service-docker-app/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "azure/basic-aks-cluster",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/azure/basic-aks-cluster/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/azure/basic-aks-cluster/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "azure/microservice-ecommerce",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/azure/microservice-ecommerce/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/azure/microservice-ecommerce/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "mimetype": null,
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/datalake/blueprint.yaml"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/datalake/blueprint.yaml?format=meta"
+                },
+                "history": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/filehistory/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/aws/datalake/blueprint.yaml"
+                }
+            },
+            "path": "aws/datalake/blueprint.yaml",
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            },
+            "attributes": [],
+            "type": "commit_file",
+            "size": 1174
+        },
+        {
+            "path": "devsecops/security-scanning",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/devsecops/security-scanning/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/devsecops/security-scanning/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "docker/application",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/docker/application/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/docker/application/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "docker/composable-demo",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/docker/composable-demo/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/docker/composable-demo/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "docker/environment",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/docker/environment/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/docker/environment/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "docker/simple-demo-app",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/docker/simple-demo-app/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/docker/simple-demo-app/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "gcp/basic-gke-cluster",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/gcp/basic-gke-cluster/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/gcp/basic-gke-cluster/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "gcp/microservice-ecommerce",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/gcp/microservice-ecommerce/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/gcp/microservice-ecommerce/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "kubernetes/application",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/kubernetes/application/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/kubernetes/application/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "kubernetes/environment",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/kubernetes/environment/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/kubernetes/environment/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "kubernetes/multicloud-pipeline",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/kubernetes/multicloud-pipeline/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/kubernetes/multicloud-pipeline/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "xl-devops-platform/__test__",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl-devops-platform/__test__/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl-devops-platform/__test__/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "xl-devops-platform/docker",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl-devops-platform/docker/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl-devops-platform/docker/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "path": "xl-devops-platform/xebialabs",
+            "type": "commit_directory",
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl-devops-platform/xebialabs/"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl-devops-platform/xebialabs/?format=meta"
+                }
+            },
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            }
+        },
+        {
+            "mimetype": null,
+            "links": {
+                "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl-devops-platform/blueprint.yaml"
+                },
+                "meta": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl-devops-platform/blueprint.yaml?format=meta"
+                },
+                "history": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/filehistory/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/xl-devops-platform/blueprint.yaml"
+                }
+            },
+            "path": "xl-devops-platform/blueprint.yaml",
+            "commit": {
+                "type": "commit",
+                "hash": "43b58161f3c3e42f9ba65d3b14c421705c34fa7b",
+                "links": {
+                    "self": {
+                        "href": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/commit/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    },
+                    "html": {
+                        "href": "https://bitbucket.org/xebialabs/blueprints/commits/43b58161f3c3e42f9ba65d3b14c421705c34fa7b"
+                    }
+                }
+            },
+            "attributes": [],
+            "type": "commit_file",
+            "size": 2057
+        }
+    ],
+    "page": 1,
+    "next": "https://api.bitbucket.org/2.0/repositories/xebialabs/blueprints/src/43b58161f3c3e42f9ba65d3b14c421705c34fa7b/?pagelen=50&max_depth=10&page=xGCox"
+}

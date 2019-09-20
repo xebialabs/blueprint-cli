@@ -62,6 +62,7 @@ func (s *mockRepoService) GetBranch(ctx context.Context, owner, repo, branch str
 	return b, nil, err
 }
 
+// Repository Service Mock implementation for tests
 func (s *mockRepoService) GetContents(ctx context.Context, owner, repo, path string, opt *github.RepositoryContentGetOptions) (fileContent *github.RepositoryContent, directoryContent []*github.RepositoryContent, resp *github.Response, err error) {
 	// try to find local file
 	escapedPath := (&url.URL{Path: path}).String()

@@ -27,6 +27,13 @@ func TestGetRepoProviderWithName(t *testing.T) {
 		assert.Equal(t, ProviderGitHub, provider)
 	})
 
+	t.Run("should get bitbucket repo provider with name", func(t *testing.T) {
+		provider, err := GetRepoProvider("bitbucket")
+		require.Nil(t, err)
+		require.NotNil(t, provider)
+		assert.Equal(t, ProviderBitbucket, provider)
+	})
+
 	t.Run("should get http repo provider with name", func(t *testing.T) {
 		provider, err := GetRepoProvider("http")
 		require.Nil(t, err)
@@ -39,5 +46,12 @@ func TestGetRepoProviderWithName(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, provider)
 		assert.Equal(t, ProviderGitHub, provider)
+	})
+
+	t.Run("should get bitbucket repo provider with name mixed with uppercase and lowercase", func(t *testing.T) {
+		provider, err := GetRepoProvider("Bitbucket")
+		require.Nil(t, err)
+		require.NotNil(t, provider)
+		assert.Equal(t, ProviderBitbucket, provider)
 	})
 }

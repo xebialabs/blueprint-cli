@@ -17,6 +17,7 @@ import (
 
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/bitbucket"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/http"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/local"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/mock"
@@ -195,6 +196,8 @@ func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*
 			repo, err = local.NewLocalBlueprintRepository(repoDefinition)
 		case models.ProviderGitHub:
 			repo, err = github.NewGitHubBlueprintRepository(repoDefinition)
+		case models.ProviderBitbucket:
+			repo, err = bitbucket.NewBitbucketBlueprintRepository(repoDefinition)
 		case models.ProviderHttp:
 			repo, err = http.NewHttpBlueprintRepository(repoDefinition, CLIVersion)
 		default:
