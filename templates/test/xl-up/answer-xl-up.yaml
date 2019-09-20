@@ -25,7 +25,8 @@ XlrReportDbUser: xl-release-report
 XlrReportDbPass: xl-release-report
 XlKeyStore: ../../templates/test/xl-up/cert
 XlKeyStorePass: test123
-XlVersion: 8.6.1
+XlrOfficialVersion: 8.6.1
+XldOfficialVersion: 8.6.1
 InstallMonitoring: true
 MonitoringUser: mon-user
 MonitoringUserPass: mon-pass

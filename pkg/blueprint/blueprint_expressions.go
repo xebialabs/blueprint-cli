@@ -228,6 +228,10 @@ var functions = map[string]govaluate.ExpressionFunction{
 		var params []string
 		module := fmt.Sprintf("%v", args[0])
 
+		if len(args) == 2 && module == "_showapplicableversions" {
+			params = append(params, fmt.Sprintf("%v", args[1]))
+		}
+
 		if len(args) == 3 && module == "checkversion" {
 			params = append(params, fmt.Sprintf("%v", args[1]))
 			params = append(params, fmt.Sprintf("%v", args[2]))

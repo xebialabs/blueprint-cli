@@ -28,27 +28,55 @@ func (result *VersionFnResult) GetResult(module string, attr string, index int) 
 }
 
 func showVersions(params []string) ([]string, error) {
-	var currentVersion int64
-	if models.AvailableVersion != "" {
-		currentVersion = util.ParseVersion(models.AvailableVersion, 4)
-	}
+	application := params[0]
 
-	// TODO find a better way to handle this...
-	availableVersions := []string{"8.6.1", "9.0.2"}
+	if application == "xlr" {
+		var currentXlrVersion int64
 
-	if currentVersion == int64(0) {
-		return availableVersions, nil
-	}
-
-	var applicableVersion []string
-
-	for _, version := range availableVersions {
-		if currentVersion <= util.ParseVersion(version, 4) {
-			applicableVersion = append(applicableVersion, version)
+		if models.AvailableOfficialXlrVersion != "" {
+			currentXlrVersion = util.ParseVersion(models.AvailableOfficialXlrVersion, 4)
 		}
+		// TODO find a better way to handle this...
+		availableXlrVersions := []string{"9.0.2", "9.0.4", "9.0.6"}
+
+		if currentXlrVersion == int64(0) {
+			return availableXlrVersions, nil
+		}
+
+		var applicableXlrVersion []string
+
+		for _, version := range availableXlrVersions {
+			if currentXlrVersion <= util.ParseVersion(version, 4) {
+				applicableXlrVersion = append(applicableXlrVersion, version)
+			}
+		}
+
+		return applicableXlrVersion, nil
+
+	} else {
+		var currentXldVersion int64
+
+		if models.AvailableOfficialXldVersion != "" {
+			currentXldVersion = util.ParseVersion(models.AvailableOfficialXldVersion, 4)
+		}
+		// TODO find a better way to handle this...
+		availableXldVersions := []string{"9.0.2", "9.0.3", "9.0.5"}
+
+		if currentXldVersion == int64(0) {
+			return availableXldVersions, nil
+		}
+
+		var applicableXldVersion []string
+
+		for _, version := range availableXldVersions {
+			if currentXldVersion <= util.ParseVersion(version, 4) {
+				applicableXldVersion = append(applicableXldVersion, version)
+			}
+		}
+
+		return applicableXldVersion, nil
 	}
 
-	return applicableVersion, nil
 }
 
 func versionFromDockerTag(version string) (int64, error) {
@@ -96,8 +124,14 @@ func compareVersion(application, version string) (bool, error) {
 		if application == "xld" && models.AvailableXldVersion != "" {
 			return false, fmt.Errorf("cannot downgrade from %s to %s", models.AvailableXldVersion, version)
 		}
+		//probably not needed
+		if application == "xlr" && models.AvailableOfficialXlrVersion != "" {
+			return false, fmt.Errorf("cannot downgrade from %s to %s", models.AvailableOfficialXlrVersion, version)
+		}
 
-		return false, fmt.Errorf("cannot downgrade from %s to %s", models.AvailableVersion, version)
+		if application == "xld" && models.AvailableOfficialXldVersion != "" {
+			return false, fmt.Errorf("cannot downgrade from %s to %s", models.AvailableOfficialXldVersion, version)
+		}
 	}
 
 	return true, nil

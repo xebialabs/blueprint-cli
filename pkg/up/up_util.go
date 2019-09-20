@@ -204,15 +204,32 @@ func mergeMaps(autoAnswerFile, providedAnswerFile map[string]string) (map[string
 
 func VersionCheck(autoAnswerFile map[string]string, providedAnswerFile map[string]string) (string, error) {
 	// Strip the version information - if the value is provided to the up command.
-	if k8s.IsPropertyPresent("XlVersion", providedAnswerFile) {
+	if k8s.IsPropertyPresent("XlrOfficialVersion", providedAnswerFile) {
 		var versionFromKubernetesConfigMap string
-		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("XlVersion", providedAnswerFile)
+		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("XlrOfficialVersion", providedAnswerFile)
 		if err != nil {
 			return "", err
 		}
 
-		if k8s.IsPropertyPresent("prevVersion", autoAnswerFile) {
-			versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("prevVersion", autoAnswerFile)
+		if k8s.IsPropertyPresent("prevXlrOfficialVersion", autoAnswerFile) {
+			versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("prevXlrOfficialVersion", autoAnswerFile)
+			if err != nil {
+				return "", err
+			}
+		}
+
+		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
+	}
+
+	if k8s.IsPropertyPresent("XldOfficialVersion", providedAnswerFile) {
+		var versionFromKubernetesConfigMap string
+		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("XldOfficialVersion", providedAnswerFile)
+		if err != nil {
+			return "", err
+		}
+
+		if k8s.IsPropertyPresent("prevXldOfficialVersion", autoAnswerFile) {
+			versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("prevXldOfficialVersion", autoAnswerFile)
 			if err != nil {
 				return "", err
 			}
