@@ -28,7 +28,7 @@ func testScenarios(t *testing.T, ms *MockOperatingSystem, apiServerURL string) {
 }
 
 func TestApiServerUrlOnWindows(t *testing.T) {
-	testScenarios(t, ms, "https://host.docker.internal:6445")
+	testScenarios(t, ms, "https://host.docker.internal:6443")
 }
 
 func TestApiServerUrlOnMacos(t *testing.T) {

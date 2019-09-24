@@ -54,7 +54,7 @@ func GetOperatingSystem() string {
 
 func DefaultApiServerUrl(ios IOperatingSystem) string {
 	if ios.getOs() == "windows" {
-		return "https://host.docker.internal:6445"
+		return "https://host.docker.internal:6443"
 	} else if ios.getOs() == "darwin" {
 		return "https://host.docker.internal:6443"
 	} else {
