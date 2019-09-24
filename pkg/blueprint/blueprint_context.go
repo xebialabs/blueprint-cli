@@ -16,6 +16,7 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1"
 
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/bitbucketserver"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/bitbucket"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/http"
@@ -198,6 +199,8 @@ func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*
 			repo, err = github.NewGitHubBlueprintRepository(repoDefinition)
 		case models.ProviderBitbucket:
 			repo, err = bitbucket.NewBitbucketBlueprintRepository(repoDefinition)
+		case models.ProviderBitbucketServer:
+			repo, err = bitbucketserver.NewBitbucketServerBlueprintRepository(repoDefinition)
 		case models.ProviderHttp:
 			repo, err = http.NewHttpBlueprintRepository(repoDefinition, CLIVersion)
 		default:

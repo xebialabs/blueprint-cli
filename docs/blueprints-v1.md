@@ -82,7 +82,7 @@ Custom function syntax: `!fn DOMAIN.MODULE (PARAMETERS...).ATTRIBUTE|[INDEX]`
 
 ### Expression tag (`!expression`)
 
-Blueprints support custom expressions to be used within variable definitions and file declarations (`spec` part in YAML file). Expression tag can be used in `value`, `default`, `options`, `dependsOnTrue` and `dependsOnFalse` fields. 
+Blueprints support custom expressions to be used within variable definitions and file declarations (`spec` part in YAML file). Expression tag can be used in `value`, `default`, `options`, `dependsOnTrue` and `dependsOnFalse` fields.
 
 You can use a variable defined in the parameter section inside an expression. Variable names are case sensitive and you should define the variable before it is used in an expression, in other words you can't refer to a variable that will be defined after the expression in defined in the `blueprint.yaml` file.
 
@@ -136,7 +136,7 @@ Backslashes can be used anywhere in an expression to escape the very next charac
 You can use the provided functions in an expression
 
 | Function | Parameters | Examples | Description |
-|:------: |:-----------: |:----------------------------------------: |:----------------: 
+|:------: |:-----------: |:----------------------------------------: |:----------------:
 | **strlen** | Variable or Text(string) | - `!expression "strlen('Foo') > 5"`<br>- `!expression "strlen(FooVariable) > 5"` | Get the length of the given string variable |
 | **max** | Variable or numbers(float64, float64) | - `!expression "max(5, 10) > 5"`<br>- `!expression "max(FooVariable, 100)"` | Get the maximum of the two given numbers |
 | **min** | Variable or numbers(float64, float64) | - `!expression "min(5, 10) > 5"`<br>- `!expression "min(FooVariable, 100)"` | Get the minimum of the two given numbers |
@@ -197,9 +197,9 @@ spec:
 
 ## Go Templates
 
-In blueprint template files using `.tmpl` extension, GoLang templating can be used. 
-Please refer to the following [cheatsheet](https://curtisvermeeren.github.io/2017/09/14/Golang-Templates-Cheatsheet) for more details how to use GoLang templates. 
-Also support for additional [Sprig](http://masterminds.github.io/sprig/) functions are included in the templating engine, as well as list of custom XL functions. 
+In blueprint template files using `.tmpl` extension, GoLang templating can be used.
+Please refer to the following [cheatsheet](https://curtisvermeeren.github.io/2017/09/14/Golang-Templates-Cheatsheet) for more details how to use GoLang templates.
+Also support for additional [Sprig](http://masterminds.github.io/sprig/) functions are included in the templating engine, as well as list of custom XL functions.
 Please refer to below table for additional functions available.
 
 | Function | Example | Description |
@@ -226,6 +226,14 @@ blueprint:
       repo-name: blueprints
       owner: xebialabs
       token: my-github-token
+      branch: master
+    - name: xebialabs-bitbucket-server
+      type: bitbucketserver
+      url: http://localhost:7990
+      project-key: XEB
+      repo-name: blueprints
+      user: xebialabs
+      token: my-bitbucket-token
       branch: master
     - name: xebialabs-dist
       type: http
