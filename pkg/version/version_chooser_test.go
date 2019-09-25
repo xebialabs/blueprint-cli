@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
 func Test_showVersions(t *testing.T) {
@@ -43,20 +44,91 @@ func Test_showVersions(t *testing.T) {
 }
 
 func Test_checkVersion(t *testing.T) {
-	type args struct {
-		params []string
-	}
-	tests := []struct {
+	type TestCheckVersion struct {
 		name    string
-		args    args
+		params  []string
 		want    bool
 		wantErr bool
-	}{
-		// TODO: Add test cases.
 	}
-	for _, tt := range tests {
+
+	tests := []func() TestCheckVersion{
+		func() TestCheckVersion {
+			models.AvailableXlrVersion = ""
+			return TestCheckVersion{
+				"should error when invlaid number of params are passed",
+				[]string{"8.0"},
+				false,
+				true,
+			}
+		},
+		func() TestCheckVersion {
+			models.AvailableXlrVersion = ""
+			return TestCheckVersion{
+				"should check valid versions for XLR",
+				[]string{"xlr", "xlr:9.0.2"},
+				true,
+				false,
+			}
+		},
+		func() TestCheckVersion {
+			models.AvailableXlrVersion = ""
+			return TestCheckVersion{
+				"should check valid versions for XLD",
+				[]string{"xld", "xld:9.0.5"},
+				true,
+				false,
+			}
+		},
+		func() TestCheckVersion {
+			models.AvailableXlrVersion = ""
+			return TestCheckVersion{
+				"should check invalid versions for XLR when current version is nil",
+				[]string{"xlr", "xlr:8.9.2"},
+				true,
+				false,
+			}
+		},
+		func() TestCheckVersion {
+			models.AvailableXldVersion = ""
+			return TestCheckVersion{
+				"should check invalid versions for XLD when current version is nil",
+				[]string{"xld", "xld:8.0"},
+				true,
+				false,
+			}
+		},
+		func() TestCheckVersion {
+			models.AvailableXlrVersion = "xlr:8.9.2"
+			return TestCheckVersion{
+				"should check valid versions for XLR when current version is set",
+				[]string{"xlr", "xlr:8.9.2"},
+				true,
+				false,
+			}
+		},
+		func() TestCheckVersion {
+			models.AvailableXlrVersion = "xlr:8.9.2"
+			return TestCheckVersion{
+				"should check invalid versions for XLR when current version is set",
+				[]string{"xlr", "xlr:8.9.1"},
+				false,
+				true,
+			}
+		},
+		func() TestCheckVersion {
+			models.AvailableXldVersion = "xld:8.9.2"
+			return TestCheckVersion{
+				"should check invalid versions for XLD when current version is set",
+				[]string{"xld", "xld:8.9.1"},
+				false,
+				true,
+			}
+		},
+	}
+	for _, ttF := range tests {
+		tt := ttF()
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := checkVersion(tt.args.params)
+			got, err := checkVersion(tt.params)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("checkVersion() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -69,20 +141,46 @@ func Test_checkVersion(t *testing.T) {
 }
 
 func Test_getVersionFromTag(t *testing.T) {
-	type args struct {
-		params []string
-	}
 	tests := []struct {
 		name    string
-		args    args
+		params  []string
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			"should error when passing insufficient params",
+			[]string{},
+			"",
+			true,
+		},
+		{
+			"should return the version from the passed string",
+			[]string{"xld:9.0.4"},
+			"9.0.4",
+			false,
+		},
+		{
+			"should return the version from the passed string",
+			[]string{"xld:9.0.4-beta.1"},
+			"9.0.4-beta.1",
+			false,
+		},
+		{
+			"should return the version from the passed string",
+			[]string{"xld:9.0"},
+			"9.0.0",
+			false,
+		},
+		{
+			"should error when passing invlaid version",
+			[]string{"xld:latest"},
+			"",
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getVersionFromTag(tt.args.params)
+			got, err := getVersionFromTag(tt.params)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getVersionFromTag() error = %v, wantErr %v", err, tt.wantErr)
 				return
