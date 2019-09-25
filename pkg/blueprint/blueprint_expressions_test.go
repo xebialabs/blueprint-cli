@@ -749,7 +749,7 @@ func Test_processCustomExpression(t *testing.T) {
 			true,
 		},
 		{
-			"should return list of versions for valid version expression",
+			"should return list of versions for valid XLD version expression",
 			false,
 			args{
 				"version('_showapplicableversions')",
@@ -769,49 +769,69 @@ func Test_processCustomExpression(t *testing.T) {
 			false,
 		},
 		{
-		    "should return the same path if it's a UNIX-style path",
-		    false,
-		    args {
-		        "normalizePath('/home/test/some/path')",
-		        map[string]interface{}{},
-            },
-            "/home/test/some/path",
-            nil,
-            false,
-        },
-        {
-            "should return a normalised path if it's a Windows-style path",
-            false,
-            args {
-                `normalizePath('C:\\Users\\Someone\\place')`,
-                map[string]interface{}{},
-            },
-            "/C/Users/Someone/place",
-            nil,
-            false,
-        },
-        {
-            "should return an error if we provide no arguments",
-            false,
-            args {
-                `normalizePath()`,
-                map[string]interface{}{},
-            },
-            nil,
-            nil,
-            true,
-        },
-        {
-            "should return an error if we provide more than one argument",
-            false,
-            args {
-                `normalizePath('/some/place', 'something')`,
-                map[string]interface{}{},
-            },
-            nil,
-            nil,
-            true,
-        },
+			"should return list of versions for valid XLR version expression",
+			false,
+			args{
+				"version('_showapplicableversions', 'xlr')",
+				map[string]interface{}{},
+			},
+			nil,
+			func(result interface{}) bool {
+				switch result.(type) {
+				case []string:
+					if len(result.([]string)) > 0 {
+						return true
+					}
+				}
+
+				return false
+			},
+			false,
+		},
+		{
+			"should return the same path if it's a UNIX-style path",
+			false,
+			args{
+				"normalizePath('/home/test/some/path')",
+				map[string]interface{}{},
+			},
+			"/home/test/some/path",
+			nil,
+			false,
+		},
+		{
+			"should return a normalised path if it's a Windows-style path",
+			false,
+			args{
+				`normalizePath('C:\\Users\\Someone\\place')`,
+				map[string]interface{}{},
+			},
+			"/C/Users/Someone/place",
+			nil,
+			false,
+		},
+		{
+			"should return an error if we provide no arguments",
+			false,
+			args{
+				`normalizePath()`,
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should return an error if we provide more than one argument",
+			false,
+			args{
+				`normalizePath('/some/place', 'something')`,
+				map[string]interface{}{},
+			},
+			nil,
+			nil,
+			true,
+		},
 	}
 	for _, tt := range tests {
 		if tt.onlyInUnix && runtime.GOOS == "windows" {

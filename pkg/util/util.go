@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/mitchellh/go-homedir"
@@ -174,45 +173,6 @@ func ExtractStringKeysFromMap(m map[string]interface{}) (keys []string) {
 		i += 1
 	}
 	return
-}
-
-func isNumDot(s string) bool {
-	for _, v := range s {
-		if !((v >= 48 && v <= 57) || v == 46) {
-			return false
-		}
-	}
-	return true
-}
-
-func GetVersionFromImageTag(version string) (string, error) {
-	i := strings.Index(version, ":")
-	if i != -1 && len(version) > (i+1) {
-		versionTag := version[i+1:]
-		if isNumDot(versionTag) {
-			return versionTag, nil
-		}
-		return version, fmt.Errorf("Version tag %s is not valid", versionTag)
-	}
-	return version, fmt.Errorf("Version tag is missing")
-}
-
-func ParseVersion(version string, digits int) int64 {
-	strList := strings.Split(version, ".")
-	format := fmt.Sprintf("%%s%%0%ds", digits)
-	v := ""
-
-	for _, value := range strList {
-		v = fmt.Sprintf(format, v, value)
-	}
-	var result int64
-	var err error
-
-	if result, err = strconv.ParseInt(v, 10, 64); err != nil {
-		return 0
-	}
-
-	return result
 }
 
 func CopyIntoStringInterfaceMap(in map[string]interface{}, out map[string]interface{}) {

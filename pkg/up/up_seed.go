@@ -108,40 +108,40 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 		if !upParams.Undeploy {
 			// Strip the version information
-			models.AvailableOfficialXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrOfficialVersion", "prevXlrOfficialVersion")
+			models.AvailableOfficialXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrOfficialVersion", "PrevXlrOfficialVersion")
 			if err != nil {
 				return err
 			}
 			if models.AvailableOfficialXlrVersion != "" {
 				answerMapFromConfigMap["XlrOfficialVersion"] = ""
-				answerMapFromConfigMap["prevXlrOfficialVersion"] = models.AvailableOfficialXlrVersion
+				answerMapFromConfigMap["PrevXlrOfficialVersion"] = models.AvailableOfficialXlrVersion
 			}
 
-			models.AvailableOfficialXldVersion, err = getVersion(answerMapFromConfigMap, "XldOfficialVersion", "prevXldOfficialVersion")
+			models.AvailableOfficialXldVersion, err = getVersion(answerMapFromConfigMap, "XldOfficialVersion", "PrevXldOfficialVersion")
 			if err != nil {
 				return err
 			}
 			if models.AvailableOfficialXldVersion != "" {
 				answerMapFromConfigMap["XldOfficialVersion"] = ""
-				answerMapFromConfigMap["prevXldOfficialVersion"] = models.AvailableOfficialXldVersion
+				answerMapFromConfigMap["PrevXldOfficialVersion"] = models.AvailableOfficialXldVersion
 			}
 
-			models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrVersion", "prevXlrVersion")
+			models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrVersion", "PrevXlrVersion")
 			if err != nil {
 				return err
 			}
 			if models.AvailableXlrVersion != "" {
 				answerMapFromConfigMap["XlrVersion"] = ""
-				answerMapFromConfigMap["prevXlrVersion"] = models.AvailableXlrVersion
+				answerMapFromConfigMap["PrevXlrVersion"] = models.AvailableXlrVersion
 			}
 
-			models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "XldVersion", "prevXldVersion")
+			models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "XldVersion", "PrevXldVersion")
 			if err != nil {
 				return err
 			}
 			if models.AvailableXldVersion != "" {
 				answerMapFromConfigMap["XldVersion"] = ""
-				answerMapFromConfigMap["prevXldVersion"] = models.AvailableXldVersion
+				answerMapFromConfigMap["PrevXldVersion"] = models.AvailableXldVersion
 			}
 		}
 
