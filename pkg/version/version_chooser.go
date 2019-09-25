@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Masterminds/semver"
 	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
 )
 
 const (
@@ -13,6 +13,10 @@ const (
 	CheckVersion            = "checkversion"
 	GetVersionFromTag       = "getversionfromtag"
 )
+
+// TODO find a better way to handle this...
+var AvailableXlrVersions = []string{"9.0.2", "9.0.4", "9.0.6"}
+var AvailableXldVersions = []string{"9.0.2", "9.0.3", "9.0.5"}
 
 type VersionFnResult struct {
 	versions []string
@@ -28,75 +32,58 @@ func (result *VersionFnResult) GetResult(module string, attr string, index int) 
 }
 
 func showVersions(params []string) ([]string, error) {
-	application := params[0]
+	var application string
+	if len(params) > 0 {
+		application = params[0]
+	}
 
 	if application == "xlr" {
-		var currentXlrVersion int64
-
-		if models.AvailableOfficialXlrVersion != "" {
-			currentXlrVersion = util.ParseVersion(models.AvailableOfficialXlrVersion, 4)
-		}
-		// TODO find a better way to handle this...
-		availableXlrVersions := []string{"9.0.2", "9.0.4", "9.0.6"}
-
-		if currentXlrVersion == int64(0) {
-			return availableXlrVersions, nil
-		}
-
-		var applicableXlrVersion []string
-
-		for _, version := range availableXlrVersions {
-			if currentXlrVersion <= util.ParseVersion(version, 4) {
-				applicableXlrVersion = append(applicableXlrVersion, version)
-			}
-		}
-
-		return applicableXlrVersion, nil
-
+		return getVersionForApp(models.AvailableOfficialXlrVersion, AvailableXlrVersions)
 	} else {
-		var currentXldVersion int64
-
-		if models.AvailableOfficialXldVersion != "" {
-			currentXldVersion = util.ParseVersion(models.AvailableOfficialXldVersion, 4)
-		}
-		// TODO find a better way to handle this...
-		availableXldVersions := []string{"9.0.2", "9.0.3", "9.0.5"}
-
-		if currentXldVersion == int64(0) {
-			return availableXldVersions, nil
-		}
-
-		var applicableXldVersion []string
-
-		for _, version := range availableXldVersions {
-			if currentXldVersion <= util.ParseVersion(version, 4) {
-				applicableXldVersion = append(applicableXldVersion, version)
-			}
-		}
-
-		return applicableXldVersion, nil
+		return getVersionForApp(models.AvailableOfficialXldVersion, AvailableXldVersions)
 	}
 
 }
 
-func versionFromDockerTag(version string) (int64, error) {
-	version, err := util.GetVersionFromImageTag(version)
-	if err != nil {
-		return 0, err
+func getVersionForApp(availableOfficialAppVersion string, availableAppVersions []string) ([]string, error) {
+	var currentAppVersion *semver.Version
+	var err error
+
+	if availableOfficialAppVersion != "" {
+		currentAppVersion, err = semver.NewVersion(availableOfficialAppVersion)
+		if err != nil {
+			return nil, fmt.Errorf("Current version tag %s is not valid: %s", availableOfficialAppVersion, err)
+		}
 	}
 
-	return util.ParseVersion(version, 4), nil
+	if currentAppVersion == nil {
+		return availableAppVersions, nil
+	}
+
+	var applicableAppVersion []string
+
+	for _, version := range availableAppVersions {
+		appVersion, err := semver.NewVersion(version)
+		if err != nil {
+			return nil, fmt.Errorf("App version tag %s is not valid: %s", version, err)
+		}
+		if currentAppVersion.Compare(appVersion) <= 0 {
+			applicableAppVersion = append(applicableAppVersion, version)
+		}
+	}
+
+	return applicableAppVersion, nil
 }
 
-func getVersionFromConfigMap(application string) (int64, error) {
+func getVersionFromConfigMap(application string) (*semver.Version, error) {
 	if application == "xlr" && models.AvailableXlrVersion != "" {
-		return versionFromDockerTag(models.AvailableXlrVersion)
+		return GetVersionFromImageTag(models.AvailableXlrVersion)
 	}
 
 	if application == "xld" && models.AvailableXldVersion != "" {
-		return versionFromDockerTag(models.AvailableXldVersion)
+		return GetVersionFromImageTag(models.AvailableXldVersion)
 	}
-	return int64(0), nil
+	return nil, nil
 }
 
 func compareVersion(application, version string) (bool, error) {
@@ -106,14 +93,14 @@ func compareVersion(application, version string) (bool, error) {
 		return false, fmt.Errorf("%s:%s provided in config map is not valid", application, version)
 	}
 
-	givenVersion, err := versionFromDockerTag(version)
+	givenVersion, err := GetVersionFromImageTag(version)
 
 	if err != nil {
 		return false, fmt.Errorf("%s is not a valid version/tag", version)
 	}
 
-	if currentVersion != int64(0) {
-		if currentVersion <= givenVersion {
+	if currentVersion != nil {
+		if currentVersion.Compare(givenVersion) <= 0 {
 			return true, nil
 		}
 
@@ -153,9 +140,12 @@ func getVersionFromTag(params []string) (string, error) {
 		return "", fmt.Errorf("invalid number of arguments sent in getVersionFromTag")
 	}
 
-	version := params[0]
+	version, err := GetVersionFromImageTag(params[0])
+	if err != nil {
+		return "", fmt.Errorf("%s is not a valid version/tag", params[0])
+	}
+	return version.String(), nil
 
-	return util.GetVersionFromImageTag(version)
 }
 
 func GetPropertyByName(module string, params ...string) (interface{}, error) {
@@ -169,4 +159,18 @@ func GetPropertyByName(module string, params ...string) (interface{}, error) {
 	default:
 		return nil, fmt.Errorf("%s is not a valid UP helper module", module)
 	}
+}
+
+func GetVersionFromImageTag(version string) (*semver.Version, error) {
+	i := strings.Index(version, ":")
+	if i != -1 && len(version) > (i+1) {
+		versionTag := version[i+1:]
+		vers, err := semver.NewVersion(versionTag)
+		if err != nil {
+			return nil, fmt.Errorf("Version tag %s is not valid: %s", versionTag, err)
+		}
+
+		return vers, nil
+	}
+	return nil, fmt.Errorf("Version tag is missing")
 }

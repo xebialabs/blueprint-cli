@@ -254,8 +254,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			"InstallMonitoring":  "true",
 			"K8sAuthentication":  "FilePath",
 			"PostgresMaxConn":    "400",
-			"XlrOfficialVersion": "8.6.1",
-			"XldOfficialVersion": "8.6.1",
+			"XlrOfficialVersion": "9.0.2",
+			"XldOfficialVersion": "9.0.2",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))

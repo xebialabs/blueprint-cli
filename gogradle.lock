@@ -5,60 +5,13 @@ dependencies:
   build:
   - vcs: "git"
     name: "cloud.google.com/go"
-    commit: "f83d9bfe7eca14002f006124f249866d62a4a2f4"
+    commit: "39e4db135a86cce6c240053d6708c44dabe61866"
     url: "https://code.googlesource.com/gocloud"
-    transitive: false
-  - vcs: "git"
-    name: "code.cloudfoundry.org/bytefmt"
-    commit: "854d396b647c90b5a45646f9dcc2c9cd08ea8d51"
-    url: "https://github.com/cloudfoundry/bytefmt"
-    transitive: false
-  - vcs: "git"
-    name: "dmitri.shuralyov.com/app/changes"
-    commit: "dc30f1494c2111233691998b41a5624769f4f783"
-    url: "https://dmitri.shuralyov.com/app/changes"
-    transitive: false
-  - vcs: "git"
-    name: "dmitri.shuralyov.com/go/generated"
-    commit: "b1254a4463635f9a4eddb19e8fa1e379f1383e20"
-    url: "https://dmitri.shuralyov.com/go/generated"
-    transitive: false
-  - vcs: "git"
-    name: "dmitri.shuralyov.com/go/prefixtitle"
-    commit: "985f29f600087e42c2d4d98c76a207527ea686bc"
-    url: "https://dmitri.shuralyov.com/go/prefixtitle"
-    transitive: false
-  - vcs: "git"
-    name: "dmitri.shuralyov.com/html/belt"
-    commit: "f7d459c86be0d89cab0b8a0694d6f9a5586cd184"
-    url: "https://dmitri.shuralyov.com/html/belt"
-    transitive: false
-  - vcs: "git"
-    name: "dmitri.shuralyov.com/route/github"
-    commit: "ce4edef1f8c9585ca16cca2f9990a099d038c0a2"
-    url: "https://dmitri.shuralyov.com/route/github"
-    transitive: false
-  - vcs: "git"
-    name: "dmitri.shuralyov.com/service/change"
-    commit: "bd27112db59ba9f1e01f6d1e36ea7715c9dde98c"
-    url: "https://dmitri.shuralyov.com/service/change"
-    transitive: false
-  - vcs: "git"
-    name: "dmitri.shuralyov.com/state"
-    commit: "2cf192113e663d5cb0dd411ea77bac3b8619a8a1"
-    url: "https://dmitri.shuralyov.com/state"
-    transitive: false
-  - urls:
-    - "https://github.com/AaronO/go-git-http.git"
-    - "git@github.com:AaronO/go-git-http.git"
-    vcs: "git"
-    name: "github.com/AaronO/go-git-http"
-    commit: "1d9485b3a98f7484772acb5f0dda28b69b958fdd"
     transitive: false
   - name: "github.com/Azure/azure-sdk-for-go"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -68,32 +21,29 @@ dependencies:
   - name: "github.com/Azure/go-autorest"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/Azure/go-autorest"
     transitive: false
+  - urls:
+    - "https://github.com/BurntSushi/toml.git"
+    - "git@github.com:BurntSushi/toml.git"
+    vcs: "git"
+    name: "github.com/BurntSushi/toml"
+    commit: "3012a1dbe2e4bd1391d42b32f0577cb7bbc7f005"
+    transitive: false
   - name: "github.com/DataDog/datadog-go"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/DataDog/datadog-go"
-    transitive: false
-  - name: "github.com/Jeffail/gabs"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/Jeffail/gabs"
     transitive: false
   - urls:
     - "https://github.com/Knetic/govaluate.git"
@@ -114,7 +64,7 @@ dependencies:
     - "git@github.com:Masterminds/semver.git"
     vcs: "git"
     name: "github.com/Masterminds/semver"
-    commit: "59c29afe1a994eacb71c833025ca7acf874bb1da"
+    commit: "fe7c21038085e01e67044ec1efe3afb1eaa59f75"
     transitive: false
   - urls:
     - "https://github.com/Masterminds/sprig.git"
@@ -126,7 +76,7 @@ dependencies:
   - name: "github.com/Microsoft/go-winio"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -136,7 +86,7 @@ dependencies:
   - name: "github.com/NYTimes/gziphandler"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -158,37 +108,17 @@ dependencies:
     name: "github.com/PuerkitoBio/goquery"
     commit: "3dcf72e6c17f694381a21592651ca1464ded0e10"
     transitive: false
-  - name: "github.com/SAP/go-hdb"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/SAP/go-hdb"
-    transitive: false
-  - name: "github.com/SermoDigital/jose"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/SermoDigital/jose"
-    transitive: false
   - urls:
     - "https://github.com/Shopify/sarama.git"
     - "git@github.com:Shopify/sarama.git"
     vcs: "git"
     name: "github.com/Shopify/sarama"
-    commit: "2af3badd8c04a312157aa5d6a3382abdb54eef2f"
+    commit: "0b5880d554bae9de0d6ebd82871f10aa364ce177"
     transitive: false
   - name: "github.com/StackExchange/wmi"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -201,22 +131,6 @@ dependencies:
     vcs: "git"
     name: "github.com/VividCortex/gohistogram"
     commit: "51564d9861991fb0ad0f531c99ef602d0f9866e6"
-    transitive: false
-  - name: "github.com/aclements/go-gg"
-    host:
-      name: "golang.org/x/perf"
-      commit: "ecb187b06eb016056283eaea1f0a2262f5921572"
-      url: "https://go.googlesource.com/perf"
-      vcs: "git"
-    vendorPath: "vendor/github.com/aclements/go-gg"
-    transitive: false
-  - name: "github.com/aclements/go-moremath"
-    host:
-      name: "golang.org/x/perf"
-      commit: "ecb187b06eb016056283eaea1f0a2262f5921572"
-      url: "https://go.googlesource.com/perf"
-      vcs: "git"
-    vendorPath: "vendor/github.com/aclements/go-moremath"
     transitive: false
   - urls:
     - "https://github.com/afex/hystrix-go.git"
@@ -244,40 +158,26 @@ dependencies:
     - "git@github.com:alecthomas/units.git"
     vcs: "git"
     name: "github.com/alecthomas/units"
-    commit: "680d30ca31172657fa50e996eb82d790d1d8b96e"
+    commit: "f65c72e2690dc4b403c8bd637baf4611cd4c069b"
     transitive: false
   - urls:
     - "https://github.com/andybalholm/cascadia.git"
     - "git@github.com:andybalholm/cascadia.git"
     vcs: "git"
     name: "github.com/andybalholm/cascadia"
-    commit: "e577959a45873b847a11c9a01781cba1fef074df"
-    transitive: false
-  - urls:
-    - "https://github.com/andygrunwald/go-gerrit.git"
-    - "git@github.com:andygrunwald/go-gerrit.git"
-    vcs: "git"
-    name: "github.com/andygrunwald/go-gerrit"
-    commit: "5959a9bf9ff8d9554ea425405c20020842ab0bd8"
-    transitive: false
-  - urls:
-    - "https://github.com/anmitsu/go-shlex.git"
-    - "git@github.com:anmitsu/go-shlex.git"
-    vcs: "git"
-    name: "github.com/anmitsu/go-shlex"
-    commit: "648efa622239a2f6ff949fed78ee37b48d499ba4"
+    commit: "b69f6c92dfc187ebfe3914df716c2647a3af0ba0"
     transitive: false
   - urls:
     - "https://github.com/apache/thrift.git"
     - "git@github.com:apache/thrift.git"
     vcs: "git"
     name: "github.com/apache/thrift"
-    commit: "77d96c18c3729bf3faeadff67e57e7e429f1d3cd"
+    commit: "786c019476dd5508c53314cf3b25c47fe3ec2ae8"
     transitive: false
   - name: "github.com/armon/circbuf"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -294,7 +194,7 @@ dependencies:
   - name: "github.com/armon/go-metrics"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -304,22 +204,12 @@ dependencies:
   - name: "github.com/armon/go-radix"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/armon/go-radix"
-    transitive: false
-  - name: "github.com/asaskevich/govalidator"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/asaskevich/govalidator"
     transitive: false
   - urls:
     - "https://github.com/aws/aws-sdk-go.git"
@@ -333,7 +223,7 @@ dependencies:
     - "git@github.com:aws/aws-sdk-go-v2.git"
     vcs: "git"
     name: "github.com/aws/aws-sdk-go-v2"
-    commit: "9d23340c6faa83de6f72d814bdb3b15667ca220e"
+    commit: "57d74d6ff436076d96a8f1104b53949ff7c8c22e"
     transitive: false
   - urls:
     - "https://github.com/beorn7/perks.git"
@@ -342,17 +232,10 @@ dependencies:
     name: "github.com/beorn7/perks"
     commit: "37c8de3658fcb183f997c4e13e8337516ab753e6"
     transitive: false
-  - urls:
-    - "https://github.com/beyang/hgo.git"
-    - "git@github.com:beyang/hgo.git"
-    vcs: "git"
-    name: "github.com/beyang/hgo"
-    commit: "d45f1891a48a5c7dd1ea5bf00bad43953a04484a"
-    transitive: false
   - name: "github.com/bgentry/speakeasy"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -362,26 +245,12 @@ dependencies:
   - name: "github.com/boltdb/bolt"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/boltdb/bolt"
-    transitive: false
-  - urls:
-    - "https://github.com/bradfitz/go-smtpd.git"
-    - "git@github.com:bradfitz/go-smtpd.git"
-    vcs: "git"
-    name: "github.com/bradfitz/go-smtpd"
-    commit: "deb6d623762522f8ad4a55b952001e4215a76cf4"
-    transitive: false
-  - urls:
-    - "https://github.com/bradfitz/gomemcache.git"
-    - "git@github.com:bradfitz/gomemcache.git"
-    vcs: "git"
-    name: "github.com/bradfitz/gomemcache"
-    commit: "a41fca850d0b6f392931a78cbae438803ea0b886"
     transitive: false
   - urls:
     - "https://github.com/briandowns/spinner.git"
@@ -395,7 +264,7 @@ dependencies:
     - "git@github.com:cactus/go-statsd-client.git"
     vcs: "git"
     name: "github.com/cactus/go-statsd-client"
-    commit: "47b6058c80f53b9d6f8af839bf82de17cf80e1f2"
+    commit: "52b467de415c00d80e1f3a3fe574d4cabd41c1b3"
     transitive: false
   - urls:
     - "https://github.com/casbin/casbin.git"
@@ -435,7 +304,7 @@ dependencies:
   - name: "github.com/circonus-labs/circonus-gometrics"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -445,7 +314,7 @@ dependencies:
   - name: "github.com/circonus-labs/circonusllhist"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -462,7 +331,7 @@ dependencies:
   - name: "github.com/cockroachdb/datadriven"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -496,7 +365,7 @@ dependencies:
   - name: "github.com/coredns/coredns"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -508,12 +377,12 @@ dependencies:
     - "git@github.com:coreos/etcd.git"
     vcs: "git"
     name: "github.com/coreos/etcd"
-    commit: "129138760cbb79bc183abf6652455d27d6748818"
+    commit: "6075b9def1315242e66509439f1b92845cf47a90"
     transitive: false
   - name: "github.com/coreos/go-semver"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -523,7 +392,7 @@ dependencies:
   - name: "github.com/coreos/go-systemd"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -533,7 +402,7 @@ dependencies:
   - name: "github.com/coreos/pkg"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -550,7 +419,7 @@ dependencies:
   - name: "github.com/creack/pty"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -560,7 +429,7 @@ dependencies:
   - name: "github.com/davecgh/go-spew"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -574,20 +443,10 @@ dependencies:
     name: "github.com/deckarep/golang-set"
     commit: "cbaa98ba5575e67703b32b4b19f73c91f3c4159e"
     transitive: false
-  - name: "github.com/denisenkom/go-mssqldb"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/denisenkom/go-mssqldb"
-    transitive: false
   - name: "github.com/denverdino/aliyungo"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -604,7 +463,7 @@ dependencies:
   - name: "github.com/digitalocean/godo"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -642,7 +501,7 @@ dependencies:
   - name: "github.com/docker/go-connections"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -673,7 +532,7 @@ dependencies:
   - name: "github.com/dustin/go-humanize"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -714,7 +573,7 @@ dependencies:
   - name: "github.com/elazarl/go-bindata-assetfs"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -738,7 +597,7 @@ dependencies:
   - name: "github.com/envoyproxy/go-control-plane"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -748,7 +607,7 @@ dependencies:
   - name: "github.com/envoyproxy/protoc-gen-validate"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -769,22 +628,12 @@ dependencies:
     name: "github.com/fatih/color"
     commit: "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
     transitive: false
-  - name: "github.com/fatih/structs"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/fatih/structs"
-    transitive: false
   - urls:
-    - "https://github.com/flynn/go-shlex.git"
-    - "git@github.com:flynn/go-shlex.git"
+    - "https://github.com/fatih/structs.git"
+    - "git@github.com:fatih/structs.git"
     vcs: "git"
-    name: "github.com/flynn/go-shlex"
-    commit: "3f9db97f856818214da2e1057f8ad84803971cff"
+    name: "github.com/fatih/structs"
+    commit: "878a968ab22548362a09bdb3322f98b00f470d46"
     transitive: false
   - urls:
     - "https://github.com/franela/goreq.git"
@@ -803,24 +652,17 @@ dependencies:
   - name: "github.com/ghodss/yaml"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/ghodss/yaml"
     transitive: false
-  - urls:
-    - "https://github.com/gliderlabs/ssh.git"
-    - "git@github.com:gliderlabs/ssh.git"
-    vcs: "git"
-    name: "github.com/gliderlabs/ssh"
-    commit: "866d0ddf7991e6751ed276dd13fb22fca79b5794"
-    transitive: false
   - name: "github.com/go-ini/ini"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -851,22 +693,12 @@ dependencies:
   - name: "github.com/go-ole/go-ole"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/go-ole/go-ole"
-    transitive: false
-  - name: "github.com/go-sql-driver/mysql"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/go-sql-driver/mysql"
     transitive: false
   - urls:
     - "https://github.com/go-stack/stack.git"
@@ -952,16 +784,6 @@ dependencies:
     name: "github.com/gobuffalo/validate"
     commit: "2ada686bcfc51eb528382b5134818852f918fe24"
     transitive: false
-  - name: "github.com/gocql/gocql"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/gocql/gocql"
-    transitive: false
   - urls:
     - "https://github.com/gofrs/uuid.git"
     - "git@github.com:gofrs/uuid.git"
@@ -972,7 +794,7 @@ dependencies:
   - name: "github.com/gogo/googleapis"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -996,7 +818,7 @@ dependencies:
   - name: "github.com/golang/glog"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1022,21 +844,17 @@ dependencies:
     - "git@github.com:golang/protobuf.git"
     vcs: "git"
     name: "github.com/golang/protobuf"
-    commit: "822fe56949f5d56c9e2f02367c657e0e9b4d27d1"
+    commit: "1680a479a2cfb3fa22b972af7e36d0a0fde47bf8"
     transitive: false
-  - urls:
-    - "https://github.com/golang/snappy.git"
-    - "git@github.com:golang/snappy.git"
-    vcs: "git"
-    name: "github.com/golang/snappy"
-    commit: "ff6b7dc882cf4cfba7ee0b9f7dcc1ac096c554aa"
-    transitive: false
-  - urls:
-    - "https://github.com/gomodule/redigo.git"
-    - "git@github.com:gomodule/redigo.git"
-    vcs: "git"
-    name: "github.com/gomodule/redigo"
-    commit: "d3876d43bbbeb98b4d67309b4d3eef49438ef74c"
+  - name: "github.com/golang/snappy"
+    host:
+      name: "github.com/hashicorp/consul"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
+      urls:
+      - "https://github.com/hashicorp/consul.git"
+      - "git@github.com:hashicorp/consul.git"
+      vcs: "git"
+    vendorPath: "vendor/github.com/golang/snappy"
     transitive: false
   - urls:
     - "https://github.com/google/btree.git"
@@ -1062,7 +880,7 @@ dependencies:
   - name: "github.com/google/go-querystring"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1072,7 +890,7 @@ dependencies:
   - name: "github.com/google/gofuzz"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1094,6 +912,13 @@ dependencies:
     commit: "236ed259b199815a270edb9f8702bd0102e2e8fa"
     transitive: false
   - urls:
+    - "https://github.com/google/renameio.git"
+    - "git@github.com:google/renameio.git"
+    vcs: "git"
+    name: "github.com/google/renameio"
+    commit: "f0e32980c006571efd537032e5f9cd8c1a92819e"
+    transitive: false
+  - urls:
     - "https://github.com/google/uuid.git"
     - "git@github.com:google/uuid.git"
     vcs: "git"
@@ -1110,7 +935,7 @@ dependencies:
   - name: "github.com/googleapis/gnostic"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1120,19 +945,12 @@ dependencies:
   - name: "github.com/gophercloud/gophercloud"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/gophercloud/gophercloud"
-    transitive: false
-  - urls:
-    - "https://github.com/gopherjs/gopherjs.git"
-    - "git@github.com:gopherjs/gopherjs.git"
-    vcs: "git"
-    name: "github.com/gopherjs/gopherjs"
-    commit: "d3ddacdb130fcd23f77a827e3b599804730be6b5"
     transitive: false
   - urls:
     - "https://github.com/gorilla/css.git"
@@ -1151,31 +969,27 @@ dependencies:
   - name: "github.com/gorilla/websocket"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
       vcs: "git"
     vendorPath: "vendor/github.com/gorilla/websocket"
     transitive: false
-  - urls:
-    - "https://github.com/graph-gophers/graphql-go.git"
-    - "git@github.com:graph-gophers/graphql-go.git"
-    vcs: "git"
-    name: "github.com/graph-gophers/graphql-go"
-    commit: "38a077bc812da9a60fd1885e68206c59b24c858e"
-    transitive: false
-  - urls:
-    - "https://github.com/gregjones/httpcache.git"
-    - "git@github.com:gregjones/httpcache.git"
-    vcs: "git"
-    name: "github.com/gregjones/httpcache"
-    commit: "901d90724c7919163f472a9812253fb26761123d"
+  - name: "github.com/gregjones/httpcache"
+    host:
+      name: "github.com/hashicorp/consul"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
+      urls:
+      - "https://github.com/hashicorp/consul.git"
+      - "git@github.com:hashicorp/consul.git"
+      vcs: "git"
+    vendorPath: "vendor/github.com/gregjones/httpcache"
     transitive: false
   - name: "github.com/grpc-ecosystem/go-grpc-middleware"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -1185,7 +999,7 @@ dependencies:
   - name: "github.com/grpc-ecosystem/go-grpc-prometheus"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -1195,34 +1009,24 @@ dependencies:
   - name: "github.com/grpc-ecosystem/grpc-gateway"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
       vcs: "git"
     vendorPath: "vendor/github.com/grpc-ecosystem/grpc-gateway"
     transitive: false
-  - name: "github.com/hailocab/go-hostpool"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/hailocab/go-hostpool"
-    transitive: false
   - urls:
     - "https://github.com/hashicorp/consul.git"
     - "git@github.com:hashicorp/consul.git"
     vcs: "git"
     name: "github.com/hashicorp/consul"
-    commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+    commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
     transitive: false
   - name: "github.com/hashicorp/errwrap"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1232,7 +1036,7 @@ dependencies:
   - name: "github.com/hashicorp/go-bexpr"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1242,7 +1046,7 @@ dependencies:
   - name: "github.com/hashicorp/go-checkpoint"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1252,7 +1056,7 @@ dependencies:
   - name: "github.com/hashicorp/go-cleanhttp"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1262,7 +1066,7 @@ dependencies:
   - name: "github.com/hashicorp/go-discover"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1272,7 +1076,7 @@ dependencies:
   - name: "github.com/hashicorp/go-hclog"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1282,7 +1086,7 @@ dependencies:
   - name: "github.com/hashicorp/go-immutable-radix"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1292,7 +1096,7 @@ dependencies:
   - name: "github.com/hashicorp/go-memdb"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1302,27 +1106,24 @@ dependencies:
   - name: "github.com/hashicorp/go-msgpack"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/hashicorp/go-msgpack"
     transitive: false
-  - name: "github.com/hashicorp/go-multierror"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/hashicorp/go-multierror"
+  - urls:
+    - "https://github.com/hashicorp/go-multierror.git"
+    - "git@github.com:hashicorp/go-multierror.git"
+    vcs: "git"
+    name: "github.com/hashicorp/go-multierror"
+    commit: "83588e72410abfbe4df460eeb6f30841ae47d4c4"
     transitive: false
   - name: "github.com/hashicorp/go-plugin"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1332,7 +1133,7 @@ dependencies:
   - name: "github.com/hashicorp/go-raftchunking"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1342,7 +1143,7 @@ dependencies:
   - name: "github.com/hashicorp/go-retryablehttp"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1352,7 +1153,7 @@ dependencies:
   - name: "github.com/hashicorp/go-rootcerts"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1362,7 +1163,7 @@ dependencies:
   - name: "github.com/hashicorp/go-sockaddr"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1372,7 +1173,7 @@ dependencies:
   - name: "github.com/hashicorp/go-syslog"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1382,7 +1183,7 @@ dependencies:
   - name: "github.com/hashicorp/go-uuid"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1392,7 +1193,7 @@ dependencies:
   - name: "github.com/hashicorp/go-version"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1402,24 +1203,27 @@ dependencies:
   - name: "github.com/hashicorp/golang-lru"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/hashicorp/golang-lru"
     transitive: false
-  - urls:
-    - "https://github.com/hashicorp/hcl.git"
-    - "git@github.com:hashicorp/hcl.git"
-    vcs: "git"
-    name: "github.com/hashicorp/hcl"
-    commit: "cf7d376da96d9cecec7c7483cec2735efe54a410"
+  - name: "github.com/hashicorp/hcl"
+    host:
+      name: "github.com/hashicorp/consul"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
+      urls:
+      - "https://github.com/hashicorp/consul.git"
+      - "git@github.com:hashicorp/consul.git"
+      vcs: "git"
+    vendorPath: "vendor/github.com/hashicorp/hcl"
     transitive: false
   - name: "github.com/hashicorp/hil"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1429,7 +1233,7 @@ dependencies:
   - name: "github.com/hashicorp/logutils"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1439,7 +1243,7 @@ dependencies:
   - name: "github.com/hashicorp/mdns"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1449,7 +1253,7 @@ dependencies:
   - name: "github.com/hashicorp/memberlist"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1459,7 +1263,7 @@ dependencies:
   - name: "github.com/hashicorp/net-rpc-msgpackrpc"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1469,7 +1273,7 @@ dependencies:
   - name: "github.com/hashicorp/raft"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1479,7 +1283,7 @@ dependencies:
   - name: "github.com/hashicorp/raft-boltdb"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1489,7 +1293,7 @@ dependencies:
   - name: "github.com/hashicorp/serf"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1499,7 +1303,7 @@ dependencies:
   - name: "github.com/hashicorp/vault"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1509,7 +1313,7 @@ dependencies:
   - name: "github.com/hashicorp/vic"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1519,7 +1323,7 @@ dependencies:
   - name: "github.com/hashicorp/yamux"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1533,13 +1337,6 @@ dependencies:
       url: "https://gopkg.in/AlecAivazis/survey.v1"
       vcs: "git"
     vendorPath: "vendor/github.com/hinshun/vt10x"
-    transitive: false
-  - urls:
-    - "https://github.com/hpcloud/tail.git"
-    - "git@github.com:hpcloud/tail.git"
-    vcs: "git"
-    name: "github.com/hpcloud/tail"
-    commit: "a1dbeea552b7c8df4b542c66073e393de198a800"
     transitive: false
   - urls:
     - "https://github.com/huandu/xstrings.git"
@@ -1565,7 +1362,7 @@ dependencies:
   - name: "github.com/imdario/mergo"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1575,7 +1372,7 @@ dependencies:
   - name: "github.com/inconshreveable/mousetrap"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -1603,23 +1400,6 @@ dependencies:
     name: "github.com/jcmturner/gofork"
     commit: "dc7c13fece037a4a36e2b3c69db4991498d30692"
     transitive: false
-  - name: "github.com/jefferai/jsonx"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/jefferai/jsonx"
-    transitive: false
-  - urls:
-    - "https://github.com/jellevandenhooff/dkim.git"
-    - "git@github.com:jellevandenhooff/dkim.git"
-    vcs: "git"
-    name: "github.com/jellevandenhooff/dkim"
-    commit: "f50fe3d243e1a9c9369eea29813517f3af190518"
-    transitive: false
   - urls:
     - "https://github.com/jessevdk/go-flags.git"
     - "git@github.com:jessevdk/go-flags.git"
@@ -1637,7 +1417,7 @@ dependencies:
   - name: "github.com/jmespath/go-jmespath"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1654,7 +1434,7 @@ dependencies:
   - name: "github.com/jonboulle/clockwork"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -1664,7 +1444,7 @@ dependencies:
   - name: "github.com/joyent/triton-go"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1678,15 +1458,12 @@ dependencies:
     name: "github.com/jpillora/backoff"
     commit: "3050d21c67d7c46b07ca1b5e1be0b26669c8d04c"
     transitive: false
-  - name: "github.com/json-iterator/go"
-    host:
-      name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
-      urls:
-      - "https://github.com/coreos/etcd.git"
-      - "git@github.com:coreos/etcd.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/json-iterator/go"
+  - urls:
+    - "https://github.com/json-iterator/go.git"
+    - "git@github.com:json-iterator/go.git"
+    vcs: "git"
+    name: "github.com/json-iterator/go"
+    commit: "819acad769e54806c920726ac93537ba4e2c22ad"
     transitive: false
   - urls:
     - "https://github.com/jtolds/gls.git"
@@ -1700,7 +1477,7 @@ dependencies:
     - "git@github.com:julienschmidt/httprouter.git"
     vcs: "git"
     name: "github.com/julienschmidt/httprouter"
-    commit: "6d4f4fb4d2ae6d1cb069aecb0e330fd3ee9e0b43"
+    commit: "667c1dbb44f3b5528b874c3c9071b23702e3dd0f"
     transitive: false
   - urls:
     - "https://github.com/justinas/alice.git"
@@ -1708,13 +1485,6 @@ dependencies:
     vcs: "git"
     name: "github.com/justinas/alice"
     commit: "03f45bd4b7dad4734bc4620e46a35789349abb20"
-    transitive: false
-  - urls:
-    - "https://github.com/k0kubun/go-ansi.git"
-    - "git@github.com:k0kubun/go-ansi.git"
-    vcs: "git"
-    name: "github.com/k0kubun/go-ansi"
-    commit: "3bf9e290321332340cd6915d2386f733fbf7233a"
     transitive: false
   - urls:
     - "https://github.com/k0kubun/pp.git"
@@ -1745,16 +1515,6 @@ dependencies:
     name: "github.com/kevinburke/ssh_config"
     commit: "01f96b0aa0cdcaa93f9495f89bbc6cb5a992ce6e"
     transitive: false
-  - name: "github.com/keybase/go-crypto"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/keybase/go-crypto"
-    transitive: false
   - urls:
     - "https://github.com/kisielk/gotool.git"
     - "git@github.com:kisielk/gotool.git"
@@ -1779,7 +1539,7 @@ dependencies:
   - name: "github.com/konsorten/go-windows-terminal-sequences"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -1807,29 +1567,23 @@ dependencies:
     name: "github.com/kr/pretty"
     commit: "71e7e49937503c662b9b636fd6b2c14b1aa818a5"
     transitive: false
-  - urls:
-    - "https://github.com/kr/pty.git"
-    - "git@github.com:kr/pty.git"
-    vcs: "git"
-    name: "github.com/kr/pty"
-    commit: "24b51915630e1d9d3c6adf15a3a96796bbc3cd43"
+  - name: "github.com/kr/pty"
+    host:
+      name: "gopkg.in/AlecAivazis/survey.v1"
+      commit: "38cdfa1242b19e0eb8b6f33004bf8e89832b8743"
+      url: "https://gopkg.in/AlecAivazis/survey.v1"
+      vcs: "git"
+    vendorPath: "vendor/github.com/kr/pty"
     transitive: false
   - name: "github.com/kr/text"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/kr/text"
-    transitive: false
-  - urls:
-    - "https://github.com/lib/pq.git"
-    - "git@github.com:lib/pq.git"
-    vcs: "git"
-    name: "github.com/lib/pq"
-    commit: "931b5ae4c24e6810c8c82ab4734904de3df1c3dc"
     transitive: false
   - urls:
     - "https://github.com/lightstep/lightstep-tracer-common.git"
@@ -1847,7 +1601,7 @@ dependencies:
     - "git@github.com:lightstep/lightstep-tracer-go.git"
     vcs: "git"
     name: "github.com/lightstep/lightstep-tracer-go"
-    commit: "d54b38984d35ad453ebe350d8fa4e538ebffb308"
+    commit: "dcac77dc1a52c593503742b8e0188d727b7655d0"
     transitive: false
   - urls:
     - "https://github.com/magiconair/properties.git"
@@ -1898,18 +1652,10 @@ dependencies:
     name: "github.com/mattn/go-runewidth"
     commit: "703b5e6b11ae25aeb2af9ebb5d5fdf8fa2575211"
     transitive: false
-  - name: "github.com/mattn/go-sqlite3"
-    host:
-      name: "golang.org/x/perf"
-      commit: "ecb187b06eb016056283eaea1f0a2262f5921572"
-      url: "https://go.googlesource.com/perf"
-      vcs: "git"
-    vendorPath: "vendor/github.com/mattn/go-sqlite3"
-    transitive: false
   - name: "github.com/matttproud/golang_protobuf_extensions"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1941,7 +1687,7 @@ dependencies:
   - name: "github.com/miekg/dns"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1951,24 +1697,17 @@ dependencies:
   - name: "github.com/mitchellh/cli"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/mitchellh/cli"
     transitive: false
-  - urls:
-    - "https://github.com/mitchellh/colorstring.git"
-    - "git@github.com:mitchellh/colorstring.git"
-    vcs: "git"
-    name: "github.com/mitchellh/colorstring"
-    commit: "d06e56a500db4d08c33db0b79461e7c9beafca2d"
-    transitive: false
   - name: "github.com/mitchellh/copystructure"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1985,7 +1724,7 @@ dependencies:
   - name: "github.com/mitchellh/go-testing-interface"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -1995,7 +1734,7 @@ dependencies:
   - name: "github.com/mitchellh/hashstructure"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2005,7 +1744,7 @@ dependencies:
   - name: "github.com/mitchellh/mapstructure"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2015,7 +1754,7 @@ dependencies:
   - name: "github.com/mitchellh/reflectwalk"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2025,7 +1764,7 @@ dependencies:
   - name: "github.com/modern-go/concurrent"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -2035,7 +1774,7 @@ dependencies:
   - name: "github.com/modern-go/reflect2"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -2061,7 +1800,7 @@ dependencies:
     - "git@github.com:nats-io/jwt.git"
     vcs: "git"
     name: "github.com/nats-io/jwt"
-    commit: "3cf585455e54df1cd75bda121ac2a1e8eb51d849"
+    commit: "3289d6f980ad96164b0585a9657f67144cd6eba8"
     transitive: false
   - urls:
     - "https://github.com/nats-io/nats.go.git"
@@ -2091,24 +1830,10 @@ dependencies:
     name: "github.com/nbutton23/zxcvbn-go"
     commit: "ae427f1e4c1d66674cc457c6c3822de13ccb8777"
     transitive: false
-  - urls:
-    - "https://github.com/neelance/astrewrite.git"
-    - "git@github.com:neelance/astrewrite.git"
-    vcs: "git"
-    name: "github.com/neelance/astrewrite"
-    commit: "99348263ae862cc230986ce88deaddbf7edcc034"
-    transitive: false
-  - urls:
-    - "https://github.com/neelance/sourcemap.git"
-    - "git@github.com:neelance/sourcemap.git"
-    vcs: "git"
-    name: "github.com/neelance/sourcemap"
-    commit: "8c68805598ab8d5637b1a72b5f7d381ea0f39c31"
-    transitive: false
   - name: "github.com/nicolai86/scaleway-sdk"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2139,7 +1864,7 @@ dependencies:
   - name: "github.com/oklog/run"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2165,14 +1890,14 @@ dependencies:
     - "git@github.com:onsi/ginkgo.git"
     vcs: "git"
     name: "github.com/onsi/ginkgo"
-    commit: "5049dc5a7d91641cbdd9b4363e0718d9dcd638a5"
+    commit: "9eda700730cba42af70d53180f9dcce9266bc2bc"
     transitive: false
   - urls:
     - "https://github.com/onsi/gomega.git"
     - "git@github.com:onsi/gomega.git"
     vcs: "git"
     name: "github.com/onsi/gomega"
-    commit: "bdebf9e0ece900259084cfa4121b97ce1a540939"
+    commit: "c893efa28eb45626cdaa76c9f653b62488858837"
     transitive: false
   - urls:
     - "https://github.com/op/go-logging.git"
@@ -2226,7 +1951,7 @@ dependencies:
   - name: "github.com/packethost/packngo"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2236,22 +1961,12 @@ dependencies:
   - name: "github.com/pascaldekloe/goe"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/pascaldekloe/goe"
-    transitive: false
-  - name: "github.com/patrickmn/go-cache"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/github.com/patrickmn/go-cache"
     transitive: false
   - name: "github.com/pborman/getopt"
     host:
@@ -2275,7 +1990,7 @@ dependencies:
     - "git@github.com:pelletier/go-toml.git"
     vcs: "git"
     name: "github.com/pelletier/go-toml"
-    commit: "095a905e040b7b5dbec6ffe45263e663e50f1774"
+    commit: "091e2dc49814e7694c4bd8b1f74ca371852b0703"
     transitive: false
   - urls:
     - "https://github.com/performancecopilot/speed.git"
@@ -2293,31 +2008,30 @@ dependencies:
     subpackages:
     - "llrb"
     transitive: false
-  - urls:
-    - "https://github.com/peterbourgon/diskv.git"
-    - "git@github.com:peterbourgon/diskv.git"
-    vcs: "git"
-    name: "github.com/peterbourgon/diskv"
-    commit: "0be1b92a6df0e4f5cb0a5d15fb7f643d0ad93ce6"
+  - name: "github.com/peterbourgon/diskv"
+    host:
+      name: "github.com/hashicorp/consul"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
+      urls:
+      - "https://github.com/hashicorp/consul.git"
+      - "git@github.com:hashicorp/consul.git"
+      vcs: "git"
+    vendorPath: "vendor/github.com/peterbourgon/diskv"
     transitive: false
-  - urls:
-    - "https://github.com/pierrec/cmdflag.git"
-    - "git@github.com:pierrec/cmdflag.git"
-    vcs: "git"
-    name: "github.com/pierrec/cmdflag"
-    commit: "46458df5405dbec1a219e5444c9eff47c8d05c97"
-    transitive: false
-  - urls:
-    - "https://github.com/pierrec/lz4.git"
-    - "git@github.com:pierrec/lz4.git"
-    vcs: "git"
-    name: "github.com/pierrec/lz4"
-    commit: "0554902aa74a6a41b367c6352ebcc922b26782b1"
+  - name: "github.com/pierrec/lz4"
+    host:
+      name: "github.com/hashicorp/consul"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
+      urls:
+      - "https://github.com/hashicorp/consul.git"
+      - "git@github.com:hashicorp/consul.git"
+      vcs: "git"
+    vendorPath: "vendor/github.com/pierrec/lz4"
     transitive: false
   - name: "github.com/pkg/errors"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2341,7 +2055,7 @@ dependencies:
   - name: "github.com/posener/complete"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2405,7 +2119,7 @@ dependencies:
   - name: "github.com/renier/xmlrpc"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2426,24 +2140,20 @@ dependencies:
     name: "github.com/rs/cors"
     commit: "7af7a1e09ba336d2ea14b1ce73bf693c6837dbf6"
     transitive: false
-  - urls:
-    - "https://github.com/russross/blackfriday.git"
-    - "git@github.com:russross/blackfriday.git"
-    vcs: "git"
-    name: "github.com/russross/blackfriday"
-    commit: "a925a152c144ea7de0f451eaf2f7db9e52fa005a"
-    transitive: false
-  - urls:
-    - "https://github.com/rwcarlsen/goexif.git"
-    - "git@github.com:rwcarlsen/goexif.git"
-    vcs: "git"
-    name: "github.com/rwcarlsen/goexif"
-    commit: "9e8deecbddbd4989a3e8d003684b783412b41e7a"
+  - name: "github.com/russross/blackfriday"
+    host:
+      name: "github.com/cpuguy83/go-md2man"
+      commit: "f79a8a8ca69da163eee19ab442bedad7a35bba5a"
+      urls:
+      - "https://github.com/cpuguy83/go-md2man.git"
+      - "git@github.com:cpuguy83/go-md2man.git"
+      vcs: "git"
+    vendorPath: "vendor/github.com/russross/blackfriday"
     transitive: false
   - name: "github.com/ryanuber/columnize"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2453,7 +2163,7 @@ dependencies:
   - name: "github.com/ryanuber/go-glob"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2465,38 +2175,17 @@ dependencies:
     - "git@github.com:samuel/go-zookeeper.git"
     vcs: "git"
     name: "github.com/samuel/go-zookeeper"
-    commit: "0ceca61e4d75b92ab59d094a7502921aba0051a2"
-    transitive: false
-  - urls:
-    - "https://github.com/schollz/progressbar.git"
-    - "git@github.com:schollz/progressbar.git"
-    vcs: "git"
-    name: "github.com/schollz/progressbar"
-    commit: "830b9a9d11f80acde84644ba4c40c8a60fc3826f"
+    commit: "2cc03de413da42869e2db7ce7965d3e978d917eb"
     transitive: false
   - name: "github.com/sean-/seed"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/sean-/seed"
-    transitive: false
-  - urls:
-    - "https://github.com/sendgrid/rest.git"
-    - "git@github.com:sendgrid/rest.git"
-    vcs: "git"
-    name: "github.com/sendgrid/rest"
-    commit: "ed616c851bdc7934c0a8ce120ddbd15e040e59a5"
-    transitive: false
-  - urls:
-    - "https://github.com/sendgrid/sendgrid-go.git"
-    - "git@github.com:sendgrid/sendgrid-go.git"
-    vcs: "git"
-    name: "github.com/sendgrid/sendgrid-go"
-    commit: "d1c72cf7d640fb33478848959485bb0cf916809b"
     transitive: false
   - urls:
     - "https://github.com/serenize/snaker.git"
@@ -2515,7 +2204,7 @@ dependencies:
   - name: "github.com/shirou/gopsutil"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2525,173 +2214,12 @@ dependencies:
   - name: "github.com/shirou/w32"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
       vcs: "git"
     vendorPath: "vendor/github.com/shirou/w32"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/component.git"
-    - "git@github.com:shurcooL/component.git"
-    vcs: "git"
-    name: "github.com/shurcooL/component"
-    commit: "90263df59ff67362cabbd017f72c7de257a61a64"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/events.git"
-    - "git@github.com:shurcooL/events.git"
-    vcs: "git"
-    name: "github.com/shurcooL/events"
-    commit: "de7d109ebe4c7eb08603fe3535fbd2ee84be2fba"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/frontend.git"
-    - "git@github.com:shurcooL/frontend.git"
-    vcs: "git"
-    name: "github.com/shurcooL/frontend"
-    commit: "7e359e4b7b17caddccf1f72ef501de6229a1b17b"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/github_flavored_markdown.git"
-    - "git@github.com:shurcooL/github_flavored_markdown.git"
-    vcs: "git"
-    name: "github.com/shurcooL/github_flavored_markdown"
-    commit: "2122de53247006a637e59cf1c99d0770312d4be3"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/githubv4.git"
-    - "git@github.com:shurcooL/githubv4.git"
-    vcs: "git"
-    name: "github.com/shurcooL/githubv4"
-    commit: "4ba037080260cb26279c05337b38064b520a7f9e"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/go.git"
-    - "git@github.com:shurcooL/go.git"
-    vcs: "git"
-    name: "github.com/shurcooL/go"
-    commit: "7189cc372560f641a5c041d2b199d9b0a41293c4"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/gofontwoff.git"
-    - "git@github.com:shurcooL/gofontwoff.git"
-    vcs: "git"
-    name: "github.com/shurcooL/gofontwoff"
-    commit: "180f79e6909d63e9a778d07a4fb713e1a7a73f7b"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/graphql.git"
-    - "git@github.com:shurcooL/graphql.git"
-    vcs: "git"
-    name: "github.com/shurcooL/graphql"
-    commit: "d48a9a75455f6af30244670bc0c9d0e38e7392b5"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/highlight_diff.git"
-    - "git@github.com:shurcooL/highlight_diff.git"
-    vcs: "git"
-    name: "github.com/shurcooL/highlight_diff"
-    commit: "111da2e7d480d1ae2e33d64cd6b19530db117002"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/highlight_go.git"
-    - "git@github.com:shurcooL/highlight_go.git"
-    vcs: "git"
-    name: "github.com/shurcooL/highlight_go"
-    commit: "9d8641ddf2e1517d286cedf0f4f4a6fb41ef5043"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/home.git"
-    - "git@github.com:shurcooL/home.git"
-    vcs: "git"
-    name: "github.com/shurcooL/home"
-    commit: "a8cced5af713f2f38b9fcd519d68a9e8c58b43dd"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/htmlg.git"
-    - "git@github.com:shurcooL/htmlg.git"
-    vcs: "git"
-    name: "github.com/shurcooL/htmlg"
-    commit: "b6326af49ef602914ba4449e7f8decf8264a8fd0"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/httperror.git"
-    - "git@github.com:shurcooL/httperror.git"
-    vcs: "git"
-    name: "github.com/shurcooL/httperror"
-    commit: "2e76094aa70eecf50fcd2e4df33e861246a8a3e6"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/httpfs.git"
-    - "git@github.com:shurcooL/httpfs.git"
-    vcs: "git"
-    name: "github.com/shurcooL/httpfs"
-    commit: "8d4bc4ba774931155e6cd5ef6098cb038dd45135"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/httpgzip.git"
-    - "git@github.com:shurcooL/httpgzip.git"
-    vcs: "git"
-    name: "github.com/shurcooL/httpgzip"
-    commit: "320755c1c1b0484e6179c9a5b68aabcc0dae5ac2"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/issues.git"
-    - "git@github.com:shurcooL/issues.git"
-    vcs: "git"
-    name: "github.com/shurcooL/issues"
-    commit: "6a96395fbb66a7c3431a4af9c1839b095d94c3f8"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/issuesapp.git"
-    - "git@github.com:shurcooL/issuesapp.git"
-    vcs: "git"
-    name: "github.com/shurcooL/issuesapp"
-    commit: "0b82558264994ab993533eed0d2cfe83e145dbe5"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/markdownfmt.git"
-    - "git@github.com:shurcooL/markdownfmt.git"
-    vcs: "git"
-    name: "github.com/shurcooL/markdownfmt"
-    commit: "3438a10682f5f5790da1e59ac7d6518c499d9a2f"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/notifications.git"
-    - "git@github.com:shurcooL/notifications.git"
-    vcs: "git"
-    name: "github.com/shurcooL/notifications"
-    commit: "bcc2b3082a7acf2b5e8082374401a9d5e62944d2"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/notificationsapp.git"
-    - "git@github.com:shurcooL/notificationsapp.git"
-    vcs: "git"
-    name: "github.com/shurcooL/notificationsapp"
-    commit: "0a6e54cc4198490965719c64619758a801bc4aa5"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/octicon.git"
-    - "git@github.com:shurcooL/octicon.git"
-    vcs: "git"
-    name: "github.com/shurcooL/octicon"
-    commit: "9ff1a4cf27f4a918862c3ffbd24371b3aed18f9d"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/reactions.git"
-    - "git@github.com:shurcooL/reactions.git"
-    vcs: "git"
-    name: "github.com/shurcooL/reactions"
-    commit: "145cd5e7f3d10a0a2d7a689862cf578c60c475d1"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/resume.git"
-    - "git@github.com:shurcooL/resume.git"
-    vcs: "git"
-    name: "github.com/shurcooL/resume"
-    commit: "dc47c8f77a8061791fe407ec399a6ff5b54c7cd6"
     transitive: false
   - name: "github.com/shurcooL/sanitized_anchor_name"
     host:
@@ -2702,20 +2230,6 @@ dependencies:
       - "git@github.com:cpuguy83/go-md2man.git"
       vcs: "git"
     vendorPath: "vendor/github.com/shurcooL/sanitized_anchor_name"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/users.git"
-    - "git@github.com:shurcooL/users.git"
-    vcs: "git"
-    name: "github.com/shurcooL/users"
-    commit: "49c67e49c5377c48c01f82d3e1b6844a901a0b33"
-    transitive: false
-  - urls:
-    - "https://github.com/shurcooL/webdavfs.git"
-    - "git@github.com:shurcooL/webdavfs.git"
-    vcs: "git"
-    name: "github.com/shurcooL/webdavfs"
-    commit: "0680c3c63e3c598dd87422cd39ae2e5388943606"
     transitive: false
   - urls:
     - "https://github.com/sirupsen/logrus.git"
@@ -2741,7 +2255,7 @@ dependencies:
   - name: "github.com/softlayer/softlayer-go"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2751,7 +2265,7 @@ dependencies:
   - name: "github.com/soheilhy/cmux"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -2771,13 +2285,6 @@ dependencies:
     vcs: "git"
     name: "github.com/sourcegraph/annotate"
     commit: "f4cad6c6324d3f584e1743d8b3e0e017a5f3a636"
-    transitive: false
-  - urls:
-    - "https://github.com/sourcegraph/go-diff.git"
-    - "git@github.com:sourcegraph/go-diff.git"
-    vcs: "git"
-    name: "github.com/sourcegraph/go-diff"
-    commit: "042635e6444e67483d777aaa240274f13691500c"
     transitive: false
   - urls:
     - "https://github.com/sourcegraph/syntaxhighlight.git"
@@ -2859,7 +2366,7 @@ dependencies:
   - name: "github.com/stretchr/objx"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2874,27 +2381,6 @@ dependencies:
     commit: "85f2b59c4459e5bf57488796be8c3667cb8246d6"
     transitive: false
   - urls:
-    - "https://github.com/syndtr/goleveldb.git"
-    - "git@github.com:syndtr/goleveldb.git"
-    vcs: "git"
-    name: "github.com/syndtr/goleveldb"
-    commit: "81b91e5521e1d9f5d09677b8a940a5903385b2fa"
-    transitive: false
-  - urls:
-    - "https://github.com/tambet/go-asana.git"
-    - "git@github.com:tambet/go-asana.git"
-    vcs: "git"
-    name: "github.com/tambet/go-asana"
-    commit: "6c0cb7090a14aaf5861c43a10e6db9d32c1fe555"
-    transitive: false
-  - urls:
-    - "https://github.com/tarm/serial.git"
-    - "git@github.com:tarm/serial.git"
-    vcs: "git"
-    name: "github.com/tarm/serial"
-    commit: "98f6abe2eb07edd42f6dfa2a934aea469acc29b7"
-    transitive: false
-  - urls:
     - "https://github.com/thoas/go-funk.git"
     - "git@github.com:thoas/go-funk.git"
     vcs: "git"
@@ -2904,7 +2390,7 @@ dependencies:
   - name: "github.com/tmc/grpc-websocket-proxy"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -2914,7 +2400,7 @@ dependencies:
   - name: "github.com/tv42/httpunix"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -2928,17 +2414,10 @@ dependencies:
     name: "github.com/ulikunitz/xz"
     commit: "6f934d456d51e742b4eeab20d925a827ef22320a"
     transitive: false
-  - urls:
-    - "https://github.com/unknwon/cae.git"
-    - "git@github.com:unknwon/cae.git"
-    vcs: "git"
-    name: "github.com/unknwon/cae"
-    commit: "55a0b64484a12115b7322b9eed01e2c26113061d"
-    transitive: false
   - name: "github.com/urfave/cli"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -2955,7 +2434,7 @@ dependencies:
   - name: "github.com/vmware/govmomi"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -3007,19 +2486,12 @@ dependencies:
   - name: "github.com/xiang90/probing"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
       vcs: "git"
     vendorPath: "vendor/github.com/xiang90/probing"
-    transitive: false
-  - urls:
-    - "https://github.com/xo/dburl.git"
-    - "git@github.com:xo/dburl.git"
-    vcs: "git"
-    name: "github.com/xo/dburl"
-    commit: "0192e0fb89d18caa6756525d92ce2a0bd3a200f8"
     transitive: false
   - urls:
     - "https://github.com/xordataexchange/crypt.git"
@@ -3038,7 +2510,7 @@ dependencies:
   - name: "go.etcd.io/bbolt"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -3047,12 +2519,12 @@ dependencies:
     transitive: false
   - vcs: "git"
     name: "go.etcd.io/etcd"
-    commit: "129138760cbb79bc183abf6652455d27d6748818"
+    commit: "6075b9def1315242e66509439f1b92845cf47a90"
     url: "https://github.com/etcd-io/etcd"
     transitive: false
   - vcs: "git"
     name: "go.opencensus.io"
-    commit: "d7af601eacbd8e41ece0b1a9fbb9040c844d8fa4"
+    commit: "df0549d970e2a64236cca48fa6a76f0d321c8254"
     url: "https://github.com/census-instrumentation/opencensus-go"
     transitive: false
   - vcs: "git"
@@ -3063,7 +2535,7 @@ dependencies:
   - name: "go.uber.org/multierr"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -3075,35 +2547,27 @@ dependencies:
     commit: "425214515ff452748375576b20c82524849177c6"
     url: "https://github.com/uber-go/zap"
     transitive: false
+
+
   - vcs: "git"
-    name: "go4.org"
-    commit: "94abd6928b1da39b1d757b60c93fb2419c409fa1"
-    url: "https://github.com/go4org/go4"
+    name: "golang.org/x/mod"
+    commit: "c5eba5822913c9d54a51e2ef1131a7aa5fae5df3"
+    url: "https://go.googlesource.com/mod"
     transitive: false
-  - vcs: "git"
-    name: "golang.org/x/build"
-    commit: "6d21d91eff340b582826e9ff290f4570410bc6ce"
-    url: "https://go.googlesource.com/build"
-    transitive: false
-  - vcs: "git"
-    name: "golang.org/x/crypto"
-    commit: "227b76d455e791cb042b03e633e2f7fbcfdf74a5"
-    url: "https://go.googlesource.com/crypto"
-    transitive: false
-  - vcs: "git"
-    name: "golang.org/x/net"
-    commit: "a8b05e9114ab0cb08faec337c959aed24b68bf50"
-    url: "https://go.googlesource.com/net"
+  - name: "golang.org/x/net"
+    host:
+      name: "github.com/hashicorp/consul"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
+      urls:
+      - "https://github.com/hashicorp/consul.git"
+      - "git@github.com:hashicorp/consul.git"
+      vcs: "git"
+    vendorPath: "vendor/golang.org/x/net"
     transitive: false
   - vcs: "git"
     name: "golang.org/x/oauth2"
     commit: "0f29369cfe4552d0e4bcddc57cc75f4d7e672a33"
     url: "https://go.googlesource.com/oauth2"
-    transitive: false
-  - vcs: "git"
-    name: "golang.org/x/perf"
-    commit: "ecb187b06eb016056283eaea1f0a2262f5921572"
-    url: "https://go.googlesource.com/perf"
     transitive: false
   - vcs: "git"
     name: "golang.org/x/sync"
@@ -3112,13 +2576,13 @@ dependencies:
     transitive: false
   - vcs: "git"
     name: "golang.org/x/sys"
-    commit: "0c1ff786ef13daa914a3351c5e6b0321aed5960e"
+    commit: "2837fb4f24fee082b8c39b1a6dc9e0ed9f3fbd4f"
     url: "https://go.googlesource.com/sys"
     transitive: false
   - name: "golang.org/x/text"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -3128,7 +2592,7 @@ dependencies:
   - name: "golang.org/x/time"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -3137,7 +2601,7 @@ dependencies:
     transitive: false
   - vcs: "git"
     name: "golang.org/x/tools"
-    commit: "928b73f71f9bfe60600b4da8ce844809bd27b9ac"
+    commit: "22afafe3322a860fcd3d88448768f9db36f8bc5f"
     url: "https://go.googlesource.com/tools"
     transitive: false
   - vcs: "git"
@@ -3147,22 +2611,32 @@ dependencies:
     transitive: false
   - vcs: "git"
     name: "google.golang.org/api"
-    commit: "634b73c1f50be990f1ba97c3f325fb7f88b13775"
+    commit: "99d61c9f5f95c5dcbb08242b071a810d541c1c1f"
     url: "https://code.googlesource.com/google-api-go-client"
     transitive: false
-  - vcs: "git"
-    name: "google.golang.org/appengine"
-    commit: "5f2a59506353b8d5ba8cbbcd9f3c1f41f1eaf079"
-    url: "https://github.com/golang/appengine"
+  - name: "google.golang.org/appengine"
+    host:
+      name: "github.com/hashicorp/consul"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
+      urls:
+      - "https://github.com/hashicorp/consul.git"
+      - "git@github.com:hashicorp/consul.git"
+      vcs: "git"
+    vendorPath: "vendor/google.golang.org/appengine"
     transitive: false
-  - vcs: "git"
-    name: "google.golang.org/genproto"
-    commit: "f660b865573183437d2d868f703fe88bb8af0b55"
-    url: "https://github.com/google/go-genproto"
+  - name: "google.golang.org/genproto"
+    host:
+      name: "github.com/hashicorp/consul"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
+      urls:
+      - "https://github.com/hashicorp/consul.git"
+      - "git@github.com:hashicorp/consul.git"
+      vcs: "git"
+    vendorPath: "vendor/google.golang.org/genproto"
     transitive: false
   - vcs: "git"
     name: "google.golang.org/grpc"
-    commit: "a5e64ec425533f3212fb53add0c4c45c4f9a3890"
+    commit: "230def769105c46b2e597578b23002a6ac159dde"
     url: "https://github.com/grpc/grpc-go"
     transitive: false
   - vcs: "git"
@@ -3183,7 +2657,7 @@ dependencies:
   - name: "gopkg.in/cheggaaa/pb.v1"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -3196,29 +2670,14 @@ dependencies:
     url: "https://gopkg.in/errgo.v2"
     transitive: false
   - vcs: "git"
-    name: "gopkg.in/fsnotify.v1"
-    commit: "7be54206639f256967dd82fa767397ba5f8f48f5"
-    url: "https://gopkg.in/fsnotify.v1"
-    transitive: false
-  - name: "gopkg.in/fsnotify/fsnotify.v1"
-    host:
-      name: "github.com/hpcloud/tail"
-      commit: "a1dbeea552b7c8df4b542c66073e393de198a800"
-      urls:
-      - "https://github.com/hpcloud/tail.git"
-      - "git@github.com:hpcloud/tail.git"
-      vcs: "git"
-    vendorPath: "vendor/gopkg.in/fsnotify/fsnotify.v1"
-    transitive: false
-  - vcs: "git"
     name: "gopkg.in/gcfg.v1"
-    commit: "61b2c08bc8f6068f7c5ca684372f9a6cb1c45ebe"
+    commit: "0ef1a8547f99b94fac9af5377dd72febba18f37c"
     url: "https://gopkg.in/gcfg.v1"
     transitive: false
   - name: "gopkg.in/inf.v0"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -3250,25 +2709,10 @@ dependencies:
     commit: "99a8ce2fbf8b8087b6ed12a37c61b10f04070043"
     url: "https://gopkg.in/jcmturner/rpc.v1"
     transitive: false
-  - name: "gopkg.in/mgo.v2"
-    host:
-      name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
-      urls:
-      - "https://github.com/hashicorp/consul.git"
-      - "git@github.com:hashicorp/consul.git"
-      vcs: "git"
-    vendorPath: "vendor/gopkg.in/mgo.v2"
-    transitive: false
-  - vcs: "git"
-    name: "gopkg.in/pipe.v2"
-    commit: "3c2ca4d525447ec8b2f606a6974f9c9f40831f26"
-    url: "https://gopkg.in/pipe.v2"
-    transitive: false
   - name: "gopkg.in/square/go-jose.v2"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -3290,16 +2734,6 @@ dependencies:
     commit: "db6c41c156481962abf9a55a324858674c25ab08"
     url: "https://gopkg.in/src-d/go-git.v4"
     transitive: false
-  - name: "gopkg.in/tomb.v1"
-    host:
-      name: "github.com/hpcloud/tail"
-      commit: "a1dbeea552b7c8df4b542c66073e393de198a800"
-      urls:
-      - "https://github.com/hpcloud/tail.git"
-      - "git@github.com:hpcloud/tail.git"
-      vcs: "git"
-    vendorPath: "vendor/gopkg.in/tomb.v1"
-    transitive: false
   - vcs: "git"
     name: "gopkg.in/warnings.v0"
     commit: "ec4a0fea49c7b46c2aeb0b51aac55779c607e52b"
@@ -3308,7 +2742,7 @@ dependencies:
   - name: "gopkg.in/yaml.v2"
     host:
       name: "github.com/hashicorp/consul"
-      commit: "e11d07a68582a855a9bd22b2413467f48b585352"
+      commit: "92fd596d32d2b2e59d5ac6442f4ba6a64d7930f5"
       urls:
       - "https://github.com/hashicorp/consul.git"
       - "git@github.com:hashicorp/consul.git"
@@ -3316,14 +2750,9 @@ dependencies:
     vendorPath: "vendor/gopkg.in/yaml.v2"
     transitive: false
   - vcs: "git"
-    name: "grpc.go4.org"
-    commit: "11d0a25b491971beb5a4625ea7856a3c4afaafa5"
-    url: "https://github.com/go4org/grpc"
-    transitive: false
-  - vcs: "git"
-    name: "honnef.co/go/js/dom"
-    commit: "ebc4cf92d81fd1ac604b5d0e516731e15dac1c7e"
-    url: "https://github.com/dominikh/go-js-dom"
+    name: "honnef.co/go/tools"
+    commit: "4c0a318d638eb5e21ccbc2844c31f4e766350b49"
+    url: "https://github.com/dominikh/go-tools"
     transitive: false
   - vcs: "git"
     name: "k8s.io/api"
@@ -3363,7 +2792,7 @@ dependencies:
   - name: "sigs.k8s.io/yaml"
     host:
       name: "github.com/coreos/etcd"
-      commit: "129138760cbb79bc183abf6652455d27d6748818"
+      commit: "6075b9def1315242e66509439f1b92845cf47a90"
       urls:
       - "https://github.com/coreos/etcd.git"
       - "git@github.com:coreos/etcd.git"
@@ -3375,26 +2804,11 @@ dependencies:
     commit: "ebfcffb1b5c00031ce797183546746715a3cfe87"
     url: "https://github.com/sourcegraph/appdash"
     transitive: false
-  - vcs: "git"
-    name: "sourcegraph.com/sourcegraph/go-git"
-    commit: "87e0e4ab9e95695ebe87393d6f3585902e68930f"
-    url: "https://github.com/sourcegraph/go-git"
-    transitive: false
-  - vcs: "git"
-    name: "sourcegraph.com/sourcegraph/go-vcs"
-    commit: "d784c9520ccdd19883f59efd0a2ae4441f576582"
-    url: "https://github.com/sourcegraph/go-vcs"
-    transitive: false
-  - vcs: "git"
-    name: "sourcegraph.com/sqs/pbtypes"
-    commit: "688c2c2cb411327a50aae0f89119af9f38b0fc03"
-    url: "https://github.com/sqs/pbtypes"
-    transitive: false
   test:
   - urls:
     - "https://github.com/jarcoal/httpmock.git"
     - "git@github.com:jarcoal/httpmock.git"
     vcs: "git"
     name: "github.com/jarcoal/httpmock"
-    commit: "b43b330ad7ef975a5049e4cc58f948aa6d9cad89"
+    commit: "ac2099de8d3789d30b99b740d1a9d242097462df"
     transitive: false

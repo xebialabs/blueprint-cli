@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/Masterminds/semver"
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
@@ -205,84 +206,56 @@ func mergeMaps(autoAnswerFile, providedAnswerFile map[string]string) (map[string
 func VersionCheck(autoAnswerFile map[string]string, providedAnswerFile map[string]string) (string, error) {
 	// Strip the version information - if the value is provided to the up command.
 	if k8s.IsPropertyPresent("XlrOfficialVersion", providedAnswerFile) {
-		var versionFromKubernetesConfigMap string
-		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("XlrOfficialVersion", providedAnswerFile)
-		if err != nil {
-			return "", err
-		}
-
-		if k8s.IsPropertyPresent("prevXlrOfficialVersion", autoAnswerFile) {
-			versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("prevXlrOfficialVersion", autoAnswerFile)
-			if err != nil {
-				return "", err
-			}
-		}
-
-		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
+		return checkPreviousAndDecideVersionMatch("XlrOfficialVersion", autoAnswerFile, providedAnswerFile)
 	}
 
 	if k8s.IsPropertyPresent("XldOfficialVersion", providedAnswerFile) {
-		var versionFromKubernetesConfigMap string
-		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("XldOfficialVersion", providedAnswerFile)
-		if err != nil {
-			return "", err
-		}
-
-		if k8s.IsPropertyPresent("prevXldOfficialVersion", autoAnswerFile) {
-			versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("prevXldOfficialVersion", autoAnswerFile)
-			if err != nil {
-				return "", err
-			}
-		}
-
-		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
+		return checkPreviousAndDecideVersionMatch("XldOfficialVersion", autoAnswerFile, providedAnswerFile)
 	}
 
 	if k8s.IsPropertyPresent("XlrVersion", providedAnswerFile) {
-		var versionFromKubernetesConfigMap string
-		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("XlrVersion", providedAnswerFile)
-		if err != nil {
-			return "", err
-		}
-
-		if k8s.IsPropertyPresent("prevXlrVersion", autoAnswerFile) {
-			versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("prevXlrVersion", autoAnswerFile)
-			if err != nil {
-				return "", err
-			}
-		}
-
-		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
+		return checkPreviousAndDecideVersionMatch("XlrVersion", autoAnswerFile, providedAnswerFile)
 	}
 
 	if k8s.IsPropertyPresent("XldVersion", providedAnswerFile) {
-		var versionFromKubernetesConfigMap string
-		versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap("XldVersion", providedAnswerFile)
-
-		if k8s.IsPropertyPresent("prevXldVersion", autoAnswerFile) {
-			versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("prevXldVersion", autoAnswerFile)
-			if err != nil {
-				return "", err
-			}
-		}
-
-		return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
+		return checkPreviousAndDecideVersionMatch("XldVersion", autoAnswerFile, providedAnswerFile)
 	}
 
 	return "", nil
 }
 
-func decideVersionMatch(installedVersion string, newVersion string) (string, error) {
-	installed := util.ParseVersion(installedVersion, 4)
-	versionToInstall := util.ParseVersion(newVersion, 4)
+func checkPreviousAndDecideVersionMatch(key string, autoAnswerFile map[string]string, providedAnswerFile map[string]string) (string, error) {
+	var versionFromKubernetesConfigMap string
+	versionFromAnswerFileProvided, err := k8s.GetRequiredPropertyFromMap(key, providedAnswerFile)
 
-	if installed != 0 {
+	if k8s.IsPropertyPresent("Prev"+key, autoAnswerFile) {
+		versionFromKubernetesConfigMap, err = k8s.GetRequiredPropertyFromMap("Prev"+key, autoAnswerFile)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return decideVersionMatch(versionFromKubernetesConfigMap, versionFromAnswerFileProvided)
+}
+
+func decideVersionMatch(installedVersion string, newVersion string) (string, error) {
+	installed, err := semver.NewVersion(installedVersion)
+	if err != nil {
+		installed = nil
+	}
+
+	versionToInstall, err := semver.NewVersion(newVersion)
+	if err != nil {
+		return "", fmt.Errorf("New version tag %s is not valid: %s", newVersion, err)
+	}
+
+	if installed != nil {
 		switch {
-		case installed > versionToInstall:
+		case installed.GreaterThan(versionToInstall):
 			return "", fmt.Errorf("cannot downgrade the deployment from %s to %s", installedVersion, newVersion)
-		case installed < versionToInstall:
+		case installed.LessThan(versionToInstall):
 			return fmt.Sprintf("upgrading from %s to %s", installedVersion, newVersion), nil
-		case installed == versionToInstall:
+		case installed.Equal(versionToInstall):
 			return "", fmt.Errorf("the given version %s already exists", installedVersion)
 		}
 	}
