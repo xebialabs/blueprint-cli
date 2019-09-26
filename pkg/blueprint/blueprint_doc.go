@@ -98,20 +98,24 @@ func GetProcessedExpressionValue(val VarField, parameters map[string]interface{}
 
 func (variable *Variable) ProcessExpression(parameters map[string]interface{}) error {
 	fieldsToSkip := []string{"Validate", "Options"} // these fields have special processing
-	variableR := reflect.ValueOf(variable).Elem()
-	typeOfT := variableR.Type()
+	return ProcessExpressionField(variable, fieldsToSkip, parameters, variable.Name.Value)
+}
+
+func ProcessExpressionField(item interface{}, fieldsToSkip []string, parameters map[string]interface{}, id string) error {
+	itemR := reflect.ValueOf(item).Elem()
+	typeOfT := itemR.Type()
 	// iterate over the struct fields and map them
-	for i := 0; i < variableR.NumField(); i++ {
-		fieldR := variableR.Field(i)
+	for i := 0; i < itemR.NumField(); i++ {
+		fieldR := itemR.Field(i)
 		fieldName := typeOfT.Field(i).Name
 		value := fieldR.Interface()
-		field := reflect.ValueOf(variable).Elem().FieldByName(strings.Title(fieldName))
+		field := reflect.ValueOf(item).Elem().FieldByName(strings.Title(fieldName))
 		if !util.IsStringInSlice(fieldName, fieldsToSkip) && field.IsValid() {
 			switch val := value.(type) {
 			case VarField:
 				procVal, err := GetProcessedExpressionValue(val, parameters)
 				if err != nil {
-					return fmt.Errorf("Error while processing !expr [%s] for [%s] of [%s]. %s", val.Value, fieldName, variable.Name.Value, err.Error())
+					return fmt.Errorf("Error while processing !expr [%s] for [%s] of [%s]. %s", val.Value, fieldName, id, err.Error())
 				}
 				field.Set(reflect.ValueOf(procVal))
 			}
