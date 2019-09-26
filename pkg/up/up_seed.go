@@ -108,31 +108,40 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 		if !upParams.Undeploy {
 			// Strip the version information
-			models.AvailableVersion, err = getVersion(answerMapFromConfigMap, "xlVersion", "prevVersion")
+			models.AvailableOfficialXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrOfficialVersion", "PrevXlrOfficialVersion")
 			if err != nil {
 				return err
 			}
-			if models.AvailableVersion != "" {
-				answerMapFromConfigMap["XlVersion"] = ""
-				answerMapFromConfigMap["prevVersion"] = models.AvailableVersion
+			if models.AvailableOfficialXlrVersion != "" {
+				answerMapFromConfigMap["XlrOfficialVersion"] = ""
+				answerMapFromConfigMap["PrevXlrOfficialVersion"] = models.AvailableOfficialXlrVersion
 			}
 
-			models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "xlrVersion", "prevXlrVersion")
+			models.AvailableOfficialXldVersion, err = getVersion(answerMapFromConfigMap, "XldOfficialVersion", "PrevXldOfficialVersion")
+			if err != nil {
+				return err
+			}
+			if models.AvailableOfficialXldVersion != "" {
+				answerMapFromConfigMap["XldOfficialVersion"] = ""
+				answerMapFromConfigMap["PrevXldOfficialVersion"] = models.AvailableOfficialXldVersion
+			}
+
+			models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrVersion", "PrevXlrVersion")
 			if err != nil {
 				return err
 			}
 			if models.AvailableXlrVersion != "" {
 				answerMapFromConfigMap["XlrVersion"] = ""
-				answerMapFromConfigMap["prevXlrVersion"] = models.AvailableXlrVersion
+				answerMapFromConfigMap["PrevXlrVersion"] = models.AvailableXlrVersion
 			}
 
-			models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "xldVersion", "prevXldVersion")
+			models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "XldVersion", "PrevXldVersion")
 			if err != nil {
 				return err
 			}
 			if models.AvailableXldVersion != "" {
 				answerMapFromConfigMap["XldVersion"] = ""
-				answerMapFromConfigMap["prevXldVersion"] = models.AvailableXldVersion
+				answerMapFromConfigMap["PrevXldVersion"] = models.AvailableXldVersion
 			}
 		}
 
