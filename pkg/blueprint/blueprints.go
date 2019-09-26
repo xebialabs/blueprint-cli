@@ -3,7 +3,6 @@ package blueprint
 import (
 	"fmt"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -68,26 +67,7 @@ func shouldSkipFile(templateConfig TemplateConfig, parameters map[string]interfa
 
 func (config *TemplateConfig) ProcessExpression(parameters map[string]interface{}) error {
 	fieldsToSkip := []string{""} // these fields have special processing
-	configR := reflect.ValueOf(config).Elem()
-	typeOfT := configR.Type()
-	// iterate over the struct fields and map them
-	for i := 0; i < configR.NumField(); i++ {
-		fieldR := configR.Field(i)
-		fieldName := typeOfT.Field(i).Name
-		value := fieldR.Interface()
-		field := reflect.ValueOf(config).Elem().FieldByName(strings.Title(fieldName))
-		if !util.IsStringInSlice(fieldName, fieldsToSkip) && field.IsValid() {
-			switch val := value.(type) {
-			case VarField:
-				procVal, err := GetProcessedExpressionValue(val, parameters)
-				if err != nil {
-					return fmt.Errorf("Error while processing !expr [%s] for [%s] of [%s]. %s", val.Value, fieldName, config.Path, err.Error())
-				}
-				field.Set(reflect.ValueOf(procVal))
-			}
-		}
-	}
-	return nil
+	return ProcessExpressionField(config, fieldsToSkip, parameters, config.Path)
 }
 
 // InstantiateBlueprint is entry point for the cli command

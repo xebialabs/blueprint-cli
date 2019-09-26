@@ -1,24 +1,24 @@
 package blueprint
 
 import (
-    "fmt"
-    "math"
-    "net/url"
-    "os/user"
-    "regexp"
-    "strconv"
-    "strings"
-    "time"
+	"fmt"
+	"math"
+	"net/url"
+	"os/user"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 
-    "github.com/thoas/go-funk"
+	"github.com/thoas/go-funk"
 
-    "github.com/Knetic/govaluate"
-    "github.com/dlclark/regexp2"
-    "github.com/xebialabs/xl-cli/pkg/cloud/aws"
-    "github.com/xebialabs/xl-cli/pkg/cloud/k8s"
-    "github.com/xebialabs/xl-cli/pkg/osHelper"
-    "github.com/xebialabs/xl-cli/pkg/util"
-    upHelper "github.com/xebialabs/xl-cli/pkg/version"
+	"github.com/Knetic/govaluate"
+	"github.com/dlclark/regexp2"
+	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
+	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
+	"github.com/xebialabs/xl-cli/pkg/osHelper"
+	"github.com/xebialabs/xl-cli/pkg/util"
+	upHelper "github.com/xebialabs/xl-cli/pkg/version"
 )
 
 var functions = map[string]govaluate.ExpressionFunction{
@@ -250,18 +250,18 @@ var functions = map[string]govaluate.ExpressionFunction{
 
 	// normalize windows paths to mountable docker paths
 	"normalizePath": func(args ...interface{}) (interface{}, error) {
-	    if len(args) != 1 {
-	        return nil, fmt.Errorf("invalid number of arguments for  expression function 'normalizePath', expecting 1 (module name) got %d", len(args))
-        }
+		if len(args) != 1 {
+			return nil, fmt.Errorf("invalid number of arguments for  expression function 'normalizePath', expecting 1 (module name) got %d", len(args))
+		}
 
-	    path := fmt.Sprintf("%v", args[0])
+		path := fmt.Sprintf("%v", args[0])
 
-        pathRe := regexp.MustCompile(`^([A-Za-z]):\\`)
-        path = pathRe.ReplaceAllString(path, `/$1/`)
-        path = strings.ReplaceAll(path, "\\", `/`)
+		pathRe := regexp.MustCompile(`^([A-Za-z]):\\`)
+		path = pathRe.ReplaceAllString(path, `/$1/`)
+		path = strings.ReplaceAll(path, "\\", `/`)
 
-        return path, nil
-    },
+		return path, nil
+	},
 }
 
 // ProcessCustomExpression evaluates the expressions passed in the blueprint.yaml file using https://github.com/Knetic/govaluate

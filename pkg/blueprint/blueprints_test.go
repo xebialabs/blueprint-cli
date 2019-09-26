@@ -274,7 +274,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"AWSRegion":          "eu-central-1",
 			"DiskSize":           "10",
 			"DiskSizeWithBuffer": "125.6",
-			"ShouldNotBeThere":   "",
+			"ShouldNotBeThere":   "shouldnotbehere",
 			"File":               "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\n-----END CERTIFICATE-----\\n",
 		}
 		for k, v := range valueMap {
@@ -465,7 +465,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"AWSRegion":          "eu-central-1",
 			"DiskSize":           "10",
 			"DiskSizeWithBuffer": "125.6",
-			"ShouldNotBeThere":   "",
+			"ShouldNotBeThere":   "shouldnotbehere",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
@@ -565,7 +565,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"AWSRegion":          "eu-central-1",
 			"DiskSize":           "10",
 			"DiskSizeWithBuffer": "125.6",
-			"ShouldNotBeThere":   "",
+			"ShouldNotBeThere":   "shouldnotbehere",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
