@@ -5,7 +5,6 @@
 		}
 	],
 	"settings": {
-		"go.gopath": "${workspaceFolder}/vendor:${workspaceFolder}/.gogradle/project_gopath",
-		"go.toolsGopath": "${workspaceFolder}/.gotools"
+        "go.gopath": "${workspaceFolder}/vendor:${workspaceFolder}/.gogradle/project_gopath"
 	}
 }
