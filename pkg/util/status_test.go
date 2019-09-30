@@ -91,6 +91,20 @@ func TestDataMapTable(t *testing.T) {
 		assert.Equal(t, expected, DataMapTable(&data, TableAlignLeft, 30, 10, "", 3, false))
 	})
 
+	t.Run("should print valid data table with long key and values", func(t *testing.T) {
+		data := map[string]interface{}{"test": "*****", "long key for testing long key for testing": "--- License ---\r\nLicense version: 3\r\nProduct: XL Release\r\nLicensed to: XebiaLabs\r\nContact: XebiaLabs Internal Use Only", "confirm": true}
+		expected :=
+			` -------------------------------- ----------------------------------------------------
+| LABEL                          | VALUE                                              |
+ -------------------------------- ----------------------------------------------------
+| confirm                        | true                                               |
+| long key for testing long ke.. | --- License ---\r\nLicense version: 3\r\nProduct.. |
+| test                           | *****                                              |
+ -------------------------------- ----------------------------------------------------
+`
+		assert.Equal(t, expected, DataMapTable(&data, TableAlignLeft, 30, 50, "", 1, false))
+	})
+
 	t.Run("should print valid data table and remove empty values (left aligned)", func(t *testing.T) {
 		data := map[string]interface{}{"test": "*****", "userName": "", "confirm": true}
 		expected :=

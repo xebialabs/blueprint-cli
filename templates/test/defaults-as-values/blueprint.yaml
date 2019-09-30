@@ -77,6 +77,15 @@ spec:
     prompt: Test Prompt
     saveInXlvals: true
     default: 125.6
+  - name: File
+    type: File
+    prompt: where is the File?
+    saveInXlvals: true
+    default: ../../templates/test/defaults-as-values/cert
+  - name: SecretFile
+    type: SecretFile
+    prompt: where is the SecretFile?
+    default: ../../templates/test/defaults-as-values/cert
 
   files:
   - path: xld-environment.yml.tmpl

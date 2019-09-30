@@ -275,6 +275,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"DiskSize":           "10",
 			"DiskSizeWithBuffer": "125.6",
 			"ShouldNotBeThere":   "",
+			"File":               "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\n-----END CERTIFICATE-----\\n",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
@@ -285,6 +286,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		secretsMap := map[string]string{
 			"AWSAccessKey":    "accesskey",
 			"AWSAccessSecret": "accesssecret",
+			"SecretFile":      "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\n-----END CERTIFICATE-----\\n",
 		}
 		for k, v := range secretsMap {
 			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))

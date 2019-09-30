@@ -273,7 +273,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 			return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Value)
 		}
 		return answerStr, nil
-	case TypeFile:
+	case TypeFile, TypeSecretFile:
 		// read file contents
 		filePath := value.(string)
 		util.Verbose("[input] Reading file contents from path: %s\n", filePath)
