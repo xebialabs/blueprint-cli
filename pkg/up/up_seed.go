@@ -19,9 +19,6 @@ import (
 var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 var applyValues map[string]string
 
-// SkipSeed when set to true will skip running xl-seed docker images
-var SkipSeed = false
-
 // SkipKube can be set to true to skip kubernetes connection activities
 var SkipKube = false
 
@@ -31,7 +28,7 @@ var SkipPrompts = false
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
 func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, gitBranch string, gb *blueprint.GeneratedBlueprint) error {
 
-	if !SkipSeed {
+	if !upParams.DryRun {
 		defer util.StopAndRemoveContainer(s)
 	}
 
@@ -174,7 +171,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 	util.Info("Generated files successfully! \n")
 
-	if !SkipSeed {
+	if !upParams.DryRun {
 		util.Info("Spinning up xl seed! \n")
 		err = runAndCaptureResponse(pullSeedImage)
 		if err != nil {

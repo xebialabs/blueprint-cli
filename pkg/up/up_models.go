@@ -9,4 +9,5 @@ type UpParams struct {
 	CfgOverridden     bool
 	NoCleanup         bool
 	Undeploy          bool
+	DryRun            bool
 }
