@@ -724,6 +724,19 @@ func prepareQuestionText(desc string, fallbackQuestion string) string {
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
 	skipParam := variable.IgnoreIfSkipped.Bool && (variable.Meta.PromptSkipped || data == nil || data == "")
 
+	switch variable.Type.Value {
+	case TypeConfirm:
+		if data != nil && (data == "true" || data == true) {
+			data = true
+		} else {
+			data = false
+		}
+	default:
+		if data == nil {
+			data = ""
+		}
+	}
+
 	if IsSecretType(variable.Type.Value) {
 		if !skipParam {
 			util.Verbose("[dataPrep] Skipping secret parameter [%s] from summary-table/value-files because IgnoreIfSkipped is true and PromptIf is false\n", variable.Name.Value)
@@ -738,9 +751,6 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 		}
 		// Use raw value of secret field if flag is set
 		if variable.ReplaceAsIs.Bool {
-			if data == nil {
-				data = ""
-			}
 			preparedData.TemplateData[variable.Name.Value] = data
 		} else {
 			preparedData.TemplateData[variable.Name.Value] = fmt.Sprintf(fmtTagValue, variable.Name.Value)
@@ -756,14 +766,7 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 				preparedData.Values[variable.Name.Value] = data
 			}
 		}
-		if data == nil {
-			switch variable.Type.Value {
-			case TypeConfirm:
-				data = false
-			case TypeInput, TypeEditor, TypeFile, TypeSelect:
-				data = ""
-			}
-		}
+
 		preparedData.TemplateData[variable.Name.Value] = data
 	}
 }

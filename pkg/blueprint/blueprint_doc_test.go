@@ -1447,6 +1447,56 @@ func Test_saveItemToTemplateDataMap(t *testing.T) {
 			},
 		},
 		{
+			"should save variable in PreparedData with correct type for Confirm types",
+			args{
+				&Variable{
+					Name:         VarField{Value: "Test"},
+					Label:        VarField{Value: "Test"},
+					Type:         VarField{Value: "Confirm"},
+					Default:      VarField{Value: "true", Bool: true},
+					SaveInXlvals: VarField{Bool: true},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"true",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": true},
+				SummaryData:  map[string]interface{}{"input1": "val1", "Test": true},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{"Test": true},
+			},
+		},
+		{
+			"should save variable in PreparedData with correct type for Confirm types when data is nil",
+			args{
+				&Variable{
+					Name:         VarField{Value: "Test"},
+					Label:        VarField{Value: "Test"},
+					Type:         VarField{Value: "Confirm"},
+					Default:      VarField{Value: "true", Bool: true},
+					SaveInXlvals: VarField{Bool: true},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				nil,
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": false},
+				SummaryData:  map[string]interface{}{"input1": "val1", "Test": false},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{"Test": false},
+			},
+		},
+		{
 			"should not skip variable in SummaryData & Values when IgnoreIfSkipped is true & PromptIf is true",
 			args{
 				&Variable{
