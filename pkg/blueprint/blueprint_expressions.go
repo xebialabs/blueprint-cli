@@ -274,11 +274,11 @@ func ProcessCustomExpression(exStr string, parameters map[string]interface{}) (i
 		return nil, err
 	}
 
-	expressionParams := fixValueTypes(parameters)
+	expressionParams := FixValueTypes(parameters)
 	return expression.Evaluate(expressionParams)
 }
 
-func fixValueTypes(parameters map[string]interface{}) map[string]interface{} {
+func FixValueTypes(parameters map[string]interface{}) map[string]interface{} {
 	newParams := make(map[string]interface{})
 	for k, v := range parameters {
 		switch vStr := v.(type) {
