@@ -267,7 +267,13 @@ func convertAnswerFileToMap(answerFilePath string) (map[string]string, error) {
 }
 
 func convertMapToAnswerFile(contents map[string]string, filename string) error {
-	yamlBytes, err := yaml.Marshal(contents)
+	var contentsInterface = map[string]interface{}{}
+	for k, v := range contents {
+		contentsInterface[k] = v
+	}
+	contentsInterface = blueprint.FixValueTypes(contentsInterface)
+
+	yamlBytes, err := yaml.Marshal(contentsInterface)
 	if err != nil {
 		fmt.Errorf("error when marshalling the answer map to yaml %s", err.Error())
 	}
