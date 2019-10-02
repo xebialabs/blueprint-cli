@@ -34,9 +34,12 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
              type: Input
              default: lala
              saveInXlvals: true
+             ignoreIfSkipped: true
              prompt: help text
            - name: fn
              value: !expr "awsRegions('ecs', 0)"
+             saveInXlvals: !expr "1 > 2 ? true : false"
+             ignoreIfSkipped: !expr "1 > 2 ? true : false"
            - name: select
              type: Select
              prompt: select region
@@ -295,17 +298,20 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 			Prompt: VarField{Value: "password?"},
 		}, doc.Variables[0])
 		assert.Equal(t, Variable{
-			Name:         VarField{Value: "test"},
-			Label:        VarField{Value: "test"},
-			Type:         VarField{Value: TypeInput},
-			Default:      VarField{Value: "lala"},
-			Prompt:       VarField{Value: "help text"},
-			SaveInXlvals: VarField{Bool: true, Value: "true"},
+			Name:            VarField{Value: "test"},
+			Label:           VarField{Value: "test"},
+			Type:            VarField{Value: TypeInput},
+			Default:         VarField{Value: "lala"},
+			Prompt:          VarField{Value: "help text"},
+			SaveInXlvals:    VarField{Bool: true, Value: "true"},
+			IgnoreIfSkipped: VarField{Bool: true, Value: "true"},
 		}, doc.Variables[1])
 		assert.Equal(t, Variable{
-			Name:  VarField{Value: "fn"},
-			Label: VarField{Value: "fn"},
-			Value: VarField{Value: "awsRegions('ecs', 0)", Tag: tagExpressionV2},
+			Name:            VarField{Value: "fn"},
+			Label:           VarField{Value: "fn"},
+			Value:           VarField{Value: "awsRegions('ecs', 0)", Tag: tagExpressionV2},
+			SaveInXlvals:    VarField{Value: "1 > 2 ? true : false", Tag: tagExpressionV2},
+			IgnoreIfSkipped: VarField{Value: "1 > 2 ? true : false", Tag: tagExpressionV2},
 		}, doc.Variables[2])
 		assert.Equal(t, Variable{
 			Name:   VarField{Value: "select"},

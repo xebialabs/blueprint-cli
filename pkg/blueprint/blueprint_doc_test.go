@@ -1121,6 +1121,61 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"should process variables correctly based on primitive or complex data",
+			BlueprintConfig{
+				Variables: []Variable{
+					{
+						Name:    VarField{Value: "input1"},
+						Label:   VarField{Value: "input1"},
+						Value:   VarField{Value: "true", Bool: true},
+						Default: VarField{Value: "100"},
+					},
+					{
+						Name:    VarField{Value: "input2"},
+						Label:   VarField{Value: "1 < 2 ? 'input 2' : 'input 22'", Tag: tagExpressionV2},
+						Type:    VarField{Value: "Input"},
+						Value:   VarField{Value: "100"},
+						Default: VarField{Value: "true", Bool: true},
+					},
+					{
+						Name:    VarField{Value: "input3"},
+						Label:   VarField{Value: "1 < 2 ? 'input 3' : 'input 33'", Tag: tagExpressionV2},
+						Type:    VarField{Value: "Input"},
+						Value:   VarField{Value: "1 < 2 ? true : false", Tag: tagExpressionV2},
+						Default: VarField{Value: "false", Bool: false},
+					},
+					{
+						Name:         VarField{Value: "input4"},
+						Label:        VarField{Value: "input4"},
+						Value:        VarField{Value: "50.885"},
+						Default:      VarField{Value: "100"},
+						SaveInXlvals: VarField{Value: "1 < 2", Tag: tagExpressionV2},
+					},
+					{
+						Name:  VarField{Value: "input5"},
+						Label: VarField{Value: "input 5"},
+						Type:  VarField{Value: "SecretInput"},
+						Value: VarField{Value: "50.58"},
+					},
+					{
+						Name:         VarField{Value: "input6"},
+						Label:        VarField{Value: "input6"},
+						Type:         VarField{Value: "Input"},
+						Default:      VarField{Value: "false", Bool: false},
+						SaveInXlvals: VarField{Value: "true", Bool: true},
+					},
+				},
+			},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, true},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"input1": "true", "input2": "100", "input3": "true", "input4": "50.885", "input5": "!value input5", "input6": "false"},
+				SummaryData:  map[string]interface{}{"input1": "true", "input 2": "100", "input 3": "true", "input4": "50.885", "input 5": "*****", "input6": "false"},
+				Secrets:      map[string]interface{}{"input5": "50.58"},
+				Values:       map[string]interface{}{"input4": "50.885", "input6": "false"},
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
