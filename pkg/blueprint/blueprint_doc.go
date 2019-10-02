@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -69,8 +70,62 @@ func NewPreparedData() *PreparedData {
 // regular Expressions
 var regExFn = regexp.MustCompile(`([\w\d]+).([\w\d]+)\(([,/\-:\s\w\d]*)\)(?:\.([\w\d]*)|\[([\d]+)\])*`)
 
+func GetProcessedExpressionValue(val VarField, parameters map[string]interface{}) (VarField, error) {
+	switch val.Tag {
+	case tagExpressionV1, tagExpressionV2:
+		procVal, err := ProcessCustomExpression(val.Value, parameters)
+		if err != nil {
+			return val, err
+		}
+		util.Verbose("[expression] Processed value of expression [%s] is: %s\n", val.Value, procVal)
+		switch finalVal := procVal.(type) {
+		case string:
+			val.Value = finalVal
+			break
+		case bool:
+			val.Value = strconv.FormatBool(finalVal)
+			val.Bool = finalVal
+			break
+		case nil:
+			val.Value = ""
+		case float32, float64:
+			val.Value = fmt.Sprintf("%f", finalVal)
+		}
+		return val, nil
+	}
+	return val, nil
+}
+
+func (variable *Variable) ProcessExpression(parameters map[string]interface{}) error {
+	fieldsToSkip := []string{"Validate", "Options"} // these fields have special processing
+	return ProcessExpressionField(variable, fieldsToSkip, parameters, variable.Name.Value)
+}
+
+func ProcessExpressionField(item interface{}, fieldsToSkip []string, parameters map[string]interface{}, id string) error {
+	itemR := reflect.ValueOf(item).Elem()
+	typeOfT := itemR.Type()
+	// iterate over the struct fields and map them
+	for i := 0; i < itemR.NumField(); i++ {
+		fieldR := itemR.Field(i)
+		fieldName := typeOfT.Field(i).Name
+		value := fieldR.Interface()
+		field := reflect.ValueOf(item).Elem().FieldByName(strings.Title(fieldName))
+		if !util.IsStringInSlice(fieldName, fieldsToSkip) && field.IsValid() {
+			switch val := value.(type) {
+			case VarField:
+				procVal, err := GetProcessedExpressionValue(val, parameters)
+				if err != nil {
+					return fmt.Errorf("Error while processing !expr [%s] for [%s] of [%s]. %s", val.Value, fieldName, id, err.Error())
+				}
+				field.Set(reflect.ValueOf(procVal))
+			}
+		}
+	}
+	return nil
+}
+
 // GetDefaultVal variable struct functions
-func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interface{} {
+func (variable *Variable) GetDefaultVal() interface{} {
 	defaultVal := variable.Default.Value
 	switch variable.Default.Tag {
 	case tagFnV1:
@@ -91,30 +146,12 @@ func (variable *Variable) GetDefaultVal(variables map[string]interface{}) interf
 			}
 			return values[0]
 		}
-	case tagExpressionV1, tagExpressionV2:
-		value, err := ProcessCustomExpression(defaultVal, variables)
-		if err != nil {
-			util.Info("Error while processing default value !expr [%s] for [%s]. %s", defaultVal, variable.Name.Value, err.Error())
-			defaultVal = ""
-		} else {
-			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", defaultVal, value)
-			boolVal, ok := value.(bool)
-			if ok {
-				if variable.Type.Value == TypeConfirm {
-					variable.Default.Bool = boolVal
-				}
-			}
-			if value == nil {
-				return ""
-			}
-			return value
-		}
 	}
 
 	return defaultVal
 }
 
-func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) interface{} {
+func (variable *Variable) GetValueFieldVal() interface{} {
 	switch variable.Value.Tag {
 	case tagFnV1:
 		values, err := ProcessCustomFunction(variable.Value.Value)
@@ -133,25 +170,6 @@ func (variable *Variable) GetValueFieldVal(parameters map[string]interface{}) in
 			return values[0]
 		}
 		return values[0]
-	case tagExpressionV1, tagExpressionV2:
-		value, err := ProcessCustomExpression(variable.Value.Value, parameters)
-		if err != nil {
-			util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", variable.Value.Value, variable.Name.Value, err.Error())
-			return ""
-		} else {
-			util.Verbose("[expression] Processed value of expression [%s] is: %s\n", variable.Value.Value, value)
-			boolVal, ok := value.(bool)
-			if ok {
-				if variable.Type.Value == TypeConfirm {
-					variable.Value.Bool = boolVal
-				}
-				return fmt.Sprint(boolVal)
-			}
-			if value == nil {
-				return ""
-			}
-			return value
-		}
 	}
 	return variable.Value.Value
 }
@@ -460,8 +478,9 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 
 	// for every variable defined in blueprint.yaml file
 	for i, variable := range blueprintDoc.Variables {
+		variable.ProcessExpression(data.TemplateData)
 		// process default field value
-		defaultVal := variable.GetDefaultVal(data.TemplateData)
+		defaultVal := variable.GetDefaultVal()
 
 		// skip question based on DependsOn fields, the default value if present is set as value
 		if !util.IsStringEmpty(variable.DependsOn.Value) {
@@ -475,7 +494,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		}
 		// skip user input if value field is present
 		if variable.Value.Value != "" {
-			parsedVal := variable.GetValueFieldVal(data.TemplateData)
+			parsedVal := variable.GetValueFieldVal()
 
 			// check if resulting value is non-empty
 			if parsedVal != nil && parsedVal != "" {
@@ -705,6 +724,19 @@ func prepareQuestionText(desc string, fallbackQuestion string) string {
 func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, data interface{}) {
 	skipParam := variable.IgnoreIfSkipped.Bool && (variable.Meta.PromptSkipped || data == nil || data == "")
 
+	switch variable.Type.Value {
+	case TypeConfirm:
+		if data != nil && (data == "true" || data == true) {
+			data = true
+		} else {
+			data = false
+		}
+	default:
+		if data == nil {
+			data = ""
+		}
+	}
+
 	if IsSecretType(variable.Type.Value) {
 		if !skipParam {
 			util.Verbose("[dataPrep] Skipping secret parameter [%s] from summary-table/value-files because IgnoreIfSkipped is true and PromptIf is false\n", variable.Name.Value)
@@ -719,9 +751,6 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 		}
 		// Use raw value of secret field if flag is set
 		if variable.ReplaceAsIs.Bool {
-			if data == nil {
-				data = ""
-			}
 			preparedData.TemplateData[variable.Name.Value] = data
 		} else {
 			preparedData.TemplateData[variable.Name.Value] = fmt.Sprintf(fmtTagValue, variable.Name.Value)
@@ -737,14 +766,7 @@ func saveItemToTemplateDataMap(variable *Variable, preparedData *PreparedData, d
 				preparedData.Values[variable.Name.Value] = data
 			}
 		}
-		if data == nil {
-			switch variable.Type.Value {
-			case TypeConfirm:
-				data = false
-			case TypeInput, TypeEditor, TypeFile, TypeSelect:
-				data = ""
-			}
-		}
+
 		preparedData.TemplateData[variable.Name.Value] = data
 	}
 }

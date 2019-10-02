@@ -99,7 +99,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Name: VarField{Value: "test"},
 			Type: VarField{Value: TypeInput},
 		}
-		defaultVal := v.GetDefaultVal(dummyData)
+		defaultVal := v.GetDefaultVal()
 		assert.Equal(t, "", defaultVal)
 	})
 
@@ -109,7 +109,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "default_val"},
 		}
-		defaultVal := v.GetDefaultVal(dummyData)
+		defaultVal := v.GetDefaultVal()
 		assert.Equal(t, "default_val", defaultVal)
 	})
 
@@ -119,7 +119,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "aws.regs", Tag: tagFnV1},
 		}
-		defaultVal := v.GetDefaultVal(dummyData)
+		defaultVal := v.GetDefaultVal()
 		assert.Equal(t, "", defaultVal)
 	})
 
@@ -129,29 +129,20 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
-		defaultVal := v.GetDefaultVal(dummyData)
+		defaultVal := v.GetDefaultVal()
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
 		sort.Strings(regionsList)
 		assert.Equal(t, regionsList[0], defaultVal)
-	})
-
-	t.Run("should return empty string when invalid expression tag in default field", func(t *testing.T) {
-		v := Variable{
-			Name:    VarField{Value: "test"},
-			Type:    VarField{Value: TypeInput},
-			Default: VarField{Value: "awsCredentials('AccessKeyID2')", Tag: tagExpressionV2},
-		}
-		defaultVal := v.GetDefaultVal(dummyData)
-		assert.Equal(t, "", defaultVal)
 	})
 
 	t.Run("should return empty string when expression tag return nil", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeInput},
-			Default: VarField{Value: "aws.regs", Tag: tagExpressionV2},
+			Default: VarField{Value: "Foo", Tag: tagExpressionV2},
 		}
-		defaultVal := v.GetDefaultVal(dummyData)
+		v.ProcessExpression(map[string]interface{}{"Foo": nil})
+		defaultVal := v.GetDefaultVal()
 		assert.Equal(t, "", defaultVal)
 	})
 
@@ -161,17 +152,19 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "'foo' + 'bar'", Tag: tagExpressionV2},
 		}
-		defaultVal := v.GetDefaultVal(dummyData)
+		v.ProcessExpression(dummyData)
+		defaultVal := v.GetDefaultVal()
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
 			Name:    VarField{Value: "test"},
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "Foo > 10", Tag: tagExpressionV2},
 		}
-		defaultVal = v.GetDefaultVal(map[string]interface{}{
+		v.ProcessExpression(map[string]interface{}{
 			"Foo": 100,
 		})
-		assert.True(t, defaultVal.(bool))
+		defaultVal = v.GetDefaultVal()
+		assert.Equal(t, "true", defaultVal)
 	})
 }
 
@@ -182,7 +175,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "testing"},
 		}
-		val := v.GetValueFieldVal(dummyData)
+		val := v.GetValueFieldVal()
 		assert.Equal(t, "testing", val)
 	})
 
@@ -192,7 +185,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "aws.regs", Tag: tagFnV1},
 		}
-		val := v.GetValueFieldVal(dummyData)
+		val := v.GetValueFieldVal()
 		assert.Equal(t, "", val)
 	})
 
@@ -202,7 +195,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
-		val := v.GetValueFieldVal(dummyData)
+		val := v.GetValueFieldVal()
 		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
 		sort.Strings(regionsList)
 		assert.Equal(t, regionsList[0], val)
@@ -212,9 +205,10 @@ func TestGetValueFieldVal(t *testing.T) {
 		v := Variable{
 			Name:  VarField{Value: "test"},
 			Type:  VarField{Value: TypeInput},
-			Value: VarField{Value: "aws.regs()", Tag: tagExpressionV2},
+			Value: VarField{Value: "Foo", Tag: tagExpressionV2},
 		}
-		val := v.GetValueFieldVal(dummyData)
+		v.ProcessExpression(map[string]interface{}{"Foo": nil})
+		val := v.GetValueFieldVal()
 		assert.Equal(t, "", val)
 	})
 
@@ -224,16 +218,18 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "'foo' + 'bar'", Tag: tagExpressionV2},
 		}
-		defaultVal := v.GetValueFieldVal(dummyData)
+		v.ProcessExpression(dummyData)
+		defaultVal := v.GetValueFieldVal()
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
 			Name:  VarField{Value: "test"},
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "Foo > 10", Tag: tagExpressionV2},
 		}
-		defaultVal = v.GetValueFieldVal(map[string]interface{}{
+		v.ProcessExpression(map[string]interface{}{
 			"Foo": 100,
 		})
+		defaultVal = v.GetValueFieldVal()
 		assert.Equal(t, "true", defaultVal)
 	})
 }
@@ -1125,6 +1121,61 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"should process variables correctly based on primitive or complex data",
+			BlueprintConfig{
+				Variables: []Variable{
+					{
+						Name:    VarField{Value: "input1"},
+						Label:   VarField{Value: "input1"},
+						Value:   VarField{Value: "true", Bool: true},
+						Default: VarField{Value: "100"},
+					},
+					{
+						Name:    VarField{Value: "input2"},
+						Label:   VarField{Value: "1 < 2 ? 'input 2' : 'input 22'", Tag: tagExpressionV2},
+						Type:    VarField{Value: "Input"},
+						Value:   VarField{Value: "100"},
+						Default: VarField{Value: "true", Bool: true},
+					},
+					{
+						Name:    VarField{Value: "input3"},
+						Label:   VarField{Value: "1 < 2 ? 'input 3' : 'input 33'", Tag: tagExpressionV2},
+						Type:    VarField{Value: "Input"},
+						Value:   VarField{Value: "1 < 2 ? true : false", Tag: tagExpressionV2},
+						Default: VarField{Value: "false", Bool: false},
+					},
+					{
+						Name:         VarField{Value: "input4"},
+						Label:        VarField{Value: "input4"},
+						Value:        VarField{Value: "50.885"},
+						Default:      VarField{Value: "100"},
+						SaveInXlvals: VarField{Value: "1 < 2", Tag: tagExpressionV2},
+					},
+					{
+						Name:  VarField{Value: "input5"},
+						Label: VarField{Value: "input 5"},
+						Type:  VarField{Value: "SecretInput"},
+						Value: VarField{Value: "50.58"},
+					},
+					{
+						Name:         VarField{Value: "input6"},
+						Label:        VarField{Value: "input6"},
+						Type:         VarField{Value: "Input"},
+						Default:      VarField{Value: "false", Bool: false},
+						SaveInXlvals: VarField{Value: "true", Bool: true},
+					},
+				},
+			},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, true},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"input1": "true", "input2": "100", "input3": "true", "input4": "50.885", "input5": "!value input5", "input6": "false"},
+				SummaryData:  map[string]interface{}{"input1": "true", "input 2": "100", "input 3": "true", "input4": "50.885", "input 5": "*****", "input6": "false"},
+				Secrets:      map[string]interface{}{"input5": "50.58"},
+				Values:       map[string]interface{}{"input4": "50.885", "input6": "false"},
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1451,6 +1502,56 @@ func Test_saveItemToTemplateDataMap(t *testing.T) {
 			},
 		},
 		{
+			"should save variable in PreparedData with correct type for Confirm types",
+			args{
+				&Variable{
+					Name:         VarField{Value: "Test"},
+					Label:        VarField{Value: "Test"},
+					Type:         VarField{Value: "Confirm"},
+					Default:      VarField{Value: "true", Bool: true},
+					SaveInXlvals: VarField{Bool: true},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				"true",
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": true},
+				SummaryData:  map[string]interface{}{"input1": "val1", "Test": true},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{"Test": true},
+			},
+		},
+		{
+			"should save variable in PreparedData with correct type for Confirm types when data is nil",
+			args{
+				&Variable{
+					Name:         VarField{Value: "Test"},
+					Label:        VarField{Value: "Test"},
+					Type:         VarField{Value: "Confirm"},
+					Default:      VarField{Value: "true", Bool: true},
+					SaveInXlvals: VarField{Bool: true},
+				},
+				&PreparedData{
+					TemplateData: map[string]interface{}{"input1": "val1"},
+					SummaryData:  map[string]interface{}{"input1": "val1"},
+					Secrets:      map[string]interface{}{},
+					Values:       map[string]interface{}{},
+				},
+				nil,
+			},
+			PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "Test": false},
+				SummaryData:  map[string]interface{}{"input1": "val1", "Test": false},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{"Test": false},
+			},
+		},
+		{
 			"should not skip variable in SummaryData & Values when IgnoreIfSkipped is true & PromptIf is true",
 			args{
 				&Variable{
@@ -1566,6 +1667,86 @@ func Test_shouldAskForInput(t *testing.T) {
 				t.Errorf("shouldAskForInput() = %v, want %v", got, tt.want)
 			}
 			SkipUserInput = false // reset the field
+		})
+	}
+}
+
+func TestVariable_ProcessExpression(t *testing.T) {
+	tests := []struct {
+		name       string
+		variable   Variable
+		parameters map[string]interface{}
+		want       Variable
+		wantErr    bool
+	}{
+		{
+			"should throw error when expression is invalid",
+			Variable{
+				Name:  VarField{Value: "Test"},
+				Label: VarField{Value: "True ? 'A' : 'B'", Tag: tagExpressionV2},
+			},
+			map[string]interface{}{},
+			Variable{
+				Name:  VarField{Value: "Test"},
+				Label: VarField{Value: "A", Tag: tagExpressionV2},
+			},
+			true,
+		},
+		{
+			"should process expressions in variable fields",
+			Variable{
+				Name:        VarField{Value: "Test"},
+				Label:       VarField{Value: "true ? 'A' : 'B'", Tag: tagExpressionV2},
+				Description: VarField{Value: "Foo > 5 ? 5 : 'B'", Tag: tagExpressionV2},
+				Value:       VarField{Value: "Foo > 5 ? 5.8 : 'B'", Tag: tagExpressionV2},
+			},
+			map[string]interface{}{
+				"Foo": 10,
+			},
+			Variable{
+				Name:        VarField{Value: "Test"},
+				Label:       VarField{Value: "A", Tag: tagExpressionV2},
+				Description: VarField{Value: "5.000000", Tag: tagExpressionV2},
+				Value:       VarField{Value: "5.800000", Tag: tagExpressionV2},
+			},
+			false,
+		},
+		{
+			"should process expressions in variable fields skipping validate & options",
+			Variable{
+				Name:      VarField{Value: "Test"},
+				Label:     VarField{Value: "true ? 'A' : 'B'", Tag: tagExpressionV2},
+				DependsOn: VarField{Value: "Foo > 5", Tag: tagExpressionV2},
+				Validate:  VarField{Value: "Foo > 5", Tag: tagExpressionV2},
+				Options: []VarField{
+					{Value: "true ? 'A' : 'B'", Tag: tagExpressionV2},
+					{Value: "Foo > 5 ? 'B' : 'C'", Tag: tagExpressionV2},
+				},
+			},
+			map[string]interface{}{
+				"Foo": 10,
+			},
+			Variable{
+				Name:      VarField{Value: "Test"},
+				Label:     VarField{Value: "A", Tag: tagExpressionV2},
+				DependsOn: VarField{Value: "true", Bool: true, Tag: tagExpressionV2},
+				Validate:  VarField{Value: "Foo > 5", Tag: tagExpressionV2},
+				Options: []VarField{
+					{Value: "true ? 'A' : 'B'", Tag: tagExpressionV2},
+					{Value: "Foo > 5 ? 'B' : 'C'", Tag: tagExpressionV2},
+				},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.variable.ProcessExpression(tt.parameters)
+			if tt.wantErr {
+				assert.NotNil(t, err)
+			} else {
+				assert.Equal(t, tt.want, tt.variable)
+			}
 		})
 	}
 }

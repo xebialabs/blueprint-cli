@@ -2,7 +2,6 @@ package blueprint
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -35,8 +34,6 @@ const (
 	secretsFile       = "secrets.xlvals"
 	secretsFileHeader = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
 	gitignoreFile     = ".gitignore"
-	skipOperation     = "skip"
-	renameOperation   = "rename"
 )
 
 var ignoredPaths = []string{"__test__"}
@@ -66,6 +63,11 @@ func shouldSkipFile(templateConfig TemplateConfig, parameters map[string]interfa
 		return !dependsOnVal, nil
 	}
 	return false, nil
+}
+
+func (config *TemplateConfig) ProcessExpression(parameters map[string]interface{}) error {
+	fieldsToSkip := []string{""} // these fields have special processing
+	return ProcessExpressionField(config, fieldsToSkip, parameters, config.Path)
 }
 
 // InstantiateBlueprint is entry point for the cli command
@@ -144,6 +146,7 @@ func InstantiateBlueprint(
 
 	// execute each template file found
 	for _, config := range blueprintDoc.TemplateConfigs {
+		config.ProcessExpression(preparedData.TemplateData)
 		skipFile, err := shouldSkipFile(config, preparedData.TemplateData)
 		if err != nil {
 			return err
@@ -296,10 +299,14 @@ func prepareMergedTemplateData(
 }
 
 func evaluateAndSkipIfDependsOnIsFalse(dependsOn VarField, mergedData *PreparedData) (bool, error) {
-	if util.IsStringEmpty(dependsOn.Value) {
+	procDependsOn, err := GetProcessedExpressionValue(dependsOn, mergedData.TemplateData)
+	if err != nil {
+		return false, err
+	}
+	if util.IsStringEmpty(procDependsOn.Value) {
 		return true, nil
 	}
-	dependsOnVal, err := ParseDependsOnValue(dependsOn, mergedData.TemplateData)
+	dependsOnVal, err := ParseDependsOnValue(procDependsOn, mergedData.TemplateData)
 	if err != nil {
 		return false, err
 	}
@@ -381,15 +388,6 @@ func findTemplateConfig(configs []TemplateConfig, path string) int {
 		}
 	}
 	return -1
-}
-
-func createDirectoryIfNeeded(fileName string) error {
-	dir, _ := filepath.Split(fileName)
-	if dir != "" && !util.PathExists(dir, true) {
-		util.Verbose("[file] Creating sub-directory %s\n", dir)
-		return os.MkdirAll(dir, os.ModePerm)
-	}
-	return nil
 }
 
 // --utility functions

@@ -36,9 +36,11 @@ func undeployNamespace(client *kubernetes.Clientset) error {
 
 	util.Info("Deleting namespace...\n")
 
-	if err := client.CoreV1().Namespaces().Delete(NAMESPACE, &metav1.DeleteOptions{
+	err := client.CoreV1().Namespaces().Delete(NAMESPACE, &metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
-	}); err != nil {
+	})
+
+	if err != nil {
 		if err.Error() != fmt.Sprintf("namespaces \"%s\" not found", NAMESPACE) {
 			return fmt.Errorf("an error occurred - %s", err)
 		} else {
@@ -47,7 +49,7 @@ func undeployNamespace(client *kubernetes.Clientset) error {
 		}
 	}
 
-	if err := waitForUndeployCompletion(func() (int, error) {
+	err = waitForUndeployCompletion(func() (int, error) {
 		_, err := client.CoreV1().Namespaces().Get(NAMESPACE, metav1.GetOptions{})
 
 		if err != nil {
@@ -55,7 +57,9 @@ func undeployNamespace(client *kubernetes.Clientset) error {
 		} else {
 			return 1, nil
 		}
-	}, "Namespace"); err != nil {
+	}, "Namespace")
+
+	if err != nil {
 		return err
 	}
 
@@ -68,13 +72,15 @@ func undeployStorageClasses(client *kubernetes.Clientset) error {
 	// Delete storage classes matching label "xebialabs"
 	util.Info("Deleting storage classes...\n")
 
-	if err := client.StorageV1().StorageClasses().DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
+	err := client.StorageV1().StorageClasses().DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
 		LabelSelector: LabelSelector,
-	}); err != nil {
+	})
+
+	if err != nil {
 		return fmt.Errorf("an error occurred - %s", err)
 	}
 
-	if err := waitForUndeployCompletion(func() (int, error) {
+	err = waitForUndeployCompletion(func() (int, error) {
 		items, err := client.StorageV1().StorageClasses().List(metav1.ListOptions{
 			LabelSelector: LabelSelector,
 		})
@@ -84,7 +90,9 @@ func undeployStorageClasses(client *kubernetes.Clientset) error {
 		}
 
 		return len(items.Items), nil
-	}, "StorageClasses"); err != nil {
+	}, "StorageClasses")
+
+	if err != nil {
 		return err
 	}
 
@@ -97,13 +105,15 @@ func undeployClusterRoleBindings(client *kubernetes.Clientset) error {
 	// Delete cluster role bindings matching label "xebialabs"
 	util.Info("Deleting cluster role bindings...\n")
 
-	if err := client.RbacV1().ClusterRoleBindings().DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
+	err := client.RbacV1().ClusterRoleBindings().DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
 		LabelSelector: LabelSelector,
-	}); err != nil {
+	})
+
+	if err != nil {
 		return fmt.Errorf("an error occurred - %s", err)
 	}
 
-	if err := waitForUndeployCompletion(func() (int, error) {
+	err = waitForUndeployCompletion(func() (int, error) {
 		items, err := client.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{
 			LabelSelector: LabelSelector,
 		})
@@ -113,7 +123,9 @@ func undeployClusterRoleBindings(client *kubernetes.Clientset) error {
 		}
 
 		return len(items.Items), nil
-	}, "ClusterRoleBindings"); err != nil {
+	}, "ClusterRoleBindings")
+
+	if err != nil {
 		return err
 	}
 
@@ -126,13 +138,15 @@ func undeployClusterRoles(client *kubernetes.Clientset) error {
 	// Delete cluster roles matching label "xebialabs"
 	util.Info("Deleting cluster roles...\n")
 
-	if err := client.RbacV1().ClusterRoles().DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
+	err := client.RbacV1().ClusterRoles().DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
 		LabelSelector: LabelSelector,
-	}); err != nil {
+	})
+
+	if err != nil {
 		return fmt.Errorf("an error occurred - %s", err)
 	}
 
-	if err := waitForUndeployCompletion(func() (int, error) {
+	err = waitForUndeployCompletion(func() (int, error) {
 		items, err := client.RbacV1().ClusterRoles().List(metav1.ListOptions{
 			LabelSelector: LabelSelector,
 		})
@@ -142,7 +156,9 @@ func undeployClusterRoles(client *kubernetes.Clientset) error {
 		}
 
 		return len(items.Items), nil
-	}, "ClusterRoles"); err != nil {
+	}, "ClusterRoles")
+
+	if err != nil {
 		return err
 	}
 

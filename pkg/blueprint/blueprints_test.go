@@ -274,7 +274,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"AWSRegion":          "eu-central-1",
 			"DiskSize":           "10",
 			"DiskSizeWithBuffer": "125.6",
-			"ShouldNotBeThere":   "",
+			"ShouldNotBeThere":   "shouldnotbehere",
 			"File":               "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\n-----END CERTIFICATE-----\\n",
 		}
 		for k, v := range valueMap {
@@ -465,7 +465,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"AWSRegion":          "eu-central-1",
 			"DiskSize":           "10",
 			"DiskSizeWithBuffer": "125.6",
-			"ShouldNotBeThere":   "",
+			"ShouldNotBeThere":   "shouldnotbehere",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
@@ -565,7 +565,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"AWSRegion":          "eu-central-1",
 			"DiskSize":           "10",
 			"DiskSizeWithBuffer": "125.6",
-			"ShouldNotBeThere":   "",
+			"ShouldNotBeThere":   "shouldnotbehere",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
@@ -1689,6 +1689,57 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			}
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.want1, got1)
+		})
+	}
+}
+
+func TestTemplateConfig_ProcessExpression(t *testing.T) {
+	tests := []struct {
+		name       string
+		config     TemplateConfig
+		parameters map[string]interface{}
+		want       TemplateConfig
+		wantErr    bool
+	}{
+		{
+			"should throw error when expression is invalid",
+			TemplateConfig{
+				Path:      "Test.yaml",
+				DependsOn: VarField{Value: "True ? 'A' : 'B'", Tag: tagExpressionV2},
+			},
+			map[string]interface{}{},
+			TemplateConfig{
+				Path:      "Test.yaml",
+				DependsOn: VarField{Value: "True ? 'A' : 'B'", Tag: tagExpressionV2},
+			},
+			true,
+		},
+		{
+			"should process expressions in variable fields",
+			TemplateConfig{
+				Path:      "Test.yaml",
+				RenameTo:  VarField{Value: "true ? 'A' : 'B'", Tag: tagExpressionV2},
+				DependsOn: VarField{Value: "Foo > 5 ? 'A' : 'B'", Tag: tagExpressionV2},
+			},
+			map[string]interface{}{
+				"Foo": 10,
+			},
+			TemplateConfig{
+				Path:      "Test.yaml",
+				RenameTo:  VarField{Value: "A", Tag: tagExpressionV2},
+				DependsOn: VarField{Value: "A", Tag: tagExpressionV2},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.config.ProcessExpression(tt.parameters)
+			if tt.wantErr {
+				assert.NotNil(t, err)
+			} else {
+				assert.Equal(t, tt.want, tt.config)
+			}
 		})
 	}
 }

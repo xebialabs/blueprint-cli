@@ -165,7 +165,6 @@ func GetFileContent(filePath string) string {
 }
 
 func TestInvokeBlueprintAndSeed(t *testing.T) {
-	SkipSeed = true
 	SkipKube = true
 	SkipPrompts = true
 	blueprint.SkipFinalPrompt = true
@@ -186,6 +185,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				CfgOverridden:     false,
 				NoCleanup:         false,
 				Undeploy:          false,
+				DryRun:            true,
 			},
 			"beta",
 			gb,
@@ -286,7 +286,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				AdvancedSetup:     false,
 				CfgOverridden:     false,
 				NoCleanup:         false,
-				Undeploy:          true,
+                Undeploy:          true,
+                DryRun:            true,
 			},
 			"beta",
 			gb,
