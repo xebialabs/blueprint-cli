@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/AlecAivazis/survey.v1"
+
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 
 	"gopkg.in/yaml.v2"
@@ -86,6 +88,33 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 	util.IsQuiet = false
 
+	if upParams.Undeploy {
+		shouldUndeploy := false
+		err := survey.AskOne(&survey.Confirm{Message: models.UndeployConfirmationPrompt, Default: false}, &shouldUndeploy, nil)
+
+		if err != nil {
+			return err
+		} else if shouldUndeploy == false {
+			return fmt.Errorf("undeployment cancelled")
+		}
+
+		kubeClient, err := getKubeClient()
+
+		if err != nil {
+			return err
+		}
+
+		err = undeployAll(kubeClient)
+
+		if err != nil {
+			return fmt.Errorf("an error occurred while undeploying - %s", err)
+		}
+
+		util.Info("Everything has been undeployed!\n")
+
+		return nil
+	}
+
 	configMap := ""
 	if !SkipKube {
 		configMap, err = getKubeConfigMap()
@@ -95,54 +124,48 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	if configMap != "" {
-		if upParams.Undeploy {
-			util.Verbose("Undeploy workflow started.... \n")
-		} else {
-			util.Verbose("Update workflow started.... \n")
-		}
+		util.Verbose("Update workflow started.... \n")
 
 		answerMapFromConfigMap, err := parseConfigMap(configMap)
 		if err != nil {
 			return err
 		}
 
-		if !upParams.Undeploy {
-			// Strip the version information
-			models.AvailableOfficialXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrOfficialVersion", "PrevXlrOfficialVersion")
-			if err != nil {
-				return err
-			}
-			if models.AvailableOfficialXlrVersion != "" {
-				answerMapFromConfigMap["XlrOfficialVersion"] = ""
-				answerMapFromConfigMap["PrevXlrOfficialVersion"] = models.AvailableOfficialXlrVersion
-			}
+		// Strip the version information
+		models.AvailableOfficialXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrOfficialVersion", "PrevXlrOfficialVersion")
+		if err != nil {
+			return err
+		}
+		if models.AvailableOfficialXlrVersion != "" {
+			answerMapFromConfigMap["XlrOfficialVersion"] = ""
+			answerMapFromConfigMap["PrevXlrOfficialVersion"] = models.AvailableOfficialXlrVersion
+		}
 
-			models.AvailableOfficialXldVersion, err = getVersion(answerMapFromConfigMap, "XldOfficialVersion", "PrevXldOfficialVersion")
-			if err != nil {
-				return err
-			}
-			if models.AvailableOfficialXldVersion != "" {
-				answerMapFromConfigMap["XldOfficialVersion"] = ""
-				answerMapFromConfigMap["PrevXldOfficialVersion"] = models.AvailableOfficialXldVersion
-			}
+		models.AvailableOfficialXldVersion, err = getVersion(answerMapFromConfigMap, "XldOfficialVersion", "PrevXldOfficialVersion")
+		if err != nil {
+			return err
+		}
+		if models.AvailableOfficialXldVersion != "" {
+			answerMapFromConfigMap["XldOfficialVersion"] = ""
+			answerMapFromConfigMap["PrevXldOfficialVersion"] = models.AvailableOfficialXldVersion
+		}
 
-			models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrVersion", "PrevXlrVersion")
-			if err != nil {
-				return err
-			}
-			if models.AvailableXlrVersion != "" {
-				answerMapFromConfigMap["XlrVersion"] = ""
-				answerMapFromConfigMap["PrevXlrVersion"] = models.AvailableXlrVersion
-			}
+		models.AvailableXlrVersion, err = getVersion(answerMapFromConfigMap, "XlrVersion", "PrevXlrVersion")
+		if err != nil {
+			return err
+		}
+		if models.AvailableXlrVersion != "" {
+			answerMapFromConfigMap["XlrVersion"] = ""
+			answerMapFromConfigMap["PrevXlrVersion"] = models.AvailableXlrVersion
+		}
 
-			models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "XldVersion", "PrevXldVersion")
-			if err != nil {
-				return err
-			}
-			if models.AvailableXldVersion != "" {
-				answerMapFromConfigMap["XldVersion"] = ""
-				answerMapFromConfigMap["PrevXldVersion"] = models.AvailableXldVersion
-			}
+		models.AvailableXldVersion, err = getVersion(answerMapFromConfigMap, "XldVersion", "PrevXldVersion")
+		if err != nil {
+			return err
+		}
+		if models.AvailableXldVersion != "" {
+			answerMapFromConfigMap["XldVersion"] = ""
+			answerMapFromConfigMap["PrevXldVersion"] = models.AvailableXldVersion
 		}
 
 		err = generateLicenseAndKeystore(answerMapFromConfigMap, gb)
@@ -154,9 +177,6 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			return err
 		}
 	} else {
-		if upParams.Undeploy {
-			return fmt.Errorf("no resources found. Nothing to un-deploy")
-		}
 		util.Verbose("Install workflow started")
 	}
 
@@ -180,7 +200,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err != nil {
 			return err
 		}
-		seed, err := runSeed(upParams.Undeploy)
+		seed, err := runSeed()
 		if err != nil {
 			return err
 		}

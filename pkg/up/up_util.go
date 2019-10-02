@@ -40,7 +40,7 @@ var pullSeedImage = models.Command{
 	Args: []string{"pull", SeedImage},
 }
 
-func runSeed(undeploy bool) (models.Command, error) {
+func runSeed() (models.Command, error) {
 	dir, err := os.Getwd()
 
 	if err != nil {
@@ -48,10 +48,6 @@ func runSeed(undeploy bool) (models.Command, error) {
 	}
 
 	command := []string{"run", "--name", "xl-seed", "-v", dir + ":/data", SeedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"}
-
-	if undeploy {
-		command = append(command, "--undeploy")
-	}
 
 	return models.Command{
 		Name: Docker,
