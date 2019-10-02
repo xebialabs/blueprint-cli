@@ -71,8 +71,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	answerFileToBlueprint := upParams.AnswerFile
 
 	if answerFileToBlueprint != "" {
-		err = generateAnswerFile(answerFileToBlueprint, gb)
-		if err != nil {
+		if err = generateAnswerFile(answerFileToBlueprint, gb); err != nil {
 			return err
 		}
 		answerFileToBlueprint = TempAnswerFile
@@ -101,9 +100,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			return err
 		}
 
-		err = undeployAll(kubeClient)
-
-		if err != nil {
+		if err = undeployAll(kubeClient); err != nil {
 			return fmt.Errorf("an error occurred while undeploying - %s", err)
 		}
 
@@ -114,8 +111,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 	configMap := ""
 	if !SkipKube {
-		configMap, err = getKubeConfigMap()
-		if err != nil {
+		if configMap, err = getKubeConfigMap(); err != nil {
 			return err
 		}
 	}
@@ -165,12 +161,11 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			answerMapFromConfigMap["PrevXldVersion"] = models.AvailableXldVersion
 		}
 
-		err = generateLicenseAndKeystore(answerMapFromConfigMap, gb)
-		if err != nil {
+		if err = generateLicenseAndKeystore(answerMapFromConfigMap, gb); err != nil {
 			return err
 		}
-		err = convertMapToAnswerFile(answerMapFromConfigMap, GeneratedAnswerFile)
-		if err != nil {
+
+		if err = convertMapToAnswerFile(answerMapFromConfigMap, GeneratedAnswerFile); err != nil {
 			return err
 		}
 	} else {
@@ -178,14 +173,12 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	util.IsQuiet = true
-	err = runApplicationBlueprint(&upParams, blueprintContext, gb, gitBranch)
-	if err != nil {
+	if err = runApplicationBlueprint(&upParams, blueprintContext, gb, gitBranch); err != nil {
 		return err
 	}
 	util.IsQuiet = false
 
-	err = applyFilesAndSave()
-	if err != nil {
+	if err = applyFilesAndSave(); err != nil {
 		return err
 	}
 
@@ -193,16 +186,16 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 	if !upParams.DryRun {
 		util.Info("Spinning up xl seed! \n")
-		err = runAndCaptureResponse(pullSeedImage)
-		if err != nil {
+
+		if err = runAndCaptureResponse(pullSeedImage); err != nil {
 			return err
 		}
 		seed, err := runSeed()
 		if err != nil {
 			return err
 		}
-		err = runAndCaptureResponse(seed)
-		if err != nil {
+
+		if err = runAndCaptureResponse(seed); err != nil {
 			return err
 		}
 	}
@@ -212,6 +205,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 func parseConfigMap(configMap string) (map[string]string, error) {
 	util.Verbose("%s", configMap)
 	answerMapFromConfigMap := make(map[string]string)
+
 	if err := yaml.Unmarshal([]byte(configMap), &answerMapFromConfigMap); err != nil {
 		return nil, fmt.Errorf("error parsing configMap: %s", err)
 	}
@@ -258,12 +252,12 @@ func generateAnswerFile(upAnswerFile string, gb *blueprint.GeneratedBlueprint) e
 	if err != nil {
 		return err
 	}
-	err = generateLicenseAndKeystore(answerMap, gb)
-	if err != nil {
+
+	if err = generateLicenseAndKeystore(answerMap, gb); err != nil {
 		return err
 	}
-	err = convertMapToAnswerFile(answerMap, TempAnswerFile)
-	if err != nil {
+
+	if err = convertMapToAnswerFile(answerMap, TempAnswerFile); err != nil {
 		return err
 	}
 	gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
@@ -298,8 +292,7 @@ func convertMapToAnswerFile(contents map[string]string, filename string) error {
 		fmt.Errorf("error when marshalling the answer map to yaml %s", err.Error())
 	}
 
-	err = ioutil.WriteFile(filename, yamlBytes, 0640)
-	if err != nil {
+	if err = ioutil.WriteFile(filename, yamlBytes, 0640); err != nil {
 		fmt.Errorf("error when creating an answer file %s", err.Error())
 	}
 	return nil
@@ -340,8 +333,8 @@ func getAnswerFile(answerFile string) (string, error) {
 			}
 		}
 		answerFile = MergedAnswerFile
-		err = convertMapToAnswerFile(newAnswerMap, answerFile)
-		if err != nil {
+
+		if err = convertMapToAnswerFile(newAnswerMap, answerFile); err != nil {
 			return "", err
 		}
 	} else {
