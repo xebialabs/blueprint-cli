@@ -78,7 +78,17 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	// Infra blueprint
-	_, _, err = blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, answerFileToBlueprint, false, upParams.QuickSetup, true, false)
+	_, _, err = blueprint.InstantiateBlueprint(
+		blueprint.BlueprintParams{
+			TemplatePath:       upParams.BlueprintTemplate,
+			AnswersFile:        answerFileToBlueprint,
+			StrictAnswers:      false,
+			UseDefaultsAsValue: upParams.QuickSetup,
+			FromUpCommand:      true,
+			PrintSummaryTable:  false,
+		},
+		blueprintContext, gb,
+	)
 	if err != nil {
 		return fmt.Errorf("error while creating Infrastructure Blueprint: %s", err)
 	}
@@ -243,7 +253,17 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
 	}
 
-	_, _, err = blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, upParams.AnswerFile, false, upParams.QuickSetup, true, true)
+	_, _, err = blueprint.InstantiateBlueprint(
+		blueprint.BlueprintParams{
+			TemplatePath:       upParams.BlueprintTemplate,
+			AnswersFile:        upParams.AnswerFile,
+			StrictAnswers:      false,
+			UseDefaultsAsValue: upParams.QuickSetup,
+			FromUpCommand:      true,
+			PrintSummaryTable:  true,
+		},
+		blueprintContext, gb,
+	)
 	if err != nil {
 		return fmt.Errorf("error while creating Blueprint: %s", err)
 	}

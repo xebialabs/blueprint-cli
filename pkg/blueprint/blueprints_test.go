@@ -103,14 +103,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		_, _, err := InstantiateBlueprint(
-			"abc",
+			BlueprintParams{
+				TemplatePath:       "abc",
+				AnswersFile:        "",
+				StrictAnswers:      false,
+				UseDefaultsAsValue: false,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			"",
-			false,
-			false,
-			false,
-			true,
 		)
 
 		require.NotNil(t, err)
@@ -121,14 +123,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		_, _, err := InstantiateBlueprint(
-			"invalid",
+			BlueprintParams{
+				TemplatePath:       "invalid",
+				AnswersFile:        "",
+				StrictAnswers:      false,
+				UseDefaultsAsValue: false,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			"",
-			false,
-			false,
-			false,
-			true,
 		)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter AppName must have a 'prompt' field", err.Error())
@@ -138,14 +142,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		data, doc, err := InstantiateBlueprint(
-			"answer-input",
+			BlueprintParams{
+				TemplatePath:       "answer-input",
+				AnswersFile:        GetTestTemplateDir("answer-input.yaml"),
+				StrictAnswers:      true,
+				UseDefaultsAsValue: false,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			GetTestTemplateDir("answer-input.yaml"),
-			true,
-			false,
-			false,
-			true,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -198,14 +204,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		data, doc, err := InstantiateBlueprint(
-			"dependson-test",
+			BlueprintParams{
+				TemplatePath:       "dependson-test",
+				AnswersFile:        GetTestTemplateDir("answer-input-dependson.yaml"),
+				StrictAnswers:      false,
+				UseDefaultsAsValue: false,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			GetTestTemplateDir("answer-input-dependson.yaml"),
-			false,
-			false,
-			false,
-			true,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -245,14 +253,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		data, doc, err := InstantiateBlueprint(
-			"defaults-as-values",
+			BlueprintParams{
+				TemplatePath:       "defaults-as-values",
+				AnswersFile:        "",
+				StrictAnswers:      false,
+				UseDefaultsAsValue: true,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			"",
-			false,
-			true,
-			false,
-			true,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -320,14 +330,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		defer gb.Cleanup()
 
 		data, doc, err := InstantiateBlueprint(
-			"input-expression-tests",
+			BlueprintParams{
+				TemplatePath:       "input-expression-tests",
+				AnswersFile:        "",
+				StrictAnswers:      false,
+				UseDefaultsAsValue: true,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			"",
-			false,
-			true,
-			false,
-			true,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -387,14 +399,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		defer gb.Cleanup()
 
 		data, doc, err := InstantiateBlueprint(
-			"input-expression-tests",
+			BlueprintParams{
+				TemplatePath:       "input-expression-tests",
+				AnswersFile:        "",
+				StrictAnswers:      false,
+				UseDefaultsAsValue: true,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			"",
-			false,
-			true,
-			false,
-			true,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -438,14 +452,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		data, doc, err := InstantiateBlueprint(
-			"valid-no-prompt",
+			BlueprintParams{
+				TemplatePath:       "valid-no-prompt",
+				AnswersFile:        "",
+				StrictAnswers:      false,
+				UseDefaultsAsValue: false,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			"",
-			false,
-			false,
-			false,
-			true,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -497,14 +513,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		data, doc, err := InstantiateBlueprint(
-			"valid-no-prompt-suppress-xebia-labs-folder",
+			BlueprintParams{
+				TemplatePath:       "valid-no-prompt-suppress-xebia-labs-folder",
+				AnswersFile:        "",
+				StrictAnswers:      false,
+				UseDefaultsAsValue: false,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			"",
-			false,
-			false,
-			false,
-			true,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -544,14 +562,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		data, doc, err := InstantiateBlueprint(
-			"composed",
+			BlueprintParams{
+				TemplatePath:       "composed",
+				AnswersFile:        "",
+				StrictAnswers:      false,
+				UseDefaultsAsValue: true,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			"",
-			false,
-			true,
-			false,
-			true,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -634,26 +654,31 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		// This can be used to debug a local blueprint if you have the repo in ../blueprints relative to xl-cli
-		/* pwd, _ := os.Getwd()
-		BlueprintTestPath = strings.Replace(pwd, path.Join("xl-cli", "pkg", "blueprint"), path.Join("blueprints"), -1)
+		/* 		pwd, _ := os.Getwd()
+		   		BlueprintTestPath = strings.Replace(pwd, path.Join("xl-cli", "pkg", "blueprint"), path.Join("blueprints"), -1)
+		   		data, doc, err := InstantiateBlueprint(
+		   			BlueprintParams{
+		   				TemplatePath:       "gcp/microservice-ecommerce",
+		   				AnswersFile:        BlueprintTestPath + "/gcp/microservice-ecommerce/__test__/answers-with-cluster-with-cicd.yaml",
+		   				StrictAnswers:      false,
+		   				UseDefaultsAsValue: true,
+		   				FromUpCommand:      false,
+		   				PrintSummaryTable:  true,
+		   			},
+		   			getLocalTestBlueprintContext(t),
+		   			gb,
+		   		) */
 		data, doc, err := InstantiateBlueprint(
-			"gcp/microservice-ecommerce",
+			BlueprintParams{
+				TemplatePath:       "compose-nested",
+				AnswersFile:        "",
+				StrictAnswers:      false,
+				UseDefaultsAsValue: true,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			BlueprintTestPath+"/gcp/microservice-ecommerce/__test__/answers-with-cluster-with-cicd.yaml",
-			false,
-			true,
-			false,
-		) */
-		data, doc, err := InstantiateBlueprint(
-			"compose-nested",
-			getLocalTestBlueprintContext(t),
-			gb,
-			"",
-			false,
-			true,
-			false,
-			true,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -737,14 +762,16 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 		data, doc, err := InstantiateBlueprint(
-			"valid-no-prompt-v1",
+			BlueprintParams{
+				TemplatePath:       "valid-no-prompt-v1",
+				AnswersFile:        "",
+				StrictAnswers:      false,
+				UseDefaultsAsValue: false,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
 			getLocalTestBlueprintContext(t),
 			gb,
-			"",
-			false,
-			false,
-			false,
-			true,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)

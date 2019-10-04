@@ -70,16 +70,20 @@ func (config *TemplateConfig) ProcessExpression(parameters map[string]interface{
 	return ProcessExpressionField(config, fieldsToSkip, parameters, config.Path)
 }
 
+type BlueprintParams struct {
+	TemplatePath       string
+	AnswersFile        string
+	StrictAnswers      bool
+	UseDefaultsAsValue bool
+	FromUpCommand      bool
+	PrintSummaryTable  bool
+}
+
 // InstantiateBlueprint is entry point for the cli command
 func InstantiateBlueprint(
-	templatePath string,
+	params BlueprintParams,
 	blueprintContext *BlueprintContext,
 	generatedBlueprint *GeneratedBlueprint,
-	answersFile string,
-	strictAnswers bool,
-	useDefaultsAsValue bool,
-	fromUpCommand bool,
-	printSummaryTable bool,
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
 	var err error
@@ -93,21 +97,21 @@ func InstantiateBlueprint(
 	}
 
 	// if template path is not defined in cmd, get user selection
-	if templatePath == "" {
-		templatePath, err = blueprintContext.askUserToChooseBlueprint(blueprints, templatePath, surveyOpts...)
+	if params.TemplatePath == "" {
+		params.TemplatePath, err = blueprintContext.askUserToChooseBlueprint(blueprints, params.TemplatePath, surveyOpts...)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, templatePath, answersFile, strictAnswers, useDefaultsAsValue, printSummaryTable, fromUpCommand, surveyOpts...)
+	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, params.TemplatePath, params.AnswersFile, params.StrictAnswers, params.UseDefaultsAsValue, params.PrintSummaryTable, params.FromUpCommand, surveyOpts...)
 	if err != nil {
 		return nil, nil, err
 	}
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
 	// if this is use-defaults mode, ask confirmation for xl-up
-	if useDefaultsAsValue && fromUpCommand && printSummaryTable && !SkipUpFinalPrompt {
+	if params.UseDefaultsAsValue && params.FromUpCommand && params.PrintSummaryTable && !SkipUpFinalPrompt {
 		// Final prompt from user to start generation process
 		toContinue := false
 		question := models.UpFinalPrompt
