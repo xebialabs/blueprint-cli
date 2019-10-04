@@ -4,8 +4,6 @@ ApiServerURL: https://k8s.com:6443
 K8sAuthentication: FilePath
 K8sClientCertFile: ../../templates/test/xl-up/cert
 K8sClientKeyFile: ../../templates/test/xl-up/cert
-K8sClientCert: ../../templates/test/xl-up/cert
-K8sClientKey: ../../templates/test/xl-up/cert
 InstallXLD: true
 InstallXLR: true
 XldAdminPass: password

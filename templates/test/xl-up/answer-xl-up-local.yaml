@@ -4,10 +4,6 @@ ExternalDatabase               : false
 InstallXLD                     : true
 InstallXLR                     : true
 K8sSetup                       : LocalK8S
-K8sClientCertFile              : ../../templates/test/xl-up/cert
-K8sClientKeyFile               : ../../templates/test/xl-up/cert
-K8sClientCert                  : ../../templates/test/xl-up/cert
-K8sClientKey                   : ../../templates/test/xl-up/cert
 Namespace                      : xebialabs
 OsType                         : linux
 PostgresEffectCacheSize        : 1GB

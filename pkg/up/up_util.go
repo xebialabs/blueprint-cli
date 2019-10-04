@@ -27,12 +27,15 @@ const (
 	XlUpBlueprint                 = "xl-up-blueprint"
 	DefaultInfraBlueprintTemplate = "xl-infra"
 	DefaultBlueprintTemplate      = "xl-up"
+	AnswerFileFromConfigMap       = "config_map_answer_file.yaml"
 	GeneratedAnswerFile           = "cm_answer_file_auto.yaml"
 	GeneratedFinalAnswerFile      = "generated_answers.yaml"
 	TempAnswerFile                = "temp_answer_file_auto.yaml"
 	MergedAnswerFile              = "merged_answer_file.yaml"
 	ConfigMapName                 = "answers-config-map"
 	DataFile                      = "answers.yaml"
+	ClientCertificate             = "cert.crt"
+	ClientCertificateKey          = "cert.key"
 )
 
 var pullSeedImage = models.Command{
@@ -142,7 +145,7 @@ func GenerateFileAndUpdateProperty(propertyName, newPropertyValue string, answer
 
 		util.Verbose("writing %s", newPropertyValue)
 
-		if _, err := os.Stat(models.BlueprintOutputDir); os.IsNotExist(err) {
+		if !util.PathExists(models.BlueprintOutputDir, true) {
 			err := os.Mkdir(models.BlueprintOutputDir, os.ModePerm)
 			if err != nil {
 				return fmt.Errorf("error creating %s folder - %s", models.BlueprintOutputDir, err)

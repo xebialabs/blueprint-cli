@@ -85,7 +85,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	util.IsQuiet = false
 
 	if upParams.Undeploy {
-		if !blueprint.SkipUpFinalPrompt {
+		if !SkipPrompts {
 			shouldUndeploy := false
 			err := survey.AskOne(&survey.Confirm{Message: models.UndeployConfirmationPrompt, Default: false}, &shouldUndeploy, nil)
 
@@ -166,8 +166,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err = generateLicenseAndKeystore(answerMapFromConfigMap, gb); err != nil {
 			return err
 		}
-
-		if err = convertMapToAnswerFile(answerMapFromConfigMap, GeneratedAnswerFile); err != nil {
+		if err = convertMapToAnswerFile(answerMapFromConfigMap, AnswerFileFromConfigMap); err != nil {
 			return err
 		}
 	} else {
@@ -240,6 +239,8 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 		if err != nil {
 			return err
 		}
+		gb.GeneratedFiles = append(gb.GeneratedFiles, AnswerFileFromConfigMap)
+		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
 	}
 
 	err = blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, upParams.AnswerFile, false, upParams.QuickSetup, true, true)
@@ -320,28 +321,44 @@ func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) (
 
 func getAnswerFile(answerFile string) (string, error) {
 	// If the answer file is provided merge them and use the merged file as the answer file
+	var err error
 	if answerFile != "" {
-		newAnswerMap, isConflict, err := mergeAnswerFiles(answerFile)
+		answerFile, err = mergeAndGetAnswerFile(answerFile)
 		if err != nil {
 			return "", err
 		}
-		if isConflict {
-			isAnswerFileClash, err := askOverrideAnswerFile()
+	} else {
+		if util.PathExists(AnswerFileFromConfigMap, false) {
+			answerFile, err = mergeAndGetAnswerFile(AnswerFileFromConfigMap)
 			if err != nil {
 				return "", err
 			}
-			if !isAnswerFileClash {
-				fmt.Errorf("quitting deployment due to conflict in files")
-			}
+		} else {
+			answerFile = GeneratedAnswerFile
 		}
-		answerFile = MergedAnswerFile
+	}
+	return answerFile, nil
+}
 
-		if err = convertMapToAnswerFile(newAnswerMap, answerFile); err != nil {
+func mergeAndGetAnswerFile(answerFile string) (string, error) {
+	newAnswerMap, isConflict, err := mergeAnswerFiles(answerFile)
+	if err != nil {
+		return "", err
+	}
+	if isConflict {
+		isAnswerFileClash, err := askOverrideAnswerFile()
+		if err != nil {
 			return "", err
 		}
-	} else {
-		answerFile = GeneratedAnswerFile
+		if !isAnswerFileClash {
+			return "", fmt.Errorf("quitting deployment due to conflict in files")
+		}
 	}
+	answerFile = MergedAnswerFile
+	if err = convertMapToAnswerFile(newAnswerMap, answerFile); err != nil {
+		return "", err
+	}
+
 	return answerFile, nil
 }
 
