@@ -15,6 +15,7 @@ spec:
       - GCP
       - Azure
     default: AWS
+    saveInXlvals: true
 
   - name: Service
     prompt: What service do you want to deploy?
@@ -22,35 +23,50 @@ spec:
     options:
       - !expr "Provider == 'GCP' ? ('GKE', 'CloudStorage') : (Provider == 'AWS' ? ('EKS', 'S3') : ('AKS', 'AzureStorage'))"
     default: !expr "Provider == 'GCP' ? 'GKE' : (Provider == 'AWS' ? 'EKS' : 'AKS')"
+    saveInXlvals: true
+
+  - name: K8sConfig
+    prompt: What is your Kubernetes cluster name
+    type: Confirm
+    promptIf: !expr "Service == 'GKE' || Service == 'EKS' || Service == 'AKS'"
+    default: !expr "k8sConfig('IsAvailable')"
+    saveInXlvals: true
 
   - name: K8sClusterName
     prompt: What is your Kubernetes cluster name
     type: Input
-    promptIf: !expr "Service == 'GKE' || Service == 'EKS' || Service == 'AKS'"
-    default: !expr "k8sConfig('ClusterServer')"
+    value: !expr "k8sConfig('ClusterServer')"
+    default: "defaultVal"
+    saveInXlvals: true
 
   # AWS specific variables
   - name: UseAWSCredentialsFromSystem
     prompt: Do you want to use AWS credentials from your ~/.aws/credentials file?
     type: Confirm
-    promptIf: !expr "Provider == 'AWS' && awsCredentials('IsAvailable')"
+    value: !expr "awsCredentials('IsAvailable')"
+    default: true
+    saveInXlvals: true
 
   - name: AWSAccessKey
     type: SecretInput
     prompt: What is the AWS Access Key ID?
-    promptIf: !expr "Provider == 'AWS' && !UseAWSCredentialsFromSystem"
-    default: !expr "awsCredentials('AccessKeyID')"
+    value: !expr "awsCredentials('AccessKeyID')"
+    default: "defaultVal"
+    saveInXlvals: true
 
   - name: AWSAccessSecret
     prompt: What is the AWS Secret Access Key?
     type: SecretInput
-    promptIf: !expr "Provider == 'AWS' && !UseAWSCredentialsFromSystem"
-    default: !expr "awsCredentials('SecretAccessKey')"
+    value: !expr "awsCredentials('SecretAccessKey')"
+    default: "defaultVal"
+    saveInXlvals: true
 
   - name: AWSRegion
     type: Select
     prompt: "Select the AWS region:"
-    promptIf: !expr "Provider == 'AWS'"
     options:
       - !expr "awsRegions('ecs')"
-    default: !expr "awsRegions('ecs', 0)"
+    value: !expr "awsRegions('ecs', 0)"
+    default: "defaultVal"
+    saveInXlvals: true
+

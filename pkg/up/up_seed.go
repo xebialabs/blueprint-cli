@@ -85,13 +85,15 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	util.IsQuiet = false
 
 	if upParams.Undeploy {
-		shouldUndeploy := false
-		err := survey.AskOne(&survey.Confirm{Message: models.UndeployConfirmationPrompt, Default: false}, &shouldUndeploy, nil)
+		if !blueprint.SkipUpFinalPrompt {
+			shouldUndeploy := false
+			err := survey.AskOne(&survey.Confirm{Message: models.UndeployConfirmationPrompt, Default: false}, &shouldUndeploy, nil)
 
-		if err != nil {
-			return err
-		} else if shouldUndeploy == false {
-			return fmt.Errorf("undeployment cancelled")
+			if err != nil {
+				return err
+			} else if shouldUndeploy == false {
+				return fmt.Errorf("undeployment cancelled")
+			}
 		}
 
 		kubeClient, err := getKubeClient()

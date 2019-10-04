@@ -24,7 +24,7 @@ func Test_processCustomExpression(t *testing.T) {
 	ioutil.WriteFile(testFilePath, originalConfigBytes, 0755)
 
 	// create test k8s config file
-	d1 := []byte(sampleKubeConfig)
+	d1 := []byte(SampleKubeConfig)
 	ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
 	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
 
@@ -831,6 +831,62 @@ func Test_processCustomExpression(t *testing.T) {
 			nil,
 			nil,
 			true,
+		},
+	}
+	for _, tt := range tests {
+		if tt.onlyInUnix && runtime.GOOS == "windows" {
+			continue
+		}
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ProcessCustomExpression(tt.args.exStr, tt.args.parameters)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("processCustomExpression() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantFn != nil {
+				assert.True(t, tt.wantFn(got))
+			} else {
+				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func Test_processCustomExpression_no_k8s(t *testing.T) {
+	type args struct {
+		exStr      string
+		parameters map[string]interface{}
+	}
+	tests := []struct {
+		name       string
+		onlyInUnix bool
+		args       args
+		want       interface{}
+		wantFn     func(got interface{}) bool
+		wantErr    bool
+	}{
+		// k8s helper functions
+		{
+			"should return isAvailable true for k8sConfig expression with default context",
+			false,
+			args{
+				"k8sConfig('IsAvailable')",
+				map[string]interface{}{},
+			},
+			false,
+			nil,
+			false,
+		},
+		{
+			"should return cluster server url for k8sConfig expression",
+			false,
+			args{
+				"k8sConfig('ClusterServer')",
+				map[string]interface{}{},
+			},
+			"",
+			nil,
+			false,
 		},
 	}
 	for _, tt := range tests {

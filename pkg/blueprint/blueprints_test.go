@@ -293,6 +293,137 @@ func TestInstantiateBlueprint(t *testing.T) {
 		}
 	})
 
+	t.Run("should create output files for valid test template in use defaults as values mode using expressions with valid k8s & aws config", func(t *testing.T) {
+
+		// initialize temp dir for tests
+		tmpDir, err := ioutil.TempDir("", "xltest")
+		if err != nil {
+			t.Error(err)
+		}
+		defer os.RemoveAll(tmpDir)
+
+		// create test k8s config file
+		// create test k8s config file
+		d1 := []byte(SampleKubeConfig)
+		ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
+		os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
+		os.Setenv("AWS_ACCESS_KEY_ID", "dummy_val")
+		os.Setenv("AWS_SECRET_ACCESS_KEY", "dummy_val")
+
+		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
+		defer gb.Cleanup()
+
+		err = InstantiateBlueprint(
+			"input-expression-tests",
+			getLocalTestBlueprintContext(t),
+			gb,
+			"",
+			false,
+			true,
+			false,
+			true,
+		)
+		require.Nil(t, err)
+
+		// assertions
+		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, secretsFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, gitignoreFile))
+
+		// check __test__ directory is not there
+		_, err = os.Stat("__test__")
+		assert.True(t, os.IsNotExist(err))
+
+		// check values file
+		valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
+		valueMap := map[string]string{
+			"Provider":                    "AWS",
+			"Service":                     "EKS",
+			"K8sConfig":                   "true",
+			"K8sClusterName":              "https://test.hcp.eastus.azmk8s.io:443",
+			"UseAWSCredentialsFromSystem": "true",
+			"AWSRegion":                   "ap-northeast-1",
+		}
+		for k, v := range valueMap {
+			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+
+		// check secrets file
+		secretsFile := GetFileContent(path.Join(gb.OutputDir, secretsFile))
+		secretsMap := map[string]string{
+			"AWSAccessKey":    "dummy_val",
+			"AWSAccessSecret": "dummy_val",
+		}
+		for k, v := range secretsMap {
+			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+	})
+
+	t.Run("should create output files for valid test template in use defaults as values mode using expressions without k8s & aws config", func(t *testing.T) {
+
+		// initialize temp dir for tests
+		tmpDir, err := ioutil.TempDir("", "xltest")
+		if err != nil {
+			t.Error(err)
+		}
+		defer os.RemoveAll(tmpDir)
+
+		// create test k8s config file
+		os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
+		os.Setenv("AWS_ACCESS_KEY_ID", "")
+		os.Setenv("AWS_SECRET_ACCESS_KEY", "")
+		os.Setenv("AWS_CONFIG_FILE", filepath.Join(tmpDir, "aws", "config"))
+		os.Setenv("AWS_SHARED_CREDENTIALS_FILE", filepath.Join(tmpDir, "aws", "credentials"))
+
+		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
+		defer gb.Cleanup()
+
+		err = InstantiateBlueprint(
+			"input-expression-tests",
+			getLocalTestBlueprintContext(t),
+			gb,
+			"",
+			false,
+			true,
+			false,
+			true,
+		)
+		require.Nil(t, err)
+
+		// assertions
+		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, secretsFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, gitignoreFile))
+
+		// check __test__ directory is not there
+		_, err = os.Stat("__test__")
+		assert.True(t, os.IsNotExist(err))
+
+		// check values file
+		valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
+		valueMap := map[string]string{
+			"Provider":                    "AWS",
+			"Service":                     "EKS",
+			"K8sConfig":                   "false",
+			"K8sClusterName":              "defaultVal",
+			"UseAWSCredentialsFromSystem": "false",
+			"AWSRegion":                   "ap-northeast-1",
+		}
+		for k, v := range valueMap {
+			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+
+		// check secrets file
+		secretsFile := GetFileContent(path.Join(gb.OutputDir, secretsFile))
+		secretsMap := map[string]string{
+			"AWSAccessKey":    "defaultVal",
+			"AWSAccessSecret": "defaultVal",
+		}
+		for k, v := range secretsMap {
+			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+	})
+
 	t.Run("should create output files for valid test template from local path", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()

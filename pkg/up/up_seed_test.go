@@ -164,11 +164,49 @@ func GetFileContent(filePath string) string {
 	return string(f)
 }
 
+var simpleSampleKubeConfig = `apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: 123==123
+    insecure-skip-tls-verify: true
+    server: https://test.io:443
+  name: testCluster
+contexts:
+- context:
+    cluster: testCluster
+    namespace: test
+    user: testCluster_user
+  name: testCluster
+current-context: testCluster
+kind: Config
+preferences: {}
+users:
+- name: testCluster_user
+  user:
+    client-certificate-data: 123==123
+    client-key-data: 123==123
+    token: 6555565666666666666`
+
 func TestInvokeBlueprintAndSeed(t *testing.T) {
 	SkipKube = true
 	SkipPrompts = true
 	blueprint.SkipFinalPrompt = true
 	blueprint.SkipUpFinalPrompt = true
+
+	// initialize temp dir for tests
+	tmpDir, err := ioutil.TempDir("", "xltest")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// create test k8s config file
+	// create test k8s config file
+	d1 := []byte(simpleSampleKubeConfig)
+	ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
+	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
+	os.Setenv("AWS_ACCESS_KEY_ID", "dummy_val")
+	os.Setenv("AWS_SECRET_ACCESS_KEY", "dummy_val")
 
 	t.Run("should create output files for valid xl-up template with answers file", func(t *testing.T) {
 		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
@@ -250,20 +288,20 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		// check values file
 		valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
 		valueMap := map[string]string{
-            "InstallMonitoring":  "true",
+			"InstallMonitoring":  "true",
 			"K8sAuthentication":  "FilePath",
 			"PostgresMaxConn":    "400",
 			"XlrOfficialVersion": "9.0.2",
 			"XldOfficialVersion": "9.0.2",
 		}
 		for k, v := range valueMap {
-            assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
 		}
 
 		// check secrets file
 		secretsFile := GetFileContent(path.Join(gb.OutputDir, "secrets.xlvals"))
 		secretsMap := map[string]string{
-            "XlrLic":             "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\nMB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz\\nOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B\\nAQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8\\nigrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH\\n+5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna\\n8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD\\nwZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV\\nE/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV\\nHQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA\\nhdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH\\n72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN\\nEYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw\\nOP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l\\nhHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9\\nLxjYOSJ5loUikwq6lQBA5Q==\\n-----END CERTIFICATE-----\\n",
+			"XlrLic":             "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\nMB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz\\nOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B\\nAQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8\\nigrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH\\n+5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna\\n8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD\\nwZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV\\nE/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV\\nHQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA\\nhdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH\\n72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN\\nEYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw\\nOP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l\\nhHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9\\nLxjYOSJ5loUikwq6lQBA5Q==\\n-----END CERTIFICATE-----\\n",
 			"K8sClientCert":      "Li4vLi4vdGVtcGxhdGVzL3Rlc3QveGwtdXAvY2VydA==",
 			"MonitoringUserPass": "mon-pass",
 		}
@@ -286,8 +324,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				AdvancedSetup:     false,
 				CfgOverridden:     false,
 				NoCleanup:         false,
-                Undeploy:          true,
-                DryRun:            true,
+				Undeploy:          true,
+				DryRun:            true,
 			},
 			"beta",
 			gb,

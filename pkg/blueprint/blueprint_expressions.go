@@ -173,12 +173,25 @@ var functions = map[string]govaluate.ExpressionFunction{
 		}
 
 		// attributes:
-		// - 0: Config attribute name [ClusterServer, ClusterInsecureSkipTLSVerify, ContextCluster, ContextNamespace, ContextUser, UserClientCertificateData, UserClientKeyData, IsAvailable]
+		// - 0: Config attribute name [ClusterServer, ClusterInsecureSkipTLSVerify, ContextCluster, ContextNamespace, ContextUser, UserClientCertificateData, UserClientKeyData, IsAvailable, IsConfigAvailable]
 		// - 1: Context name [optional]
 		attr := fmt.Sprintf("%v", args[0])
 
+		if !funk.Contains([]string{"ClusterServer", "ClusterInsecureSkipTLSVerify", "ContextCluster", "ContextNamespace", "ContextUser", "UserClientCertificateData", "UserClientKeyData", "IsAvailable", "IsConfigAvailable"}, attr) {
+			return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'k8sConfig'", attr)
+		}
+
+		kubeConfigPresent := k8s.IsKubeConfigFilePresent()
 		if attr == "IsConfigAvailable" {
-			return k8s.IsKubeConfigFilePresent(), nil
+			return kubeConfigPresent, nil
+		}
+
+		if !kubeConfigPresent {
+			if attr == "IsAvailable" {
+				return false, nil
+			} else {
+				return "", nil
+			}
 		}
 
 		contextName := ""
@@ -212,6 +225,10 @@ var functions = map[string]govaluate.ExpressionFunction{
 		   - getkeyfilelocation
 		*/
 		module := fmt.Sprintf("%v", args[0])
+
+		if !funk.Contains([]string{"_defaultapiserverurl", "_operatingsystem", "getcertfilelocation", "getkeyfilelocation"}, module) {
+			return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'os'", module)
+		}
 		return osHelper.GetPropertyByName(module)
 	},
 
@@ -225,8 +242,13 @@ var functions = map[string]govaluate.ExpressionFunction{
 		   - checkversion
 		   - getversionfromtag
 		*/
+
 		var params []string
 		module := fmt.Sprintf("%v", args[0])
+
+		if !funk.Contains([]string{"_showapplicableversions", "checkversion", "getversionfromtag"}, module) {
+			return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'version'", module)
+		}
 
 		if len(args) == 2 && module == "_showapplicableversions" {
 			params = append(params, fmt.Sprintf("%v", args[1]))

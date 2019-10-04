@@ -165,31 +165,27 @@ func GetK8SConfigFromSystem(context string) (K8SFnResult, error) {
 }
 
 func GetKubeConfigFile() ([]byte, error) {
-	// check if KUBECONFIG is set in environment
-	configPath := os.Getenv("KUBECONFIG")
-	if configPath == "" {
-		// if KUBECONFIG is not set find path based on OS
-		home, err := homedir.Dir()
-		if err != nil {
-			return nil, err
-		}
-		configPath = filepath.Join(home, ".kube", "config")
-	}
+	configPath := GetKubeConfigFilePath()
 	// read file from path and return string
 	return ioutil.ReadFile(configPath)
 }
 func IsKubeConfigFilePresent() bool {
+	configPath := GetKubeConfigFilePath()
+	return util.PathExists(configPath, false)
+}
+
+func GetKubeConfigFilePath() string {
 	// check if KUBECONFIG is set in environment
 	configPath := os.Getenv("KUBECONFIG")
 	if configPath == "" {
 		// if KUBECONFIG is not set find path based on OS
 		home, err := homedir.Dir()
 		if err != nil {
-			return false
+			return ""
 		}
 		configPath = filepath.Join(home, ".kube", "config")
 	}
-	return configPath != ""
+	return configPath
 }
 
 func ParseKubeConfig(kubeConfigYaml []byte) (K8sConfig, error) {

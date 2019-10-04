@@ -13,7 +13,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
 )
 
-var sampleKubeConfig = `apiVersion: v1
+var SampleKubeConfig = `apiVersion: v1
 clusters:
 - cluster:
     certificate-authority-data: REDACTED
@@ -86,7 +86,7 @@ users:
 func Setupk8sConfig() {
 	tmpDir := filepath.Join("test", "blueprints")
 	os.MkdirAll(tmpDir, os.ModePerm)
-	d1 := []byte(sampleKubeConfig)
+	d1 := []byte(SampleKubeConfig)
 	ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
 	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
 }
