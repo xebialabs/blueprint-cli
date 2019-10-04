@@ -309,6 +309,72 @@ func TestInstantiateBlueprint(t *testing.T) {
 		}
 	})
 
+	t.Run("should create output files for valid test template in use defaults as values mode with existing data passed on", func(t *testing.T) {
+		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
+		defer gb.Cleanup()
+		data, doc, err := InstantiateBlueprint(
+			BlueprintParams{
+				TemplatePath:       "defaults-as-values-existing-data",
+				AnswersFile:        "",
+				StrictAnswers:      false,
+				UseDefaultsAsValue: true,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+				ExistingPreparedData: &PreparedData{
+					TemplateData: map[string]interface{}{"Test": "testing", "TestDepends2": false, "AppName": "TestApp", "AWSAccessSecret": "accesssecret", "DiskSize": "10.0", "SecretFile": "../../templates/test/defaults-as-values/cert"},
+					SummaryData:  map[string]interface{}{"Test Label": "testing", "TestDepends2": false, "AppName": "TestApp", "AWSAccessSecret": "*****", "DiskSize": "10.0", "SecretFile": "*****"},
+					Values:       map[string]interface{}{"Test": "testing", "AppName": "TestApp", "DiskSize": "10.0"},
+					Secrets:      map[string]interface{}{"AWSAccessSecret": "accesssecret", "SecretFile": "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\n-----END CERTIFICATE-----\\n"},
+				},
+			},
+			getLocalTestBlueprintContext(t),
+			gb,
+		)
+		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
+
+		// assertions
+		assert.FileExists(t, "xld-environment.yml")
+		assert.FileExists(t, "xld-infrastructure.yml")
+		assert.FileExists(t, "xlr-pipeline.yml")
+		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, secretsFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, gitignoreFile))
+
+		// check __test__ directory is not there
+		_, err = os.Stat("__test__")
+		assert.True(t, os.IsNotExist(err))
+
+		// check values file
+		valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
+		valueMap := map[string]string{
+			"Test":               "testing",
+			"ClientCert":         "this is a multiline\\ntext\\n\\nwith escape chars\\n",
+			"AppName":            "TestApp",
+			"SuperSecret":        "supersecret",
+			"AWSRegion":          "eu-central-1",
+			"DiskSize":           "10",
+			"DiskSizeWithBuffer": "125.6",
+			"ShouldNotBeThere":   "shouldnotbehere",
+			"File":               "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\n-----END CERTIFICATE-----\\n",
+		}
+		for k, v := range valueMap {
+			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+
+		// check secrets file
+		secretsFile := GetFileContent(path.Join(gb.OutputDir, secretsFile))
+		secretsMap := map[string]string{
+			"AWSAccessKey":    "accesskey",
+			"AWSAccessSecret": "accesssecret",
+			"SecretFile":      "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\n-----END CERTIFICATE-----\\n",
+		}
+		for k, v := range secretsMap {
+			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+	})
+
 	t.Run("should create output files for valid test template in use defaults as values mode using expressions with valid k8s & aws config", func(t *testing.T) {
 
 		// initialize temp dir for tests
@@ -1583,13 +1649,10 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 	SkipFinalPrompt = true
 
 	type args struct {
-		blueprintContext   *BlueprintContext
-		blueprints         map[string]*models.BlueprintRemote
-		templatePath       string
-		answersFile        string
-		strictAnswers      bool
-		useDefaultsAsValue bool
-		surveyOpts         []survey.AskOpt
+		blueprintContext *BlueprintContext
+		blueprints       map[string]*models.BlueprintRemote
+		params           BlueprintParams
+		surveyOpts       []survey.AskOpt
 	}
 	tests := []struct {
 		name    string
@@ -1603,10 +1666,12 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			args{
 				repo,
 				blueprints,
-				"foo",
-				"",
-				false,
-				false,
+				BlueprintParams{
+					TemplatePath:       "foo",
+					AnswersFile:        "",
+					StrictAnswers:      false,
+					UseDefaultsAsValue: false,
+				},
 				[]survey.AskOpt{},
 			},
 			nil,
@@ -1618,10 +1683,12 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			args{
 				repo,
 				blueprints,
-				"aws/monolith",
-				"",
-				false,
-				false,
+				BlueprintParams{
+					TemplatePath:       "aws/monolith",
+					AnswersFile:        "",
+					StrictAnswers:      false,
+					UseDefaultsAsValue: false,
+				},
 				[]survey.AskOpt{},
 			},
 			&PreparedData{
@@ -1647,14 +1714,100 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			false,
 		},
 		{
+			"should return processed data for blueprint with existing prepared data",
+			args{
+				repo,
+				blueprints,
+				BlueprintParams{
+					TemplatePath:       "aws/compose",
+					AnswersFile:        "",
+					StrictAnswers:      false,
+					UseDefaultsAsValue: false,
+					ExistingPreparedData: &PreparedData{
+						TemplateData: map[string]interface{}{"Bar": "original", "Foo2": "hello2", "Test2": "hello2"},
+						SummaryData:  map[string]interface{}{"Bar": "original", "Foo2": "hello2", "Test2": "hello2"},
+						Secrets:      map[string]interface{}{},
+						Values:       map[string]interface{}{"Test2": "hello2"},
+					},
+				},
+				[]survey.AskOpt{},
+			},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"Bar": "testing", "Foo": "hello", "Test": "hello", "Foo2": "hello2", "Test2": "hello2"},
+				SummaryData:  map[string]interface{}{"Bar": "testing", "Foo": "hello", "Test": "hello", "Foo2": "hello2", "Test2": "hello2"},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{"Test": "hello", "Test2": "hello2"},
+			},
+			&BlueprintConfig{
+				ApiVersion: "xl/v2",
+				Kind:       "Blueprint",
+				Metadata:   Metadata{Name: "Test Project"},
+				Include: []IncludedBlueprintProcessed{
+					{
+						Blueprint: "aws/monolith",
+						Stage:     "before",
+						ParameterOverrides: []Variable{
+							{
+								Name:      VarField{Value: "Test"},
+								Value:     VarField{Value: "hello"},
+								DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"},
+							},
+						},
+						FileOverrides: []TemplateConfig{
+							{
+								Path:      "xld-infrastructure.yml.tmpl",
+								DependsOn: VarField{Value: "false", Tag: tagExpressionV2},
+							},
+						},
+					},
+					{
+						Blueprint: "aws/datalake",
+						Stage:     "after",
+						ParameterOverrides: []Variable{
+							{
+								Name:  VarField{Value: "Foo"},
+								Value: VarField{Value: "hello"},
+							},
+						},
+						DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
+						FileOverrides: []TemplateConfig{
+							{
+								Path:      "xlr-pipeline.yml",
+								RenameTo:  VarField{Value: "xlr-pipeline2-new.yml"},
+								DependsOn: VarField{Value: "TestDepends"},
+							},
+						},
+					},
+				},
+				Variables: []Variable{
+					{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "hello"}, SaveInXlvals: VarField{Value: "true", Bool: true}, DependsOn: VarField{Tag: tagExpressionV2, Value: "2 > 1"}},
+					{Name: VarField{Value: "Bar"}, Label: VarField{Value: "Bar"}, Value: VarField{Value: "testing"}},
+					{Name: VarField{Value: "Foo"}, Label: VarField{Value: "Foo"}, Value: VarField{Value: "hello"}},
+				},
+				TemplateConfigs: []TemplateConfig{
+					{Path: "xld-environment.yml.tmpl", FullPath: "aws/monolith/xld-environment.yml.tmpl"},
+					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/monolith/xld-infrastructure.yml.tmpl", DependsOn: VarField{Value: "false", Tag: tagExpressionV2}},
+					{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
+					{Path: "xld-environment.yml.tmpl", FullPath: "aws/compose/xld-environment.yml.tmpl"},
+					{Path: "xld-infrastructure.yml.tmpl", FullPath: "aws/compose/xld-infrastructure.yml.tmpl"},
+					{Path: "xlr-pipeline.yml", FullPath: "aws/compose/xlr-pipeline.yml"},
+					{Path: "xld-app.yml.tmpl", FullPath: "aws/datalake/xld-app.yml.tmpl"},
+					{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Value: "TestDepends"}, RenameTo: VarField{Value: "xlr-pipeline2-new.yml"}},
+				},
+			},
+			false,
+		},
+		{
 			"should return processed data for composed blueprint",
 			args{
 				repo,
 				blueprints,
-				"aws/compose",
-				"",
-				false,
-				false,
+				BlueprintParams{
+					TemplatePath:       "aws/compose",
+					AnswersFile:        "",
+					StrictAnswers:      false,
+					UseDefaultsAsValue: false,
+				},
 				[]survey.AskOpt{},
 			},
 			&PreparedData{
@@ -1727,10 +1880,12 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			args{
 				repo,
 				blueprints,
-				"aws/compose-2",
-				"",
-				false,
-				false,
+				BlueprintParams{
+					TemplatePath:       "aws/compose-2",
+					AnswersFile:        "",
+					StrictAnswers:      false,
+					UseDefaultsAsValue: false,
+				},
 				[]survey.AskOpt{},
 			},
 			&PreparedData{
@@ -1801,10 +1956,12 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			args{
 				repo,
 				blueprints,
-				"aws/compose-3",
-				"",
-				false,
-				false,
+				BlueprintParams{
+					TemplatePath:       "aws/compose-3",
+					AnswersFile:        "",
+					StrictAnswers:      false,
+					UseDefaultsAsValue: false,
+				},
 				[]survey.AskOpt{},
 			},
 			&PreparedData{
@@ -1863,14 +2020,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 			got, got1, err := prepareMergedTemplateData(
 				tt.args.blueprintContext,
 				tt.args.blueprints,
-				BlueprintParams{
-					TemplatePath:       tt.args.templatePath,
-					AnswersFile:        tt.args.answersFile,
-					StrictAnswers:      tt.args.strictAnswers,
-					UseDefaultsAsValue: tt.args.useDefaultsAsValue,
-					FromUpCommand:      false,
-					PrintSummaryTable:  false,
-				},
+				tt.args.params,
 				tt.args.surveyOpts...,
 			)
 			if (err != nil) != tt.wantErr {

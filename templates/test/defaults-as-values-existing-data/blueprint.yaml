@@ -1,0 +1,63 @@
+apiVersion: xl/v2
+kind: Blueprint
+metadata:
+  name: Test Project
+  description: Is just a test blueprint project
+  author: XebiaLabs
+  version: 1.0
+spec:
+  parameters:
+  - name: ClientCert
+    type: Editor
+    prompt: Test Prompt
+    saveInXlvals: true
+    default: |
+        this is a multiline
+        text\n
+        with escape chars
+  - name: TestDepends
+    type: Confirm
+    prompt: Test Prompt
+    default: true
+  - name: TestDepends3
+    label: TestDepends 3 label
+    type: Confirm
+    prompt: Test Prompt
+    default: true
+  - name: ShouldNotBeThere
+    type: Input
+    prompt: Test Prompt
+    saveInXlvals: true
+    promptIf: TestDepends2
+    default: shouldnotbehere
+  - name: AWSAccessKey
+    type: SecretInput
+    prompt: Test Prompt
+    default: accesskey
+  - name: SuperSecret
+    type: Input
+    prompt: Test Prompt
+    saveInXlvals: true
+    default: supersecret
+  - name: AWSRegion
+    type: Select
+    prompt: Test Prompt
+    options:
+      - !expr "awsRegions('ecs')"
+    default: eu-central-1
+    saveInXlvals: true
+  - name: DiskSizeWithBuffer
+    type: Input
+    prompt: Test Prompt
+    saveInXlvals: true
+    default: 125.6
+  - name: File
+    type: File
+    prompt: where is the File?
+    saveInXlvals: true
+    default: ../../templates/test/defaults-as-values/cert
+
+  files:
+  - path: xld-environment.yml.tmpl
+  - path: xld-infrastructure.yml.tmpl
+  - path: xlr-pipeline.yml

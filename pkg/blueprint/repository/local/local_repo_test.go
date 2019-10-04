@@ -110,10 +110,10 @@ func TestListBlueprintsFromRepo(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, blueprints)
 		assert.NotEmpty(t, blueprints)
-		assert.Len(t, blueprints, 11)
+		assert.Len(t, blueprints, 12)
 		require.NotNil(t, blueprintDirs)
 		assert.NotEmpty(t, blueprintDirs)
-		assert.Len(t, blueprintDirs, 11)
+		assert.Len(t, blueprintDirs, 12)
 
 		answerInputBlueprint := blueprints["answer-input"]
 		assert.Equal(t, "answer-input", answerInputBlueprint.Path)
