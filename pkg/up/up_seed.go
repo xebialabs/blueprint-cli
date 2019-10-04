@@ -305,14 +305,15 @@ func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) (
 
 func getAnswerFile(answerFile string) (string, error) {
 	// If the answer file is provided merge them and use the merged file as the answer file
+	var err error
 	if answerFile != "" {
-		answerFile, err := mergeAndGetAnswerFile(answerFile)
+		answerFile, err = mergeAndGetAnswerFile(answerFile)
 		if err != nil {
 			return "", err
 		}
 	} else {
 		if AnswerFileFromConfigMap != "" {
-			answerFile, err := mergeAndGetAnswerFile(AnswerFileFromConfigMap)
+			answerFile, err = mergeAndGetAnswerFile(AnswerFileFromConfigMap)
 			if err != nil {
 				return "", err
 			}
