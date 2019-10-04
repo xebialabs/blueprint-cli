@@ -167,9 +167,9 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err = generateLicenseAndKeystore(answerMapFromConfigMap, gb); err != nil {
 			return err
 		}
-        if err = convertMapToAnswerFile(answerMapFromConfigMap, AnswerFileFromConfigMap); err != nil {
-            return err
-        }
+		if err = convertMapToAnswerFile(answerMapFromConfigMap, AnswerFileFromConfigMap); err != nil {
+			return err
+		}
 	} else {
 		util.Verbose("Install workflow started")
 	}
@@ -240,6 +240,8 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 		if err != nil {
 			return err
 		}
+		gb.GeneratedFiles = append(gb.GeneratedFiles, AnswerFileFromConfigMap)
+		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
 	}
 
 	err = blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, upParams.AnswerFile, false, upParams.QuickSetup, true, true)
@@ -355,9 +357,9 @@ func mergeAndGetAnswerFile(answerFile string) (string, error) {
 		}
 	}
 	answerFile = MergedAnswerFile
-    if err = convertMapToAnswerFile(newAnswerMap, answerFile); err != nil {
-        return "", err
-    }
+	if err = convertMapToAnswerFile(newAnswerMap, answerFile); err != nil {
+		return "", err
+	}
 
 	return answerFile, nil
 }
