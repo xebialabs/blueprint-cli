@@ -102,7 +102,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 	t.Run("should error on unknown template", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		err := InstantiateBlueprint(
+		_, _, err := InstantiateBlueprint(
 			"abc",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -120,7 +120,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 	t.Run("should error on invalid test template", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		err := InstantiateBlueprint(
+		_, _, err := InstantiateBlueprint(
 			"invalid",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -137,7 +137,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 	t.Run("should create output files for valid test template with answers file", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		err := InstantiateBlueprint(
+		data, doc, err := InstantiateBlueprint(
 			"answer-input",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -148,6 +148,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 		)
 		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
 
 		// assertions
 		assert.FileExists(t, "xld-environment.yml")
@@ -195,7 +197,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 	t.Run("should create output files for valid test template with promptIf on parameters", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		err := InstantiateBlueprint(
+		data, doc, err := InstantiateBlueprint(
 			"dependson-test",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -206,6 +208,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 		)
 		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
 
 		// assertions
 		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
@@ -240,7 +244,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 	t.Run("should create output files for valid test template in use defaults as values mode", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		err := InstantiateBlueprint(
+		data, doc, err := InstantiateBlueprint(
 			"defaults-as-values",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -251,6 +255,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 		)
 		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
 
 		// assertions
 		assert.FileExists(t, "xld-environment.yml")
@@ -313,7 +319,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 
-		err = InstantiateBlueprint(
+		data, doc, err := InstantiateBlueprint(
 			"input-expression-tests",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -324,6 +330,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 		)
 		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
 
 		// assertions
 		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
@@ -378,7 +386,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
 
-		err = InstantiateBlueprint(
+		data, doc, err := InstantiateBlueprint(
 			"input-expression-tests",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -389,6 +397,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 		)
 		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
 
 		// assertions
 		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
@@ -427,7 +437,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 	t.Run("should create output files for valid test template from local path", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		err := InstantiateBlueprint(
+		data, doc, err := InstantiateBlueprint(
 			"valid-no-prompt",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -438,6 +448,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 		)
 		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
 
 		// assertions
 		assert.FileExists(t, "xld-environment.yml")
@@ -484,7 +496,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 	t.Run("should create output files for valid test template with SuppressXebiaLabsFolder enabled", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		err := InstantiateBlueprint(
+		data, doc, err := InstantiateBlueprint(
 			"valid-no-prompt-suppress-xebia-labs-folder",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -495,6 +507,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 		)
 		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
 
 		// assertions
 		assert.FileExists(t, "xld-environment.yml")
@@ -529,7 +543,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 	t.Run("should create output files for valid test template composed from local path", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		err := InstantiateBlueprint(
+		data, doc, err := InstantiateBlueprint(
 			"composed",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -540,6 +554,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 		)
 		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
 
 		// assertions
 		assert.False(t, util.PathExists("xld-environment.yml", false))   // this file is skipped when composing
@@ -620,7 +636,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		// This can be used to debug a local blueprint if you have the repo in ../blueprints relative to xl-cli
 		/* pwd, _ := os.Getwd()
 		BlueprintTestPath = strings.Replace(pwd, path.Join("xl-cli", "pkg", "blueprint"), path.Join("blueprints"), -1)
-		err := InstantiateBlueprint(
+		data, doc, err := InstantiateBlueprint(
 			"gcp/microservice-ecommerce",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -629,7 +645,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 			false,
 		) */
-		err := InstantiateBlueprint(
+		data, doc, err := InstantiateBlueprint(
 			"compose-nested",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -640,6 +656,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 		)
 		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
 
 		// assertions
 		assert.False(t, util.PathExists("xld-environment.yml", false))   // this file is skipped when composing
@@ -718,7 +736,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 	t.Run("should create output files for valid test template from local path for schema V1", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
-		err := InstantiateBlueprint(
+		data, doc, err := InstantiateBlueprint(
 			"valid-no-prompt-v1",
 			getLocalTestBlueprintContext(t),
 			gb,
@@ -729,6 +747,8 @@ func TestInstantiateBlueprint(t *testing.T) {
 			true,
 		)
 		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
 
 		// assertions
 		assert.FileExists(t, "xld-environment.yml")

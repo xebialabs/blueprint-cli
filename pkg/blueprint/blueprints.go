@@ -81,7 +81,7 @@ func InstantiateBlueprint(
 	fromUpCommand bool,
 	printSummaryTable bool,
 	surveyOpts ...survey.AskOpt,
-) error {
+) (*PreparedData, *BlueprintConfig, error) {
 	var err error
 	var blueprints map[string]*models.BlueprintRemote
 
@@ -89,20 +89,20 @@ func InstantiateBlueprint(
 	util.Verbose("[cmd] Reading blueprints from provider: %s\n", (*blueprintContext.ActiveRepo).GetProvider())
 	blueprints, err = blueprintContext.initCurrentRepoClient()
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	// if template path is not defined in cmd, get user selection
 	if templatePath == "" {
 		templatePath, err = blueprintContext.askUserToChooseBlueprint(blueprints, templatePath, surveyOpts...)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
 
 	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, templatePath, answersFile, strictAnswers, useDefaultsAsValue, printSummaryTable, fromUpCommand, surveyOpts...)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
@@ -114,10 +114,10 @@ func InstantiateBlueprint(
 
 		err := survey.AskOne(&survey.Confirm{Message: question, Default: true}, &toContinue, nil, surveyOpts...)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 		if !toContinue {
-			return fmt.Errorf("xl up execution cancelled")
+			return nil, nil, fmt.Errorf("xl up execution cancelled")
 		}
 	}
 
@@ -127,20 +127,20 @@ func InstantiateBlueprint(
 	if createXebiaLabsFolder || len(preparedData.Values) != 0 {
 		err = writeConfigToFile(valuesFileHeader, preparedData.Values, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, valuesFile))
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
 
 	if createXebiaLabsFolder || len(preparedData.Secrets) != 0 {
 		err = writeConfigToFile(secretsFileHeader, preparedData.Secrets, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, secretsFile))
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 		// generate .gitignore file
 		gitignoreData := secretsFile
 		err = writeDataToFile(generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, gitignoreFile), &gitignoreData)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
 
@@ -149,7 +149,7 @@ func InstantiateBlueprint(
 		config.ProcessExpression(preparedData.TemplateData)
 		skipFile, err := shouldSkipFile(config, preparedData.TemplateData)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 
 		if skipFile {
@@ -161,7 +161,7 @@ func InstantiateBlueprint(
 		util.Verbose("[file] Fetching template file %s from %s\n", config.Path, config.FullPath)
 		templateContent, err := blueprintContext.fetchFileContents(config.FullPath, strings.HasSuffix(config.Path, templateExtension))
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 		templateString := string(*templateContent)
 		finalFileName := config.Path
@@ -179,7 +179,7 @@ func InstantiateBlueprint(
 			processedTmpl := &strings.Builder{}
 			err = tmpl.Execute(processedTmpl, preparedData.TemplateData)
 			if err != nil {
-				return err
+				return nil, nil, err
 			}
 
 			// write the processed template to a file
@@ -187,7 +187,7 @@ func InstantiateBlueprint(
 
 			err = writeDataToFile(generatedBlueprint, strings.Replace(finalFileName, templateExtension, "", 1), &finalTmpl)
 			if err != nil {
-				return err
+				return nil, nil, err
 			}
 		} else {
 			if funk.ContainsString(ignoredPaths, filepath.Base(filepath.Dir(config.FullPath))) {
@@ -198,7 +198,7 @@ func InstantiateBlueprint(
 				util.Verbose("[file] Copying file %s\n", config.FullPath)
 				err = writeDataToFile(generatedBlueprint, finalFileName, &templateString)
 				if err != nil {
-					return err
+					return nil, nil, err
 				}
 			}
 		}
@@ -207,7 +207,7 @@ func InstantiateBlueprint(
 	if blueprintDoc.Metadata.Instructions != "" {
 		util.Info("\n\n%s\n\n", color.GreenString(blueprintDoc.Metadata.Instructions))
 	}
-	return nil
+	return preparedData, blueprintDoc, nil
 }
 
 func prepareMergedTemplateData(

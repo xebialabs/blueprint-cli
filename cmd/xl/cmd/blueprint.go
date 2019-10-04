@@ -45,7 +45,7 @@ func DoBlueprint(context *xl.Context) {
 	}
 
 	generatedBlueprint := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
-	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, generatedBlueprint, answersFile, strictAnswers, useDefaultsAsValue, false, true)
+	_, _, err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, generatedBlueprint, answersFile, strictAnswers, useDefaultsAsValue, false, true)
 	if err != nil {
 		generatedBlueprint.Cleanup() // Cleanup the partially generated blueprint
 		util.Fatal("Error while creating Blueprint: %s\n", err)
