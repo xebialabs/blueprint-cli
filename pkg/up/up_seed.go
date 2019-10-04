@@ -239,6 +239,8 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 		if err != nil {
 			return err
 		}
+		gb.GeneratedFiles = append(gb.GeneratedFiles, AnswerFileFromConfigMap)
+		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
 	}
 
 	err = blueprint.InstantiateBlueprint(upParams.BlueprintTemplate, blueprintContext, gb, upParams.AnswerFile, false, upParams.QuickSetup, true, true)
