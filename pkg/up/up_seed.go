@@ -3,7 +3,6 @@ package up
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 	"time"
 
@@ -86,7 +85,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	util.IsQuiet = false
 
 	if upParams.Undeploy {
-		if !blueprint.SkipUpFinalPrompt {
+		if !SkipPrompts {
 			shouldUndeploy := false
 			err := survey.AskOne(&survey.Confirm{Message: models.UndeployConfirmationPrompt, Default: false}, &shouldUndeploy, nil)
 
@@ -167,9 +166,9 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err = generateLicenseAndKeystore(answerMapFromConfigMap, gb); err != nil {
 			return err
 		}
-        if err = convertMapToAnswerFile(answerMapFromConfigMap, AnswerFileFromConfigMap); err != nil {
-            return err
-        }
+		if err = convertMapToAnswerFile(answerMapFromConfigMap, AnswerFileFromConfigMap); err != nil {
+			return err
+		}
 	} else {
 		util.Verbose("Install workflow started")
 	}
@@ -327,12 +326,11 @@ func getAnswerFile(answerFile string) (string, error) {
 			return "", err
 		}
 	} else {
-		if _, err := os.Stat(AnswerFileFromConfigMap); err == nil {
+		if util.PathExists(AnswerFileFromConfigMap, false) {
 			answerFile, err = mergeAndGetAnswerFile(AnswerFileFromConfigMap)
 			if err != nil {
 				return "", err
 			}
-
 		} else {
 			answerFile = GeneratedAnswerFile
 		}
@@ -351,13 +349,13 @@ func mergeAndGetAnswerFile(answerFile string) (string, error) {
 			return "", err
 		}
 		if !isAnswerFileClash {
-			fmt.Errorf("quitting deployment due to conflict in files")
+			return "", fmt.Errorf("quitting deployment due to conflict in files")
 		}
 	}
 	answerFile = MergedAnswerFile
-    if err = convertMapToAnswerFile(newAnswerMap, answerFile); err != nil {
-        return "", err
-    }
+	if err = convertMapToAnswerFile(newAnswerMap, answerFile); err != nil {
+		return "", err
+	}
 
 	return answerFile, nil
 }
