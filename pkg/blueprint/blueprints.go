@@ -71,12 +71,13 @@ func (config *TemplateConfig) ProcessExpression(parameters map[string]interface{
 }
 
 type BlueprintParams struct {
-	TemplatePath       string
-	AnswersFile        string
-	StrictAnswers      bool
-	UseDefaultsAsValue bool
-	FromUpCommand      bool
-	PrintSummaryTable  bool
+	TemplatePath         string
+	AnswersFile          string
+	StrictAnswers        bool
+	UseDefaultsAsValue   bool
+	FromUpCommand        bool
+	PrintSummaryTable    bool
+	ExistingPreparedData *PreparedData
 }
 
 // InstantiateBlueprint is entry point for the cli command
@@ -104,7 +105,7 @@ func InstantiateBlueprint(
 		}
 	}
 
-	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, params.TemplatePath, params.AnswersFile, params.StrictAnswers, params.UseDefaultsAsValue, params.PrintSummaryTable, params.FromUpCommand, surveyOpts...)
+	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, params, surveyOpts...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -217,21 +218,23 @@ func InstantiateBlueprint(
 func prepareMergedTemplateData(
 	blueprintContext *BlueprintContext,
 	blueprints map[string]*models.BlueprintRemote,
-	templatePath string,
-	answersFile string,
-	strictAnswers bool,
-	useDefaultsAsValue bool,
-	printSummaryTable bool,
-	fromUpCommand bool,
+	params BlueprintParams,
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
 	// get blueprint definition
-	blueprintDocs, masterBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprints, templatePath, VarField{}, "")
+	blueprintDocs, masterBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprints, params.TemplatePath, VarField{}, "")
 	if err != nil {
 		return nil, nil, err
 	}
 
 	mergedData := NewPreparedData()
+	if params.ExistingPreparedData != nil {
+		// merge from existing data if any
+		util.CopyIntoStringInterfaceMap(params.ExistingPreparedData.TemplateData, mergedData.TemplateData)
+		util.CopyIntoStringInterfaceMap(params.ExistingPreparedData.SummaryData, mergedData.SummaryData)
+		util.CopyIntoStringInterfaceMap(params.ExistingPreparedData.Values, mergedData.Values)
+		util.CopyIntoStringInterfaceMap(params.ExistingPreparedData.Secrets, mergedData.Secrets)
+	}
 	mergedBlueprintDoc := &BlueprintConfig{
 		ApiVersion: masterBlueprintDoc.ApiVersion,
 		Kind:       masterBlueprintDoc.Kind,
@@ -258,7 +261,7 @@ func prepareMergedTemplateData(
 		}
 		if ok {
 			// ask for user input
-			preparedData, err := blueprintDoc.BlueprintConfig.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, mergedData, surveyOpts...)
+			preparedData, err := blueprintDoc.BlueprintConfig.prepareTemplateData(params, mergedData, surveyOpts...)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -278,13 +281,13 @@ func prepareMergedTemplateData(
 	}
 
 	// Print summary table
-	if printSummaryTable {
+	if params.PrintSummaryTable {
 		// use util.Print so that this is not skipped in quiet mode
-		if useDefaultsAsValue && answersFile == "" {
+		if params.UseDefaultsAsValue && params.AnswersFile == "" {
 			util.Print("Using default values:\n")
 		}
 
-		util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1, fromUpCommand))
+		util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1, params.FromUpCommand))
 	}
 
 	if !SkipFinalPrompt {

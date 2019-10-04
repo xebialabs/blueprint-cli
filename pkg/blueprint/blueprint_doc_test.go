@@ -1186,7 +1186,14 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 				TemplateConfigs: tt.fields.TemplateConfigs,
 				Variables:       tt.fields.Variables,
 			}
-			got, err := blueprintDoc.prepareTemplateData(tt.args.answersFilePath, tt.args.strictAnswers, tt.args.useDefaultsAsValue, NewPreparedData())
+			got, err := blueprintDoc.prepareTemplateData(
+				BlueprintParams{
+					AnswersFile:        tt.args.answersFilePath,
+					StrictAnswers:      tt.args.strictAnswers,
+					UseDefaultsAsValue: tt.args.useDefaultsAsValue,
+				},
+				NewPreparedData(),
+			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BlueprintYaml.prepareTemplateData() error = %v, wantErr %v", err, tt.wantErr)
 				return

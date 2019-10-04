@@ -456,21 +456,21 @@ func (blueprintDoc *BlueprintConfig) validate() error {
 }
 
 // prepare template data by getting user input and calling named functions
-func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string, strictAnswers bool, useDefaultsAsValue bool, data *PreparedData, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
+func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams, data *PreparedData, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
 	// if exists, get map of answers from file
 	var answerMap map[string]string
 	var err error
 	usingAnswersFile := false
-	if answersFilePath != "" {
+	if params.AnswersFile != "" {
 		// parse answers file
-		util.Verbose("[dataPrep] Using answers file [%s] (strict: %t) instead of asking questions from console\n", answersFilePath, strictAnswers)
-		answerMap, err = GetValuesFromAnswersFile(answersFilePath)
+		util.Verbose("[dataPrep] Using answers file [%s] (strict: %t) instead of asking questions from console\n", params.AnswersFile, params.StrictAnswers)
+		answerMap, err = GetValuesFromAnswersFile(params.AnswersFile)
 		if err != nil {
 			return nil, err
 		}
 
 		// skip final prompt if in strict answers mode
-		if strictAnswers {
+		if params.StrictAnswers {
 			SkipFinalPrompt = true
 		}
 		usingAnswersFile = true
@@ -529,7 +529,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 		}
 
 		// skip user input if it is in default mode and default value is present
-		if useDefaultsAsValue && defaultVal != nil && defaultVal != "" {
+		if params.UseDefaultsAsValue && defaultVal != nil && defaultVal != "" {
 			finalVal, err := variable.VerifyVariableValue(defaultVal, data.TemplateData)
 			if err != nil {
 				return nil, err
@@ -547,7 +547,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(answersFilePath string,
 			continue
 		}
 		// do not return error when in non-strict answers mode, instead ask user input for the variable value
-		if usingAnswersFile && strictAnswers && !variable.IgnoreIfSkipped.Bool {
+		if usingAnswersFile && params.StrictAnswers && !variable.IgnoreIfSkipped.Bool {
 			return nil, fmt.Errorf("variable with name [%s] could not be found in answers file", variable.Name.Value)
 		}
 
