@@ -27,12 +27,15 @@ const (
 	XlUpBlueprint                 = "xl-up-blueprint"
 	DefaultInfraBlueprintTemplate = "xl-infra"
 	DefaultBlueprintTemplate      = "xl-up"
+	AnswerFileFromConfigMap       = "config_map_answer_file.yaml"
 	GeneratedAnswerFile           = "cm_answer_file_auto.yaml"
 	GeneratedFinalAnswerFile      = "generated_answers.yaml"
 	TempAnswerFile                = "temp_answer_file_auto.yaml"
 	MergedAnswerFile              = "merged_answer_file.yaml"
 	ConfigMapName                 = "answers-config-map"
 	DataFile                      = "answers.yaml"
+	ClientCertificate             = "cert.crt"
+	ClientCertificateKey          = "cert.key"
 )
 
 var pullSeedImage = models.Command{

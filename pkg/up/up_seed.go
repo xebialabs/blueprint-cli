@@ -166,10 +166,9 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err = generateLicenseAndKeystore(answerMapFromConfigMap, gb); err != nil {
 			return err
 		}
-
-		if err = convertMapToAnswerFile(answerMapFromConfigMap, GeneratedAnswerFile); err != nil {
-			return err
-		}
+        if err = convertMapToAnswerFile(answerMapFromConfigMap, AnswerFileFromConfigMap); err != nil {
+            return err
+        }
 	} else {
 		util.Verbose("Install workflow started")
 	}
@@ -321,27 +320,43 @@ func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) (
 func getAnswerFile(answerFile string) (string, error) {
 	// If the answer file is provided merge them and use the merged file as the answer file
 	if answerFile != "" {
-		newAnswerMap, isConflict, err := mergeAnswerFiles(answerFile)
+		answerFile, err := mergeAndGetAnswerFile(answerFile)
 		if err != nil {
 			return "", err
 		}
-		if isConflict {
-			isAnswerFileClash, err := askOverrideAnswerFile()
+	} else {
+		if AnswerFileFromConfigMap != "" {
+			answerFile, err := mergeAndGetAnswerFile(AnswerFileFromConfigMap)
 			if err != nil {
 				return "", err
 			}
-			if !isAnswerFileClash {
-				fmt.Errorf("quitting deployment due to conflict in files")
-			}
-		}
-		answerFile = MergedAnswerFile
 
-		if err = convertMapToAnswerFile(newAnswerMap, answerFile); err != nil {
+		} else {
+			answerFile = GeneratedAnswerFile
+		}
+	}
+	return answerFile, nil
+}
+
+func mergeAndGetAnswerFile(answerFile string) (string, error) {
+	newAnswerMap, isConflict, err := mergeAnswerFiles(answerFile)
+	if err != nil {
+		return "", err
+	}
+	if isConflict {
+		isAnswerFileClash, err := askOverrideAnswerFile()
+		if err != nil {
 			return "", err
 		}
-	} else {
-		answerFile = GeneratedAnswerFile
+		if !isAnswerFileClash {
+			fmt.Errorf("quitting deployment due to conflict in files")
+		}
 	}
+	answerFile = MergedAnswerFile
+    if err = convertMapToAnswerFile(newAnswerMap, answerFile); err != nil {
+        return "", err
+    }
+
 	return answerFile, nil
 }
 
