@@ -657,6 +657,17 @@ func Test_processCustomExpression(t *testing.T) {
 			true,
 		},
 		{
+			"should return IsConfigAvailable true for valid config file",
+			false,
+			args{
+				"k8sConfig('IsConfigAvailable')",
+				map[string]interface{}{},
+			},
+			true,
+			nil,
+			false,
+		},
+		{
 			"should return isAvailable true for k8sConfig expression with default context",
 			false,
 			args{
@@ -853,6 +864,15 @@ func Test_processCustomExpression(t *testing.T) {
 }
 
 func Test_processCustomExpression_no_k8s(t *testing.T) {
+	// initialize temp dir for tests
+	tmpDir, err := ioutil.TempDir("", "xltest")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
+
 	type args struct {
 		exStr      string
 		parameters map[string]interface{}
@@ -866,6 +886,17 @@ func Test_processCustomExpression_no_k8s(t *testing.T) {
 		wantErr    bool
 	}{
 		// k8s helper functions
+		{
+			"should return IsConfigAvailable false for invalid config file",
+			false,
+			args{
+				"k8sConfig('IsConfigAvailable')",
+				map[string]interface{}{},
+			},
+			false,
+			nil,
+			false,
+		},
 		{
 			"should return isAvailable true for k8sConfig expression with default context",
 			false,
