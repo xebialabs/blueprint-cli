@@ -289,10 +289,13 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
 		valueMap := map[string]string{
 			"InstallMonitoring":  "true",
+			"K8sSetup":           "PlainK8SCluster",
 			"K8sAuthentication":  "FilePath",
 			"PostgresMaxConn":    "400",
 			"XlrOfficialVersion": "9.0.2",
 			"XldOfficialVersion": "9.0.2",
+			"UseKubeconfig":      "false",
+			"ApiServerURL":       "https://k8s.com:6443",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
@@ -304,6 +307,89 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			"XlrLic":             "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\nMB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz\\nOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B\\nAQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8\\nigrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH\\n+5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna\\n8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD\\nwZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV\\nE/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV\\nHQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA\\nhdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH\\n72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN\\nEYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw\\nOP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l\\nhHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9\\nLxjYOSJ5loUikwq6lQBA5Q==\\n-----END CERTIFICATE-----\\n",
 			"K8sClientCert":      "Li4vLi4vdGVtcGxhdGVzL3Rlc3QveGwtdXAvY2VydA==",
 			"MonitoringUserPass": "mon-pass",
+		}
+		for k, v := range secretsMap {
+			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+	})
+
+	t.Run("should create output files for valid xl-up template with answers file for local setup", func(t *testing.T) {
+		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
+		defer gb.Cleanup()
+		err := InvokeBlueprintAndSeed(
+			getLocalTestBlueprintContext(t),
+			UpParams{
+				// enable for local testing
+				// LocalPath:         "../../../xl-up-blueprint",
+				BlueprintTemplate: "xl-infra",
+				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up-local.yaml")),
+				QuickSetup:        true,
+				AdvancedSetup:     false,
+				CfgOverridden:     false,
+				NoCleanup:         false,
+				Undeploy:          false,
+				DryRun:            true,
+			},
+			"beta",
+			gb,
+		)
+
+		require.Nil(t, err)
+
+		// assertions
+
+		// certs
+		assert.FileExists(t, "cert.crt")
+		assert.FileExists(t, "cert.key")
+
+		//answer files
+		assert.FileExists(t, GeneratedAnswerFile)
+		assert.FileExists(t, GeneratedFinalAnswerFile)
+		assert.FileExists(t, MergedAnswerFile)
+		assert.FileExists(t, TempAnswerFile)
+
+		//xl files
+		assert.FileExists(t, "xebialabs.yaml")
+		assert.FileExists(t, path.Join(gb.OutputDir, "values.xlvals"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "secrets.xlvals"))
+		assert.FileExists(t, path.Join(gb.OutputDir, ".gitignore"))
+
+		assert.FileExists(t, path.Join(gb.OutputDir, "answers.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "common.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "deploy-it.lic"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "xl-release.lic"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "deployments.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "keystore.jceks"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "xl-deploy.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "xl-release.yaml"))
+
+		// check __test__ directory is not there
+		_, err = os.Stat("__test__")
+		assert.True(t, os.IsNotExist(err))
+
+		// check encoded string value in commom.yaml
+		commonFile := GetFileContent(path.Join(gb.OutputDir, "common.yaml"))
+		assert.Contains(t, commonFile, fmt.Sprintf("tlsCert: %s", `123==123`))
+
+		// check values file
+		valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
+		valueMap := map[string]string{
+			"K8sSetup":           "LocalK8S",
+			"PostgresMaxConn":    "512",
+			"XlrOfficialVersion": "9.0.2",
+			"XldOfficialVersion": "9.0.2",
+			"UseKubeconfig":      "true",
+			"LocalApiServerURL":  "https://172.16.16.21:6443",
+		}
+		for k, v := range valueMap {
+			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+
+		// check secrets file
+		secretsFile := GetFileContent(path.Join(gb.OutputDir, "secrets.xlvals"))
+		secretsMap := map[string]string{
+			"XlrLic":        "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\nMB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz\\nOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B\\nAQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8\\nigrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH\\n+5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna\\n8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD\\nwZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV\\nE/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV\\nHQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA\\nhdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH\\n72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN\\nEYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw\\nOP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l\\nhHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9\\nLxjYOSJ5loUikwq6lQBA5Q==\\n-----END CERTIFICATE-----\\n",
+			"K8sClientCert": "123==123",
 		}
 		for k, v := range secretsMap {
 			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
