@@ -3,6 +3,7 @@ package up
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -326,7 +327,7 @@ func getAnswerFile(answerFile string) (string, error) {
 			return "", err
 		}
 	} else {
-		if AnswerFileFromConfigMap != "" {
+		if _, err := os.Stat(AnswerFileFromConfigMap); err == nil {
 			answerFile, err = mergeAndGetAnswerFile(AnswerFileFromConfigMap)
 			if err != nil {
 				return "", err
