@@ -78,7 +78,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	// Infra blueprint
-	_, _, err = blueprint.InstantiateBlueprint(
+	preparedData, _, err := blueprint.InstantiateBlueprint(
 		blueprint.BlueprintParams{
 			TemplatePath:       upParams.BlueprintTemplate,
 			AnswersFile:        answerFileToBlueprint,
@@ -184,7 +184,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	util.IsQuiet = true
-	if err = runApplicationBlueprint(&upParams, blueprintContext, gb, gitBranch); err != nil {
+	if err = runApplicationBlueprint(&upParams, blueprintContext, gb, gitBranch, preparedData); err != nil {
 		return err
 	}
 	util.IsQuiet = false
@@ -223,7 +223,7 @@ func parseConfigMap(configMap string) (map[string]string, error) {
 	return answerMapFromConfigMap, nil
 }
 
-func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint, gitBranch string) error {
+func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint, gitBranch string, preparedData *blueprint.PreparedData) error {
 	var err error
 	// Switch blueprint once the infrastructure is done.
 	if upParams.BlueprintTemplate != "" {
@@ -236,7 +236,7 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 		}
 		blueprintContext.ActiveRepo = &repo
 	}
-
+	// TODO don't read from answer files
 	if upParams.AnswerFile != "" {
 		upParams.AnswerFile, err = getAnswerFile(TempAnswerFile)
 		if err != nil {
@@ -255,12 +255,13 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 
 	_, _, err = blueprint.InstantiateBlueprint(
 		blueprint.BlueprintParams{
-			TemplatePath:       upParams.BlueprintTemplate,
-			AnswersFile:        upParams.AnswerFile,
-			StrictAnswers:      false,
-			UseDefaultsAsValue: upParams.QuickSetup,
-			FromUpCommand:      true,
-			PrintSummaryTable:  true,
+			TemplatePath:         upParams.BlueprintTemplate,
+			AnswersFile:          upParams.AnswerFile,
+			StrictAnswers:        false,
+			UseDefaultsAsValue:   upParams.QuickSetup,
+			FromUpCommand:        true,
+			PrintSummaryTable:    true,
+			ExistingPreparedData: preparedData,
 		},
 		blueprintContext, gb,
 	)
