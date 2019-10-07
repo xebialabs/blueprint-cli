@@ -345,7 +345,7 @@ func mergeAndGetAnswerFile(answerFile string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if isConflict {
+	if isConflict && util.PathExists(AnswerFileFromConfigMap, false) {
 		isAnswerFileClash, err := askOverrideAnswerFile()
 		if err != nil {
 			return "", err
