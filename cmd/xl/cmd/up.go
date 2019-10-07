@@ -57,17 +57,20 @@ func init() {
 	upFlags.BoolVarP(&upParams.QuickSetup, "quick-setup", "", false, "Quickly run setup with all default values")
 	upFlags.BoolVarP(&upParams.AdvancedSetup, "advanced-setup", "", false, "Advanced setup")
 	upFlags.StringVarP(&upParams.AnswerFile, "answers", "a", "", "The file containing answers for the questions")
-	upFlags.BoolVarP(&upParams.CfgOverridden, "dev", "d", false, "Enable dev mode, uses repository config from your local config instead")
 	upFlags.BoolVar(&upParams.NoCleanup, "no-cleanup", false, "Leave generated files on the filesystem")
 	upFlags.BoolVar(&upParams.Undeploy, "undeploy", false, "Undeploy the deployed resources")
 	upFlags.BoolVar(&upParams.DryRun, "dry-run", false, "Create files only, nothing will be deployed")
-	upFlags.BoolVarP(&upParams.SkipK8sConnection, "skip-k8s", "", false, "Skip connecting to Kubernetes cluster")
-	err := upFlags.MarkHidden("dev")
-	if err != nil {
+	// hidden flags
+	upFlags.BoolVarP(&upParams.CfgOverridden, "dev", "d", false, "Enable dev mode, uses repository config from your local config instead")
+	if err := upFlags.MarkHidden("dev"); err != nil {
 		util.Error("error setting up cmd flags: %s\n", err.Error())
 	}
-	err = upFlags.MarkHidden("skip-k8s")
-	if err != nil {
+	upFlags.BoolVarP(&upParams.SkipK8sConnection, "skip-k8s", "", false, "Skip connecting to Kubernetes cluster")
+	if err := upFlags.MarkHidden("skip-k8s"); err != nil {
+		util.Error("error setting up cmd flags: %s\n", err.Error())
+	}
+	upFlags.BoolVarP(&upParams.SkipPrompts, "skip-prompts", "", false, "Skip confirmation prompts")
+	if err := upFlags.MarkHidden("skip-prompts"); err != nil {
 		util.Error("error setting up cmd flags: %s\n", err.Error())
 	}
 }

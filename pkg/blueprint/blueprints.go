@@ -115,9 +115,8 @@ func InstantiateBlueprint(
 	if params.UseDefaultsAsValue && params.FromUpCommand && params.PrintSummaryTable && !SkipUpFinalPrompt {
 		// Final prompt from user to start generation process
 		toContinue := false
-		question := models.UpFinalPrompt
 
-		err := survey.AskOne(&survey.Confirm{Message: question, Default: true}, &toContinue, nil, surveyOpts...)
+		err := survey.AskOne(&survey.Confirm{Message: models.UpFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
 		if err != nil {
 			return nil, nil, err
 		}

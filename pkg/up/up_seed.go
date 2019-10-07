@@ -29,6 +29,11 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		defer util.StopAndRemoveContainer(s)
 	}
 
+	if upParams.SkipPrompts {
+		SkipPrompts = true
+		blueprint.SkipUpFinalPrompt = true
+	}
+
 	if upParams.AnswerFile == "" {
 		if !(upParams.QuickSetup || upParams.AdvancedSetup) && !upParams.Undeploy {
 			// ask for setup mode.
