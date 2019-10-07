@@ -8,8 +8,6 @@ import (
 
 	"gopkg.in/AlecAivazis/survey.v1"
 
-	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
-
 	"gopkg.in/yaml.v2"
 
 	"github.com/briandowns/spinner"
@@ -20,9 +18,6 @@ import (
 
 var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 var applyValues map[string]string
-
-// SkipKube can be set to true to skip kubernetes connection activities
-var SkipKube = false
 
 // SkipPrompts can be set to true to skip asking prompts
 var SkipPrompts = false
@@ -74,10 +69,10 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err = generateAnswerFile(answerFileToBlueprint, gb); err != nil {
 			return err
 		}
-		answerFileToBlueprint = TempAnswerFile
+		answerFileToBlueprint = TempAnswerFile // TODO this can be kept in memory
 	}
 
-	// Infra blueprint
+	// Infra blueprint, // This also generates an answer file for next blueprint
 	preparedData, _, err := blueprint.InstantiateBlueprint(
 		blueprint.BlueprintParams{
 			TemplatePath:       upParams.BlueprintTemplate,
@@ -122,7 +117,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	configMap := ""
-	if !SkipKube {
+	if !upParams.SkipK8sConnection {
 		if configMap, err = getKubeConfigMap(); err != nil {
 			return err
 		}
@@ -176,7 +171,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err = generateLicenseAndKeystore(answerMapFromConfigMap, gb); err != nil {
 			return err
 		}
-		if err = convertMapToAnswerFile(answerMapFromConfigMap, AnswerFileFromConfigMap); err != nil {
+		if err = convertMapToAnswerFile(answerMapFromConfigMap, AnswerFileFromConfigMap); err != nil { // can be in memory
 			return err
 		}
 	} else {
@@ -324,18 +319,11 @@ func convertMapToAnswerFile(contents map[string]string, filename string) error {
 
 func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) (string, error) {
 	var version string
-	var err error
-	if k8s.IsPropertyPresent(key, answerMapFromConfigMap) {
-		version, err = k8s.GetRequiredPropertyFromMap(key, answerMapFromConfigMap)
-		if err != nil {
-			return "", err
-		}
+	if util.MapContainsKeyWithVal(answerMapFromConfigMap, key) {
+		version = answerMapFromConfigMap[key]
 		util.Verbose("Version %s is existing.\n", version)
-	} else if k8s.IsPropertyPresent(prevKey, answerMapFromConfigMap) {
-		version, err = k8s.GetRequiredPropertyFromMap(prevKey, answerMapFromConfigMap)
-		if err != nil {
-			return "", err
-		}
+	} else if util.MapContainsKeyWithVal(answerMapFromConfigMap, prevKey) {
+		version = answerMapFromConfigMap[prevKey]
 	}
 	return version, nil
 }

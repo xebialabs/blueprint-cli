@@ -61,7 +61,12 @@ func init() {
 	upFlags.BoolVar(&upParams.NoCleanup, "no-cleanup", false, "Leave generated files on the filesystem")
 	upFlags.BoolVar(&upParams.Undeploy, "undeploy", false, "Undeploy the deployed resources")
 	upFlags.BoolVar(&upParams.DryRun, "dry-run", false, "Create files only, nothing will be deployed")
+	upFlags.BoolVarP(&upParams.SkipK8sConnection, "skip-k8s", "", false, "Skip connecting to Kubernetes cluster")
 	err := upFlags.MarkHidden("dev")
+	if err != nil {
+		util.Error("error setting up cmd flags: %s\n", err.Error())
+	}
+	err = upFlags.MarkHidden("skip-k8s")
 	if err != nil {
 		util.Error("error setting up cmd flags: %s\n", err.Error())
 	}
