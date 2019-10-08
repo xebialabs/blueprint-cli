@@ -187,7 +187,14 @@ users:
     client-key-data: 123==123
     token: 6555565666666666666`
 
+var TestLocalPath = ""
+var TestBranch = "beta"
+
 func TestInvokeBlueprintAndSeed(t *testing.T) {
+
+	// enable for local testing
+	TestLocalPath = "../../../xl-up-blueprint"
+
 	SkipPrompts = true
 	blueprint.SkipFinalPrompt = true
 	blueprint.SkipUpFinalPrompt = true
@@ -213,7 +220,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			getLocalTestBlueprintContext(t),
 			UpParams{
 				// enable for local testing
-				LocalPath:         "../../../xl-up-blueprint",
+				LocalPath:         TestLocalPath,
 				BlueprintTemplate: "xl-infra",
 				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
 				QuickSetup:        true,
@@ -224,7 +231,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				DryRun:            true,
 				SkipK8sConnection: true,
 			},
-			"beta",
+			TestBranch,
 			gb,
 		)
 
@@ -317,7 +324,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			getLocalTestBlueprintContext(t),
 			UpParams{
 				// enable for local testing
-				LocalPath:         "../../../xl-up-blueprint",
+				LocalPath:         TestLocalPath,
 				BlueprintTemplate: "xl-infra",
 				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up-local.yaml")),
 				QuickSetup:        true,
@@ -328,7 +335,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				DryRun:            true,
 				SkipK8sConnection: true,
 			},
-			"beta",
+			TestBranch,
 			gb,
 		)
 
@@ -399,7 +406,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			getLocalTestBlueprintContext(t),
 			UpParams{
 				// enable for local testing
-				// LocalPath:         "../../../xl-up-blueprint",
+				LocalPath:         TestLocalPath,
 				BlueprintTemplate: "xl-infra",
 				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
 				QuickSetup:        true,
@@ -410,7 +417,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				DryRun:            true,
 				SkipK8sConnection: true,
 			},
-			"beta",
+			TestBranch,
 			gb,
 		)
 
