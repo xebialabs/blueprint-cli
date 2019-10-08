@@ -219,7 +219,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabe
 func getOptionTextWithLabel(option VarField) string {
 	optionText := option.Value
 	if option.Label != "" {
-		optionText = fmt.Sprintf(optionTextFormat, option.Label, optionText)
+		optionText = fmt.Sprintf(optionTextFormat, optionText, option.Label)
 	}
 	return optionText
 }

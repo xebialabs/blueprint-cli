@@ -291,14 +291,14 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		// check values file
 		valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
 		valueMap := map[string]string{
-			"InstallMonitoring":  "true",
+			"MonitoringInstall":  "true",
 			"K8sSetup":           "PlainK8SCluster",
 			"K8sAuthentication":  "FilePath",
 			"PostgresMaxConn":    "400",
 			"XlrOfficialVersion": "9.0.2",
 			"XldOfficialVersion": "9.0.2",
 			"UseKubeconfig":      "false",
-			"ApiServerURL":       "https://k8s.com:6443",
+			"K8sApiServerURL":    "https://k8s.com:6443",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
@@ -375,12 +375,12 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		// check values file
 		valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
 		valueMap := map[string]string{
-			"K8sSetup":           "LocalK8S",
-			"PostgresMaxConn":    "512",
-			"XlrOfficialVersion": "9.0.2",
-			"XldOfficialVersion": "9.0.2",
-			"UseKubeconfig":      "true",
-			"LocalApiServerURL":  "https://172.16.16.21:6443",
+			"K8sSetup":             "LocalK8S",
+			"PostgresMaxConn":      "512",
+			"XlrOfficialVersion":   "9.0.2",
+			"XldOfficialVersion":   "9.0.2",
+			"UseKubeconfig":        "true",
+			"K8sLocalApiServerURL": "https://172.16.16.21:6443",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
