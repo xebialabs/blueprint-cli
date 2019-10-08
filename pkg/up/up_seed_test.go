@@ -200,7 +200,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	// create test k8s config file
-	// create test k8s config file
 	d1 := []byte(simpleSampleKubeConfig)
 	ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
 	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
@@ -239,8 +238,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 		//answer files
 		assert.FileExists(t, GeneratedAnswerFile)
-		assert.FileExists(t, GeneratedFinalAnswerFile)
-		assert.FileExists(t, MergedAnswerFile)
 		assert.FileExists(t, TempAnswerFile)
 
 		//xl files
@@ -345,8 +342,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 		//answer files
 		assert.FileExists(t, GeneratedAnswerFile)
-		assert.FileExists(t, GeneratedFinalAnswerFile)
-		assert.FileExists(t, MergedAnswerFile)
 		assert.FileExists(t, TempAnswerFile)
 
 		//xl files
@@ -404,7 +399,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			getLocalTestBlueprintContext(t),
 			UpParams{
 				// enable for local testing
-				LocalPath:         "../../../xl-up-blueprint",
+				// LocalPath:         "../../../xl-up-blueprint",
 				BlueprintTemplate: "xl-infra",
 				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
 				QuickSetup:        true,

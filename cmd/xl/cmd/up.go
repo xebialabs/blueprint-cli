@@ -46,7 +46,7 @@ func DoUp(context *xl.Context, gitBranch string) {
 		util.Fatal("Error while running xl-up: %s\n", err)
 	}
 	if !upParams.NoCleanup {
-		defer gb.Cleanup(up.GeneratedFinalAnswerFile, up.ClientCertificate, up.ClientCertificateKey)
+		defer gb.Cleanup(up.GeneratedAnswerFile, up.ClientCertificate, up.ClientCertificateKey)
 	}
 }
 

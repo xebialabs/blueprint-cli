@@ -68,20 +68,21 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		blueprintContext.ActiveRepo = &repo
 	}
 
-	answerFileToBlueprint := upParams.AnswerFile
+	answerFileToUse := upParams.AnswerFile
 
-	if answerFileToBlueprint != "" {
-		if err = generateAnswerFile(answerFileToBlueprint, gb); err != nil {
+	if answerFileToUse != "" {
+		// Update the user provided answerfile with License and Keystore information if needed
+		if err = generateAnswerFile(answerFileToUse, gb); err != nil {
 			return err
 		}
-		answerFileToBlueprint = TempAnswerFile // TODO this can be kept in memory
+		answerFileToUse = TempAnswerFile
 	}
 
-	// Infra blueprint, // This also generates an answer file for next blueprint
+	// xl-infra blueprint, This generates answer data for next blueprint
 	preparedData, _, err := blueprint.InstantiateBlueprint(
 		blueprint.BlueprintParams{
 			TemplatePath:       upParams.BlueprintTemplate,
-			AnswersFile:        answerFileToBlueprint,
+			AnswersFile:        answerFileToUse,
 			StrictAnswers:      false,
 			UseDefaultsAsValue: upParams.QuickSetup,
 			FromUpCommand:      true,
@@ -236,27 +237,25 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 		}
 		blueprintContext.ActiveRepo = &repo
 	}
-	// TODO don't read from answer files
-	if upParams.AnswerFile != "" {
-		upParams.AnswerFile, err = getAnswerFile(TempAnswerFile)
+	answerFileToUse := upParams.AnswerFile
+	if answerFileToUse != "" { // when user provide answerfile is present use the temp file created earlier
+		answerFileToUse, err = getAnswerFile(TempAnswerFile)
 		if err != nil {
 			return err
 		}
 		gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
-		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
 	} else {
-		upParams.AnswerFile, err = getAnswerFile(upParams.AnswerFile)
+		answerFileToUse, err = getAnswerFile(answerFileToUse)
 		if err != nil {
 			return err
 		}
 		gb.GeneratedFiles = append(gb.GeneratedFiles, AnswerFileFromConfigMap)
-		gb.GeneratedFiles = append(gb.GeneratedFiles, MergedAnswerFile)
 	}
 
 	_, _, err = blueprint.InstantiateBlueprint(
 		blueprint.BlueprintParams{
 			TemplatePath:         upParams.BlueprintTemplate,
-			AnswersFile:          upParams.AnswerFile,
+			AnswersFile:          answerFileToUse,
 			StrictAnswers:        false,
 			UseDefaultsAsValue:   upParams.QuickSetup,
 			FromUpCommand:        true,
@@ -271,8 +270,19 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 	return nil
 }
 
+func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) (string, error) {
+	var version string
+	if util.MapContainsKeyWithVal(answerMapFromConfigMap, key) {
+		version = answerMapFromConfigMap[key]
+		util.Verbose("Version %s is existing.\n", version)
+	} else if util.MapContainsKeyWithVal(answerMapFromConfigMap, prevKey) {
+		version = answerMapFromConfigMap[prevKey]
+	}
+	return version, nil
+}
+
 func generateAnswerFile(upAnswerFile string, gb *blueprint.GeneratedBlueprint) error {
-	answerMap, err := convertAnswerFileToMap(upAnswerFile)
+	answerMap, err := blueprint.GetValuesFromAnswersFile(upAnswerFile)
 	if err != nil {
 		return err
 	}
@@ -286,22 +296,6 @@ func generateAnswerFile(upAnswerFile string, gb *blueprint.GeneratedBlueprint) e
 	}
 	gb.GeneratedFiles = append(gb.GeneratedFiles, TempAnswerFile)
 	return nil
-}
-
-func convertAnswerFileToMap(answerFilePath string) (map[string]string, error) {
-	answerMap := make(map[string]string)
-
-	contents, err := ioutil.ReadFile(answerFilePath)
-
-	if err != nil {
-		return nil, fmt.Errorf("error reading answer file %s: %s", answerFilePath, err)
-	}
-
-	if err := yaml.Unmarshal(contents, &answerMap); err != nil {
-		return nil, fmt.Errorf("error converting answer file %s", err)
-	}
-
-	return answerMap, nil
 }
 
 func convertMapToAnswerFile(contents map[string]string, filename string) error {
@@ -322,26 +316,16 @@ func convertMapToAnswerFile(contents map[string]string, filename string) error {
 	return nil
 }
 
-func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) (string, error) {
-	var version string
-	if util.MapContainsKeyWithVal(answerMapFromConfigMap, key) {
-		version = answerMapFromConfigMap[key]
-		util.Verbose("Version %s is existing.\n", version)
-	} else if util.MapContainsKeyWithVal(answerMapFromConfigMap, prevKey) {
-		version = answerMapFromConfigMap[prevKey]
-	}
-	return version, nil
-}
-
 func getAnswerFile(answerFile string) (string, error) {
 	// If the answer file is provided merge them and use the merged file as the answer file
 	var err error
-	if answerFile != "" {
+	if answerFile != "" { // answerfile is present
 		answerFile, err = mergeAndGetAnswerFile(answerFile)
 		if err != nil {
 			return "", err
 		}
 	} else {
+		// answerfile is not present, see if there is an answerfile from k8s configmap
 		if util.PathExists(AnswerFileFromConfigMap, false) {
 			answerFile, err = mergeAndGetAnswerFile(AnswerFileFromConfigMap)
 			if err != nil {
@@ -368,7 +352,6 @@ func mergeAndGetAnswerFile(answerFile string) (string, error) {
 			return "", fmt.Errorf("quitting deployment due to conflict in files")
 		}
 	}
-	answerFile = MergedAnswerFile
 	if err = convertMapToAnswerFile(newAnswerMap, answerFile); err != nil {
 		return "", err
 	}

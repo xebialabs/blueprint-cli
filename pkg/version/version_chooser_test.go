@@ -172,6 +172,12 @@ func Test_getVersionFromTag(t *testing.T) {
 			false,
 		},
 		{
+			"should return the version from the passed string",
+			[]string{"9.0.2"},
+			"9.0.2",
+			false,
+		},
+		{
 			"should error when passing invlaid version",
 			[]string{"xld:latest"},
 			"",

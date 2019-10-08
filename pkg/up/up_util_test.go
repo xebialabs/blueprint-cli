@@ -107,7 +107,7 @@ func TestMergeMaps(t *testing.T) {
 		assert.Equal(t, mergedMap["four"], "4")
 	})
 
-	t.Run("should merge map when there is overlap", func(t *testing.T) {
+	t.Run("should merge map when there is overlap in value", func(t *testing.T) {
 		autoMap := make(map[string]string)
 		autoMap["one"] = "1"
 		autoMap["two"] = "2"

@@ -162,12 +162,14 @@ func GetPropertyByName(module string, params ...string) (interface{}, error) {
 }
 
 func GetVersionFromImageTag(version string) (*semver.Version, error) {
-	i := strings.Index(version, ":")
-	if i != -1 && len(version) > (i+1) {
-		versionTag := version[i+1:]
-		vers, err := semver.NewVersion(versionTag)
+	if strings.Contains(version, ":") {
+		split := strings.Split(version, ":")
+		version = split[len(split)-1]
+	}
+	if version != "" {
+		vers, err := semver.NewVersion(version)
 		if err != nil {
-			return nil, fmt.Errorf("Version tag %s is not valid: %s", versionTag, err)
+			return nil, fmt.Errorf("Version tag %s is not valid: %s", version, err)
 		}
 
 		return vers, nil
