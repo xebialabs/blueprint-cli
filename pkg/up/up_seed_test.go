@@ -193,7 +193,7 @@ var TestBranch = "beta"
 func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 	// enable for local testing
-	TestLocalPath = "../../../xl-up-blueprint"
+	// TestLocalPath = "../../../xl-up-blueprint"
 
 	SkipPrompts = true
 	blueprint.SkipFinalPrompt = true
