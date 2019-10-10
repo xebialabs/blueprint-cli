@@ -138,6 +138,82 @@ func TestInstantiateBlueprint(t *testing.T) {
 		assert.Equal(t, "parameter AppName must have a 'prompt' field", err.Error())
 	})
 
+	t.Run("should create output files for valid test template with answers map", func(t *testing.T) {
+		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
+		defer gb.Cleanup()
+		data, doc, err := InstantiateBlueprint(
+			BlueprintParams{
+				TemplatePath: "answer-input",
+				AnswersMap: map[string]string{
+					"Test":               "testing",
+					"ClientCert":         "FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5\\nQJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ\\n",
+					"TestDepends":        "true",
+					"TestDepends2":       "false",
+					"TestDepends3":       "false",
+					"AppName":            "TestApp",
+					"AWSAccessKey":       "accesskey",
+					"AWSAccessSecret":    "accesssecret",
+					"ShouldNotBeThere":   "nope",
+					"SuperSecret":        "invisible",
+					"AWSRegion":          "eu-central-1",
+					"DiskSize":           "100.0",
+					"DiskSizeWithBuffer": "125.1",
+				},
+				StrictAnswers:      true,
+				UseDefaultsAsValue: false,
+				FromUpCommand:      false,
+				PrintSummaryTable:  true,
+			},
+			getLocalTestBlueprintContext(t),
+			gb,
+		)
+		require.Nil(t, err)
+		require.NotNil(t, data)
+		require.NotNil(t, doc)
+
+		// assertions
+		assert.FileExists(t, "xld-environment.yml")
+		assert.FileExists(t, "xld-infrastructure.yml")
+		assert.FileExists(t, "xlr-pipeline.yml")
+		assert.FileExists(t, path.Join(gb.OutputDir, valuesFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, secretsFile))
+		assert.FileExists(t, path.Join(gb.OutputDir, gitignoreFile))
+
+		// check __test__ directory is not there
+		_, err = os.Stat("__test__")
+		assert.True(t, os.IsNotExist(err))
+
+		// check encoded string value in env template
+		envTemplateFile := GetFileContent("xld-environment.yml")
+		assert.Contains(t, envTemplateFile, fmt.Sprintf("accessSecret: %s", b64.StdEncoding.EncodeToString([]byte("accesssecret"))))
+
+		// check values file
+		valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
+		valueMap := map[string]string{
+			"Test":               "testing",
+			"ClientCert":         "FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5\\nQJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ\\n",
+			"AppName":            "TestApp",
+			"SuperSecret":        "invisible",
+			"AWSRegion":          "eu-central-1",
+			"DiskSize":           "100",
+			"DiskSizeWithBuffer": "125.1",
+			"ShouldNotBeThere":   "",
+		}
+		for k, v := range valueMap {
+			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+
+		// check secrets file
+		secretsFile := GetFileContent(path.Join(gb.OutputDir, secretsFile))
+		secretsMap := map[string]string{
+			"AWSAccessKey":    "accesskey",
+			"AWSAccessSecret": "accesssecret",
+		}
+		for k, v := range secretsMap {
+			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+	})
+
 	t.Run("should create output files for valid test template with answers file", func(t *testing.T) {
 		gb := &GeneratedBlueprint{OutputDir: "xebialabs"}
 		defer gb.Cleanup()
