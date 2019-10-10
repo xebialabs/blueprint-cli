@@ -3,7 +3,6 @@ package up
 import (
 	"fmt"
 
-	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,12 +12,7 @@ import (
 // The namespace to use
 const NAMESPACE = "xebialabs"
 
-func getKubeClient() (*kubernetes.Clientset, error) {
-	answerMap, err := blueprint.GetValuesFromAnswersFile(GeneratedAnswerFile)
-	if err != nil {
-		return nil, err
-	}
-
+func getKubeClient(answerMap map[string]string) (*kubernetes.Clientset, error) {
 	config, err := k8s.GetK8sConfiguration(answerMap)
 	if err != nil {
 		return nil, err
@@ -32,9 +26,9 @@ func getKubeClient() (*kubernetes.Clientset, error) {
 	return client, nil
 }
 
-func getKubeConfigMap() (string, error) {
+func getKubeConfigMap(answerMap map[string]string) (string, error) {
 	// Step 1 Get connection
-	client, err := getKubeClient()
+	client, err := getKubeClient(answerMap)
 	if err != nil {
 		return "", err
 	}

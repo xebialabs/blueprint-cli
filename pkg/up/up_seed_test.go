@@ -245,7 +245,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 		//answer files
 		assert.FileExists(t, GeneratedAnswerFile)
-		assert.FileExists(t, TempAnswerFile)
 
 		//xl files
 		assert.FileExists(t, "xebialabs.yaml")
@@ -268,7 +267,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 		// check encoded string value in commom.yaml
 		commonFile := GetFileContent(path.Join(gb.OutputDir, "common.yaml"))
-		assert.Contains(t, commonFile, fmt.Sprintf("tlsCert: %s", `|
+		assert.Contains(t, commonFile, fmt.Sprintf("tlsCert: %s", `|-
       -----BEGIN CERTIFICATE-----
       MIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw
       LzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz
@@ -349,7 +348,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 		//answer files
 		assert.FileExists(t, GeneratedAnswerFile)
-		assert.FileExists(t, TempAnswerFile)
 
 		//xl files
 		assert.FileExists(t, "xebialabs.yaml")

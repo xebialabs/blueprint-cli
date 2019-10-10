@@ -763,10 +763,13 @@ func TestGetValuesFromAnswersFile(t *testing.T) {
 	// Create needed temporary directory for tests
 	os.MkdirAll("test", os.ModePerm)
 	defer os.RemoveAll("test")
-	validContent := []byte(`test: testing
-sample: 5.45
-confirm: true
-`)
+	validContent := []byte(`
+        test: testing
+        test2: testing/path
+        sample: 5.45
+        sample2: 5
+        confirm: true
+    `)
 	badFormatContent := []byte(`test=testing
 sample=5.45
 confirm=true
@@ -797,7 +800,13 @@ confirm=true
 		{
 			"answers file: parse map of answers from valid file",
 			validFilePath,
-			map[string]string{"test": "testing", "sample": "5.45", "confirm": "true"},
+			map[string]string{
+				"test":    "testing",
+				"test2":   "testing/path",
+				"sample":  "5.45",
+				"sample2": "5",
+				"confirm": "true",
+			},
 			false,
 		},
 	}

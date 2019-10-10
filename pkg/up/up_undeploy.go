@@ -43,10 +43,9 @@ func undeployNamespace(client *kubernetes.Clientset) error {
 	if err != nil {
 		if err.Error() != fmt.Sprintf("namespaces \"%s\" not found", NAMESPACE) {
 			return fmt.Errorf("an error occurred - %s", err)
-		} else {
-			util.Info("Namespace \"%s\" was not found - continuing undeployment of other resources\n", NAMESPACE)
-			return nil
 		}
+		util.Info("Namespace \"%s\" was not found - continuing undeployment of other resources\n", NAMESPACE)
+		return nil
 	}
 
 	err = waitForUndeployCompletion(func() (int, error) {
@@ -54,9 +53,8 @@ func undeployNamespace(client *kubernetes.Clientset) error {
 
 		if err != nil {
 			return 0, err
-		} else {
-			return 1, nil
 		}
+		return 1, nil
 	}, "Namespace")
 
 	if err != nil {
