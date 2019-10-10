@@ -180,7 +180,7 @@ func waitForUndeployCompletion(getStatusFn GetStatusFn, resource string) error {
 		} else if iterations == 50 {
 			return fmt.Errorf("reached 50 iterations while waiting for resource \"%s\" to delete. Failing now", resource)
 		} else {
-			util.Info("\tResource \"%s\" still deleting; Sleeping for 5 seconds\n", resource)
+			util.Info("\tResource \"%s\" still deleting\n", resource)
 			iterations++
 			time.Sleep(5 * time.Second)
 		}
