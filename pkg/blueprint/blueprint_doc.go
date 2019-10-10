@@ -461,12 +461,17 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 	var answerMap map[string]string
 	var err error
 	usingAnswersFile := false
-	if params.AnswersFile != "" {
-		// parse answers file
-		util.Verbose("[dataPrep] Using answers file [%s] (strict: %t) instead of asking questions from console\n", params.AnswersFile, params.StrictAnswers)
-		answerMap, err = GetValuesFromAnswersFile(params.AnswersFile)
-		if err != nil {
-			return nil, err
+	if params.AnswersFile != "" || params.AnswersMap != nil {
+		if params.AnswersMap != nil {
+			util.Verbose("[dataPrep] Using answers map (strict: %t) instead of asking questions from console\n", params.StrictAnswers)
+			answerMap = params.AnswersMap
+		} else {
+			// parse answers file
+			util.Verbose("[dataPrep] Using answers file [%s] (strict: %t) instead of asking questions from console\n", params.AnswersFile, params.StrictAnswers)
+			answerMap, err = GetValuesFromAnswersFile(params.AnswersFile)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		// skip final prompt if in strict answers mode

@@ -78,6 +78,7 @@ type BlueprintParams struct {
 	FromUpCommand        bool
 	PrintSummaryTable    bool
 	ExistingPreparedData *PreparedData
+	AnswersMap           map[string]string
 }
 
 // InstantiateBlueprint is entry point for the cli command
@@ -282,7 +283,7 @@ func prepareMergedTemplateData(
 	// Print summary table
 	if params.PrintSummaryTable {
 		// use util.Print so that this is not skipped in quiet mode
-		if params.UseDefaultsAsValue && params.AnswersFile == "" {
+		if params.UseDefaultsAsValue && params.AnswersFile == "" && params.AnswersMap == nil {
 			util.Print("Using default values:\n")
 		}
 
