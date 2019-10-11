@@ -54,15 +54,15 @@ func init() {
 	rootCmd.AddCommand(upCmd)
 
 	upFlags := upCmd.Flags()
-	upFlags.StringVarP(&upParams.LocalPath, "local", "l", "", "Provide local file path where blueprints are located, by default a remote repository is used")
-	upFlags.StringVarP(&upParams.BlueprintTemplate, "blueprint", "b", "", "The folder containing the xl-infra blueprint; this can be a folder path relative to the remote blueprint repository or a local folder path provided using -l flag")
+	upFlags.StringVarP(&upParams.BlueprintTemplate, "blueprint", "b", "", "The folder path containing the xl-infra blueprint, relative to the active repository")
+	upFlags.StringVarP(&upParams.LocalPath, "local-repo", "l", "", "Provide local folder path where blueprints are located, by default a remote repository is used")
+	upFlags.StringVarP(&upParams.AnswerFile, "answers", "a", "", "The file containing answers for the questions")
 	upFlags.BoolVarP(&upParams.QuickSetup, "quick-setup", "", false, "Quickly run setup with all default values")
 	upFlags.BoolVarP(&upParams.AdvancedSetup, "advanced-setup", "", false, "Advanced setup")
-	upFlags.StringVarP(&upParams.AnswerFile, "answers", "a", "", "The file containing answers for the questions")
 	upFlags.BoolVar(&upParams.NoCleanup, "no-cleanup", false, "Leave generated files on the filesystem")
 	upFlags.BoolVar(&upParams.Undeploy, "undeploy", false, "Undeploy the deployed resources")
 	upFlags.BoolVar(&upParams.DryRun, "dry-run", false, "Create files only, nothing will be deployed")
-	// hidden flags
+	// hidden flags used for development and testing
 	upFlags.BoolVarP(&upParams.CfgOverridden, "dev", "d", false, "Enable dev mode, uses repository config from your local config instead")
 	if err := upFlags.MarkHidden("dev"); err != nil {
 		util.Error("error setting up cmd flags: %s\n", err.Error())
