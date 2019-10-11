@@ -763,10 +763,13 @@ func TestGetValuesFromAnswersFile(t *testing.T) {
 	// Create needed temporary directory for tests
 	os.MkdirAll("test", os.ModePerm)
 	defer os.RemoveAll("test")
-	validContent := []byte(`test: testing
-sample: 5.45
-confirm: true
-`)
+	validContent := []byte(`
+        test: testing
+        test2: testing/path
+        sample: 5.45
+        sample2: 5
+        confirm: true
+    `)
 	badFormatContent := []byte(`test=testing
 sample=5.45
 confirm=true
@@ -797,7 +800,13 @@ confirm=true
 		{
 			"answers file: parse map of answers from valid file",
 			validFilePath,
-			map[string]string{"test": "testing", "sample": "5.45", "confirm": "true"},
+			map[string]string{
+				"test":    "testing",
+				"test2":   "testing/path",
+				"sample":  "5.45",
+				"sample2": "5",
+				"confirm": "true",
+			},
 			false,
 		},
 	}
@@ -1186,7 +1195,14 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 				TemplateConfigs: tt.fields.TemplateConfigs,
 				Variables:       tt.fields.Variables,
 			}
-			got, err := blueprintDoc.prepareTemplateData(tt.args.answersFilePath, tt.args.strictAnswers, tt.args.useDefaultsAsValue, NewPreparedData())
+			got, err := blueprintDoc.prepareTemplateData(
+				BlueprintParams{
+					AnswersFile:        tt.args.answersFilePath,
+					StrictAnswers:      tt.args.strictAnswers,
+					UseDefaultsAsValue: tt.args.useDefaultsAsValue,
+				},
+				NewPreparedData(),
+			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BlueprintYaml.prepareTemplateData() error = %v, wantErr %v", err, tt.wantErr)
 				return

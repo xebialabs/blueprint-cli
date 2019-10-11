@@ -119,6 +119,7 @@ func MapContainsKeyWithVal(dict map[string]string, key string) bool {
 	}
 	return val != ""
 }
+
 func MapContainsKeyWithValInterface(dict map[string]interface{}, key string) bool {
 	val, ok := dict[key]
 	if !ok {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/xebialabs/xl-cli/pkg/util"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -63,10 +64,10 @@ func connectToEKS(answerMap map[string]string) (*restclient.Config, error) {
 	var sess *session.Session
 	var err error
 
-	if IsPropertyPresent("AWSAccessKey", answerMap) {
+	if util.MapContainsKeyWithVal(answerMap, "AWSAccessKey") {
 		var region string
 
-		if IsPropertyPresent("AWSRegion", answerMap) {
+		if util.MapContainsKeyWithVal(answerMap, "AWSRegion") {
 			region, err = GetRequiredPropertyFromMap("AWSRegion", answerMap)
 			if err != nil {
 				return nil, err
@@ -143,14 +144,14 @@ func connectToK8s(answerMap map[string]string) (*restclient.Config, error) {
 		return nil, err
 	}
 
-	if IsPropertyPresent("K8sToken", answerMap) {
+	if util.MapContainsKeyWithVal(answerMap, "K8sToken") {
 		config.BearerToken, err = GetRequiredPropertyFromMap("K8sToken", answerMap)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 
-		if IsPropertyPresent("K8sClientCert", answerMap) {
+		if util.MapContainsKeyWithVal(answerMap, "K8sClientCert") {
 			data, err := GetRequiredPropertyFromMap("K8sClientCert", answerMap)
 			if err != nil {
 				return nil, err
@@ -166,7 +167,7 @@ func connectToK8s(answerMap map[string]string) (*restclient.Config, error) {
 			}
 		}
 
-		if IsPropertyPresent("K8sClientKey", answerMap) {
+		if util.MapContainsKeyWithVal(answerMap, "K8sClientKey") {
 			data, err := GetRequiredPropertyFromMap("K8sClientKey", answerMap)
 			if err != nil {
 				return nil, err
@@ -209,14 +210,6 @@ func GetRequiredPropertyFromMap(propertyName string, answerMap map[string]string
 		return "", fmt.Errorf("the property %s is required to connect with Kubernetes", propertyName)
 	}
 	return value, nil
-}
-
-func IsPropertyPresent(propertyName string, answerMap map[string]string) bool {
-	value := answerMap[propertyName]
-	if value != "" {
-		return true
-	}
-	return false
 }
 
 func getClusterIDFromClusterName(answerMap map[string]string) string {

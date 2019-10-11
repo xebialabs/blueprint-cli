@@ -26,11 +26,8 @@ var blueprintCmd = &cobra.Command{
 	},
 }
 
-var blueprintTemplate string
-var answersFile string
 var localRepoPath string
-var strictAnswers bool
-var useDefaultsAsValue bool
+var params = blueprint.BlueprintParams{}
 
 // DoBlueprint creates blueprint templates
 func DoBlueprint(context *xl.Context) {
@@ -45,7 +42,7 @@ func DoBlueprint(context *xl.Context) {
 	}
 
 	generatedBlueprint := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
-	err = blueprint.InstantiateBlueprint(blueprintTemplate, blueprintContext, generatedBlueprint, answersFile, strictAnswers, useDefaultsAsValue, false, true)
+	_, _, err = blueprint.InstantiateBlueprint(params, blueprintContext, generatedBlueprint)
 	if err != nil {
 		generatedBlueprint.Cleanup() // Cleanup the partially generated blueprint
 		util.Fatal("Error while creating Blueprint: %s\n", err)
@@ -56,9 +53,9 @@ func init() {
 	rootCmd.AddCommand(blueprintCmd)
 
 	blueprintFlags := blueprintCmd.Flags()
-	blueprintFlags.StringVarP(&blueprintTemplate, "blueprint", "b", "", "Blueprint path to use, relative to the active repository")
+	blueprintFlags.StringVarP(&params.TemplatePath, "blueprint", "b", "", "Blueprint path to use, relative to the active repository")
 	blueprintFlags.StringVarP(&localRepoPath, "local-repo", "l", "", "Local repository directory to use (bypasses active repository)")
-	blueprintFlags.StringVarP(&answersFile, "answers", "a", "", "The file containing answers for blueprint questions")
-	blueprintFlags.BoolVarP(&strictAnswers, "strict-answers", "s", false, "If flag is set, answers file will be expected to have all the variable values")
-	blueprintFlags.BoolVarP(&useDefaultsAsValue, "use-defaults", "d", false, "If flag is set, default values for variables will be treated as value fields")
+	blueprintFlags.StringVarP(&params.AnswersFile, "answers", "a", "", "The file containing answers for blueprint questions")
+	blueprintFlags.BoolVarP(&params.StrictAnswers, "strict-answers", "s", false, "If flag is set, answers file will be expected to have all the variable values")
+	blueprintFlags.BoolVarP(&params.UseDefaultsAsValue, "use-defaults", "d", false, "If flag is set, default values for variables will be treated as value fields")
 }

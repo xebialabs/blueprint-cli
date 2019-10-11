@@ -125,6 +125,14 @@ func TestMapContainsKeyWithVal(t *testing.T) {
 			false,
 		},
 		{
+			"should return false when map is empty",
+			args{
+				map[string]string{},
+				"foooo",
+			},
+			false,
+		},
+		{
 			"should return false when map doesn't have value for key",
 			args{
 				testMap,

@@ -70,18 +70,24 @@ func (config *TemplateConfig) ProcessExpression(parameters map[string]interface{
 	return ProcessExpressionField(config, fieldsToSkip, parameters, config.Path)
 }
 
+type BlueprintParams struct {
+	TemplatePath         string
+	AnswersFile          string
+	StrictAnswers        bool
+	UseDefaultsAsValue   bool
+	FromUpCommand        bool
+	PrintSummaryTable    bool
+	ExistingPreparedData *PreparedData
+	AnswersMap           map[string]string
+}
+
 // InstantiateBlueprint is entry point for the cli command
 func InstantiateBlueprint(
-	templatePath string,
+	params BlueprintParams,
 	blueprintContext *BlueprintContext,
 	generatedBlueprint *GeneratedBlueprint,
-	answersFile string,
-	strictAnswers bool,
-	useDefaultsAsValue bool,
-	fromUpCommand bool,
-	printSummaryTable bool,
 	surveyOpts ...survey.AskOpt,
-) error {
+) (*PreparedData, *BlueprintConfig, error) {
 	var err error
 	var blueprints map[string]*models.BlueprintRemote
 
@@ -89,35 +95,34 @@ func InstantiateBlueprint(
 	util.Verbose("[cmd] Reading blueprints from provider: %s\n", (*blueprintContext.ActiveRepo).GetProvider())
 	blueprints, err = blueprintContext.initCurrentRepoClient()
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	// if template path is not defined in cmd, get user selection
-	if templatePath == "" {
-		templatePath, err = blueprintContext.askUserToChooseBlueprint(blueprints, templatePath, surveyOpts...)
+	if params.TemplatePath == "" {
+		params.TemplatePath, err = blueprintContext.askUserToChooseBlueprint(blueprints, params.TemplatePath, surveyOpts...)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
 
-	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, templatePath, answersFile, strictAnswers, useDefaultsAsValue, printSummaryTable, fromUpCommand, surveyOpts...)
+	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, params, surveyOpts...)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
 	// if this is use-defaults mode, ask confirmation for xl-up
-	if useDefaultsAsValue && fromUpCommand && printSummaryTable && !SkipUpFinalPrompt {
+	if params.UseDefaultsAsValue && params.FromUpCommand && params.PrintSummaryTable && !SkipUpFinalPrompt {
 		// Final prompt from user to start generation process
 		toContinue := false
-		question := models.UpFinalPrompt
 
-		err := survey.AskOne(&survey.Confirm{Message: question, Default: true}, &toContinue, nil, surveyOpts...)
+		err := survey.AskOne(&survey.Confirm{Message: models.UpFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 		if !toContinue {
-			return fmt.Errorf("xl up execution cancelled")
+			return nil, nil, fmt.Errorf("xl up execution cancelled")
 		}
 	}
 
@@ -127,20 +132,20 @@ func InstantiateBlueprint(
 	if createXebiaLabsFolder || len(preparedData.Values) != 0 {
 		err = writeConfigToFile(valuesFileHeader, preparedData.Values, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, valuesFile))
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
 
 	if createXebiaLabsFolder || len(preparedData.Secrets) != 0 {
 		err = writeConfigToFile(secretsFileHeader, preparedData.Secrets, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, secretsFile))
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 		// generate .gitignore file
 		gitignoreData := secretsFile
 		err = writeDataToFile(generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, gitignoreFile), &gitignoreData)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
 
@@ -149,7 +154,7 @@ func InstantiateBlueprint(
 		config.ProcessExpression(preparedData.TemplateData)
 		skipFile, err := shouldSkipFile(config, preparedData.TemplateData)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 
 		if skipFile {
@@ -161,7 +166,7 @@ func InstantiateBlueprint(
 		util.Verbose("[file] Fetching template file %s from %s\n", config.Path, config.FullPath)
 		templateContent, err := blueprintContext.fetchFileContents(config.FullPath, strings.HasSuffix(config.Path, templateExtension))
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 		templateString := string(*templateContent)
 		finalFileName := config.Path
@@ -179,7 +184,7 @@ func InstantiateBlueprint(
 			processedTmpl := &strings.Builder{}
 			err = tmpl.Execute(processedTmpl, preparedData.TemplateData)
 			if err != nil {
-				return err
+				return nil, nil, err
 			}
 
 			// write the processed template to a file
@@ -187,7 +192,7 @@ func InstantiateBlueprint(
 
 			err = writeDataToFile(generatedBlueprint, strings.Replace(finalFileName, templateExtension, "", 1), &finalTmpl)
 			if err != nil {
-				return err
+				return nil, nil, err
 			}
 		} else {
 			if funk.ContainsString(ignoredPaths, filepath.Base(filepath.Dir(config.FullPath))) {
@@ -198,7 +203,7 @@ func InstantiateBlueprint(
 				util.Verbose("[file] Copying file %s\n", config.FullPath)
 				err = writeDataToFile(generatedBlueprint, finalFileName, &templateString)
 				if err != nil {
-					return err
+					return nil, nil, err
 				}
 			}
 		}
@@ -207,27 +212,29 @@ func InstantiateBlueprint(
 	if blueprintDoc.Metadata.Instructions != "" {
 		util.Info("\n\n%s\n\n", color.GreenString(blueprintDoc.Metadata.Instructions))
 	}
-	return nil
+	return preparedData, blueprintDoc, nil
 }
 
 func prepareMergedTemplateData(
 	blueprintContext *BlueprintContext,
 	blueprints map[string]*models.BlueprintRemote,
-	templatePath string,
-	answersFile string,
-	strictAnswers bool,
-	useDefaultsAsValue bool,
-	printSummaryTable bool,
-	fromUpCommand bool,
+	params BlueprintParams,
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
 	// get blueprint definition
-	blueprintDocs, masterBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprints, templatePath, VarField{}, "")
+	blueprintDocs, masterBlueprintDoc, err := getBlueprintConfig(blueprintContext, blueprints, params.TemplatePath, VarField{}, "")
 	if err != nil {
 		return nil, nil, err
 	}
 
 	mergedData := NewPreparedData()
+	if params.ExistingPreparedData != nil {
+		// merge from existing data if any
+		util.CopyIntoStringInterfaceMap(params.ExistingPreparedData.TemplateData, mergedData.TemplateData)
+		util.CopyIntoStringInterfaceMap(params.ExistingPreparedData.SummaryData, mergedData.SummaryData)
+		util.CopyIntoStringInterfaceMap(params.ExistingPreparedData.Values, mergedData.Values)
+		util.CopyIntoStringInterfaceMap(params.ExistingPreparedData.Secrets, mergedData.Secrets)
+	}
 	mergedBlueprintDoc := &BlueprintConfig{
 		ApiVersion: masterBlueprintDoc.ApiVersion,
 		Kind:       masterBlueprintDoc.Kind,
@@ -254,7 +261,7 @@ func prepareMergedTemplateData(
 		}
 		if ok {
 			// ask for user input
-			preparedData, err := blueprintDoc.BlueprintConfig.prepareTemplateData(answersFile, strictAnswers, useDefaultsAsValue, mergedData, surveyOpts...)
+			preparedData, err := blueprintDoc.BlueprintConfig.prepareTemplateData(params, mergedData, surveyOpts...)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -274,13 +281,13 @@ func prepareMergedTemplateData(
 	}
 
 	// Print summary table
-	if printSummaryTable {
+	if params.PrintSummaryTable {
 		// use util.Print so that this is not skipped in quiet mode
-		if useDefaultsAsValue && answersFile == "" {
+		if params.UseDefaultsAsValue && params.AnswersFile == "" && params.AnswersMap == nil {
 			util.Print("Using default values:\n")
 		}
 
-		util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1, fromUpCommand))
+		util.Print(util.DataMapTable(&mergedData.SummaryData, util.TableAlignLeft, 30, 50, "\t", 1, params.FromUpCommand))
 	}
 
 	if !SkipFinalPrompt {

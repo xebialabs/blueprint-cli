@@ -187,8 +187,14 @@ users:
     client-key-data: 123==123
     token: 6555565666666666666`
 
+var TestLocalPath = ""
+var TestBranch = "beta"
+
 func TestInvokeBlueprintAndSeed(t *testing.T) {
-	SkipKube = true
+
+	// enable for local testing
+	// TestLocalPath = "../../../xl-up-blueprint"
+
 	SkipPrompts = true
 	blueprint.SkipFinalPrompt = true
 	blueprint.SkipUpFinalPrompt = true
@@ -200,7 +206,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	// create test k8s config file
 	// create test k8s config file
 	d1 := []byte(simpleSampleKubeConfig)
 	ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
@@ -215,7 +220,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			getLocalTestBlueprintContext(t),
 			UpParams{
 				// enable for local testing
-				// LocalPath:         "../../../xl-up-blueprint",
+				LocalPath:         TestLocalPath,
 				BlueprintTemplate: "xl-infra",
 				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
 				QuickSetup:        true,
@@ -224,8 +229,9 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				NoCleanup:         false,
 				Undeploy:          false,
 				DryRun:            true,
+				SkipK8sConnection: true,
 			},
-			"beta",
+			TestBranch,
 			gb,
 		)
 
@@ -239,9 +245,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 		//answer files
 		assert.FileExists(t, GeneratedAnswerFile)
-		assert.FileExists(t, GeneratedFinalAnswerFile)
-		assert.FileExists(t, MergedAnswerFile)
-		assert.FileExists(t, TempAnswerFile)
 
 		//xl files
 		assert.FileExists(t, "xebialabs.yaml")
@@ -320,7 +323,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			getLocalTestBlueprintContext(t),
 			UpParams{
 				// enable for local testing
-				// LocalPath:         "../../../xl-up-blueprint",
+				LocalPath:         TestLocalPath,
 				BlueprintTemplate: "xl-infra",
 				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up-local.yaml")),
 				QuickSetup:        true,
@@ -329,8 +332,9 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				NoCleanup:         false,
 				Undeploy:          false,
 				DryRun:            true,
+				SkipK8sConnection: true,
 			},
-			"beta",
+			TestBranch,
 			gb,
 		)
 
@@ -344,9 +348,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 		//answer files
 		assert.FileExists(t, GeneratedAnswerFile)
-		assert.FileExists(t, GeneratedFinalAnswerFile)
-		assert.FileExists(t, MergedAnswerFile)
-		assert.FileExists(t, TempAnswerFile)
 
 		//xl files
 		assert.FileExists(t, "xebialabs.yaml")
@@ -403,7 +404,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			getLocalTestBlueprintContext(t),
 			UpParams{
 				// enable for local testing
-				// LocalPath:         "../../../xl-up-blueprint",
+				LocalPath:         TestLocalPath,
 				BlueprintTemplate: "xl-infra",
 				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
 				QuickSetup:        true,
@@ -412,8 +413,9 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				NoCleanup:         false,
 				Undeploy:          true,
 				DryRun:            true,
+				SkipK8sConnection: true,
 			},
-			"beta",
+			TestBranch,
 			gb,
 		)
 

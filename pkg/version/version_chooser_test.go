@@ -172,6 +172,12 @@ func Test_getVersionFromTag(t *testing.T) {
 			false,
 		},
 		{
+			"should return the version from the passed string",
+			[]string{"9.0.2"},
+			"9.0.2",
+			false,
+		},
+		{
 			"should error when passing invlaid version",
 			[]string{"xld:latest"},
 			"",
@@ -232,6 +238,10 @@ func Test_GetVersionFromImageTag(t *testing.T) {
 		expected = "9.0.5-1"
 
 		assert.Equal(t, expected, actual.String())
+		actual, _ = GetVersionFromImageTag("9.0.5-1")
+		expected = "9.0.5-1"
+
+		assert.Equal(t, expected, actual.String())
 	})
 
 	t.Run("should throw an error when Docker image tag version is not semver", func(t *testing.T) {
@@ -244,16 +254,16 @@ func Test_GetVersionFromImageTag(t *testing.T) {
 		expected = fmt.Errorf("Version tag beta is not valid: Invalid Semantic Version")
 
 		assert.Equal(t, err, expected)
+
+		_, err = GetVersionFromImageTag("test")
+		expected = fmt.Errorf("Version tag test is not valid: Invalid Semantic Version")
+
+		assert.Equal(t, err, expected)
 	})
 
 	t.Run("should throw an error when there is no Docker image tag version", func(t *testing.T) {
 		_, err := GetVersionFromImageTag("test:")
 		expected := fmt.Errorf("Version tag is missing")
-
-		assert.Equal(t, err, expected)
-
-		_, err = GetVersionFromImageTag("test")
-		expected = fmt.Errorf("Version tag is missing")
 
 		assert.Equal(t, err, expected)
 	})

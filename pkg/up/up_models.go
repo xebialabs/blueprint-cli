@@ -10,4 +10,6 @@ type UpParams struct {
 	NoCleanup         bool
 	Undeploy          bool
 	DryRun            bool
+	SkipK8sConnection bool
+	SkipPrompts       bool
 }
