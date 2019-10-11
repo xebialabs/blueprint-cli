@@ -31,7 +31,7 @@ const (
 	tagExpressionV1  = "!expression"
 	tagExpressionV2  = "!expr"
 	fmtTagValue      = "!value %s"
-	optionTextFormat = "%s (%s)"
+	optionTextFormat = "%s [%s]"
 )
 
 // InputType constants

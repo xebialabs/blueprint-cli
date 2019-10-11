@@ -254,7 +254,7 @@ func TestGetOptions(t *testing.T) {
 		}
 		values := v.GetOptions(dummyData, true)
 		assert.Len(t, values, 3)
-		assert.Equal(t, []string{"aVal", "bLabel (bVal)", "cLabel (cVal)"}, values)
+		assert.Equal(t, []string{"aVal", "bVal [bLabel]", "cVal [cLabel]"}, values)
 	})
 
 	t.Run("should return string values of map options without label", func(t *testing.T) {
@@ -1231,7 +1231,7 @@ func Test_findLabelValueFromOptions(t *testing.T) {
 		},
 		{
 			"find correct values from different option types for map val",
-			"Hooya (hiya)",
+			"hiya [Hooya]",
 			[]VarField{
 				VarField{Value: "yoyo"},
 				VarField{Value: "hiya", Label: "Hooya"},
@@ -1274,7 +1274,7 @@ func Test_getDefaultTextWithLabel(t *testing.T) {
 				VarField{Value: "hiya", Label: "Hooya"},
 				VarField{Value: "someFun()", Tag: "!expr"},
 			},
-			"Hooya (hiya)",
+			"hiya [Hooya]",
 		},
 		{
 			"should return default value without label",
@@ -1315,7 +1315,7 @@ func Test_getOptionTextWithLabel(t *testing.T) {
 		{
 			"should return value with label",
 			VarField{Value: "hiya", Label: "Hooya"},
-			"Hooya (hiya)",
+			"hiya [Hooya]",
 		},
 		{
 			"should return default value without label",
