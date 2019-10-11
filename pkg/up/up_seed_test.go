@@ -267,7 +267,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 		// check encoded string value in commom.yaml
 		commonFile := GetFileContent(path.Join(gb.OutputDir, "common.yaml"))
-		assert.Contains(t, commonFile, fmt.Sprintf("tlsCert: %s", `|-
+		assert.Contains(t, commonFile, fmt.Sprintf("tlsCert: %s", `|
       -----BEGIN CERTIFICATE-----
       MIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw
       LzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz
