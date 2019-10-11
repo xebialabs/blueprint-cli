@@ -1,5 +1,5 @@
-ApiServerURL                   : https://172.16.16.21:6443
-LocalApiServerURL              : https://172.16.16.21:6443
+K8sApiServerURL                   : https://172.16.16.21:6443
+K8sLocalApiServerURL              : https://172.16.16.21:6443
 ExternalDatabase               : false
 InstallXLD                     : true
 InstallXLR                     : true

@@ -1,6 +1,6 @@
 K8sSetup: PlainK8SCluster
 UseKubeconfig: false
-ApiServerURL: https://k8s.com:6443
+K8sApiServerURL: https://k8s.com:6443
 K8sAuthentication: FilePath
 K8sClientCertFile: ../../templates/test/xl-up/cert
 K8sClientKeyFile: ../../templates/test/xl-up/cert
@@ -25,7 +25,7 @@ XlKeyStore: ../../templates/test/xl-up/cert
 XlKeyStorePass: test123
 XlrOfficialVersion: 9.0.2
 XldOfficialVersion: 9.0.2
-InstallMonitoring: true
+MonitoringInstall: true
 MonitoringUser: mon-user
 MonitoringUserPass: mon-pass
 PostgresMaxConn: 400
