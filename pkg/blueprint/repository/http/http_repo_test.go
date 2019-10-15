@@ -2,6 +2,7 @@ package http
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -236,6 +237,14 @@ with a new line`),
 	})
 }
 
+type MockURLChecker struct {
+	ExistingVersion string
+}
+
+func (checker MockURLChecker) URLExists(URL string) bool {
+	return strings.Contains(URL, checker.ExistingVersion)
+}
+
 func Test_getCLIVersionURL(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -267,10 +276,20 @@ func Test_getCLIVersionURL(t *testing.T) {
 			"FOO9.0.0-SNAPSHOT",
 			"https://dist.xebialabs.com/public/blueprints/${foo}",
 		},
+		{
+			"should keep trying until it finds an existing version",
+			models.DefaultBlueprintRepositoryUrl,
+			"9.1.1",
+			"https://dist.xebialabs.com/public/blueprints/9.0.0/",
+		},
+	}
+	var checker URLExistsChecker
+	checker = MockURLChecker{
+		ExistingVersion: "9.0.0",
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getCLIVersionURL(tt.url, tt.CLIVersion); got != tt.want {
+			if got := getCLIVersionURL(tt.url, tt.CLIVersion, checker); got != tt.want {
 				t.Errorf("getCLIVersionURL() = %v, want %v", got, tt.want)
 			}
 		})
