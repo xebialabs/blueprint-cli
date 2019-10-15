@@ -8,7 +8,9 @@ import (
 	"net/url"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/models"
@@ -160,12 +162,47 @@ func (repo *HttpBlueprintRepository) getResponseFromUrl(filePath string) (*http.
 	return response, nil
 }
 
+func URLExists(URL string) bool {
+	httpClient := &http.Client{
+		Timeout: 2 * time.Second,
+	}
+
+	resp, err := httpClient.Get(URL)
+	if err != nil {
+		return false
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return false
+	}
+
+	return true
+}
+
 func getCLIVersionURL(url, CLIVersion string) string {
 	if strings.Contains(url, models.BlueprintCurrentCLIVersion) {
-		re := regexp.MustCompile("^[0-9].[0-9].[0-9]")
-		CLIVersionNumbers := re.FindStringSubmatch(CLIVersion)
-		if CLIVersionNumbers != nil && len(CLIVersionNumbers) > 0 {
-			return strings.Replace(url, models.BlueprintCurrentCLIVersion, CLIVersionNumbers[0], -1)
+		re := regexp.MustCompile("^([0-9]).([0-9]).([0-9])")
+		versions := re.FindStringSubmatch(CLIVersion)
+		if len(versions) == 4 {
+			// Tick down like a reverse odometer until an existing blueprint directory is found
+			yDigit, _ := strconv.Atoi(versions[2])
+			for yDigit >= 0 {
+				zDigit, _ := strconv.Atoi(versions[3])
+				for zDigit >= 0 {
+					// Match on x.y.z
+					URL := strings.Replace(url, models.BlueprintCurrentCLIVersion, fmt.Sprintf("%s.%d.%d", versions[1], yDigit, zDigit), -1)
+					if URLExists(URL) {
+						return URL
+					}
+					zDigit--
+				}
+				// Match on x.y
+				URL := strings.Replace(url, models.BlueprintCurrentCLIVersion, fmt.Sprintf("%s.%d", versions[1], yDigit), -1)
+				if URLExists(URL) {
+					return URL
+				}
+				yDigit--
+			}
 		}
 	}
 	return url

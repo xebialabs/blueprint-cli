@@ -237,6 +237,23 @@ with a new line`),
 }
 
 func Test_getCLIVersionURL(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder(
+		"GET",
+		"https://dist.xebialabs.com/public/blueprints/9.0.0/",
+		httpmock.NewStringResponder(200, `[
+            "aws/monolith"
+        ]`),
+	)
+	httpmock.RegisterResponder(
+		"GET",
+		"https://dist.xebialabs.com/public/blueprints/9.1/",
+		httpmock.NewStringResponder(200, `[
+            "aws/monolith"
+        ]`),
+	)
+
 	tests := []struct {
 		name       string
 		url        string
@@ -266,6 +283,24 @@ func Test_getCLIVersionURL(t *testing.T) {
 			"https://dist.xebialabs.com/public/blueprints/${foo}",
 			"FOO9.0.0-SNAPSHOT",
 			"https://dist.xebialabs.com/public/blueprints/${foo}",
+		},
+		{
+			"should keep trying until it finds an existing version from patch",
+			models.DefaultBlueprintRepositoryUrl,
+			"9.0.1",
+			"https://dist.xebialabs.com/public/blueprints/9.0.0/",
+		},
+		{
+			"should keep trying until it finds an existing version from minor",
+			models.DefaultBlueprintRepositoryUrl,
+			"9.1.0",
+			"https://dist.xebialabs.com/public/blueprints/9.1/",
+		},
+		{
+			"should keep trying until it finds an existing version without patch",
+			models.DefaultBlueprintRepositoryUrl,
+			"9.2.0",
+			"https://dist.xebialabs.com/public/blueprints/9.1/",
 		},
 	}
 	for _, tt := range tests {
