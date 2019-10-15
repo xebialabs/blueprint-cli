@@ -40,7 +40,7 @@ func NewHttpBlueprintRepository(confMap map[string]string, CLIVersion string) (*
 	if !util.MapContainsKeyWithVal(confMap, "url") {
 		return nil, fmt.Errorf("'url' config field must be set for HTTP repository type")
 	}
-	parsedURL, err := url.ParseRequestURI(getCLIVersionURL(confMap["url"], CLIVersion, urlExistsChecker{}))
+	parsedURL, err := url.ParseRequestURI(getCLIVersionURL(confMap["url"], CLIVersion))
 	if err != nil {
 		return nil, fmt.Errorf("HTTP repository URL cannot be parsed: %s", err.Error())
 	}
@@ -162,14 +162,8 @@ func (repo *HttpBlueprintRepository) getResponseFromUrl(filePath string) (*http.
 	return response, nil
 }
 
-type URLExistsChecker interface {
-	URLExists(URL string) bool
-}
-
-type urlExistsChecker struct { }
-
-func (checker urlExistsChecker) URLExists(URL string) bool {
-	var httpClient = &http.Client{
+func URLExists(URL string) bool {
+	httpClient := &http.Client{
 		Timeout: 2 * time.Second,
 	}
 
@@ -185,10 +179,10 @@ func (checker urlExistsChecker) URLExists(URL string) bool {
 	return true
 }
 
-func getCLIVersionURL(url, CLIVersion string, checker URLExistsChecker) string {
+func getCLIVersionURL(url, CLIVersion string) string {
 	if strings.Contains(url, models.BlueprintCurrentCLIVersion) {
-		re1 := regexp.MustCompile("^([0-9]).([0-9]).([0-9])")
-		versions := re1.FindStringSubmatch(CLIVersion)
+		re := regexp.MustCompile("^([0-9]).([0-9]).([0-9])")
+		versions := re.FindStringSubmatch(CLIVersion)
 		if len(versions) == 4 {
 			// Tick down like a reverse odometer until an existing blueprint directory is found
 			yDigit, _ := strconv.Atoi(versions[2])
@@ -197,17 +191,17 @@ func getCLIVersionURL(url, CLIVersion string, checker URLExistsChecker) string {
 				for zDigit >= 0 {
 					// Match on x.y.z
 					URL := strings.Replace(url, models.BlueprintCurrentCLIVersion, fmt.Sprintf("%s.%d.%d", versions[1], yDigit, zDigit), -1)
-					if checker.URLExists(URL) {
+					if URLExists(URL) {
 						return URL
 					}
-					zDigit -= 1
+					zDigit--
 				}
 				// Match on x.y
 				URL := strings.Replace(url, models.BlueprintCurrentCLIVersion, fmt.Sprintf("%s.%d", versions[1], yDigit), -1)
-				if checker.URLExists(URL) {
+				if URLExists(URL) {
 					return URL
 				}
-				yDigit -= 1
+				yDigit--
 			}
 		}
 	}

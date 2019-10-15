@@ -2,7 +2,6 @@ package http
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -237,15 +236,24 @@ with a new line`),
 	})
 }
 
-type MockURLChecker struct {
-	ExistingVersion string
-}
-
-func (checker MockURLChecker) URLExists(URL string) bool {
-	return strings.Contains(URL, checker.ExistingVersion)
-}
-
 func Test_getCLIVersionURL(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder(
+		"GET",
+		"https://dist.xebialabs.com/public/blueprints/9.0.0/",
+		httpmock.NewStringResponder(200, `[
+            "aws/monolith"
+        ]`),
+	)
+	httpmock.RegisterResponder(
+		"GET",
+		"https://dist.xebialabs.com/public/blueprints/9.1/",
+		httpmock.NewStringResponder(200, `[
+            "aws/monolith"
+        ]`),
+	)
+
 	tests := []struct {
 		name       string
 		url        string
@@ -277,19 +285,27 @@ func Test_getCLIVersionURL(t *testing.T) {
 			"https://dist.xebialabs.com/public/blueprints/${foo}",
 		},
 		{
-			"should keep trying until it finds an existing version",
+			"should keep trying until it finds an existing version from patch",
 			models.DefaultBlueprintRepositoryUrl,
-			"9.1.1",
+			"9.0.1",
 			"https://dist.xebialabs.com/public/blueprints/9.0.0/",
 		},
-	}
-	var checker URLExistsChecker
-	checker = MockURLChecker{
-		ExistingVersion: "9.0.0",
+		{
+			"should keep trying until it finds an existing version from minor",
+			models.DefaultBlueprintRepositoryUrl,
+			"9.1.0",
+			"https://dist.xebialabs.com/public/blueprints/9.1/",
+		},
+		{
+			"should keep trying until it finds an existing version without patch",
+			models.DefaultBlueprintRepositoryUrl,
+			"9.2.0",
+			"https://dist.xebialabs.com/public/blueprints/9.1/",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getCLIVersionURL(tt.url, tt.CLIVersion, checker); got != tt.want {
+			if got := getCLIVersionURL(tt.url, tt.CLIVersion); got != tt.want {
 				t.Errorf("getCLIVersionURL() = %v, want %v", got, tt.want)
 			}
 		})
