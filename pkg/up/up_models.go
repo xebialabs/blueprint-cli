@@ -7,6 +7,7 @@ type UpParams struct {
 	BlueprintTemplate string
 	AnswerFile        string
 	CfgOverridden     bool
+	GITBranch         string
 	NoCleanup         bool
 	Undeploy          bool
 	DryRun            bool

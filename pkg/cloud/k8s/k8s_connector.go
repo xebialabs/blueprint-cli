@@ -127,7 +127,7 @@ func connectToEKS(answerMap map[string]string) (*restclient.Config, error) {
 
 // GetK8sConfiguration gets the Kubernetes connection configuration
 func GetK8sConfiguration(answerMap map[string]string) (*restclient.Config, error) {
-	if answerMap["IsEKS"] == "true" {
+	if answerMap["K8sSetup"] == "AwsEKS" {
 		return connectToEKS(answerMap)
 	}
 

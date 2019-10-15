@@ -35,13 +35,13 @@ var upCmd = &cobra.Command{
 var upParams = up.UpParams{}
 
 // DoUp executes the up command
-func DoUp(context *xl.Context, gitBranch string) {
+func DoUp(context *xl.Context, CliVersion string) {
 	util.Verbose("Running XL Seed\n")
 	gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 	if upParams.DryRun {
 		upParams.NoCleanup = true
 	}
-	err := up.InvokeBlueprintAndSeed(context.BlueprintContext, upParams, gitBranch, gb)
+	err := up.InvokeBlueprintAndSeed(context.BlueprintContext, upParams, CliVersion, gb)
 	if err != nil {
 		util.Fatal("Error while running xl-up: %s\n", err)
 	}
@@ -57,6 +57,7 @@ func init() {
 	upFlags.StringVarP(&upParams.BlueprintTemplate, "blueprint", "b", "", "The folder path containing the xl-infra blueprint, relative to the active repository")
 	upFlags.StringVarP(&upParams.LocalPath, "local-repo", "l", "", "Provide local folder path where blueprints are located, by default a remote repository is used")
 	upFlags.StringVarP(&upParams.AnswerFile, "answers", "a", "", "The file containing answers for the questions")
+	upFlags.StringVarP(&upParams.GITBranch, "git-branch", "g", "", "Use a branch from the official GIT repository instead of the default HTTP repository")
 	upFlags.BoolVarP(&upParams.QuickSetup, "quick-setup", "", false, "Quickly run setup with all default values")
 	upFlags.BoolVarP(&upParams.AdvancedSetup, "advanced-setup", "", false, "Advanced setup")
 	upFlags.BoolVar(&upParams.NoCleanup, "no-cleanup", false, "Leave generated files on the filesystem")

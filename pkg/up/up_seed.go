@@ -12,6 +12,7 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
@@ -23,7 +24,7 @@ var applyValues map[string]string
 var SkipPrompts = false
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
-func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, gitBranch string, gb *blueprint.GeneratedBlueprint) error {
+func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, CliVersion string, gb *blueprint.GeneratedBlueprint) error {
 
 	if !upParams.DryRun {
 		defer util.StopAndRemoveContainer(s)
@@ -59,13 +60,21 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err != nil {
 			return fmt.Errorf("error while creating local blueprint context: %s", err)
 		}
-	} else if upParams.LocalPath == "" && !upParams.CfgOverridden {
-		upParams.BlueprintTemplate = DefaultInfraBlueprintTemplate
-		repo, err := getRepo(gitBranch)
+	} else if !upParams.CfgOverridden {
+		var repo repository.BlueprintRepository
+		if upParams.GITBranch != "" {
+			repo, err = getGitRepo(upParams.GITBranch)
+		} else {
+			repo, err = getHttpRepo(CliVersion)
+		}
 		if err != nil {
 			return err
 		}
 		blueprintContext.ActiveRepo = &repo
+	}
+
+	if upParams.BlueprintTemplate == "" {
+		upParams.BlueprintTemplate = DefaultInfraBlueprintTemplate
 	}
 
 	var answers map[string]string
@@ -178,7 +187,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	util.IsQuiet = true
-	if err = runApplicationBlueprint(&upParams, blueprintContext, gb, gitBranch, preparedData, answers, answersFromInfra); err != nil {
+	if err = runApplicationBlueprint(&upParams, blueprintContext, gb, CliVersion, preparedData, answers, answersFromInfra); err != nil {
 		return err
 	}
 	util.IsQuiet = false
@@ -224,15 +233,6 @@ func processAnswerMapFromPreparedData(preparedData *blueprint.PreparedData) map[
 		answers[k] = fmt.Sprintf("%v", v)
 	}
 
-	if util.MapContainsKeyWithVal(answers, "K8sSetup") {
-		if answers["K8sSetup"] == "GoogleGKE" {
-			answers["IsGKE"] = "true"
-		}
-		if answers["K8sSetup"] == "AwsEKS" {
-			answers["IsEKS"] = "true"
-		}
-	}
-
 	return answers
 }
 
@@ -246,18 +246,13 @@ func parseConfigMap(configMap string) (map[string]string, error) {
 	return answerMapFromConfigMap, nil
 }
 
-func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint, gitBranch string, preparedData *blueprint.PreparedData, answers, answersFromInfra map[string]string) error {
+func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint, CliVersion string, preparedData *blueprint.PreparedData, answers, answersFromInfra map[string]string) error {
 	var err error
 	// Switch blueprint once the infrastructure is done.
-	if upParams.BlueprintTemplate != "" {
+	if upParams.BlueprintTemplate != "" && strings.Contains(upParams.BlueprintTemplate, DefaultInfraBlueprintTemplate) {
 		upParams.BlueprintTemplate = strings.Replace(upParams.BlueprintTemplate, DefaultInfraBlueprintTemplate, DefaultBlueprintTemplate, 1)
 	} else {
 		upParams.BlueprintTemplate = DefaultBlueprintTemplate
-		repo, err := getRepo(gitBranch)
-		if err != nil {
-			return err
-		}
-		blueprintContext.ActiveRepo = &repo
 	}
 
 	if answers != nil {

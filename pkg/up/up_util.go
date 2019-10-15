@@ -14,6 +14,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
+	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/http"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/version"
@@ -85,21 +86,21 @@ func getTokenFromEnv() string {
 	return os.Getenv("XL_UP_GITHUB_TOKEN")
 }
 
-func getRepo(gitBranch string) (repository.BlueprintRepository, error) {
-
-	repo, err := github.NewGitHubBlueprintRepository(map[string]string{
+func getGitRepo(branch string) (repository.BlueprintRepository, error) {
+	return github.NewGitHubBlueprintRepository(map[string]string{
 		"name":      XlUpBlueprint,
 		"repo-name": XlUpBlueprint,
 		"owner":     Xebialabs,
-		"branch":    gitBranch,
+		"branch":    branch,
 		"token":     getTokenFromEnv(),
 	})
+}
 
-	if err != nil {
-		return nil, fmt.Errorf("error while creating Blueprint: %s", err)
-	}
-
-	return repo, nil
+func getHttpRepo(CliVersion string) (repository.BlueprintRepository, error) {
+	return http.NewHttpBlueprintRepository(map[string]string{
+		"name": XlUpBlueprint,
+		"url":  models.DefaultXLUPBlueprintRepositoryUrl,
+	}, CliVersion)
 }
 
 func generateLicenseAndKeystore(answerMapFromConfigMap map[string]string, gb *blueprint.GeneratedBlueprint) error {

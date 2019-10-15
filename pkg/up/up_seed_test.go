@@ -188,12 +188,17 @@ users:
     token: 6555565666666666666`
 
 var TestLocalPath = ""
-var TestBranch = "beta"
+var CLIVersion = "9.1.0"
+var GITBranch = "beta"
 
 func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 	// enable for local testing
 	// TestLocalPath = "../../../xl-up-blueprint"
+
+	// enable for local testing with HTTP repo or a different git branch
+	// GITBranch = ""
+	// CLIVersion = "9.1.0"
 
 	SkipPrompts = true
 	blueprint.SkipFinalPrompt = true
@@ -230,8 +235,9 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				Undeploy:          false,
 				DryRun:            true,
 				SkipK8sConnection: true,
+				GITBranch:         GITBranch,
 			},
-			TestBranch,
+			CLIVersion,
 			gb,
 		)
 
@@ -333,8 +339,9 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				Undeploy:          false,
 				DryRun:            true,
 				SkipK8sConnection: true,
+				GITBranch:         GITBranch,
 			},
-			TestBranch,
+			CLIVersion,
 			gb,
 		)
 
@@ -405,7 +412,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			UpParams{
 				// enable for local testing
 				LocalPath:         TestLocalPath,
-				BlueprintTemplate: "xl-infra",
 				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
 				QuickSetup:        true,
 				AdvancedSetup:     false,
@@ -414,8 +420,9 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				Undeploy:          true,
 				DryRun:            true,
 				SkipK8sConnection: true,
+				GITBranch:         GITBranch,
 			},
-			TestBranch,
+			CLIVersion,
 			gb,
 		)
 
