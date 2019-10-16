@@ -6,7 +6,8 @@ const (
 	BlueprintOutputDir         = "xebialabs"
 	BlueprintFinalPrompt       = "Confirm to generate blueprint files?"
 	UpFinalPrompt              = "Do you want to accept the default values?"
-	UndeployConfirmationPrompt = "Are you sure you want to undeploy everything? This cannot be undone"
+	UndeployConfirmationPrompt = "Xebialabs Devops platform is already deployed on this cluster. Are you sure you want to undeploy everything? This cannot be undone"
+	UpdateConfirmationPrompt   = "Xebialabs Devops platform is already deployed on this cluster. Are you sure you want to update? This cannot be undone"
 )
 
 // Function Result definition

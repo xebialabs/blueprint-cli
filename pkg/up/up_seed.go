@@ -114,8 +114,9 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 			if err != nil {
 				return err
-			} else if shouldUndeploy == false {
-				return fmt.Errorf("undeployment cancelled")
+			}
+			if shouldUndeploy == false {
+				return fmt.Errorf("undeployment cancelled by user")
 			}
 		}
 
@@ -142,6 +143,17 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	if configMap != "" {
+		if !SkipPrompts {
+			shouldUpdate := false
+			err := survey.AskOne(&survey.Confirm{Message: models.UpdateConfirmationPrompt, Default: false}, &shouldUpdate, nil)
+
+			if err != nil {
+				return err
+			}
+			if shouldUpdate == false {
+				return fmt.Errorf("Update cancelled by user")
+			}
+		}
 		util.Verbose("Update workflow started.... \n")
 
 		answersFromConfigMap, err := parseConfigMap(configMap)
