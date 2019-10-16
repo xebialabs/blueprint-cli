@@ -14,6 +14,7 @@ func askSetupMode(surveyOpts ...survey.AskOpt) (string, error) {
 				Message: "Select the setup mode?",
 				Options: []string{"advanced", "quick"},
 				Default: "advanced",
+				Help:    "Quick setup will use sensible default values for many of the options while Advanced setup will let the user provide values for all the options",
 			},
 			&answer,
 			survey.Required,
