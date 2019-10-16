@@ -14,7 +14,7 @@ pipeline {
         stage('Build XL CLI on Linux') {
             agent {
                 node {
-                    label 'xld||xlr'
+                    label 'xld||xlr||xli'
                 }
             }
 
@@ -40,14 +40,14 @@ pipeline {
         success {
             script {
                 if(env.BRANCH_NAME == 'master'){
-                    slackSend color: "good", tokenCredentialId: "slack-token", message: "XL Cli master build *SUCCESS* - <${env.BUILD_URL}|click to open>", channel: 'team-developer-love'
+                    slackSend color: "good", tokenCredentialId: "slack-token", message: "XL Cli master build *SUCCESS* - <${env.BUILD_URL}|click to open>", channel: 'team-love'
                 }
             }
         }
         failure {
             script {
                 if(env.BRANCH_NAME == 'master'){
-                    slackSend color: "danger", tokenCredentialId: "slack-token", message: "XL Cli master build *FAILED* - <${env.BUILD_URL}|click to open>", channel: 'team-developer-love'
+                    slackSend color: "danger", tokenCredentialId: "slack-token", message: "XL Cli master build *FAILED* - <${env.BUILD_URL}|click to open>", channel: 'team-love'
                 }
             }
         }

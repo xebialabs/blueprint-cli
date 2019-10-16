@@ -20,7 +20,7 @@ pipeline {
         stage('Release and publish XL Cli') {
             agent {
                 node {
-                    label 'xld||xlr'
+                    label 'xld||xlr||xli'
                 }
             }
 
@@ -46,15 +46,15 @@ pipeline {
     post {
         success {
             script {
-                if (env.BRANCH_NAME == 'master') {
-                    hipchatSend color: 'GREEN', credentialId: 'hipchat-token', message: "XL Cli master release <b>SUCCESS</b> - <a href=\"${BUILD_URL}\">click to open</a>", notify: false, room: 'Developer ❤️'
+                if(env.BRANCH_NAME == 'master'){
+                    slackSend color: "good", tokenCredentialId: "slack-token", message: "XL Cli master release *SUCCESS* - <${env.BUILD_URL}|click to open>", channel: 'team-love'
                 }
             }
         }
         failure {
             script {
-                if (env.BRANCH_NAME == 'master') {
-                    hipchatSend color: 'RED', credentialId: 'hipchat-token', message: "XL Cli master release <b>FAILED</b> - <a href=\"${BUILD_URL}\">click to open</a>", notify: true, room: 'Developer ❤️'
+                if(env.BRANCH_NAME == 'master'){
+                    slackSend color: "danger", tokenCredentialId: "slack-token", message: "XL Cli master release *FAILED* - <${env.BUILD_URL}|click to open>", channel: 'team-love'
                 }
             }
         }
