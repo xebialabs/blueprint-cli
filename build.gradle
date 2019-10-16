@@ -151,12 +151,11 @@ goBuild {
         "'"
 
     def debugFlags = project.hasProperty("debug") ? " -gcflags \"all=-N -l\"" : ""
-    def includeXlUp = project.hasProperty("includeXlUp") ? "-tags=includeXlUp" : ""
 
     run Paths.get("\${GOPATH}/bin/packr").toString() + " -i cmd/xl"
     go "generate cmd/xl/cmd/wrapper.go"
     // The ${} placeholder will be rendered in cross-compile
-    go "build${debugFlags}${ldflags} ${includeXlUp} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
+    go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
     dumpVersion
 
     finalizedBy ':copyVendor' // so that editors can find the source of dependencies
