@@ -15,10 +15,17 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
+const (
+	DEPLOYING = iota
+	UNDEPLOYING
+	UPDATING
+	UNKNOWN
+)
+
 var currentTask = ""
 var ctDesc = ""
 
-var deploy = true
+var phase = UNKNOWN
 
 // TODO a better way or to use the APIs available
 var generatedPlan = "c.x.d.s.deployment.DeploymentService - Generated plan"
@@ -26,53 +33,69 @@ var phaseLogEnd = "on K8S"
 var executedLog = "is completed with state [DONE]"
 var failExecutedLog = "is completed with state [FAILED]"
 
+func identifyPhase(log string) (phase int, start int) {
+	switch {
+	case strings.Contains(log, "# [Serial] Deploy"):
+		return DEPLOYING, getIndexPlusLen(log, "# [Serial] Deploy")
+	case strings.Contains(log, "* Deploy"):
+		return DEPLOYING, getIndexPlusLen(log, "* Deploy")
+	case strings.Contains(log, "# [Serial] Update"):
+		return UPDATING, getIndexPlusLen(log, "# [Serial] Update")
+	case strings.Contains(log, "* Update"):
+		return UPDATING, getIndexPlusLen(log, "* Update")
+	case strings.Contains(log, "# [Serial] Undeploy"):
+		return UNDEPLOYING, getIndexPlusLen(log, "# [Serial] Undeploy")
+	case strings.Contains(log, "* Undeploy"):
+		return UNDEPLOYING, getIndexPlusLen(log, "* Undeploy")
+	default:
+		return UNKNOWN, -1
+	}
+}
+
 func logCapture(w io.Writer, d []byte, s *spinner.Spinner) {
 	eventLog := string(d)
 
 	if strings.Index(eventLog, generatedPlan) != -1 {
 		currentTask = getCurrentTask(eventLog, strings.Index(eventLog, generatedPlan))
 		if currentTask != "" {
-			start := getIndexPlusLen(eventLog, "# [Serial] Deploy")
+			phase2, start := identifyPhase(eventLog)
+			phase = phase2
 			end := strings.Index(eventLog, phaseLogEnd)
-
-			if start < 0 {
-				start = getIndexPlusLen(eventLog, "* Deploy")
-			}
-
-			if start < 0 {
-				start = getIndexPlusLen(eventLog, "# [Serial] Update")
-			}
-
-			if start < 0 {
-				start = getIndexPlusLen(eventLog, "* Update")
-			}
 
 			if start >= 0 && end >= 0 {
 				ctDesc = eventLog[start:end]
-				write(getCurrentStage(false, true), s, w)
+				write(getCurrentStage(false, phase), s, w)
 			}
 		}
 	}
 
 	if strings.Index(eventLog, failExecutedLog) != -1 {
-		if deploy {
+		if phase == DEPLOYING || phase == UPDATING {
 			write("Failed deploying for ", s, w)
-			deploy = false
-			write(getCurrentStage(false, deploy), s, w)
+			phase = UNDEPLOYING
+			write(getCurrentStage(false, phase), s, w)
 		} else {
 			write("Failed undeploying for ", s, w)
 		}
 	}
 
 	if strings.Index(eventLog, executedLog) != -1 {
-		write(getCurrentStage(true, deploy), s, w)
+		write(getCurrentStage(true, phase), s, w)
 	}
 }
 
-func getCurrentStage(isExecuted, deploy bool) string {
-	currentStage := "Deploy"
-	if !deploy {
+func getCurrentStage(isExecuted bool, phase int) string {
+	var currentStage string
+
+	switch phase {
+	case DEPLOYING:
+		currentStage = "Deploy"
+	case UNDEPLOYING:
 		currentStage = "Undeploy"
+	case UPDATING:
+		currentStage = "Updat" // isExecuted appends ed/ing
+	default:
+		currentStage = "Finish"
 	}
 
 	if isExecuted {
@@ -84,8 +107,16 @@ func getCurrentStage(isExecuted, deploy bool) string {
 	return currentStage
 }
 
+var lastWritten = ""
+
 func write(currentStage string, s *spinner.Spinner, w io.Writer) {
+	if phase == UNKNOWN || currentStage == lastWritten {
+		return
+	}
+
 	if ctDesc != "" {
+		lastWritten = currentStage
+
 		s.Stop()
 		w.Write([]byte(currentStage + ctDesc + "\n\n"))
 		s.Start()
