@@ -32,6 +32,7 @@ const (
 	ContextPrefix       = "blueprint"
 	RepositoryConfigKey = ContextPrefix + ".repositories"
 	templateExtension   = ".tmpl"
+	fragmentsDir        = "fragments"
 
 	FlagBlueprintCurrentRepository     = ContextPrefix + "-current-repository"
 	ViperKeyBlueprintCurrentRepository = ContextPrefix + ".current-repository"
@@ -263,7 +264,10 @@ func (blueprintContext *BlueprintContext) askUserToChooseBlueprint(blueprints ma
 	if blueprintTemplate == "" {
 		var blueprintKeys []string
 		for k := range blueprints {
-			blueprintKeys = append(blueprintKeys, k)
+			// Hide blueprints in the fragments directory
+			if !strings.HasPrefix(k, fragmentsDir) {
+				blueprintKeys = append(blueprintKeys, k)
+			}
 		}
 		if len(blueprintKeys) == 0 {
 			return "", fmt.Errorf(
