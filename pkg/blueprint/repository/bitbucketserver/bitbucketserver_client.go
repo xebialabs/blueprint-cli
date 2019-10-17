@@ -21,7 +21,7 @@ func NewBitbucketServerClient(url string, username string, token string, isMock 
 		// return mock github client for testing purposes
 		workDir, _ := os.Getwd()
 		testFileFetcher := localFileFetcher{
-			SourceDir: filepath.Join(workDir, "..", "..", "..", "..", "bitbucketserver-mock"),
+			SourceDir: filepath.Join(workDir, "..", "..", "..", "..", "mock", "bitbucketserver"),
 			FileExt:   ".json",
 		}
 		return &BitbucketServerClient{

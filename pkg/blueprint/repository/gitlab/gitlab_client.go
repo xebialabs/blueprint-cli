@@ -39,7 +39,7 @@ func NewGitLabClient(token string, isMock bool) *GitLabClient {
 		// return mock gitlab client for testing purposes
 		workDir, _ := os.Getwd()
 		testFileFetcher := localFileFetcher{
-			SourceDir: filepath.Join(workDir, "..", "..", "..", "..", "gitlab-mock"),
+			SourceDir: filepath.Join(workDir, "..", "..", "..", "..", "mock", "gitlab"),
 			FileExt:   ".json",
 		}
 		return &GitLabClient{

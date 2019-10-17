@@ -41,7 +41,7 @@ func NewGithubClient(token string, isMock bool) *GithubClient {
         // return mock github client for testing purposes
         workDir, _ := os.Getwd()
         testFileFetcher := localFileFetcher{
-            SourceDir: filepath.Join(workDir, "..", "..", "..", "..", "github-mock"),
+            SourceDir: filepath.Join(workDir, "..", "..", "..", "..", "mock", "github"),
             FileExt:   ".json",
         }
         return &GithubClient{
