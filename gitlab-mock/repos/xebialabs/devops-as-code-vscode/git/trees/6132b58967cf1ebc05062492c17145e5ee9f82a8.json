@@ -1,0 +1,702 @@
+[
+    {
+        "id": "9ea42ccd2b715038dd5ab24e2b98be1379b09ed1",
+        "name": "aws",
+        "type": "tree",
+        "path": "aws",
+        "mode": "040000"
+    },
+    {
+        "id": "565fe55943a4c045ed7e3b1dc63e7e1680a5d791",
+        "name": "basic-eks-cluster",
+        "type": "tree",
+        "path": "aws/basic-eks-cluster",
+        "mode": "040000"
+    },
+    {
+        "id": "4d1d3c3fe5a84e6f387decee6a4032a5a0e0ada0",
+        "name": "__test__",
+        "type": "tree",
+        "path": "aws/basic-eks-cluster/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "c5d9cf8fa30cc88a3aa473eb5fa1d699f044362f",
+        "name": "cloudformation",
+        "type": "tree",
+        "path": "aws/basic-eks-cluster/cloudformation",
+        "mode": "040000"
+    },
+    {
+        "id": "6543bce06f44c64eea5f994503eb6776f644de22",
+        "name": "kubernetes",
+        "type": "tree",
+        "path": "aws/basic-eks-cluster/kubernetes",
+        "mode": "040000"
+    },
+    {
+        "id": "b1468fccd4696351dfe61fc9b1ff5c56e133ec75",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "aws/basic-eks-cluster/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "756538971a1d8775bb45f7169d59216d387b13e3",
+        "name": "basic-lambda",
+        "type": "tree",
+        "path": "aws/basic-lambda",
+        "mode": "040000"
+    },
+    {
+        "id": "1c210b70f6d9005bb38961b17831d847b5ba68b5",
+        "name": "__test__",
+        "type": "tree",
+        "path": "aws/basic-lambda/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "8596cfe47a1e659fb9083457528323f868b7ea10",
+        "name": "cloudformation",
+        "type": "tree",
+        "path": "aws/basic-lambda/cloudformation",
+        "mode": "040000"
+    },
+    {
+        "id": "984816ba2a97ded9a5b26ef7e363a48f80bd23dc",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "aws/basic-lambda/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "02b78eb6e86917b95383749ecb53bed28c9fc28f",
+        "name": "datalake",
+        "type": "tree",
+        "path": "aws/datalake",
+        "mode": "040000"
+    },
+    {
+        "id": "8be505f53aea4c662b8f2f61721d9d005f0b4001",
+        "name": "__test__",
+        "type": "tree",
+        "path": "aws/datalake/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "126444a1a1922a0a87c897553cf834880c61f939",
+        "name": "cloudformation",
+        "type": "tree",
+        "path": "aws/datalake/cloudformation",
+        "mode": "040000"
+    },
+    {
+        "id": "70c2b34621bee217d6e1bb1b31232e9e2cadb671",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "aws/datalake/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "fc6f01ff32d8fdece1fbd8159b1997e74c7ed443",
+        "name": "elastic-beanstalk",
+        "type": "tree",
+        "path": "aws/elastic-beanstalk",
+        "mode": "040000"
+    },
+    {
+        "id": "e0f6a162f3e02a1f237a4d2bed980b78e4d43cdc",
+        "name": "__test__",
+        "type": "tree",
+        "path": "aws/elastic-beanstalk/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "3a7282126a1a64c8ff4834be84c2dff361f84e88",
+        "name": "cloudformation",
+        "type": "tree",
+        "path": "aws/elastic-beanstalk/cloudformation",
+        "mode": "040000"
+    },
+    {
+        "id": "9861f789f416f7b46c60f4a58ca72797db4f49bd",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "aws/elastic-beanstalk/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "22cbd27ab897b96e803ccd68c43f96f3d9d7f320",
+        "name": "intermediate-eks-cluster",
+        "type": "tree",
+        "path": "aws/intermediate-eks-cluster",
+        "mode": "040000"
+    },
+    {
+        "id": "72c4ccb3fdd9cf3069a575fdf6c16aebab9c57d6",
+        "name": "__test__",
+        "type": "tree",
+        "path": "aws/intermediate-eks-cluster/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "aca20019fc48f28fe79be533f3e8805c605a95e7",
+        "name": "cloudformation",
+        "type": "tree",
+        "path": "aws/intermediate-eks-cluster/cloudformation",
+        "mode": "040000"
+    },
+    {
+        "id": "6543bce06f44c64eea5f994503eb6776f644de22",
+        "name": "kubernetes",
+        "type": "tree",
+        "path": "aws/intermediate-eks-cluster/kubernetes",
+        "mode": "040000"
+    },
+    {
+        "id": "747ad28224ef85806ee816d721f3275a8f1563df",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "aws/intermediate-eks-cluster/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "f16cdc2861867ffbb5f931b40134e0c0a9fe1587",
+        "name": "microservice-ecommerce",
+        "type": "tree",
+        "path": "aws/microservice-ecommerce",
+        "mode": "040000"
+    },
+    {
+        "id": "d1b192f01b9d7a4b541825ba5d9c9577f4841e68",
+        "name": "__test__",
+        "type": "tree",
+        "path": "aws/microservice-ecommerce/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "24eaa2a71b4749310243c65e0f681f2a8319b1ad",
+        "name": "cloudformation",
+        "type": "tree",
+        "path": "aws/microservice-ecommerce/cloudformation",
+        "mode": "040000"
+    },
+    {
+        "id": "6543bce06f44c64eea5f994503eb6776f644de22",
+        "name": "kubernetes",
+        "type": "tree",
+        "path": "aws/microservice-ecommerce/kubernetes",
+        "mode": "040000"
+    },
+    {
+        "id": "91b0cd37c88d5d787492378f429a489ba2238746",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "aws/microservice-ecommerce/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "2eae7ab402bc59c18bd889bfb4c957d01224ae33",
+        "name": "monolith-terraform",
+        "type": "tree",
+        "path": "aws/monolith-terraform",
+        "mode": "040000"
+    },
+    {
+        "id": "bb05a3f87c709db84856c3e304a2b3eaffb64b16",
+        "name": "__test__",
+        "type": "tree",
+        "path": "aws/monolith-terraform/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "61d1f14aa8f0d88d0a1e9b8347d42db75c60e80e",
+        "name": "terraform",
+        "type": "tree",
+        "path": "aws/monolith-terraform/terraform",
+        "mode": "040000"
+    },
+    {
+        "id": "6e9d72770e770f45b54883bd2190af9999a6e010",
+        "name": "infrastructure",
+        "type": "tree",
+        "path": "aws/monolith-terraform/terraform/infrastructure",
+        "mode": "040000"
+    },
+    {
+        "id": "11698d060d54dd09ac5d5ffc4ce52fd504ecef2f",
+        "name": "service",
+        "type": "tree",
+        "path": "aws/monolith-terraform/terraform/service",
+        "mode": "040000"
+    },
+    {
+        "id": "a065311b07c8e100882f9d31ad2f1348e87582f9",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "aws/monolith-terraform/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "c772c0e10a1c99d17d04d7e393cdb49a24c962b9",
+        "name": "monolith",
+        "type": "tree",
+        "path": "aws/monolith",
+        "mode": "040000"
+    },
+    {
+        "id": "e97a50703e103638a1f6d37b23c7e1c926e4084c",
+        "name": "__test__",
+        "type": "tree",
+        "path": "aws/monolith/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "40222d3553485258683240da18c737ab06fc5024",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "aws/monolith/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "bb37e6de008a2b4817cfca7bb69d516e1acff492",
+        "name": "azure",
+        "type": "tree",
+        "path": "azure",
+        "mode": "040000"
+    },
+    {
+        "id": "d4ad9b246136a1d04a00a9e00663e35f8df83b6d",
+        "name": "app-service-docker-app",
+        "type": "tree",
+        "path": "azure/app-service-docker-app",
+        "mode": "040000"
+    },
+    {
+        "id": "46775e89ce93fcf7cac70a49cc55ebe254578bcd",
+        "name": "__test__",
+        "type": "tree",
+        "path": "azure/app-service-docker-app/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "2eb2e6a6073a6fc7c2286b5e87e7bc537a2efe64",
+        "name": "terraform",
+        "type": "tree",
+        "path": "azure/app-service-docker-app/terraform",
+        "mode": "040000"
+    },
+    {
+        "id": "2126e5b85aa63228ab3f79832eefc17b7a563c50",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "azure/app-service-docker-app/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "c539d48cf88cb47286b3dfa59fe4b1d4e56647bd",
+        "name": "basic-aks-cluster",
+        "type": "tree",
+        "path": "azure/basic-aks-cluster",
+        "mode": "040000"
+    },
+    {
+        "id": "f2dc4aff06c64ed0477126767b0b94e044530027",
+        "name": "__test__",
+        "type": "tree",
+        "path": "azure/basic-aks-cluster/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "96e0b3ae154af0d6c12b16b9829951f1f862ed71",
+        "name": "terraform-azure-basic-aks-cluster",
+        "type": "tree",
+        "path": "azure/basic-aks-cluster/terraform-azure-basic-aks-cluster",
+        "mode": "040000"
+    },
+    {
+        "id": "b62fcefcd316a7795d68e5bd5261ca5bde873319",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "azure/basic-aks-cluster/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "73db15f2b7f3e9b4ba1322534a9a29dd59587112",
+        "name": "microservice-ecommerce",
+        "type": "tree",
+        "path": "azure/microservice-ecommerce",
+        "mode": "040000"
+    },
+    {
+        "id": "f3850cf976d51e662f51b4c2868aaaf80a0e8162",
+        "name": "__test__",
+        "type": "tree",
+        "path": "azure/microservice-ecommerce/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "ab8a6f7e5315393ea723be60aea5f89b61c2287c",
+        "name": "terraform",
+        "type": "tree",
+        "path": "azure/microservice-ecommerce/terraform",
+        "mode": "040000"
+    },
+    {
+        "id": "65fab4c36e4e2634e87915703a165badb0b66d86",
+        "name": "aks",
+        "type": "tree",
+        "path": "azure/microservice-ecommerce/terraform/aks",
+        "mode": "040000"
+    },
+    {
+        "id": "aa2d35fb812635e3474b6fcfad18cbdba18b14d5",
+        "name": "vpc",
+        "type": "tree",
+        "path": "azure/microservice-ecommerce/terraform/vpc",
+        "mode": "040000"
+    },
+    {
+        "id": "7e9319361b06bc252510d4e81457f65991cff949",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "azure/microservice-ecommerce/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "45a1be2e51596bad64a5f438ede725dac8697ac8",
+        "name": "blueprint-skeleton",
+        "type": "tree",
+        "path": "blueprint-skeleton",
+        "mode": "040000"
+    },
+    {
+        "id": "cde3f209c8072543ff18ecd8bffcc0aa6a058a0b",
+        "name": "__test__",
+        "type": "tree",
+        "path": "blueprint-skeleton/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "f392cf0d22cef80ddaa12424091afce1aee9b1c7",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "blueprint-skeleton/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "9946ca3f82029c862a74723d21c7271acc2012ca",
+        "name": "devsecops",
+        "type": "tree",
+        "path": "devsecops",
+        "mode": "040000"
+    },
+    {
+        "id": "43c75af9703e31c45bb6a7c0e7a535b4884b46a8",
+        "name": "security-scanning",
+        "type": "tree",
+        "path": "devsecops/security-scanning",
+        "mode": "040000"
+    },
+    {
+        "id": "9ac4824fb483e7d9a686cacf28e35c1d49173314",
+        "name": "__test__",
+        "type": "tree",
+        "path": "devsecops/security-scanning/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "ce9618a512521830dc0b2778479fe32daa340814",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "devsecops/security-scanning/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "3000812bdd3b8dccf75e6a6f222e8bc7cf76e77a",
+        "name": "docker",
+        "type": "tree",
+        "path": "docker",
+        "mode": "040000"
+    },
+    {
+        "id": "8631ed533df9b37faacf72ac43a70f51a80f2f4d",
+        "name": "application",
+        "type": "tree",
+        "path": "docker/application",
+        "mode": "040000"
+    },
+    {
+        "id": "91409dfb87478ea499f9037e1de85f684005d771",
+        "name": "__test__",
+        "type": "tree",
+        "path": "docker/application/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "d347106ae344278941c9c070bff65ee49bed68b5",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "docker/application/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "8278a4056f321189e797810bbb4ab026c2fd1528",
+        "name": "composable-demo",
+        "type": "tree",
+        "path": "docker/composable-demo",
+        "mode": "040000"
+    },
+    {
+        "id": "a4076c837c48f60b9a6448d055a8fce322b2acfa",
+        "name": "__test__",
+        "type": "tree",
+        "path": "docker/composable-demo/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "747db5b5742ee7223176ce7b1cb900c5feba956b",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "docker/composable-demo/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "bdc4683bca14e4f39a10bbc980c7cbe487e5e337",
+        "name": "environment",
+        "type": "tree",
+        "path": "docker/environment",
+        "mode": "040000"
+    },
+    {
+        "id": "cc23fbacc16194bd350abd101297c1f6b25bc74f",
+        "name": "__test__",
+        "type": "tree",
+        "path": "docker/environment/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "c18ef5214e266bea43ee7bde32b9e84da8bbcb8b",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "docker/environment/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "e667c492ca7ef77aceb6b53485388d5ac867c883",
+        "name": "simple-demo-app",
+        "type": "tree",
+        "path": "docker/simple-demo-app",
+        "mode": "040000"
+    },
+    {
+        "id": "724da848542debae331010198e88c0a776401f10",
+        "name": "__test__",
+        "type": "tree",
+        "path": "docker/simple-demo-app/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "6faf513efd4ddddfe6f95a4d9306ecd19481e429",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "docker/simple-demo-app/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "bfc90e0494e51e566acaf3fbef3380a269cf223a",
+        "name": "gcp",
+        "type": "tree",
+        "path": "gcp",
+        "mode": "040000"
+    },
+    {
+        "id": "f9a74596e83305418a53289dbf7977818e45c57b",
+        "name": "basic-gke-cluster",
+        "type": "tree",
+        "path": "gcp/basic-gke-cluster",
+        "mode": "040000"
+    },
+    {
+        "id": "21e7828455d06da5e0045ae1eb42bd0e15e53590",
+        "name": "__test__",
+        "type": "tree",
+        "path": "gcp/basic-gke-cluster/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "5f2d8b40b34f473001f4159b9cd1bfbe33f3b0a6",
+        "name": "terraform-gcp-basic-gke-cluster",
+        "type": "tree",
+        "path": "gcp/basic-gke-cluster/terraform-gcp-basic-gke-cluster",
+        "mode": "040000"
+    },
+    {
+        "id": "94f91861d89c21f916073cc39d19aca68c0fc880",
+        "name": "gke",
+        "type": "tree",
+        "path": "gcp/basic-gke-cluster/terraform-gcp-basic-gke-cluster/gke",
+        "mode": "040000"
+    },
+    {
+        "id": "e73610067b99de8b31e2e6b21c36f8de87e145c6",
+        "name": "vpc",
+        "type": "tree",
+        "path": "gcp/basic-gke-cluster/terraform-gcp-basic-gke-cluster/vpc",
+        "mode": "040000"
+    },
+    {
+        "id": "a51475e793ca3058e6536a6219da3668ded4b727",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "gcp/basic-gke-cluster/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "a90a460811ce03c9df2ad47add14d688f71a8d17",
+        "name": "microservice-ecommerce",
+        "type": "tree",
+        "path": "gcp/microservice-ecommerce",
+        "mode": "040000"
+    },
+    {
+        "id": "93bf1104da596ce205d5118d2c085bb390af46cf",
+        "name": "__test__",
+        "type": "tree",
+        "path": "gcp/microservice-ecommerce/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "a7cad5eccc13e1b3873628a87efe085fc6ba5008",
+        "name": "terraform",
+        "type": "tree",
+        "path": "gcp/microservice-ecommerce/terraform",
+        "mode": "040000"
+    },
+    {
+        "id": "94f91861d89c21f916073cc39d19aca68c0fc880",
+        "name": "gke",
+        "type": "tree",
+        "path": "gcp/microservice-ecommerce/terraform/gke",
+        "mode": "040000"
+    },
+    {
+        "id": "e73610067b99de8b31e2e6b21c36f8de87e145c6",
+        "name": "vpc",
+        "type": "tree",
+        "path": "gcp/microservice-ecommerce/terraform/vpc",
+        "mode": "040000"
+    },
+    {
+        "id": "2608f4aa9cb675dc78bf13394cee8d86704cff30",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "gcp/microservice-ecommerce/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "7a4082c86d845f28ad8ee8311dbd0c672a1d160f",
+        "name": "kubernetes",
+        "type": "tree",
+        "path": "kubernetes",
+        "mode": "040000"
+    },
+    {
+        "id": "b5c1428eaed959ad62f4cd80c30c331fbb857cad",
+        "name": "application",
+        "type": "tree",
+        "path": "kubernetes/application",
+        "mode": "040000"
+    },
+    {
+        "id": "619a43c39ac7d722ea0f265d13a93f5d9e2ae5db",
+        "name": "__test__",
+        "type": "tree",
+        "path": "kubernetes/application/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "282ebecde0ab71ad15f6e376ae843a6cf6431ff7",
+        "name": "kubernetes",
+        "type": "tree",
+        "path": "kubernetes/application/kubernetes",
+        "mode": "040000"
+    },
+    {
+        "id": "f948f19c83f645490ffee5171773e3b6dd07c726",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "kubernetes/application/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "cc81e250e9cb6cfb56c665a5715f5c4658cfc6dd",
+        "name": "environment",
+        "type": "tree",
+        "path": "kubernetes/environment",
+        "mode": "040000"
+    },
+    {
+        "id": "0bae6bdda0bd22592ec4ed943ca45effa1cf55cd",
+        "name": "__test__",
+        "type": "tree",
+        "path": "kubernetes/environment/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "f301c5f04edce51416b2e2543058477d055a75f1",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "kubernetes/environment/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "715873d4d7dc2a29fc2830def2bd500d7de844eb",
+        "name": "multicloud-pipeline",
+        "type": "tree",
+        "path": "kubernetes/multicloud-pipeline",
+        "mode": "040000"
+    },
+    {
+        "id": "1ca93eb51e99f9270d27eaa68b6b0afdd5ade537",
+        "name": "__test__",
+        "type": "tree",
+        "path": "kubernetes/multicloud-pipeline/__test__",
+        "mode": "040000"
+    },
+    {
+        "id": "4c0375ce5b217b9ae14c53ca1051dcca0e4761c6",
+        "name": "aws",
+        "type": "tree",
+        "path": "kubernetes/multicloud-pipeline/__test__/aws",
+        "mode": "040000"
+    },
+    {
+        "id": "f935d468b032f10f50418c48fdf1d9e2f1c8de4f",
+        "name": "azure",
+        "type": "tree",
+        "path": "kubernetes/multicloud-pipeline/__test__/azure",
+        "mode": "040000"
+    },
+    {
+        "id": "a063377d6d24fdf5ed294c0a2ffb3bd23d812070",
+        "name": "gcp",
+        "type": "tree",
+        "path": "kubernetes/multicloud-pipeline/__test__/gcp",
+        "mode": "040000"
+    },
+    {
+        "id": "7317b8cdada0a9435dd6678c5d479d4e1dc5442b",
+        "name": "xebialabs",
+        "type": "tree",
+        "path": "kubernetes/multicloud-pipeline/xebialabs",
+        "mode": "040000"
+    },
+    {
+        "id": "86cd50748d7f62d66ae067bd51e86b5f869261a2",
+        "name": "xl-devops-platform",
+        "type": "tree",
+        "path": "xl-devops-platform",
+        "mode": "040000"
+    }
+]

@@ -3,6 +3,7 @@ package blueprint
 import (
 	"bytes"
 	"fmt"
+    "github.com/xebialabs/xl-cli/pkg/blueprint/repository/gitlab"
 	"io/ioutil"
 	"path"
 	"sort"
@@ -203,6 +204,8 @@ func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*
 			repo, err = bitbucketserver.NewBitbucketServerBlueprintRepository(repoDefinition)
 		case models.ProviderHttp:
 			repo, err = http.NewHttpBlueprintRepository(repoDefinition, CLIVersion)
+        case models.ProviderGitLab:
+            repo, err = gitlab.NewGitLabBlueprintRepository(repoDefinition)
 		default:
 			return nil, fmt.Errorf("no blueprint provider implementation found for %s", repoProvider)
 		}

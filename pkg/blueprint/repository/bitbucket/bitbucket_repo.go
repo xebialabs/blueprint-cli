@@ -57,7 +57,6 @@ func NewBitbucketBlueprintRepository(confMap map[string]string) (*BitbucketBluep
 		repo.IsMock, _ = strconv.ParseBool(confMap["isMock"])
 	}
 
-	fmt.Print("This will take a few seconds...")
 	return repo, nil
 }
 

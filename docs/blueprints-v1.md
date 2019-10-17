@@ -243,6 +243,19 @@ blueprint:
       path: /path/to/local/test/blueprints/
       ignored-dirs: .git, .vscode
       ignored-files: .DS_Store, .gitignore
+    - name: my-gitlab
+      type: gitlab
+      repo-name: blueprints
+      owner: myself
+      token: my-gitlab-token
+      branch: master
+    - name: my-gitlab
+      type: gitlab
+      repo-name: blueprints
+      owner: myself
+      token: my-gitlab-token
+      url: http://onpremisesgitlab.com
+      branch: master
 ```
 
 It is possible to define multiple blueprint repositories with same or different types at the same time, but only one of them will be active at a given time. Active blueprint repository should be stated using `current-repository` field in the configuration file. When there's no defined blueprint repository, or `current-repository` field is not stated, `xl` command will auto update the config with the default XebiaLabs blueprint repository.
