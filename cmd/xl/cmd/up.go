@@ -71,4 +71,8 @@ func init() {
 	if err := upFlags.MarkHidden("skip-prompts"); err != nil {
 		util.Error("error setting up cmd flags: %s\n", err.Error())
 	}
+	upFlags.StringVarP(&upParams.SeedVersion, "seed-version", "", CliVersion, "The Docker image version for seed to use, default is CLI version")
+	if err := upFlags.MarkHidden("seed-version"); err != nil {
+		util.Error("error setting up cmd flags: %s\n", err.Error())
+	}
 }

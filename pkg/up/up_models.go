@@ -13,4 +13,5 @@ type UpParams struct {
 	DryRun            bool
 	SkipK8sConnection bool
 	SkipPrompts       bool
+	SeedVersion       string
 }

@@ -22,7 +22,7 @@ import (
 
 const (
 	Docker                        = "docker"
-	SeedImage                     = "xl-docker.xebialabs.com/xl-seed:demo"
+	SeedImage                     = "xebialabs/xl-seed"
 	Kubernetes                    = "kubernetes"
 	Xebialabs                     = "xebialabs"
 	XlUpBlueprint                 = "xl-up-blueprint"
@@ -35,9 +35,11 @@ const (
 	ClientCertificateKey          = "cert.key"
 )
 
-var pullSeedImage = models.Command{
-	Name: Docker,
-	Args: []string{"pull", SeedImage},
+func pullSeedImage(SeedVersion string) models.Command {
+	return models.Command{
+		Name: Docker,
+		Args: []string{"pull", fmt.Sprintf("%s:%s", SeedImage, SeedVersion)},
+	}
 }
 
 func runSeed() (models.Command, error) {
