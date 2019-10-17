@@ -31,7 +31,7 @@ blueprint:
     type: github
     repo-name: xl-up-blueprint
     owner: xebialabs
-    branch: beta
+    branch: master
     token: YOUR-PERSONAL-GITHUB-TOKEN
 
 ``` 

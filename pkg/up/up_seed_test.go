@@ -189,7 +189,7 @@ users:
 
 var TestLocalPath = ""
 var CLIVersion = "9.1.0"
-var GITBranch = "beta"
+var GITBranch = "master"
 
 func TestInvokeBlueprintAndSeed(t *testing.T) {
 
