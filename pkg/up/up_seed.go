@@ -15,16 +15,25 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
+	versionHelper "github.com/xebialabs/xl-cli/pkg/version"
 )
 
 var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 var applyValues map[string]string
+
+const (
+	CurrentXLDVersionSupported = "9.0.5"
+	CurrentXLRVersionSupported = "9.0.6"
+)
 
 // SkipPrompts can be set to true to skip asking prompts
 var SkipPrompts = false
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
 func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, CliVersion string, gb *blueprint.GeneratedBlueprint) error {
+
+	versionHelper.AvailableXldVersions = getAvailableVersions(upParams.XLDVersions, []string{CurrentXLDVersionSupported})
+	versionHelper.AvailableXlrVersions = getAvailableVersions(upParams.XLRVersions, []string{CurrentXLRVersionSupported})
 
 	if !upParams.DryRun {
 		defer util.StopAndRemoveContainer(s)
@@ -49,6 +58,8 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			}
 		}
 	}
+
+	util.Verbose("[xl up] Passed parameters: \n%+v\n", upParams)
 
 	blueprint.SkipFinalPrompt = true
 	util.IsQuiet = true
@@ -154,7 +165,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 				return fmt.Errorf("Update cancelled by user")
 			}
 		}
-		util.Verbose("Update workflow started.... \n")
+		util.Verbose("[xl up] Update workflow started.... \n")
 
 		answersFromConfigMap, err := parseConfigMap(configMap)
 		if err != nil {
@@ -195,7 +206,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			answers["FromConfigMap"] = "true"
 		}
 	} else {
-		util.Verbose("Install workflow started")
+		util.Verbose("[xl up] Install workflow started\n")
 	}
 
 	util.IsQuiet = true
@@ -249,7 +260,7 @@ func processAnswerMapFromPreparedData(preparedData *blueprint.PreparedData) map[
 }
 
 func parseConfigMap(configMap string) (map[string]string, error) {
-	util.Verbose("%s", configMap)
+	util.Verbose("[xl up] Config map: %s\n", configMap)
 	answerMapFromConfigMap := make(map[string]string)
 
 	if err := yaml.Unmarshal([]byte(configMap), &answerMapFromConfigMap); err != nil {
@@ -292,11 +303,18 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 	return nil
 }
 
+func getAvailableVersions(versions string, defaultVersions []string) []string {
+	if versions != "" && versions != "undefined" {
+		return strings.Split(versions, ",")
+	}
+	return defaultVersions
+}
+
 func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) string {
 	var version string
 	if util.MapContainsKeyWithVal(answerMapFromConfigMap, key) {
 		version = answerMapFromConfigMap[key]
-		util.Verbose("Version %s is existing.\n", version)
+		util.Verbose("[xl up] Version %s is existing.\n", version)
 	} else if util.MapContainsKeyWithVal(answerMapFromConfigMap, prevKey) {
 		version = answerMapFromConfigMap[prevKey]
 	}
@@ -344,7 +362,7 @@ func mergeAnswerFiles(answers, answersFromInfra map[string]string) (map[string]s
 	if msg != "" {
 		util.Info(msg)
 	} else {
-		util.Verbose("No version provided, will ask the version in the application blueprint")
+		util.Verbose("[xl up] No version provided, will ask the version in the application blueprint\n")
 	}
 	mergedAnswers, isConflict := mergeMaps(answersFromInfra, answers)
 	return mergedAnswers, isConflict, nil

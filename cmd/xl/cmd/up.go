@@ -10,6 +10,12 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/xl"
 )
 
+// XLDVersions default is the minimum supported version, overridden during build
+var XLDVersions = "undefined"
+
+// XLRVersions default is the minimum supported version, overridden during build
+var XLRVersions = "undefined"
+
 var upCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Install XLR, XLD via XL-Seed",
@@ -36,6 +42,8 @@ func DoUp(context *xl.Context, CliVersion string) {
 	if upParams.DryRun {
 		upParams.NoCleanup = true
 	}
+	upParams.XLDVersions = XLDVersions
+	upParams.XLRVersions = XLRVersions
 	err := up.InvokeBlueprintAndSeed(context.BlueprintContext, upParams, CliVersion, gb)
 	if err != nil {
 		util.Fatal("Error while running xl-up: %s\n", err)
