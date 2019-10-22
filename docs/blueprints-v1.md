@@ -223,18 +223,30 @@ blueprint:
   repositories:
     - name: xebialabs-github
       type: github
-      repo-name: blueprints
       owner: xebialabs
-      token: my-github-token
+      repo-name: blueprints
       branch: master
+      token: my-github-token
+    - name: xebialabs-bitbucket-cloud
+      type: bitbucket
+      owner: xebialabs
+      repo-name: blueprints
+      branch: master
+      token: my-bitbucket-token
     - name: xebialabs-bitbucket-server
       type: bitbucketserver
       url: http://localhost:7990
       project-key: XEB
       repo-name: blueprints
-      user: xebialabs
-      token: my-bitbucket-token
       branch: master
+      token: my-bitbucket-token
+    - name: my-gitlab
+      type: gitlab
+      url: http://onpremisesgitlab.com
+      owner: myself
+      repo-name: blueprints
+      branch: master
+      token: my-gitlab-token
     - name: xebialabs-dist
       type: http
       url: http://dist.xebialabs.com/public/blueprints
@@ -243,19 +255,6 @@ blueprint:
       path: /path/to/local/test/blueprints/
       ignored-dirs: .git, .vscode
       ignored-files: .DS_Store, .gitignore
-    - name: my-gitlab
-      type: gitlab
-      repo-name: blueprints
-      owner: myself
-      token: my-gitlab-token
-      branch: master
-    - name: my-gitlab
-      type: gitlab
-      repo-name: blueprints
-      owner: myself
-      token: my-gitlab-token
-      url: http://onpremisesgitlab.com
-      branch: master
 ```
 
 It is possible to define multiple blueprint repositories with same or different types at the same time, but only one of them will be active at a given time. Active blueprint repository should be stated using `current-repository` field in the configuration file. When there's no defined blueprint repository, or `current-repository` field is not stated, `xl` command will auto update the config with the default XebiaLabs blueprint repository.
