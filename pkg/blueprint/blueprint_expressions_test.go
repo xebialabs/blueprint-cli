@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	versionHelper "github.com/xebialabs/xl-cli/pkg/version"
 )
 
 func Test_processCustomExpression(t *testing.T) {
@@ -27,6 +28,9 @@ func Test_processCustomExpression(t *testing.T) {
 	d1 := []byte(SampleKubeConfig)
 	ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
 	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
+
+	versionHelper.AvailableXldVersions = []string{"9.0.5"}
+	versionHelper.AvailableXlrVersions = []string{"9.0.6"}
 
 	type args struct {
 		exStr      string

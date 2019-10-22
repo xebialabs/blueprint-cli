@@ -10,6 +10,8 @@ import (
 )
 
 func Test_showVersions(t *testing.T) {
+	AvailableXldVersions = []string{"9.0.5"}
+	AvailableXlrVersions = []string{"9.0.6"}
 	tests := []struct {
 		name    string
 		params  []string
@@ -19,13 +21,13 @@ func Test_showVersions(t *testing.T) {
 		{
 			"show XLR versions",
 			[]string{"xlr"},
-			[]string{"9.0.2", "9.0.4", "9.0.6"},
+			[]string{"9.0.6"},
 			false,
 		},
 		{
 			"show XLD versions",
 			[]string{""},
-			[]string{"9.0.2", "9.0.3", "9.0.5"},
+			[]string{"9.0.5"},
 			false,
 		},
 	}

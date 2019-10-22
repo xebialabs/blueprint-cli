@@ -12,7 +12,7 @@ const (
 	ProviderGitHub          string = "github"
 	ProviderBitbucket       string = "bitbucket"
 	ProviderBitbucketServer string = "bitbucketserver"
-    ProviderGitLab          string = "gitlab"
+	ProviderGitLab          string = "gitlab"
 	ProviderHttp            string = "http"
 )
 

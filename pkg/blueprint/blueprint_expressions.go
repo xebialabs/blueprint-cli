@@ -18,7 +18,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/xl-cli/pkg/osHelper"
 	"github.com/xebialabs/xl-cli/pkg/util"
-	upHelper "github.com/xebialabs/xl-cli/pkg/version"
+	versionHelper "github.com/xebialabs/xl-cli/pkg/version"
 )
 
 var functions = map[string]govaluate.ExpressionFunction{
@@ -263,7 +263,7 @@ var functions = map[string]govaluate.ExpressionFunction{
 			params = append(params, fmt.Sprintf("%v", args[1]))
 		}
 
-		result, err := upHelper.GetPropertyByName(module, params...)
+		result, err := versionHelper.GetPropertyByName(module, params...)
 		if err != nil {
 			return nil, fmt.Errorf("Error when executing expression function '%s', %s", module, err.Error())
 		}

@@ -17,6 +17,7 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
+	versionHelper "github.com/xebialabs/xl-cli/pkg/version"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 	"github.com/xebialabs/yaml"
 )
@@ -203,6 +204,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 	SkipPrompts = true
 	blueprint.SkipFinalPrompt = true
 	blueprint.SkipUpFinalPrompt = true
+	versionHelper.AvailableXldVersions = []string{"9.0.2"}
+	versionHelper.AvailableXlrVersions = []string{"9.0.2"}
 
 	// initialize temp dir for tests
 	tmpDir, err := ioutil.TempDir("", "xltest")
@@ -236,6 +239,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				DryRun:            true,
 				SkipK8sConnection: true,
 				GITBranch:         GITBranch,
+				XLDVersions:       "9.0.2, 9.0.5",
+				XLRVersions:       "9.0.2, 9.0.6",
 			},
 			CLIVersion,
 			gb,
@@ -340,6 +345,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				DryRun:            true,
 				SkipK8sConnection: true,
 				GITBranch:         GITBranch,
+				XLDVersions:       "9.0.2, 9.0.5",
+				XLRVersions:       "9.0.2, 9.0.6",
 			},
 			CLIVersion,
 			gb,
@@ -421,6 +428,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				DryRun:            true,
 				SkipK8sConnection: true,
 				GITBranch:         GITBranch,
+				XLDVersions:       "9.0.2, 9.0.5",
+				XLRVersions:       "9.0.2, 9.0.6",
 			},
 			CLIVersion,
 			gb,

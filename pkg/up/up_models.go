@@ -14,4 +14,6 @@ type UpParams struct {
 	SkipK8sConnection bool
 	SkipPrompts       bool
 	SeedVersion       string
+	XLDVersions       string
+	XLRVersions       string
 }

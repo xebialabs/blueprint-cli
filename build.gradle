@@ -145,12 +145,15 @@ goBuild {
 
     def ldflags = " -ldflags='" +
         ldflag("CliVersion", { -> project.version}) +
+        versionLdFlag("XLDVersions") +
+        versionLdFlag("XLRVersions") +
         ldflag("BuildVersion", gitVersionShort) +
         ldflag("BuildGitCommit", gitCommit) +
         ldflag("BuildDate", date) +
         (project.hasProperty("optimise") ? "-s -w" : "") +
         "'"
 
+    println("LDFlags: ${ldflags}cp")
     def debugFlags = project.hasProperty("debug") ? " -gcflags \"all=-N -l\"" : ""
 
     run Paths.get("\${GOPATH}/bin/packr").toString() + " -i cmd/xl"
@@ -272,6 +275,26 @@ def runCmd(Object... args) {
 
 def ldflag(c, v) {
     "-X \"github.com/xebialabs/xl-cli/cmd/xl/cmd.${c}=${v}\" "
+}
+
+def versionLdFlag(key) {
+    return project.hasProperty(key) && project.property(key) != "" ? ldflag(key, validateVersions(key)) : ""
+}
+
+def validateVersions(key) {
+    def versions = project.property(key)
+    def valid = true
+    def semverPattern = ~/^([0-9]*)\.([0-9]*)(\.([0-9]+)(-([0-9]*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.([0-9]*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?)?$/
+    def cleanVersions = []
+
+    versions.split(',').each {
+        if (!it.trim().matches(semverPattern)) {
+            valid = false
+        }
+        cleanVersions.add(it.trim())
+    }
+    if (!valid) throw new GradleException("Invalid versions passed for ${key} property, pass comma seperated versions in semver format. E.g: 9.0.5, 9.5")
+    return cleanVersions.join(',')
 }
 
 sonarqube {

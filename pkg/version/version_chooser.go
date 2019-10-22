@@ -14,13 +14,13 @@ const (
 	GetVersionFromTag       = "getversionfromtag"
 )
 
-// TODO find a better way to handle this...
-var AvailableXlrVersions = []string{"9.0.2", "9.0.4", "9.0.6"}
-var AvailableXldVersions = []string{"9.0.2", "9.0.3", "9.0.5"}
-
 type VersionFnResult struct {
 	versions []string
 }
+
+// This will be overridden during build time
+var AvailableXldVersions = []string{}
+var AvailableXlrVersions = []string{}
 
 func (result *VersionFnResult) GetResult(module string, attr string, index int) ([]string, error) {
 	switch module {
