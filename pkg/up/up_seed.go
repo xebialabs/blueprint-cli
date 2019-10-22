@@ -216,7 +216,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err = runAndCaptureResponse(pullSeedImage(upParams.SeedVersion)); err != nil {
 			return err
 		}
-		seed, err := runSeed()
+		seed, err := runSeed(upParams.SeedVersion)
 		if err != nil {
 			return err
 		}

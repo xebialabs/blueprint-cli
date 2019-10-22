@@ -42,14 +42,14 @@ func pullSeedImage(SeedVersion string) models.Command {
 	}
 }
 
-func runSeed() (models.Command, error) {
+func runSeed(SeedVersion string) (models.Command, error) {
 	dir, err := os.Getwd()
 
 	if err != nil {
 		return models.Command{}, fmt.Errorf("error while getting current work directory: %s", err)
 	}
 
-	command := []string{"run", "--name", "xl-seed", "-v", dir + ":/data", SeedImage, "--init", "xebialabs/common.yaml", "xebialabs.yaml"}
+	command := []string{"run", "--name", "xl-seed", "-v", dir + ":/data", fmt.Sprintf("%s:%s", SeedImage, SeedVersion), "--init", "xebialabs/common.yaml", "xebialabs.yaml"}
 
 	return models.Command{
 		Name: Docker,
