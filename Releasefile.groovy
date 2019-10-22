@@ -1,6 +1,6 @@
 // Exported from:        https://xl-release.xebialabs.com/#/templates/Folder3981784fa264be9b0cb046483b0afa9-Releaseb346c36b186043278aa1a30c3c614561/releasefile
 // XL Release version:   9.0.6
-// Date created:         Wed Oct 16 16:41:46 CEST 2019
+// Date created:         Tue Oct 22 16:25:37 CEST 2019
 
 xlr {
   template('Release XL CLI') {
@@ -51,6 +51,14 @@ xlr {
         required false
         showOnReleaseStart false
       }
+      stringVariable('SUPPORTED_XLD_VERSIONS') {
+        label 'Supported XLD Versions'
+        description 'The XLD versions supported by XL-UP command. Comma separated versions in semver format. E.g: 9.0.5,9.5'
+      }
+      stringVariable('SUPPORTED_XLR_VERSIONS') {
+        label 'Supported XLR Versions'
+        description 'The XLR versions supported by XL-UP command. Comma separated versions in semver format. E.g: 9.0.5,9.5'
+      }
     }
     scheduledStartDate Date.parse("yyyy-MM-dd'T'HH:mm:ssZ", '2018-10-16T09:00:00+0200')
     phases {
@@ -76,7 +84,9 @@ else:
               'RELEASE_STAGE=${INTERNAL_RELEASE_STAGE}\n' +
               'COMMIT_ID=${EXPLICIT_COMMIT_ID}\n' +
               'RELEASE_EXPLICIT=${EXPLICIT_XLCLI_VERSION}\n' +
-              'RELEASE_CREATE_BRANCH=${CREATE_MAINTENANCE_BRANCH}'
+              'RELEASE_CREATE_BRANCH=${CREATE_MAINTENANCE_BRANCH}\n' +
+              'SUPPORTED_XLD_VERSIONS=${SUPPORTED_XLD_VERSIONS}\n' +
+              'SUPPORTED_XLR_VERSIONS=${SUPPORTED_XLR_VERSIONS}'
               jobEnvVarName 'version'
               jobEnvVarValue variable('INTERNAL_XLCLI_VERSION')
             }
