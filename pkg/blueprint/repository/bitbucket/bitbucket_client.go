@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/xebialabs/go-bitbucket"
+	"github.com/ktrysmt/go-bitbucket"
 	"golang.org/x/net/context"
 )
 

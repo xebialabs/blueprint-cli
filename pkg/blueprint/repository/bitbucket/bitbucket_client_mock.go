@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/xebialabs/go-bitbucket"
+	"github.com/ktrysmt/go-bitbucket"
 )
 
 // Bitbucket Mock Service Base & Client to fetch local JSON test files

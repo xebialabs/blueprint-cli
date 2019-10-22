@@ -6,7 +6,7 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/xebialabs/go-bitbucket"
+	"github.com/ktrysmt/go-bitbucket"
 	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
