@@ -170,3 +170,14 @@ Be aware of the limitations of the approach taken:
 * Based on heuristics so we need to verify all output
 * No unique detection, the license data contains similar or equal license texts
 * Missing dependencies. The information is incomplete. Some licenses could not be detected automatically, but also the list of reported libraries by go tools is incomplete (long story) but the best source of info i could find so far
+
+
+## xl-up
+
+To test the blueprint locally you need `xl cli` on your machine  and also clone this repository:
+
+```$xslt
+xl up -b xl-infra -l /PATH/TO/xl-up-blueprint/
+```
+
+When you make a PR and also want to run integration test against an existing EKS cluster, GKE or Plain mutlinode K8s cluster then add label ``run-xl-up-pr`` in your github PR, then this pr will run against master in xl-up-blueprint branch. If you are working in story that has changes also in xl-up-blueprint repo in a branch with the same name then also add ``same-branch-on-xl-up-blueprint`` label in your pr
