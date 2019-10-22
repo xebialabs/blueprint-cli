@@ -42,6 +42,7 @@ pipeline {
                     currentVersion = readFile 'build/version.dump'
 
                     env.version = currentVersion
+                    archiveArtifacts artifacts: 'build/*/xl', fingerprint: true
                   }
                 }
             }
