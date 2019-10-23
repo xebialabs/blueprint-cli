@@ -11,8 +11,8 @@ XldLic: ../../templates/test/xl-up/cert
 XldDbName: xl-deploy
 XldDbUser: xl-deploy
 XldDbPass: xl-deploy
-NsfServerHost: nfs-test.com
-NsfSharePath: /xebialabs
+NfsServerHost: nfs-test.com
+NfsSharePath: /xebialabs
 XlrAdminPass: password
 XlrLic: ../../templates/test/xl-up/cert
 XlrDbName: xl-release
