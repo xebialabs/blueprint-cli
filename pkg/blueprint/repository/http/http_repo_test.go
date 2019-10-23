@@ -241,6 +241,13 @@ func Test_getCLIVersionURL(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder(
 		"GET",
+		"https://dist.xebialabs.com/public/blueprints/9.1.0-alpha.3/",
+		httpmock.NewStringResponder(200, `[
+            "aws/monolith"
+        ]`),
+	)
+	httpmock.RegisterResponder(
+		"GET",
 		"https://dist.xebialabs.com/public/blueprints/9.0.0/",
 		httpmock.NewStringResponder(200, `[
             "aws/monolith"
@@ -301,6 +308,12 @@ func Test_getCLIVersionURL(t *testing.T) {
 			models.DefaultBlueprintRepositoryUrl,
 			"9.2.0",
 			"https://dist.xebialabs.com/public/blueprints/9.1/",
+		},
+		{
+			"should return the exact version when match is found",
+			models.DefaultBlueprintRepositoryUrl,
+			"9.1.0-alpha.3",
+			"https://dist.xebialabs.com/public/blueprints/9.1.0-alpha.3/",
 		},
 	}
 	for _, tt := range tests {

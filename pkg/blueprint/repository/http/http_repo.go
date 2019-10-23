@@ -181,7 +181,11 @@ func URLExists(URL string) bool {
 
 func getCLIVersionURL(url, CLIVersion string) string {
 	if strings.Contains(url, models.BlueprintCurrentCLIVersion) {
-		re := regexp.MustCompile("^([0-9]).([0-9]).([0-9])")
+		URL := strings.Replace(url, models.BlueprintCurrentCLIVersion, CLIVersion, -1)
+		if URLExists(URL) {
+			return URL
+		}
+		re := regexp.MustCompile("^([0-9]+).([0-9]+).([0-9]+)")
 		versions := re.FindStringSubmatch(CLIVersion)
 		if len(versions) == 4 {
 			// Tick down like a reverse odometer until an existing blueprint directory is found
