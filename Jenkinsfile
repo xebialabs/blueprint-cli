@@ -19,6 +19,7 @@ pipeline {
         ON_PREM_KEY = "${env.ON_PREM_KEY}"
         ON_PREM_K8S_API_URL = "${env.ON_PREM_K8S_API_URL}"
         NSF_SERVER_HOST = "${env.NSF_SERVER_HOST}"
+        XL_UP_GCP_PROJECT_ID = "${env.XL_UP_GCP_PROJECT_ID}"
     }
 
     stages {
@@ -87,8 +88,10 @@ pipeline {
                         nfsSharePath = "xebialabs-k8s"
                         runXlUpOnEks(awsAccessKeyId, awsSecretKeyId, eksEndpoint, efsFileId)
                         runXlUpOnPrem(nfsSharePath)
-
+                        runXlUpOnGke()
+                        sh "rm -rf temp"
                     } catch (err) {
+                        sh "rm -rf temp"
                         throw err
                     }
                 }
@@ -136,7 +139,7 @@ def runXlUpOnEks(String awsAccessKeyId, String awsSecretKeyId, String eksEndpoin
 }
 
 
-def runXlUpOnPrem(String nsfSharePath) {
+def runXlUpOnPrem(String nfsSharePath) {
     sh """ if [[ ! -f "temp/xl-up-blueprint/k8sClientCert-onprem.crt" ]]; then 
         echo ${ON_PREM_CERT} >> temp/xl-up-blueprint/k8sClientCert-onprem-tmp.crt
         tr ' ' '\\n' < temp/xl-up-blueprint/k8sClientCert-onprem-tmp.crt > temp/xl-up-blueprint/k8sClientCert-onprem-tmp2.crt
@@ -162,4 +165,29 @@ def runXlUpOnPrem(String nsfSharePath) {
     sh "./build/linux-amd64/xl up -a temp/xl-up-blueprint/integration-tests/test-cases/jenkins/on-prem-xld-xlr-mon-full.yaml -b xl-infra -l temp/xl-up-blueprint/ --undeploy --skip-prompts"
     sh "./build/linux-amd64/xl up -a temp/xl-up-blueprint/integration-tests/test-cases/jenkins/on-prem-xld-xlr-mon-full.yaml -b xl-infra -l temp/xl-up-blueprint/"
     sh "./build/linux-amd64/xl up -a temp/xl-up-blueprint/integration-tests/test-cases/jenkins/on-prem-xld-xlr-mon-full.yaml -b xl-infra -l temp/xl-up-blueprint/ --undeploy --skip-prompts"
+}
+
+def runXlUpOnGke() {
+    GKE_ACCOUNT_EMAIL = sh(script: 'cat /var/lib/jenkins/.gcloud/account.json | python -c \'import json, sys; obj = json.load(sys.stdin); print obj["client_email"];\'', returnStdout: true).trim()
+
+    sh "gcloud auth activate-service-account ${GKE_ACCOUNT_EMAIL} --key-file=/var/lib/jenkins/.gcloud/account.json"
+    sh "gcloud container clusters get-credentials  gke-xl-up-cluster --zone europe-west3-b --project ${XL_UP_GCP_PROJECT_ID}"
+
+    GKE_ENDPOINT = sh(script: 'kubectl config view --minify -o jsonpath=\'{.clusters[0].cluster.server}\'', returnStdout: true).trim()
+    SECRET_NAME = sh(script: "kubectl get secrets -o custom-columns=:metadata.name -n kube-system | grep xebialabs-admin", returnStdout: true).trim()
+    GKE_TOKEN = sh(script: "kubectl get secrets --field-selector metadata.name=${SECRET_NAME} -n kube-system -o=jsonpath='{.items[].data.token}' | base64 -d", returnStdout: true).trim()
+    NFS_PATH = sh(script: "gcloud filestore instances list --project ${XL_UP_GCP_PROJECT_ID} --format='csv(fileShares.name,networks.ipAddresses[0])' | sed -n 2p | tr ',' '\n' | sed -n 1p", returnStdout: true).trim()
+    NFS_HOST = sh(script: "gcloud filestore instances list --project ${XL_UP_GCP_PROJECT_ID} --format='csv(fileShares.name,networks.ipAddresses[0])' | sed -n 2p | tr ',' '\n' | sed -n 2p", returnStdout: true).trim()
+
+    sh "sed -ie 's@{{GKE_ENDPOINT}}@${GKE_ENDPOINT}@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/gke-xld-xlr-mon-full.yaml"
+    sh "sed -ie 's@{{K8S_TOKEN}}@${GKE_TOKEN}@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/gke-xld-xlr-mon-full.yaml"
+    sh "sed -ie 's@{{NFS_HOST}}@${NFS_HOST}@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/gke-xld-xlr-mon-full.yaml"
+    sh "sed -ie 's@{{NFS_PATH}}@/${NFS_PATH}@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/gke-xld-xlr-mon-full.yaml"
+    sh "sed -ie 's@XldLic: ./deployit-license.lic@XldLic: temp/xl-up-blueprint/deployit-license.lic@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/gke-xld-xlr-mon-full.yaml"
+    sh "sed -ie 's@XlrLic: ./xl-release.lic@XlrLic: temp/xl-up-blueprint/xl-release.lic@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/gke-xld-xlr-mon-full.yaml"
+    sh "sed -ie 's@XlKeyStore: ./integration-tests/files/keystore.jceks@XlKeyStore: temp/xl-up-blueprint/integration-tests/files/keystore.jceks@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/gke-xld-xlr-mon-full.yaml"
+
+    sh "./build/linux-amd64/xl up -d -a temp/xl-up-blueprint/integration-tests/test-cases/jenkins/gke-xld-xlr-mon-full.yaml -b xl-infra -l temp/xl-up-blueprint/ --undeploy --skip-prompts"
+    sh "./build/linux-amd64/xl up -d -a temp/xl-up-blueprint/integration-tests/test-cases/jenkins/gke-xld-xlr-mon-full.yaml -b xl-infra -l temp/xl-up-blueprint/"
+    sh "./build/linux-amd64/xl up -d -a temp/xl-up-blueprint/integration-tests/test-cases/jenkins/gke-xld-xlr-mon-full.yaml -b xl-infra -l temp/xl-up-blueprint/ --undeploy --skip-prompts"
 }
