@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -214,6 +215,11 @@ func GetRequiredPropertyFromMap(propertyName string, answerMap map[string]string
 
 func getClusterIDFromClusterName(answerMap map[string]string) string {
 	clusterName := answerMap["EksClusterName"]
+
+	// Because clusterNames could be something like arn:aws:eks:eu-west-1:932770550094:cluster/xl-up-master
+	if strings.Index(clusterName, "arn:aws:eks") == 0 && strings.Contains(clusterName, "/") {
+		clusterName = strings.Split(clusterName, "/")[1]
+	}
 
 	if clusterName != "" {
 		return clusterName
