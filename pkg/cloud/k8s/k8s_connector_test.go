@@ -26,6 +26,14 @@ func TestClusterIDorDefaultCluster(t *testing.T) {
 
 		assert.Equal(t, clusterID, "test-xl-cluster")
 	})
+
+    t.Run("should get AWS EKS provided cluster name", func(t *testing.T) {
+        answerMap := make(map[string]string)
+        answerMap["EksClusterName"] = "arn:aws:eks:eu-west-1:932770550094:cluster/xl-up-master"
+
+        clusterName := getClusterIDFromClusterName(answerMap)
+        assert.Equal(t, clusterName, "xl-up-master")
+    })
 }
 
 func TestGetRequiredPropertyFromMap(t *testing.T) {
