@@ -46,6 +46,7 @@ pipeline {
                   }
                 }
                 archiveArtifacts artifacts: 'build/*/xl', fingerprint: true
+                archiveArtifacts artifacts: 'build/*/xl.exe', fingerprint: true
             }
         }
 
