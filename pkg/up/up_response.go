@@ -37,7 +37,7 @@ func runAndCaptureResponse(cmd models.Command) error {
 		s.Stop()
 		util.StopAndRemoveContainer(s)
 		if !completedTask {
-			return fmt.Errorf("please see xl-seed-error.txt for more details")
+			return fmt.Errorf("Error while running xl up: please see xl-seed-error.txt and xl-seed-logs.txt for more details")
 		}
 	}
 	return nil
