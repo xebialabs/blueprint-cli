@@ -37,7 +37,7 @@ func runAndCaptureResponse(cmd models.Command) error {
 		s.Stop()
 		util.StopAndRemoveContainer(s)
 		if !completedTask {
-			return fmt.Errorf("error while running xl up: \n %s", errorStr)
+			return fmt.Errorf("Deployment was unsuccessful, please see xl-seed-error.txt and xl-seed-logs.txt for more details")
 		}
 	}
 	return nil
