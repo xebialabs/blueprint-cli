@@ -46,7 +46,7 @@ func DoUp(context *xl.Context, CliVersion string) {
 	upParams.XLRVersions = XLRVersions
 	err := up.InvokeBlueprintAndSeed(context.BlueprintContext, upParams, CliVersion, gb)
 	if err != nil {
-		util.Fatal("Error while running xl-up: %s\n", err)
+		util.Fatal("Error while running xl-up - please see xl-seed-error.txt for more details\n")
 	}
 	if !upParams.NoCleanup {
 		defer gb.Cleanup(up.GeneratedAnswerFile, up.ClientCertificate, up.ClientCertificateKey)
