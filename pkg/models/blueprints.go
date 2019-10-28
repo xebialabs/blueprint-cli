@@ -5,7 +5,7 @@ import "net/url"
 const (
 	BlueprintOutputDir         = "xebialabs"
 	BlueprintFinalPrompt       = "Confirm to generate blueprint files?"
-	UpFinalPrompt              = "Do you want to accept the default values?"
+	UpFinalPrompt              = "Do you want to proceed to the deployment with these values?"
 	UndeployConfirmationPrompt = "Xebialabs Devops platform is already deployed on this cluster. Are you sure you want to undeploy everything? This cannot be undone"
 	UpdateConfirmationPrompt   = "Xebialabs Devops platform is already deployed on this cluster. Are you sure you want to update? This cannot be undone"
 )
