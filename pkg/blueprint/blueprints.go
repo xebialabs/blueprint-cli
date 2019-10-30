@@ -338,6 +338,7 @@ func getBlueprintConfig(blueprintContext *BlueprintContext, blueprints map[strin
 }
 
 func composeBlueprints(blueprintName string, blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprints map[string]*models.BlueprintRemote, dependsOn VarField, parentBlueprint string) ([]*ComposedBlueprint, error) {
+	includeBefore := make([]*ComposedBlueprint, 0)
 	blueprintDocs := make([]*ComposedBlueprint, 0)
 	// add the master blueprint
 	blueprintDocs = append(blueprintDocs, &ComposedBlueprint{blueprintName, blueprintDoc, dependsOn, parentBlueprint})
@@ -370,12 +371,17 @@ func composeBlueprints(blueprintName string, blueprintDoc *BlueprintConfig, blue
 		}
 		if currentBlueprintDoc != nil {
 			if included.Stage == "before" {
-				blueprintDocs = append(composedBlueprintDocs, blueprintDocs...)
+				includeBefore = append(includeBefore, composedBlueprintDocs...)
 			} else {
 				blueprintDocs = append(blueprintDocs, composedBlueprintDocs...)
 			}
 		}
 	}
+
+	if len(includeBefore) > 0 {
+		blueprintDocs = append(includeBefore, blueprintDocs...)
+	}
+
 	return blueprintDocs, nil
 }
 
