@@ -5,9 +5,18 @@ import (
 
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/xl-cli/pkg/util"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
+
+// The client function pointers are kept outside so that it can be mocked
+var getK8sConfigMaps = func(client *kubernetes.Clientset, opts metav1.ListOptions) (*v1.ConfigMapList, error) {
+	return client.CoreV1().ConfigMaps(NAMESPACE).List(opts)
+}
+var getK8sNamespaces = func(client *kubernetes.Clientset, opts metav1.ListOptions) (*v1.NamespaceList, error) {
+	return client.CoreV1().Namespaces().List(opts)
+}
 
 // The namespace to use
 const NAMESPACE = "xebialabs"
@@ -41,7 +50,7 @@ func getKubeConfigMap(answerMap map[string]string) (string, error) {
 	if isNamespaceAvailable {
 		util.Verbose("the namespace %s is available...\n", NAMESPACE)
 
-		cm, err := client.CoreV1().ConfigMaps(NAMESPACE).List(metav1.ListOptions{})
+		cm, err := getK8sConfigMaps(client, metav1.ListOptions{})
 		if err != nil {
 			return "", err
 		}
@@ -62,7 +71,7 @@ func getKubeConfigMap(answerMap map[string]string) (string, error) {
 
 func checkForNameSpace(client *kubernetes.Clientset, namespace string) (bool, error) {
 
-	ns, err := client.CoreV1().Namespaces().List(metav1.ListOptions{})
+	ns, err := getK8sNamespaces(client, metav1.ListOptions{})
 	if err != nil {
 		return false, err
 	}
