@@ -17,7 +17,10 @@ func runAndCaptureResponse(cmd models.Command) error {
 		return err
 	}
 	if outStr != "" {
-		createLogFile("xl-seed-log.txt", outStr)
+		err := createLogFile("xl-seed-log.txt", outStr)
+		if err != nil {
+			return err
+		}
 		stars := "***************"
 		index := strings.Index(outStr, stars)
 
