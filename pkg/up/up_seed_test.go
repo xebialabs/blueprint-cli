@@ -438,3 +438,47 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		require.NotNil(t, err)
 	})
 }
+
+func Test_getVersion(t *testing.T) {
+	type args struct {
+		answerMapFromConfigMap map[string]string
+		key                    string
+		prevKey                string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			"get current key",
+			args{
+				map[string]string{
+					"current": "current",
+					"prev":    "prev",
+				},
+				"current",
+				"prev",
+			},
+			"current",
+		},
+		{
+			"get prev key when current not found",
+			args{
+				map[string]string{
+					"prev": "prev",
+				},
+				"current",
+				"prev",
+			},
+			"prev",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getVersion(tt.args.answerMapFromConfigMap, tt.args.key, tt.args.prevKey); got != tt.want {
+				t.Errorf("getVersion() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
