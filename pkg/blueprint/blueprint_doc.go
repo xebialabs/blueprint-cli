@@ -74,15 +74,18 @@ var regExFn = regexp.MustCompile(`([\w\d]+).([\w\d]+)\(([,/\-:\s\w\d]*)\)(?:\.([
 // If there are only zeroes after the period, it will put a single 0 at the end to avoid
 // a dangling period. If the passed string is an integer, it will be returned as-is.
 func trimInsignificantTrailingZeroes(floaty string) string {
-	tmp := floaty
-	if strings.Contains(floaty, ".") {
-		for strings.HasSuffix(tmp, "0") {
-			tmp = tmp[0 : len(tmp)-1]
-		}
+	if _, err := strconv.ParseFloat(floaty, 64); err != nil {
+		return floaty
+	}
 
-		if strings.HasSuffix(tmp, ".") {
-			tmp = tmp + "0"
-		}
+	if !strings.Contains(floaty, ".") {
+		return floaty
+	}
+
+	tmp := floaty
+	// Keep trimming 0s until only '.0' remains
+	for strings.HasSuffix(tmp, "0") && !strings.HasSuffix(tmp, ".0"){
+		tmp = tmp[0 : len(tmp)-1]
 	}
 
 	return tmp

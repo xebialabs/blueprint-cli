@@ -1798,6 +1798,11 @@ func TestTrimInsignificantTrailingZeroes(t *testing.T) {
 			floatyString: "9900",
 			expected: "9900",
 		},
+		{
+			name: "Do nothing to a non-number",
+			floatyString: "Not a number",
+			expected: "Not a number",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
