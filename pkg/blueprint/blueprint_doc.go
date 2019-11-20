@@ -70,27 +70,6 @@ func NewPreparedData() *PreparedData {
 // regular Expressions
 var regExFn = regexp.MustCompile(`([\w\d]+).([\w\d]+)\(([,/\-:\s\w\d]*)\)(?:\.([\w\d]*)|\[([\d]+)\])*`)
 
-// trimInsignificantTrailingZeroes will remove all trailing 0s from a float string.
-// If there are only zeroes after the period, it will put a single 0 at the end to avoid
-// a dangling period. If the passed string is an integer, it will be returned as-is.
-func trimInsignificantTrailingZeroes(floaty string) string {
-	if _, err := strconv.ParseFloat(floaty, 64); err != nil {
-		return floaty
-	}
-
-	if !strings.Contains(floaty, ".") {
-		return floaty
-	}
-
-	tmp := floaty
-	// Keep trimming 0s until only '.0' remains
-	for strings.HasSuffix(tmp, "0") && !strings.HasSuffix(tmp, ".0"){
-		tmp = tmp[0 : len(tmp)-1]
-	}
-
-	return tmp
-}
-
 func GetProcessedExpressionValue(val VarField, parameters map[string]interface{}) (VarField, error) {
 	switch val.Tag {
 	case tagExpressionV1, tagExpressionV2:
@@ -110,7 +89,10 @@ func GetProcessedExpressionValue(val VarField, parameters map[string]interface{}
 		case nil:
 			val.Value = ""
 		case float32, float64:
-			val.Value = trimInsignificantTrailingZeroes(fmt.Sprintf("%f", finalVal))
+			val.Value = fmt.Sprintf("%g", finalVal)
+			if !strings.Contains(val.Value, ".") {
+				val.Value = fmt.Sprintf("%s.0", val.Value)
+			}
 		}
 		return val, nil
 	}
