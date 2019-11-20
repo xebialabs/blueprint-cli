@@ -1722,8 +1722,8 @@ func TestVariable_ProcessExpression(t *testing.T) {
 			Variable{
 				Name:        VarField{Value: "Test"},
 				Label:       VarField{Value: "A", Tag: tagExpressionV2},
-				Description: VarField{Value: "5.000000", Tag: tagExpressionV2},
-				Value:       VarField{Value: "5.800000", Tag: tagExpressionV2},
+				Description: VarField{Value: "5.0", Tag: tagExpressionV2},
+				Value:       VarField{Value: "5.8", Tag: tagExpressionV2},
 			},
 			false,
 		},
@@ -1765,4 +1765,44 @@ func TestVariable_ProcessExpression(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTrimInsignificantTrailingZeroes(t *testing.T) {
+	tests := []struct {
+		name string
+		floatyString string
+		expected string
+	}{
+		{
+			name: "Trim 0s after regular numbers",
+			floatyString: "99.1234500000",
+			expected: "99.12345",
+		},
+		{
+			name: "Retain the last 0 after the period",
+			floatyString: "99.00000",
+			expected: "99.0",
+		},
+		{
+			name: "Ignore 0s after period, but before numbers",
+			floatyString: "99.00012345",
+			expected: "99.00012345",
+		},
+		{
+			name: "Only trim the 0s on the right",
+			floatyString: "99.00012345000",
+			expected: "99.00012345",
+		},
+		{
+			name: "Do nothing to an integer",
+			floatyString: "9900",
+			expected: "9900",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, trimInsignificantTrailingZeroes(tt.floatyString))
+		})
+	}
+
 }
