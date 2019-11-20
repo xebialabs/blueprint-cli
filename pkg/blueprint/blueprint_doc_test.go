@@ -1722,8 +1722,8 @@ func TestVariable_ProcessExpression(t *testing.T) {
 			Variable{
 				Name:        VarField{Value: "Test"},
 				Label:       VarField{Value: "A", Tag: tagExpressionV2},
-				Description: VarField{Value: "5.000000", Tag: tagExpressionV2},
-				Value:       VarField{Value: "5.800000", Tag: tagExpressionV2},
+				Description: VarField{Value: "5.0", Tag: tagExpressionV2},
+				Value:       VarField{Value: "5.8", Tag: tagExpressionV2},
 			},
 			false,
 		},

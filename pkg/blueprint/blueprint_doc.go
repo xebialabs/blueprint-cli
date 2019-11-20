@@ -89,7 +89,10 @@ func GetProcessedExpressionValue(val VarField, parameters map[string]interface{}
 		case nil:
 			val.Value = ""
 		case float32, float64:
-			val.Value = fmt.Sprintf("%f", finalVal)
+			val.Value = fmt.Sprintf("%g", finalVal)
+			if !strings.Contains(val.Value, ".") {
+				val.Value = fmt.Sprintf("%s.0", val.Value)
+			}
 		}
 		return val, nil
 	}
