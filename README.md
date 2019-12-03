@@ -45,6 +45,8 @@ go goTest -coverprofile cover.out
 go tool cover -html=cover.out
 ```
 
+When running tests locally using Git blueprint repo fro xl-up, if you hit rate limit errors, set an env variable called `XL_UP_GITHUB_TOKEN` with your Github access token to increase the limit.
+
 ## Debugging
 
 It is possible to debug xl-cli with the help of, for example, Intellij Idea.
