@@ -60,6 +60,8 @@ type K8sUser struct {
 type K8sUserItem struct {
 	ClientCertificateData string `yaml:"client-certificate-data,omitempty"`
 	ClientKeyData         string `yaml:"client-key-data,omitempty"`
+	ClientCertificate     string `yaml:"client-certificate,omitempty"`
+	ClientKey             string `yaml:"client-key,omitempty"`
 }
 
 type K8SFnResult struct {
@@ -99,10 +101,39 @@ func (result *K8SFnResult) GetConfigField(attr string) string {
 					return strconv.FormatBool(field.Bool())
 				}
 				if val == "encoded" {
-					data, err := base64.StdEncoding.DecodeString(field.String())
+					// use User_ClientCertificate and User_ClientKey if User_ClientCertificateData and User_ClientKeyData is empty
+					if strings.TrimSpace(field.String()) == "" {
+						if knorm == "userclientcertificatedata" {
+							data, err := ioutil.ReadFile(flatFields["User_ClientCertificate"].String())
+							if err != nil {
+								util.Verbose("[k8s] Error while reading k8s client cert is: %v\n", err)
+								return field.String()
+							}
+							return string(data)
+
+						} else if knorm == "userclientkeydata" {
+							data, err := ioutil.ReadFile(flatFields["User_ClientKey"].String())
+							if err != nil {
+								util.Verbose("[k8s] Error while reading k8s client cert is: %v\n", err)
+								return field.String()
+							}
+							return string(data)
+
+						}
+					} else {
+						data, err := base64.StdEncoding.DecodeString(field.String())
+						if err != nil {
+							util.Verbose("[k8s] Error while decoding value for [%s] is: %v\n", k, err)
+							return field.String()
+						}
+						return string(data)
+					}
+				}
+				if val == "path" {
+					data, err := ioutil.ReadFile(field.String())
 					if err != nil {
-						util.Verbose("[k8s] Error while decoding value for [%s] is: %v\n", k, err)
-						return field.String()
+						util.Verbose("[k8s] Error while reading k8s client cert is: %v\n", err)
+						field.String()
 					}
 					return string(data)
 				}
