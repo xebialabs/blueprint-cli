@@ -129,14 +129,6 @@ func (result *K8SFnResult) GetConfigField(attr string) string {
 						return string(data)
 					}
 				}
-				if val == "path" {
-					data, err := ioutil.ReadFile(field.String())
-					if err != nil {
-						util.Verbose("[k8s] Error while reading k8s client cert is: %v\n", err)
-						field.String()
-					}
-					return string(data)
-				}
 			}
 			return field.String()
 		}
