@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -163,6 +164,13 @@ func GetFileContent(filePath string) string {
 		panic(err)
 	}
 	return string(f)
+}
+
+func getK8sLocalApiServerURLVal() string {
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		return "https://host.docker.internal:6443"
+	}
+	return "https://172.16.16.21:6443"
 }
 
 var simpleSampleKubeConfig = `apiVersion: v1
@@ -389,11 +397,12 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		// check values file
 		valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
 		valueMap := map[string]string{
-			"K8sSetup":           "LocalK8S",
-			"PostgresMaxConn":    "512",
-			"XlrOfficialVersion": "9.0.2",
-			"XldOfficialVersion": "9.0.2",
-			"UseKubeconfig":      "true",
+			"K8sSetup":             "LocalK8S",
+			"PostgresMaxConn":      "512",
+			"XlrOfficialVersion":   "9.0.2",
+			"XldOfficialVersion":   "9.0.2",
+			"UseKubeconfig":        "true",
+			"K8sLocalApiServerURL": getK8sLocalApiServerURLVal(),
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
