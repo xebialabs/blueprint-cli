@@ -102,7 +102,7 @@ func (result *K8SFnResult) GetConfigField(attr string, retry bool) string {
 					return strconv.FormatBool(field.Bool())
 				case "encoded":
 					// use User_ClientCertificate and User_ClientKey if User_ClientCertificateData and User_ClientKeyData is empty
-					if strings.TrimSpace(field.String()) == "" {
+					if strings.TrimSpace(field.String()) == "" && retry {
 						switch knorm {
 						case "userclientcertificatedata":
 							return result.GetConfigField("User_ClientCertificate", false)
@@ -121,7 +121,7 @@ func (result *K8SFnResult) GetConfigField(attr string, retry bool) string {
 					}
 				case "path":
 					// use User_ClientCertificateData and User_ClientKeyData if User_ClientCertificate and User_ClientKey is empty
-					if strings.TrimSpace(field.String()) == "" {
+					if strings.TrimSpace(field.String()) == "" && retry {
 						switch knorm {
 						case "userclientcertificate":
 							return result.GetConfigField("User_ClientCertificateData", false)
