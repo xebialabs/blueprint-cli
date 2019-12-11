@@ -120,7 +120,7 @@ func (result *K8SFnResult) GetConfigField(attr string, retry bool) string {
 						return string(data)
 					}
 				case "path":
-					// use User_ClientCertificate and User_ClientKey if User_ClientCertificateData and User_ClientKeyData is empty
+					// use User_ClientCertificateData and User_ClientKeyData if User_ClientCertificate and User_ClientKey is empty
 					if strings.TrimSpace(field.String()) == "" {
 						switch knorm {
 						case "userclientcertificate":
