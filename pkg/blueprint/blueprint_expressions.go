@@ -209,7 +209,7 @@ var functions = map[string]govaluate.ExpressionFunction{
 		if attr == "IsAvailable" {
 			return k8sConfig.Cluster.Server != "", nil
 		}
-		return k8sConfig.GetConfigField(attr), nil
+		return k8sConfig.GetConfigField(attr, true), nil
 	},
 
 	// os helper functions

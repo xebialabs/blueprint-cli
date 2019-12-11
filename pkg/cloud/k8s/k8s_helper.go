@@ -83,47 +83,57 @@ func (result *K8SFnResult) GetResult(module string, attr string, index int) ([]s
 		}
 
 		// return attribute
-		attrVal := result.GetConfigField(attr)
+		attrVal := result.GetConfigField(attr, true)
 		return []string{attrVal}, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid Kubernetes module", module)
 	}
 }
 
-func (result *K8SFnResult) GetConfigField(attr string) string {
+func (result *K8SFnResult) GetConfigField(attr string, retry bool) string {
 	flatFields := FlattenFields(*result)
+	attrnorm := strings.ToLower(strings.Replace(attr, "_", "", -1))
 	for k, field := range flatFields {
 		knorm := strings.ToLower(strings.Replace(k, "_", "", -1))
-		attrnorm := strings.ToLower(strings.Replace(attr, "_", "", -1))
 		if knorm == attrnorm {
 			if val, ok := SpecialHandling[k]; ok {
-				if val == "bool" {
+				switch val {
+				case "bool":
 					return strconv.FormatBool(field.Bool())
-				}
-				if val == "encoded" {
+				case "encoded":
 					// use User_ClientCertificate and User_ClientKey if User_ClientCertificateData and User_ClientKeyData is empty
 					if strings.TrimSpace(field.String()) == "" {
-						if knorm == "userclientcertificatedata" {
-							data, err := ioutil.ReadFile(flatFields["User_ClientCertificate"].String())
-							if err != nil {
-								util.Verbose("[k8s] Error while reading k8s client cert is: %v\n", err)
-								return field.String()
-							}
-							return string(data)
-
-						} else if knorm == "userclientkeydata" {
-							data, err := ioutil.ReadFile(flatFields["User_ClientKey"].String())
-							if err != nil {
-								util.Verbose("[k8s] Error while reading k8s client cert is: %v\n", err)
-								return field.String()
-							}
-							return string(data)
-
+						switch knorm {
+						case "userclientcertificatedata":
+							return result.GetConfigField("User_ClientCertificate", false)
+						case "userclientkeydata":
+							return result.GetConfigField("User_ClientKey", false)
+						default:
+							return ""
 						}
 					} else {
 						data, err := base64.StdEncoding.DecodeString(field.String())
 						if err != nil {
 							util.Verbose("[k8s] Error while decoding value for [%s] is: %v\n", k, err)
+							return field.String()
+						}
+						return string(data)
+					}
+				case "path":
+					// use User_ClientCertificate and User_ClientKey if User_ClientCertificateData and User_ClientKeyData is empty
+					if strings.TrimSpace(field.String()) == "" {
+						switch knorm {
+						case "userclientcertificate":
+							return result.GetConfigField("User_ClientCertificateData", false)
+						case "userclientkey":
+							return result.GetConfigField("User_ClientKeyData", false)
+						default:
+							return ""
+						}
+					} else {
+						data, err := ioutil.ReadFile(field.String())
+						if err != nil {
+							util.Verbose("[k8s] Error while reading k8s client cert is: %v\n", err)
 							return field.String()
 						}
 						return string(data)
@@ -141,6 +151,8 @@ var SpecialHandling = map[string]string{
 	"Cluster_CertificateAuthorityData": "encoded",
 	"User_ClientCertificateData":       "encoded",
 	"User_ClientKeyData":               "encoded",
+	"User_ClientCertificate":           "path",
+	"User_ClientKey":                   "path",
 }
 
 // CallK8SFuncByName calls related K8S module function with parameters provided
