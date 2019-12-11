@@ -41,6 +41,10 @@ clusters:
     server: https://test.hcp.eastus.azmk8s.io:443
   name: testCluster
 - cluster:
+    certificate-authority-data: dGVzdCB0aGUgc2hpdCBvdXQgb2YgdGhpcw==
+    server: https://minikube:8443
+  name: minikubeCluster
+- cluster:
     insecure-skip-tls-verify: true
     server: https://ocpm.test.com:8443
   name: ocpm-test-com:8443
@@ -54,6 +58,10 @@ contexts:
     namespace: default
     user: test/ocpm-test-com:8443
   name: default/ocpm-test-com:8443/test
+- context:
+    cluster: minikubeCluster
+    user: minikube
+  name: minikube
 - context:
     cluster: testCluster
     namespace: test
@@ -78,6 +86,10 @@ users:
     client-certificate-data: 123==123
     client-key-data: 123==123
     token: 6555565666666666666
+- name: minikube
+  user:
+    client-certificate: /path/to/client.crt
+    client-key: //pathe/to/client.key
 - name: test/ocpm-test-com:8443
   user:
     client-certificate-data: 123==123
@@ -464,6 +476,7 @@ func TestCallK8SFuncByName(t *testing.T) {
 func Test_getK8SConfigField(t *testing.T) {
 	config, _ := ParseKubeConfig([]byte(sampleKubeConfig))
 	fnRes, _ := GetContext(config, "testCluster")
+	fnResmini, _ := GetContext(config, "minikube")
 	type args struct {
 		v     *K8SFnResult
 		field string
@@ -529,6 +542,14 @@ func Test_getK8SConfigField(t *testing.T) {
 			},
 			`123==123`,
 		},
+		{
+			"should return file path when reading file fails",
+			args{
+				&fnResmini,
+				"User_clientCertificate",
+			},
+			`/path/to/client.crt`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -551,8 +572,8 @@ func TestFlattenFields(t *testing.T) {
 		{
 			"should flatten all the fields",
 			fnRes,
-			8,
-			[]string{"User_ClientCertificateData", "Cluster_Server", "Cluster_CertificateAuthorityData", "Cluster_InsecureSkipTLSVerify", "Context_Namespace", "Context_User", "Context_Cluster", "User_ClientKeyData"},
+			10,
+			[]string{"User_ClientCertificateData", "Cluster_Server", "Cluster_CertificateAuthorityData", "Cluster_InsecureSkipTLSVerify", "Context_Namespace", "Context_User", "Context_Cluster", "User_ClientKeyData", "User_ClientKey", "User_ClientCertificate"},
 		},
 	}
 	for _, tt := range tests {
