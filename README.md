@@ -183,3 +183,9 @@ xl up -b xl-infra -l /PATH/TO/xl-up-blueprint/
 ```
 
 When you make a PR and also want to run integration test against an existing EKS cluster, GKE or Plain mutlinode K8s cluster then add label ``run-xl-up-pr`` in your github PR, then this pr will run against master in xl-up-blueprint branch. If you are working in story that has changes also in xl-up-blueprint repo in a branch with the same name then also add ``same-branch-on-xl-up-blueprint`` label in your pr
+
+To specify default versions of XLDeploy and XLRelease supported by xl up while building cli use below flags,
+
+```$xslt
+./gradlew goClean goBuild  -PXLDVersions=9.0.6 -PXLRVersions=9.0.9
+```
