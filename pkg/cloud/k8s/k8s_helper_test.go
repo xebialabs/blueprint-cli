@@ -41,6 +41,10 @@ clusters:
     server: https://test.hcp.eastus.azmk8s.io:443
   name: testCluster
 - cluster:
+    certificate-authority-data: dGVzdCB0aGUgc2hpdCBvdXQgb2YgdGhpcw==
+    server: https://minikube:8443
+  name: minikubeCluster
+- cluster:
     insecure-skip-tls-verify: true
     server: https://ocpm.test.com:8443
   name: ocpm-test-com:8443
@@ -54,6 +58,10 @@ contexts:
     namespace: default
     user: test/ocpm-test-com:8443
   name: default/ocpm-test-com:8443/test
+- context:
+    cluster: minikubeCluster
+    user: minikube
+  name: minikube
 - context:
     cluster: testCluster
     namespace: test
@@ -78,6 +86,10 @@ users:
     client-certificate-data: 123==123
     client-key-data: 123==123
     token: 6555565666666666666
+- name: minikube
+  user:
+    client-certificate: /path/to/client.crt
+    client-key: client.key
 - name: test/ocpm-test-com:8443
   user:
     client-certificate-data: 123==123
@@ -464,6 +476,13 @@ func TestCallK8SFuncByName(t *testing.T) {
 func Test_getK8SConfigField(t *testing.T) {
 	config, _ := ParseKubeConfig([]byte(sampleKubeConfig))
 	fnRes, _ := GetContext(config, "testCluster")
+	fnResMini, _ := GetContext(config, "minikube")
+
+	// create a temp file
+	d1 := []byte("1234")
+	ioutil.WriteFile("client.key", d1, os.ModePerm)
+	defer os.Remove("client.key")
+
 	type args struct {
 		v     *K8SFnResult
 		field string
@@ -527,12 +546,44 @@ func Test_getK8SConfigField(t *testing.T) {
 				&fnRes,
 				"User_clientCertificateData",
 			},
-			`123==123`,
+			"123==123",
+		},
+		{
+			"should return file conetnt when reading file",
+			args{
+				&fnResMini,
+				"User_ClientKey",
+			},
+			"1234",
+		},
+		{
+			"should return file path when reading file fails",
+			args{
+				&fnResMini,
+				"User_clientCertificate",
+			},
+			"/path/to/client.crt",
+		},
+		{
+			"should return User_clientCertificate when User_clientCertificateData doesn't exist",
+			args{
+				&fnResMini,
+				"User_clientCertificateData",
+			},
+			"/path/to/client.crt",
+		},
+		{
+			"should return User_clientCertificateData when User_clientCertificate doesn't exist",
+			args{
+				&fnRes,
+				"User_clientCertificate",
+			},
+			"123==123",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.args.v.GetConfigField(tt.args.field); got != tt.want {
+			if got := tt.args.v.GetConfigField(tt.args.field, true); got != tt.want {
 				t.Errorf("getK8SConfigField() = %v, want %v", got, tt.want)
 			}
 		})
@@ -551,8 +602,8 @@ func TestFlattenFields(t *testing.T) {
 		{
 			"should flatten all the fields",
 			fnRes,
-			8,
-			[]string{"User_ClientCertificateData", "Cluster_Server", "Cluster_CertificateAuthorityData", "Cluster_InsecureSkipTLSVerify", "Context_Namespace", "Context_User", "Context_Cluster", "User_ClientKeyData"},
+			10,
+			[]string{"User_ClientCertificateData", "Cluster_Server", "Cluster_CertificateAuthorityData", "Cluster_InsecureSkipTLSVerify", "Context_Namespace", "Context_User", "Context_Cluster", "User_ClientKeyData", "User_ClientKey", "User_ClientCertificate"},
 		},
 	}
 	for _, tt := range tests {
