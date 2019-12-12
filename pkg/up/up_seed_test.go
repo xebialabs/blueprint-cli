@@ -397,7 +397,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		// check values file
 		valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
 		valueMap := map[string]string{
-			"K8sSetup":             "LocalK8S",
+			"K8sSetup":             "DockerDesktopK8s",
 			"PostgresMaxConn":      "512",
 			"XlrOfficialVersion":   "9.0.2",
 			"XldOfficialVersion":   "9.0.2",
