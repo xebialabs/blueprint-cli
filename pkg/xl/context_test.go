@@ -26,6 +26,7 @@ func (dummy *DummyXLServer) GenerateDoc(filename string,
 	includeDefaults bool,
 	ciName string,
 	templates bool,
+	deliveryPatterns bool,
 	dashboards bool,
 	configurations bool,
 	riskProfiles bool) error {

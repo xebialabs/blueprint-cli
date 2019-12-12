@@ -31,6 +31,7 @@ type XLServer interface {
 		includeDefaults bool,
 		ciName string,
 		templates bool,
+		deliveryPatterns bool,
 		dashboards bool,
 		configurations bool,
 		riskProfiles bool,
@@ -90,6 +91,7 @@ func (server *XLDeployServer) GenerateDoc(
 	includeDefaults bool,
 	ciName string,
 	templates bool,
+	deliveryPatterns bool,
 	dashboards bool,
 	configurations bool,
 	riskProfiles bool,
@@ -111,12 +113,13 @@ func (server *XLReleaseServer) GenerateDoc(
 	includeDefaults bool,
 	ciName string,
 	templates bool,
+	deliveryPatterns bool,
 	dashboards bool,
 	configurations bool,
 	riskProfiles bool,
 ) error {
-	fullPath := fmt.Sprintf("devops-as-code/generate?path=%s&permissions=%t&users=%t&roles=%t&environments=%t&applications=%t&secrets=%t&ciName=%s&templates=%t&dashboards=%t&configurations=%t&riskProfiles=%t",
-		path, permissions, users, roles, environments, applications, includeSecrets, ciName, templates, dashboards, configurations, riskProfiles)
+	fullPath := fmt.Sprintf("devops-as-code/generate?path=%s&permissions=%t&users=%t&roles=%t&environments=%t&applications=%t&secrets=%t&ciName=%s&templates=%t&deliveryPatterns=%t&dashboards=%t&configurations=%t&riskProfiles=%t",
+		path, permissions, users, roles, environments, applications, includeSecrets, ciName, templates, deliveryPatterns, dashboards, configurations, riskProfiles)
 	return server.Server.GenerateYamlDoc(filename, fullPath, override)
 }
 

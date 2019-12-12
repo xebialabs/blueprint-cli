@@ -175,7 +175,7 @@ func (c *Context) GenerateSingleXLDDocument(generateFilename string, generatePat
 	} else {
 		util.Info("Generating definitions from XL Deploy to %s\n", generateFilename)
 	}
-	return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, false, false, includeSecrets, includeDefaults, "", false, false, false, false)
+	return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, false, false, includeSecrets, includeDefaults, "", false, false, false, false, false)
 }
 
 func (c *Context) GenerateSingleXLRDocument(
@@ -189,6 +189,7 @@ func (c *Context) GenerateSingleXLRDocument(
 	includeSecrets bool,
 	ciName string,
 	templates bool,
+	deliveryPatterns bool,
 	dashboards bool,
 	configurations bool,
 	permissions bool,
@@ -203,9 +204,9 @@ func (c *Context) GenerateSingleXLRDocument(
 		util.Info("Generating definitions from XL Release to %s\n", generateFilename)
 	}
 
-	if len(generatePath) == 0 && !users && !roles && !environments && !applications && len(ciName) == 0 && !templates && !dashboards && !configurations && !permissions && !riskProfiles {
+	if len(generatePath) == 0 && !users && !roles && !environments && !applications && len(ciName) == 0 && !templates && !deliveryPatterns && !dashboards && !configurations && !permissions && !riskProfiles {
 		return fmt.Errorf("not possible to generate a definition without a proper input. For more information please read help section")
 	}
 
-	return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride, permissions, users, roles, environments, applications, includeSecrets, false, finalName, templates, dashboards, configurations, riskProfiles)
+	return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride, permissions, users, roles, environments, applications, includeSecrets, false, finalName, templates, deliveryPatterns, dashboards, configurations, riskProfiles)
 }
