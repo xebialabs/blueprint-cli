@@ -78,6 +78,7 @@ type BlueprintParams struct {
 	FromUpCommand        bool
 	PrintSummaryTable    bool
 	ExistingPreparedData *PreparedData
+	OverrideDefaults     map[string]string
 	AnswersMap           map[string]string
 }
 
@@ -320,7 +321,13 @@ func evaluateAndSkipIfDependsOnIsFalse(dependsOn VarField, mergedData *PreparedD
 	return dependsOnVal, nil
 }
 
-func getBlueprintConfig(blueprintContext *BlueprintContext, blueprints map[string]*models.BlueprintRemote, templatePath string, dependsOn VarField, parentBlueprint string) ([]*ComposedBlueprint, *BlueprintConfig, error) {
+func getBlueprintConfig(
+	blueprintContext *BlueprintContext,
+	blueprints map[string]*models.BlueprintRemote,
+	templatePath string,
+	dependsOn VarField,
+	parentBlueprint string,
+) ([]*ComposedBlueprint, *BlueprintConfig, error) {
 	util.Verbose("[cmd] Parsing Blueprint from %s\n", templatePath)
 	blueprintDocs := make([]*ComposedBlueprint, 0)
 	blueprint := blueprints[templatePath]
@@ -337,7 +344,13 @@ func getBlueprintConfig(blueprintContext *BlueprintContext, blueprints map[strin
 	return blueprintDocs, masterBlueprintDoc, nil
 }
 
-func composeBlueprints(blueprintName string, blueprintDoc *BlueprintConfig, blueprintContext *BlueprintContext, blueprints map[string]*models.BlueprintRemote, dependsOn VarField, parentBlueprint string) ([]*ComposedBlueprint, error) {
+func composeBlueprints(
+	blueprintName string,
+	blueprintDoc *BlueprintConfig,
+	blueprintContext *BlueprintContext,
+	blueprints map[string]*models.BlueprintRemote,
+	dependsOn VarField, parentBlueprint string,
+) ([]*ComposedBlueprint, error) {
 	includeBefore := make([]*ComposedBlueprint, 0)
 	blueprintDocs := make([]*ComposedBlueprint, 0)
 	// add the master blueprint

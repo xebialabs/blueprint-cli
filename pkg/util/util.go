@@ -182,6 +182,13 @@ func CopyIntoStringInterfaceMap(in map[string]interface{}, out map[string]interf
 	}
 }
 
+func CopyIntoStringStringMap(in map[string]string, out map[string]string) map[string]string {
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
 // MergeStructFields merges the source into target, zero value fields are skipped along with fieldsToSkip. The target reference is updated
 func MergeStructFields(target interface{}, source interface{}, fieldsToSkip []string) {
 	sourceR := reflect.ValueOf(source).Elem()

@@ -490,6 +490,15 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 		// process default field value
 		defaultVal := variable.GetDefaultVal()
 
+		// override the default value if its passed and if the param is overridable.
+		if variable.OverrideDefault.Bool && util.MapContainsKeyWithVal(params.OverrideDefaults, variable.Name.Value) {
+			defaultVal = params.OverrideDefaults[variable.Name.Value]
+			// remove the variable from answers if this is coming from UP command so that question will be asked in the upgrade flow
+			if params.FromUpCommand {
+				delete(answerMap, variable.Name.Value)
+			}
+		}
+
 		// skip question based on DependsOn fields, the default value if present is set as value
 		if !util.IsStringEmpty(variable.DependsOn.Value) {
 			dependsOnVal, err := ParseDependsOnValue(variable.DependsOn, data.TemplateData)

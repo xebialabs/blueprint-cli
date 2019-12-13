@@ -139,7 +139,7 @@ func GenerateFileAndUpdateProperty(propertyName, newPropertyValue string, answer
 			propertyValue = string(f)
 		}
 
-		util.Verbose("writing %s", newPropertyValue)
+		util.Verbose("writing %s\n", newPropertyValue)
 
 		if !util.PathExists(models.BlueprintOutputDir, true) {
 			err := os.Mkdir(models.BlueprintOutputDir, os.ModePerm)

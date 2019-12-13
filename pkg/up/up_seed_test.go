@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"testing"
@@ -335,6 +336,158 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		}
 	})
 
+	t.Run("should create output files for valid xl-up template with answers from config map for update scenario", func(t *testing.T) {
+		MockConfigMap = `
+        K8sSetup: PlainK8SCluster
+        UseKubeconfig: false
+        K8sApiServerURL: https://k8s.com:6443
+        K8sAuthentication: FilePath
+        K8sClientCertFile: ../../templates/test/xl-up/cert
+        K8sClientKeyFile: ../../templates/test/xl-up/cert
+        InstallXLD: true
+        InstallXLR: true
+        XldAdminPass: password
+        XldLic: ../../templates/test/xl-up/cert
+        XldDbName: xl-deploy
+        XldDbUser: xl-deploy
+        XldDbPass: xl-deploy
+        NfsServerHost: nfs-test.com
+        NfsSharePath: /xebialabs
+        XlrAdminPass: password
+        XlrLic: ../../templates/test/xl-up/cert
+        XlrDbName: xl-release
+        XlrDbUser: xl-release
+        XlrDbPass: xl-release
+        XlrReportDbName: xl-release-report
+        XlrReportDbUser: xl-release-report
+        XlrReportDbPass: xl-release-report
+        XlKeyStore: ../../templates/test/xl-up/cert
+        XlKeyStorePass: test123
+        XlrOfficialVersion: 9.0.2
+        XldOfficialVersion: 9.0.2
+        MonitoringInstall: true
+        MonitoringUser: mon-user
+        MonitoringUserPass: mon-pass
+        PostgresMaxConn: 400
+        PostgresSharedBuff: 612MB
+        PostgresEffectCacheSize: 2GB
+        PostgresSyncCommit: "off"
+        PostgresMaxWallSize: 512MB
+        PostgresqlWorkHostpath: some/path
+        OsType: linux
+        `
+		ForceConfigMap = true
+		EmptyVersion = "9.0.2"
+		defer func() {
+			MockConfigMap = ""
+			ForceConfigMap = false
+			EmptyVersion = ""
+		}()
+		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
+		defer gb.Cleanup()
+		err := InvokeBlueprintAndSeed(
+			getLocalTestBlueprintContext(t),
+			UpParams{
+				// enable for local testing
+				LocalPath:         TestLocalPath,
+				BlueprintTemplate: "xl-infra",
+				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up-update.yaml")),
+				QuickSetup:        true,
+				AdvancedSetup:     false,
+				CfgOverridden:     false,
+				NoCleanup:         false,
+				Undeploy:          false,
+				DryRun:            true,
+				SkipK8sConnection: true,
+				GITBranch:         GITBranch,
+				XLDVersions:       "9.0.2, 9.0.5",
+				XLRVersions:       "9.0.2, 9.0.6",
+			},
+			CLIVersion,
+			gb,
+		)
+
+		require.Nil(t, err)
+
+		// assertions
+
+		// certs
+		assert.FileExists(t, "cert.crt")
+		assert.FileExists(t, "cert.key")
+
+		//answer files
+		assert.FileExists(t, GeneratedAnswerFile)
+
+		//xl files
+		assert.FileExists(t, "xebialabs.yaml")
+		assert.FileExists(t, path.Join(gb.OutputDir, "values.xlvals"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "secrets.xlvals"))
+		assert.FileExists(t, path.Join(gb.OutputDir, ".gitignore"))
+
+		assert.FileExists(t, path.Join(gb.OutputDir, "answers.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "common.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "deploy-it.lic"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "xl-release.lic"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "deployments.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "keystore.jceks"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "xl-deploy.yaml"))
+		assert.FileExists(t, path.Join(gb.OutputDir, "xl-release.yaml"))
+
+		// check __test__ directory is not there
+		_, err = os.Stat("__test__")
+		assert.True(t, os.IsNotExist(err))
+
+		// check encoded string value in commom.yaml
+		commonFile := GetFileContent(path.Join(gb.OutputDir, "common.yaml"))
+		assert.Contains(t, commonFile, fmt.Sprintf("tlsCert: %s", `|
+      -----BEGIN CERTIFICATE-----
+      MIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw
+      LzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz
+      MB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz
+      OTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B
+      AQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8
+      igrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH
+      +5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna
+      8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD
+      wZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV
+      E/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV
+      HQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA
+      hdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH
+      72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN
+      EYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw
+      OP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l
+      hHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9
+      LxjYOSJ5loUikwq6lQBA5Q==
+      -----END CERTIFICATE-----`))
+
+		// check values file
+		valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
+		valueMap := map[string]string{
+			"MonitoringInstall":  "true",
+			"K8sSetup":           "PlainK8SCluster",
+			"K8sAuthentication":  "FilePath",
+			"PostgresMaxConn":    "400",
+			"XlrOfficialVersion": "9.0.2",
+			"XldOfficialVersion": "9.0.2",
+			"UseKubeconfig":      "false",
+			"K8sApiServerURL":    "https://k8s.com:6443",
+		}
+		for k, v := range valueMap {
+			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+
+		// check secrets file
+		secretsFile := GetFileContent(path.Join(gb.OutputDir, "secrets.xlvals"))
+		secretsMap := map[string]string{
+			"XlrLic":             "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\nMB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz\\nOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B\\nAQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8\\nigrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH\\n+5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna\\n8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD\\nwZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV\\nE/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV\\nHQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA\\nhdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH\\n72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN\\nEYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw\\nOP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l\\nhHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9\\nLxjYOSJ5loUikwq6lQBA5Q==\\n-----END CERTIFICATE-----",
+			"K8sClientCertFile":  "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\nMB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz\\nOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B\\nAQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8\\nigrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH\\n+5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna\\n8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD\\nwZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV\\nE/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV\\nHQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA\\nhdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH\\n72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN\\nEYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw\\nOP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l\\nhHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9\\nLxjYOSJ5loUikwq6lQBA5Q==\\n-----END CERTIFICATE-----",
+			"MonitoringUserPass": "mon-pass",
+		}
+		for k, v := range secretsMap {
+			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
+		}
+	})
+
 	t.Run("should create output files for valid xl-up template with answers file for local setup", func(t *testing.T) {
 		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 		defer gb.Cleanup()
@@ -486,6 +639,35 @@ func Test_getVersion(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getVersion(tt.args.answerMapFromConfigMap, tt.args.key, tt.args.prevKey); got != tt.want {
 				t.Errorf("getVersion() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_getAvailableVersions(t *testing.T) {
+	tests := []struct {
+		name            string
+		versions        string
+		defaultVersions []string
+		want            []string
+	}{
+		{
+			"return default when no version given",
+			"",
+			[]string{"9.0.0"},
+			[]string{"9.0.0"},
+		},
+		{
+			"return version array when given",
+			"9.0.5, 9.6.5 ,9.5",
+			[]string{"9.0.0"},
+			[]string{"9.0.5", "9.6.5", "9.5"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getAvailableVersions(tt.versions, tt.defaultVersions); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getAvailableVersions() = %v, want %v", got, tt.want)
 			}
 		})
 	}

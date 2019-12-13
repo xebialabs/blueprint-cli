@@ -931,6 +931,8 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 		answersFilePath    string
 		strictAnswers      bool
 		useDefaultsAsValue bool
+		upMode             bool
+		overideDefaults    map[string]string
 	}
 	tests := []struct {
 		name    string
@@ -967,7 +969,7 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 					},
 				},
 			},
-			args{"", false, true},
+			args{"", false, true, false, nil},
 			&PreparedData{
 				TemplateData: map[string]interface{}{"input1": "default1", "input2": "!value input2", "input3": "!value input3"},
 				SummaryData:  map[string]interface{}{"input1": "default1", "input 2": "*****", "input 3": "default3"},
@@ -1010,7 +1012,7 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 					},
 				},
 			},
-			args{GetTestTemplateDir("answer-input-2.yaml"), true, false},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, false, false, nil},
 			nil,
 			true,
 		},
@@ -1049,7 +1051,7 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 					},
 				},
 			},
-			args{GetTestTemplateDir("answer-input-2.yaml"), true, false},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, false, false, nil},
 			&PreparedData{
 				TemplateData: map[string]interface{}{"input1": "val1", "input2": "!value input2", "input3": "ans3", "input4": "ans4", "input5": ""},
 				SummaryData:  map[string]interface{}{"input1": "val1", "input 2": "*****", "input 3": "ans3", "input 4": "ans4"},
@@ -1082,7 +1084,7 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 					},
 				},
 			},
-			args{GetTestTemplateDir("answer-input-2.yaml"), true, false},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, false, false, nil},
 			&PreparedData{
 				TemplateData: map[string]interface{}{"input1": "val1", "input2": "!value input2", "input3": "ans3"},
 				SummaryData:  map[string]interface{}{"input1": "val1", "input 2": "*****", "input 3": "ans3"},
@@ -1121,7 +1123,7 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 					},
 				},
 			},
-			args{GetTestTemplateDir("answer-input-2.yaml"), true, true},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, true, false, nil},
 			&PreparedData{
 				TemplateData: map[string]interface{}{"input1": "val1", "input2": "!value input2", "input3": "ans3", "input5": "default5"},
 				SummaryData:  map[string]interface{}{"input1": "val1", "input 2": "*****", "input 3": "ans3", "input 5": "default5"},
@@ -1176,12 +1178,126 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 					},
 				},
 			},
-			args{GetTestTemplateDir("answer-input-2.yaml"), true, true},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, true, false, nil},
 			&PreparedData{
 				TemplateData: map[string]interface{}{"input1": "true", "input2": "100", "input3": "true", "input4": "50.885", "input5": "!value input5", "input6": "false"},
 				SummaryData:  map[string]interface{}{"input1": "true", "input 2": "100", "input 3": "true", "input4": "50.885", "input 5": "*****", "input6": "false"},
 				Secrets:      map[string]interface{}{"input5": "50.58"},
 				Values:       map[string]interface{}{"input4": "50.885", "input6": "false"},
+			},
+			false,
+		},
+		{
+			"should overide defaults when provided but still use answer file",
+			BlueprintConfig{
+				Variables: []Variable{
+					{
+						Name:            VarField{Value: "input1"},
+						Label:           VarField{Value: "input1"},
+						Type:            VarField{Value: "Input"},
+						Value:           VarField{Bool: false, Value: "val1"},
+						Default:         VarField{Bool: false, Value: "default1"},
+						OverrideDefault: VarField{Bool: true, Value: "true"},
+					},
+					{
+						Name:            VarField{Value: "input2"},
+						Label:           VarField{Value: "input 2"},
+						Type:            VarField{Value: "SecretInput"},
+						Default:         VarField{Bool: false, Value: "default2"},
+						OverrideDefault: VarField{Bool: true, Value: "true"},
+					},
+					{
+						Name:            VarField{Value: "input3"},
+						Label:           VarField{Value: "input 3"},
+						Type:            VarField{Value: "Input"},
+						OverrideDefault: VarField{Bool: true, Value: "true"},
+					},
+					{
+						Name:    VarField{Value: "input4"},
+						Label:   VarField{Value: "input 4"},
+						Type:    VarField{Value: "Input"},
+						Default: VarField{Bool: false, Value: "default4"},
+					},
+					{
+						Name:            VarField{Value: "input5"},
+						Label:           VarField{Value: "input 5"},
+						Type:            VarField{Value: "Input"},
+						Default:         VarField{Bool: false, Value: "default5"},
+						OverrideDefault: VarField{Bool: true, Value: "true"},
+					},
+				},
+			},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, true, false, map[string]string{
+				"input1": "overdefault1",
+				"input2": "overdefault2",
+				"input3": "overdefault3",
+				"input4": "overdefault4",
+			}},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "input2": "!value input2", "input3": "ans3", "input4": "ans4", "input5": "default5"},
+				SummaryData:  map[string]interface{}{"input1": "val1", "input 2": "*****", "input 3": "ans3", "input 4": "ans4", "input 5": "default5"},
+				Secrets:      map[string]interface{}{"input2": "ans2"},
+				Values:       map[string]interface{}{},
+			},
+			false,
+		},
+		{
+			"should overide defaults when provided but don't use answer form answer file in XL-UP mode",
+			BlueprintConfig{
+				Variables: []Variable{
+					{
+						Name:            VarField{Value: "input1"},
+						Label:           VarField{Value: "input1"},
+						Type:            VarField{Value: "Input"},
+						Value:           VarField{Bool: false, Value: "val1"},
+						Default:         VarField{Bool: false, Value: "default1"},
+						OverrideDefault: VarField{Bool: true, Value: "true"},
+					},
+					{
+						Name:            VarField{Value: "input2"},
+						Label:           VarField{Value: "input 2"},
+						Type:            VarField{Value: "SecretInput"},
+						Default:         VarField{Bool: false, Value: "default2"},
+						OverrideDefault: VarField{Bool: true, Value: "true"},
+					},
+					{
+						Name:            VarField{Value: "input3"},
+						Label:           VarField{Value: "input 3"},
+						Type:            VarField{Value: "Input"},
+						OverrideDefault: VarField{Bool: true, Value: "true"},
+					},
+					{
+						Name:    VarField{Value: "input4"},
+						Label:   VarField{Value: "input 4"},
+						Type:    VarField{Value: "Input"},
+						Default: VarField{Bool: false, Value: "default4"},
+					},
+					{
+						Name:            VarField{Value: "input5"},
+						Label:           VarField{Value: "input 5"},
+						Type:            VarField{Value: "Input"},
+						Default:         VarField{Bool: false, Value: "default5"},
+						OverrideDefault: VarField{Bool: true, Value: "true"},
+					},
+					{
+						Name:    VarField{Value: "input6"},
+						Label:   VarField{Value: "input 6"},
+						Type:    VarField{Value: "Input"},
+						Default: VarField{Bool: false, Value: "default6"},
+					},
+				},
+			},
+			args{GetTestTemplateDir("answer-input-2.yaml"), true, true, true, map[string]string{
+				"input1": "overdefault1",
+				"input2": "overdefault2",
+				"input3": "overdefault3",
+				"input4": "overdefault4",
+			}},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"input1": "val1", "input2": "!value input2", "input3": "overdefault3", "input4": "ans4", "input5": "default5", "input6": "default6"},
+				SummaryData:  map[string]interface{}{"input1": "val1", "input 2": "*****", "input 3": "overdefault3", "input 4": "ans4", "input 5": "default5", "input 6": "default6"},
+				Secrets:      map[string]interface{}{"input2": "overdefault2"},
+				Values:       map[string]interface{}{},
 			},
 			false,
 		},
@@ -1200,6 +1316,8 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 					AnswersFile:        tt.args.answersFilePath,
 					StrictAnswers:      tt.args.strictAnswers,
 					UseDefaultsAsValue: tt.args.useDefaultsAsValue,
+					OverrideDefaults:   tt.args.overideDefaults,
+					FromUpCommand:      tt.args.upMode,
 				},
 				NewPreparedData(),
 			)

@@ -28,6 +28,9 @@ const (
 
 // SkipPrompts can be set to true to skip asking prompts
 var SkipPrompts = false
+var MockConfigMap = ""
+var ForceConfigMap = false
+var EmptyVersion = ""
 
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
 func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, CliVersion string, gb *blueprint.GeneratedBlueprint) error {
@@ -89,6 +92,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	var answers map[string]string
+	var defaultFromValues map[string]string
 
 	if upParams.AnswerFile != "" {
 		// Update the user provided answerfile with License and Keystore information if needed
@@ -151,6 +155,9 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if configMap, err = getKubeConfigMap(answersFromInfra); err != nil {
 			return err
 		}
+	} else {
+		// Used only for testing purposes
+		configMap = MockConfigMap
 	}
 
 	if configMap != "" {
@@ -175,42 +182,68 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		// Strip the version information
 		models.AvailableOfficialXlrVersion = getVersion(answersFromConfigMap, "XlrOfficialVersion", "PrevXlrOfficialVersion")
 		if models.AvailableOfficialXlrVersion != "" {
-			answersFromConfigMap["XlrOfficialVersion"] = ""
+			answersFromConfigMap["XlrOfficialVersion"] = EmptyVersion
 			answersFromConfigMap["PrevXlrOfficialVersion"] = models.AvailableOfficialXlrVersion
 		}
 
 		models.AvailableOfficialXldVersion = getVersion(answersFromConfigMap, "XldOfficialVersion", "PrevXldOfficialVersion")
 		if models.AvailableOfficialXldVersion != "" {
-			answersFromConfigMap["XldOfficialVersion"] = ""
+			answersFromConfigMap["XldOfficialVersion"] = EmptyVersion
 			answersFromConfigMap["PrevXldOfficialVersion"] = models.AvailableOfficialXldVersion
 		}
 
 		models.AvailableXlrVersion = getVersion(answersFromConfigMap, "XlrVersion", "PrevXlrVersion")
 		if models.AvailableXlrVersion != "" {
-			answersFromConfigMap["XlrVersion"] = ""
+			answersFromConfigMap["XlrVersion"] = EmptyVersion
 			answersFromConfigMap["PrevXlrVersion"] = models.AvailableXlrVersion
 		}
 
 		models.AvailableXldVersion = getVersion(answersFromConfigMap, "XldVersion", "PrevXldVersion")
 		if models.AvailableXldVersion != "" {
-			answersFromConfigMap["XldVersion"] = ""
+			answersFromConfigMap["XldVersion"] = EmptyVersion
 			answersFromConfigMap["PrevXldVersion"] = models.AvailableXldVersion
 		}
 
 		if err = generateLicenseAndKeystore(answersFromConfigMap, gb); err != nil {
 			return err
 		}
-		if upParams.AnswerFile == "" {
+
+		if upParams.AnswerFile == "" || ForceConfigMap {
 			// answerfile is not present, see if there is an answerfile from k8s configmap
 			answers = answersFromConfigMap
 			answers["FromConfigMap"] = "true"
+			util.Verbose("[xl up] config map is used as answers\n")
+			// Prepare parameters that can be overriden
+			if !SkipPrompts {
+				shouldUpdate := false
+				err := survey.AskOne(&survey.Confirm{Message: models.UpdateParamsConfirmationPrompt, Default: false}, &shouldUpdate, nil)
+
+				if err != nil {
+					return err
+				}
+				if shouldUpdate {
+					util.Verbose("[xl up] config map is used as defaults\n")
+					upParams.QuickSetup = false
+					defaultFromValues = util.CopyIntoStringStringMap(answersFromConfigMap, make(map[string]string))
+					if val, ok := defaultFromValues["InstallXLD"]; ok && val == "true" {
+						delete(defaultFromValues, "InstallXLD")
+					}
+					if val, ok := defaultFromValues["InstallXLR"]; ok && val == "true" {
+						delete(defaultFromValues, "InstallXLR")
+					}
+					if val, ok := defaultFromValues["MonitoringInstall"]; ok && val == "true" {
+						delete(defaultFromValues, "MonitoringInstall")
+					}
+				}
+			}
 		}
+
 	} else {
 		util.Verbose("[xl up] Install workflow started\n")
 	}
 
 	util.IsQuiet = true
-	if err = runApplicationBlueprint(&upParams, blueprintContext, gb, CliVersion, preparedData, answers, answersFromInfra); err != nil {
+	if err = runApplicationBlueprint(&upParams, blueprintContext, gb, CliVersion, preparedData, answers, answersFromInfra, defaultFromValues); err != nil {
 		return err
 	}
 	util.IsQuiet = false
@@ -250,7 +283,7 @@ func processAnswerMapFromPreparedData(preparedData *blueprint.PreparedData) map[
 		}
 	}
 
-	answers := map[string]string{}
+	answers := make(map[string]string)
 
 	for k, v := range preparedData.TemplateData {
 		answers[k] = fmt.Sprintf("%v", v)
@@ -269,7 +302,14 @@ func parseConfigMap(configMap string) (map[string]string, error) {
 	return answerMapFromConfigMap, nil
 }
 
-func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.BlueprintContext, gb *blueprint.GeneratedBlueprint, CliVersion string, preparedData *blueprint.PreparedData, answers, answersFromInfra map[string]string) error {
+func runApplicationBlueprint(
+	upParams *UpParams,
+	blueprintContext *blueprint.BlueprintContext,
+	gb *blueprint.GeneratedBlueprint,
+	CliVersion string,
+	preparedData *blueprint.PreparedData,
+	answers, answersFromInfra, defaultFromValues map[string]string,
+) error {
 	var err error
 	// Switch blueprint once the infrastructure is done.
 	if upParams.BlueprintTemplate != "" && strings.Contains(upParams.BlueprintTemplate, DefaultInfraBlueprintTemplate) {
@@ -294,6 +334,7 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 			FromUpCommand:        true,
 			PrintSummaryTable:    true,
 			ExistingPreparedData: preparedData,
+			OverrideDefaults:     defaultFromValues,
 		},
 		blueprintContext, gb,
 	)
@@ -305,7 +346,11 @@ func runApplicationBlueprint(upParams *UpParams, blueprintContext *blueprint.Blu
 
 func getAvailableVersions(versions string, defaultVersions []string) []string {
 	if versions != "" && versions != "undefined" {
-		return strings.Split(versions, ",")
+		versionSlice := []string{}
+		for _, ver := range strings.Split(versions, ",") {
+			versionSlice = append(versionSlice, strings.TrimSpace(ver))
+		}
+		return versionSlice
 	}
 	return defaultVersions
 }

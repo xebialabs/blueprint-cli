@@ -1,11 +1,14 @@
+# xl-infra
 K8sApiServerURL                : https://172.16.16.21:6443
 K8sLocalApiServerURL           : https://172.16.16.21:6443
+K8sSetup                       : DockerDesktopK8s
+OsType                         : linux
+UseKubeconfig                  : true
+# xl-up
+Namespace                      : xebialabs
 ExternalDatabase               : false
 InstallXLD                     : true
 InstallXLR                     : true
-K8sSetup                       : DockerDesktopK8s
-Namespace                      : xebialabs
-OsType                         : linux
 PostgresEffectCacheSize        : 1GB
 PostgresMaxConn                : 512
 PostgresMaxWallSize            : 256MB
@@ -14,7 +17,6 @@ PostgresSyncCommit             : off
 PostgresqlWorkHostpath         : ../../templates/test/xl-up
 PostgresqlWorkHostpathPlain    : ../../templates/test/xl-up
 UseCustomRegistry              : false
-UseKubeconfig                  : true
 XlKeyStore                     : ../../templates/test/xl-up/cert
 XlKeyStorePass                 : test123
 XldAdminPass                   : 88ra74jdodQw93nU

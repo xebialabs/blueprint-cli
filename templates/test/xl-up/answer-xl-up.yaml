@@ -1,9 +1,12 @@
+# xl-infra
 K8sSetup: PlainK8SCluster
 UseKubeconfig: false
 K8sApiServerURL: https://k8s.com:6443
 K8sAuthentication: FilePath
 K8sClientCertFile: ../../templates/test/xl-up/cert
 K8sClientKeyFile: ../../templates/test/xl-up/cert
+OsType: linux
+# xl-up
 InstallXLD: true
 InstallXLR: true
 XldAdminPass: password
@@ -34,4 +37,3 @@ PostgresEffectCacheSize: 2GB
 PostgresSyncCommit: "off"
 PostgresMaxWallSize: 512MB
 PostgresqlWorkHostpath: some/path
-OsType: linux

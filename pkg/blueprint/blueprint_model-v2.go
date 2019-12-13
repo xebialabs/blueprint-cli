@@ -39,6 +39,7 @@ type ParameterV2 struct {
 	Description     interface{}   `yaml:"description"`
 	Label           interface{}   `yaml:"label"`
 	IgnoreIfSkipped interface{}   `yaml:"ignoreIfSkipped"`
+	OverrideDefault interface{}   `yaml:"overrideDefault"`
 }
 
 type FileV2 struct {
