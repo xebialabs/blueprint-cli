@@ -650,13 +650,28 @@ func TestValidatePrompt(t *testing.T) {
 			nil,
 		},
 		{
+			"should pass on empty space since empty values are allowed in secret fields",
+			args{"test", "", " ", true, nil},
+			nil,
+		},
+		{
 			"should fail required validation on empty value",
 			args{"test", "", "", false, nil},
 			fmt.Errorf("Value is required"),
 		},
 		{
+			"should fail required validation on empty space value",
+			args{"test", "", " ", false, nil},
+			fmt.Errorf("Value is required"),
+		},
+		{
 			"should fail required validation on empty value with pattern",
 			args{"test", "regex('.', test)", "", false, make(map[string]interface{})},
+			fmt.Errorf("Value is required"),
+		},
+		{
+			"should fail required validation on empty space with pattern",
+			args{"test", "regex('.', test)", " ", false, make(map[string]interface{})},
 			fmt.Errorf("Value is required"),
 		},
 		{
@@ -672,6 +687,11 @@ func TestValidatePrompt(t *testing.T) {
 		{
 			"should pass pattern validation on valid value",
 			args{"test", "regex('[a-z]*', test)", "abc", false, make(map[string]interface{})},
+			nil,
+		},
+		{
+			"should pass pattern validation on valid value with extra space",
+			args{"test", "regex('[a-z]*', test)", "  abc  ", false, make(map[string]interface{})},
 			nil,
 		},
 		{
@@ -701,7 +721,7 @@ func TestValidatePrompt(t *testing.T) {
 		},
 		{
 			"should pass pattern validation on valid value with complex pattern",
-			args{"test", `regex('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)`, "255.255.255.255", false, make(map[string]interface{})},
+			args{"test", `regex('\\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\\b', test)`, "255.255.255.255 ", false, make(map[string]interface{})},
 			nil,
 		},
 		{
@@ -724,24 +744,47 @@ func TestValidatePrompt(t *testing.T) {
 
 func TestValidateFilePath(t *testing.T) {
 	tmpDir := filepath.Join("test", "file-input")
+	tmpDir2 := filepath.Join("/tmp", "file-input")
 	type args struct {
-		value      string
-		fileExists bool
+		value        string
+		fileExists   bool
+		validateExpr string
+		varName      string
+		emtpyAllowed bool
+		params       map[string]interface{}
 	}
 	tests := []struct {
 		name string
 		args args
 		want error
 	}{
-		{"should pass on existing valid file path input", args{filepath.Join(tmpDir, "valid.txt"), true}, nil},
-		{"should fail on non-existing file path input", args{"not-valid.txt", false}, fmt.Errorf("file not found on path not-valid.txt")},
-		{"should fail on directory path input", args{tmpDir, false}, fmt.Errorf("given path is a directory, file path is needed")},
-		{"should fail on empty input", args{"", false}, fmt.Errorf("Value is required")},
+		{"should pass on existing valid file path input", args{filepath.Join(tmpDir, "valid.txt"), true, "", "", false, nil}, nil},
+		{"should pass on existing valid file path input with extra space", args{" " + filepath.Join(tmpDir, "valid.txt") + " ", true, "", "", false, nil}, nil},
+		{"should fail on non-existing file path input", args{"not-valid.txt", false, "", "", false, nil}, fmt.Errorf("file not found on path not-valid.txt")},
+		{"should fail on directory path input", args{tmpDir, false, "", "", false, nil}, fmt.Errorf("given path is a directory, file path is needed")},
+		{"should fail on empty input", args{"", false, "", "", false, nil}, fmt.Errorf("Value is required")},
+		{
+			"should pass on valid file path and validation",
+			args{filepath.Join(tmpDir2, "valid.txt"), true, "isValidAbsPath(K8sClientCertFile)", "K8sClientCertFile", false, make(map[string]interface{})},
+			nil,
+		},
+		{
+			"should fail on invalid file path by validation",
+			args{filepath.Join(tmpDir, "valid.txt"), false, "isValidAbsPath(K8sClientCertFile)", "K8sClientCertFile", false, make(map[string]interface{})},
+			fmt.Errorf("validation error for answer value [test/file-input/valid.txt] for variable [K8sClientCertFile]: validation [isValidAbsPath(K8sClientCertFile)] failed with value [test/file-input/valid.txt]"),
+		},
+		{
+			"should fail on invalid file path but pass validation",
+			args{filepath.Join("/", tmpDir, "valid.txt"), false, "isValidAbsPath(K8sClientCertFile)", "K8sClientCertFile", false, make(map[string]interface{})},
+			fmt.Errorf("file not found on path /test/file-input/valid.txt"),
+		},
 	}
 	for _, tt := range tests {
 		// Create needed temporary directory for tests
 		os.MkdirAll(tmpDir, os.ModePerm)
 		defer os.RemoveAll("test")
+		os.MkdirAll(tmpDir2, os.ModePerm)
+		defer os.RemoveAll(tmpDir2)
 
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.args.fileExists {
@@ -749,7 +792,7 @@ func TestValidateFilePath(t *testing.T) {
 				ioutil.WriteFile(tt.args.value, contents, os.ModePerm)
 			}
 
-			got := validateFilePath()(tt.args.value)
+			got := validateFilePath(tt.args.varName, tt.args.validateExpr, tt.args.emtpyAllowed, tt.args.params)(tt.args.value)
 			if tt.want == nil || got == nil {
 				assert.Equal(t, tt.want, got)
 			} else {

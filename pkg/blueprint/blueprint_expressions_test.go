@@ -535,6 +535,84 @@ func Test_processCustomExpression(t *testing.T) {
 			nil,
 			false,
 		},
+		{
+			"should return true when a valid unix path is tested with isValidAbsPath",
+			false,
+			args{
+				"isValidAbsPath(Test)",
+				map[string]interface{}{
+					"Test": "/path/to/my folder/valid/unix-file",
+				},
+			},
+			true,
+			nil,
+			false,
+		},
+		{
+			"should return true when a valid windows path is tested with isValidAbsPath",
+			false,
+			args{
+				"isValidAbsPath(Test)",
+				map[string]interface{}{
+					"Test": "D:\\my folder\file.crt",
+				},
+			},
+			true,
+			nil,
+			false,
+		},
+		{
+			"should return false when a valid windows path with space is tested with isValidAbsPath",
+			false,
+			args{
+				"isValidAbsPath(Test, 'true')",
+				map[string]interface{}{
+					"Test": "D:\\my folder\file.crt",
+				},
+			},
+			false,
+			nil,
+			false,
+		},
+		{
+			"should return false when a valid unix path with space is tested with isValidAbsPath",
+			false,
+			args{
+				"isValidAbsPath(Test, 'true')",
+				map[string]interface{}{
+					"Test": "/path/to/my folder/valid/unix-file",
+				},
+			},
+			false,
+			nil,
+			false,
+		},
+		{
+			"should return false when a invalid valid unix is tested with isValidAbsPath",
+			false,
+			args{
+				"isValidAbsPath(Test)",
+				map[string]interface{}{
+					"Test": "../path/to/my-folder/valid/unix-file",
+				},
+			},
+			false,
+			nil,
+			false,
+		},
+		{
+			"should return false when a invalid windows path is tested with isValidAbsPath",
+			false,
+			args{
+				"isValidAbsPath(Test)",
+				map[string]interface{}{
+					"Test": "D://my folder/file.crt",
+				},
+			},
+			false,
+			nil,
+			false,
+		},
 
 		// aws helper functions
 		{

@@ -21,6 +21,25 @@ import (
 	versionHelper "github.com/xebialabs/xl-cli/pkg/version"
 )
 
+func regexMatch(pattern, value string) (bool, error) {
+	re, err := regexp2.Compile(pattern, 0)
+	if err != nil {
+		return false, fmt.Errorf("invalid pattern in regex expression, %s", err.Error())
+	}
+	// setting a 5 second timeout to avoid hanging on complex regex
+	re.MatchTimeout = time.Second * 5
+	match, err := re.MatchString(value)
+
+	if err != nil {
+		return false, fmt.Errorf("error while matching regex expression %s, %s", pattern, err.Error())
+	}
+
+	if !match {
+		return false, nil
+	}
+	return true, nil
+}
+
 var functions = map[string]govaluate.ExpressionFunction{
 	"strlen": func(args ...interface{}) (interface{}, error) {
 		length := len(args[0].(string))
@@ -57,24 +76,21 @@ var functions = map[string]govaluate.ExpressionFunction{
 		if len(args) != 2 {
 			return nil, fmt.Errorf("invalid number of arguments for regex expression, expecting 2 got %d", len(args))
 		}
-		pattern := args[0].(string)
-		re, err := regexp2.Compile(fmt.Sprintf("^%s$", pattern), 0)
-		if err != nil {
-			return false, fmt.Errorf("invalid pattern in regex expression, %s", err.Error())
-		}
-		// setting a 5 second timeout to avoid hanging on complex regex
-		re.MatchTimeout = time.Second * 5
+		pattern := fmt.Sprintf("^%s$", args[0].(string))
 		value := fmt.Sprintf("%v", args[1])
-		match, err := re.MatchString(value)
-
-		if err != nil {
-			return false, fmt.Errorf("error while matching regex expression %s, %s", pattern, err.Error())
+		return regexMatch(pattern, value)
+	},
+	"isValidAbsPath": func(args ...interface{}) (interface{}, error) {
+		path := args[0].(string)
+		windPathRegex := `[a-zA-Z]:\\(((?![<>:"/\\|?*]).)+((?<![ .])\\)?)*` // windows absolute path with space
+		unixPathRegex := `(.?\/[\w^ -]+)*\/?([\w-])+[.]?[^.\s]*`            // unix absolute path with space
+		if len(args) == 2 && fmt.Sprintf("%v", args[1]) == "true" {
+			// update regex to validate path without spaces in it
+			windPathRegex = `[a-zA-Z]:\\(((?![<>:"/\\|?*])[\S])+((?<![ .])\\)?)*` // windows absolute path with out space
+			unixPathRegex = `(.?\/[\w^-]+)*\/?([\w-])+[.]?[^.\s]*`                // unix absolute path with out space
 		}
-
-		if !match {
-			return false, nil
-		}
-		return true, nil
+		pattern := fmt.Sprintf("^(%s|%s)$", windPathRegex, unixPathRegex)
+		return regexMatch(pattern, path)
 	},
 	"isFile": func(args ...interface{}) (interface{}, error) {
 		currentUser, err := user.Current()

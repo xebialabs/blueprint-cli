@@ -258,6 +258,20 @@ func (variable *Variable) GetValidateExpr() (string, error) {
 	return "", fmt.Errorf("only '!expr' tag is supported for validate attribute")
 }
 
+func validateField(validateExpr string, variable *Variable, parameters map[string]interface{}, value interface{}) error {
+	if validateExpr != "" {
+		allowEmpty := false
+		if IsSecretType(variable.Type.Value) {
+			allowEmpty = true
+		}
+		validationErr := validatePrompt(variable.Name.Value, validateExpr, allowEmpty, parameters)(value)
+		if validationErr != nil {
+			return fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", value, variable.Name.Value, validationErr.Error())
+		}
+	}
+	return nil
+}
+
 func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[string]interface{}) (interface{}, error) {
 	// get validate expression
 	validateExpr, err := variable.GetValidateExpr()
@@ -295,9 +309,14 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		}
 		return answerStr, nil
 	case TypeFile, TypeSecretFile:
+		// do validation if needed
+		err := validateField(validateExpr, variable, parameters, value)
+		if err != nil {
+			return "", err
+		}
 		// read file contents
 		filePath := value.(string)
-		util.Verbose("[input] Reading file contents from path: %s\n", filePath)
+		util.Verbose("[inp: %s\n", filePath)
 		data, err := ioutil.ReadFile(filePath)
 		if err != nil {
 			return "", fmt.Errorf("error reading input file [%s]: %s", filePath, err.Error())
@@ -305,15 +324,9 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		return string(data), nil
 	default:
 		// do validation if needed
-		if validateExpr != "" {
-			allowEmpty := false
-			if IsSecretType(variable.Type.Value) {
-				allowEmpty = true
-			}
-			validationErr := validatePrompt(variable.Name.Value, validateExpr, allowEmpty, parameters)(value)
-			if validationErr != nil {
-				return nil, fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", value, variable.Name.Value, validationErr.Error())
-			}
+		err := validateField(validateExpr, variable, parameters, value)
+		if err != nil {
+			return "", err
 		}
 		return value, nil
 	}
@@ -391,10 +404,10 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&filePath,
-			validateFilePath(),
+			validateFilePath(variable.Name.Value, validateExpr, false, parameters),
 			surveyOpts...,
 		)
-
+		filePath = strings.TrimSpace(filePath)
 		// read file contents & save as answer
 		util.Verbose("[input] Reading file contents from path: %s\n", filePath)
 		data, err := getFileContents(filePath)
@@ -437,7 +450,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		return confirm, nil
 	}
 	// This always returns string
-	return answer, err
+	return strings.TrimSpace(answer), err
 }
 
 // validate blueprint yaml document based on required fields
@@ -667,9 +680,16 @@ func validateFiles(configs *[]TemplateConfig) error {
 
 func validatePrompt(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}) func(val interface{}) error {
 	return func(val interface{}) error {
+		var value interface{}
+		switch valType := val.(type) {
+		case string:
+			value = strings.TrimSpace(valType)
+		default:
+			value = val
+		}
 		// if empty value is not allowed, check for any value
 		if !allowEmpty {
-			err := survey.Required(val)
+			err := survey.Required(value)
 			if err != nil {
 				return err
 			}
@@ -679,14 +699,14 @@ func validatePrompt(varName string, validateExpr string, allowEmpty bool, parame
 		if validateExpr != "" {
 			// add this value to the map of parameters for expression
 			if varName != "" {
-				parameters[varName] = val
+				parameters[varName] = value
 			}
 			isSuccess, err := ProcessCustomExpression(validateExpr, parameters)
 			if err != nil {
 				return err
 			}
 			if !isSuccess.(bool) {
-				return fmt.Errorf("validation [%s] failed with value [%s]", validateExpr, val)
+				return fmt.Errorf("validation [%s] failed with value [%s]", validateExpr, value)
 			}
 			return nil
 		}
@@ -695,13 +715,19 @@ func validatePrompt(varName string, validateExpr string, allowEmpty bool, parame
 	}
 }
 
-func validateFilePath() func(val interface{}) error {
+func validateFilePath(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}) func(val interface{}) error {
 	return func(val interface{}) error {
 		err := survey.Required(val)
 		if err != nil {
 			return err
 		}
-		filePath := val.(string)
+		validationErr := validatePrompt(varName, validateExpr, allowEmpty, parameters)(val)
+
+		if validationErr != nil {
+			return fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", val, varName, validationErr.Error())
+		}
+
+		filePath := strings.TrimSpace(val.(string))
 
 		if filePath != "" {
 			info, err := os.Stat(filePath)
