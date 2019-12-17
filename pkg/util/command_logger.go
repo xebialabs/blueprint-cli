@@ -154,6 +154,14 @@ func copyAndCapture(w io.Writer, r io.Reader, s *spinner.Spinner) ([]byte, error
 	buf := make([]byte, 1024, 1024)
 	for {
 		n, err := r.Read(buf[:])
+		if err != nil {
+			// Read returns io.EOF at the end of file, which is not an error for us
+			if err == io.EOF {
+				err = nil
+			}
+			// since it EOF we return here
+			return out, err
+		}
 		if n > 0 {
 			d := buf[:n]
 			out = append(out, d...)
@@ -166,15 +174,6 @@ func copyAndCapture(w io.Writer, r io.Reader, s *spinner.Spinner) ([]byte, error
 			}
 
 			logCapture(w, d, s)
-
-		}
-		if err != nil {
-			// Read returns io.EOF at the end of file, which is not an error for us
-			if err == io.EOF {
-				err = nil
-			}
-
-			return out, err
 		}
 	}
 }
