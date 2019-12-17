@@ -28,7 +28,7 @@ func runAndCaptureResponse(cmd models.Command) error {
 			// Flip the string, get the "first" instance of the ****** stuff, then get the position
 			lastIndex := strings.LastIndex(outStr, stars)
 			completedTask = true
-			util.Info(outStr[index : lastIndex+len(stars)])
+			util.Info(outStr[index:lastIndex+len(stars)] + "\n")
 		}
 	}
 
