@@ -925,6 +925,54 @@ func Test_processCustomExpression(t *testing.T) {
 			nil,
 			true,
 		},
+		{
+			"should create hash from answers map",
+			false,
+			args{
+				`md5HashOfAnswersIncluding()`,
+				map[string]interface{}{
+					"foo":  "bar",
+					"bar":  10,
+					"fooo": true,
+					"baar": "hello",
+				},
+			},
+			"8e95292b8f637910ed4af0c262177e02",
+			nil,
+			false,
+		},
+		{
+			"should create hash from filtered answers map",
+			false,
+			args{
+				`md5HashOfAnswersIncluding('foo', 'bar')`,
+				map[string]interface{}{
+					"foo":  "bar",
+					"bar":  10,
+					"fooo": true,
+					"baar": "hello",
+				},
+			},
+			"d2639145905a67631756942d27ce0f1f",
+			nil,
+			false,
+		},
+		{
+			"should create hash from inverse filtered answers map",
+			false,
+			args{
+				`md5HashOfAnswersNotIncluding('fooo', 'baar')`,
+				map[string]interface{}{
+					"foo":  "bar",
+					"bar":  10,
+					"fooo": true,
+					"baar": "hello",
+				},
+			},
+			"d2639145905a67631756942d27ce0f1f",
+			nil,
+			false,
+		},
 	}
 	for _, tt := range tests {
 		if tt.onlyInUnix && runtime.GOOS == "windows" {
