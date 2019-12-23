@@ -1090,6 +1090,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 							{Name: VarField{Value: "Test"}, Label: VarField{Value: "Test"}, Value: VarField{Value: "testing"}, SaveInXlvals: VarField{Value: "true", Bool: true}},
 						},
 					},
+					DependsOn: []VarField{{}},
 				},
 			},
 			false,
@@ -1128,6 +1129,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 							{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
 						},
 					},
+					DependsOn: []VarField{{}},
 				},
 				{
 					Name:   "aws/compose",
@@ -1182,6 +1184,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 							{Path: "xlr-pipeline.yml", FullPath: "aws/compose/xlr-pipeline.yml"},
 						},
 					},
+					DependsOn: []VarField{{}},
 				},
 				{
 					Name:   "aws/datalake",
@@ -1203,7 +1206,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 							},
 						},
 					},
-					DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
+					DependsOn: []VarField{{}, {Tag: tagExpressionV2, Value: "Bar == 'testing'"}},
 				},
 			},
 			false,
@@ -1211,7 +1214,7 @@ func Test_getBlueprintConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotArray, got, err := getBlueprintConfig(tt.args.blueprintContext, tt.args.blueprints, tt.args.templatePath, tt.args.dependsOn, tt.args.parentName)
+			gotArray, got, err := getBlueprintConfig(tt.args.blueprintContext, tt.args.blueprints, tt.args.templatePath, []VarField{tt.args.dependsOn}, tt.args.parentName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getBlueprintConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1322,6 +1325,7 @@ func Test_composeBlueprints(t *testing.T) {
 							{Path: "xlr-pipeline.yml", FullPath: "aws/compose/xlr-pipeline.yml"},
 						},
 					},
+					DependsOn: []VarField{{}},
 				},
 				{
 					Name:   "aws/emptyfiles",
@@ -1336,6 +1340,7 @@ func Test_composeBlueprints(t *testing.T) {
 						},
 						TemplateConfigs: []TemplateConfig{},
 					},
+					DependsOn: []VarField{{}},
 				},
 				{
 					Name:   "aws/emptyparams",
@@ -1351,6 +1356,7 @@ func Test_composeBlueprints(t *testing.T) {
 							{Path: "xlr-pipeline.yml", FullPath: "aws/emptyparams/xlr-pipeline.yml"},
 						},
 					},
+					DependsOn: []VarField{{}},
 				},
 			},
 			false,
@@ -1432,6 +1438,7 @@ func Test_composeBlueprints(t *testing.T) {
 							{Path: "xlr-pipeline.yml", FullPath: "aws/compose/xlr-pipeline.yml"},
 						},
 					},
+					DependsOn: []VarField{{}},
 				},
 				{
 					Name:   "aws/datalake",
@@ -1449,7 +1456,7 @@ func Test_composeBlueprints(t *testing.T) {
 							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Value: "TestDepends"}, RenameTo: VarField{Value: "xlr-pipeline2-new.yml"}},
 						},
 					},
-					DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
+					DependsOn: []VarField{{}, {Tag: tagExpressionV2, Value: "Bar == 'testing'"}},
 				},
 			},
 			false,
@@ -1535,6 +1542,7 @@ func Test_composeBlueprints(t *testing.T) {
 							{Path: "xlr-pipeline.yml", FullPath: "aws/monolith/xlr-pipeline.yml"},
 						},
 					},
+					DependsOn: []VarField{{}},
 				},
 				{
 					Name:   "aws/test",
@@ -1593,6 +1601,7 @@ func Test_composeBlueprints(t *testing.T) {
 							{Path: "xlr-pipeline.yml", FullPath: "aws/compose/xlr-pipeline.yml"},
 						},
 					},
+					DependsOn: []VarField{{}},
 				},
 				{
 					Name:   "aws/datalake",
@@ -1610,7 +1619,7 @@ func Test_composeBlueprints(t *testing.T) {
 							{Path: "xlr-pipeline.yml", FullPath: "aws/datalake/xlr-pipeline.yml", DependsOn: VarField{Value: "TestDepends"}, RenameTo: VarField{Value: "xlr-pipeline2-new.yml"}},
 						},
 					},
-					DependsOn: VarField{Tag: tagExpressionV2, Value: "Bar == 'testing'"},
+					DependsOn: []VarField{{}, {Tag: tagExpressionV2, Value: "Bar == 'testing'"}},
 				},
 			},
 			false,
@@ -1618,7 +1627,7 @@ func Test_composeBlueprints(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := composeBlueprints(tt.args.blueprintName, tt.args.blueprintDoc, tt.args.blueprintContext, tt.args.blueprints, tt.args.dependsOn, tt.args.parentName)
+			got, err := composeBlueprints(tt.args.blueprintName, tt.args.blueprintDoc, tt.args.blueprintContext, tt.args.blueprints, []VarField{tt.args.dependsOn}, tt.args.parentName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("composeBlueprints() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1704,7 +1713,7 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := evaluateAndSkipIfDependsOnIsFalse(tt.args.dependsOn, tt.args.mergedData)
+			got, err := evaluateAndSkipIfDependsOnIsFalse([]VarField{tt.args.dependsOn}, tt.args.mergedData)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("evaluateAndCheckDependsOnIsTrue() error = %v, wantErr %v", err, tt.wantErr)
 				return
