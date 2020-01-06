@@ -680,6 +680,11 @@ func TestValidatePrompt(t *testing.T) {
 			nil,
 		},
 		{
+			"should pass required validation on empty space with allowEmpty true",
+			args{"test", "", "", true, make(map[string]interface{})},
+			nil,
+		},
+		{
 			"should fail pattern validation on invalid value",
 			args{"test", "regex('[a-z]*', test)", "123", false, make(map[string]interface{})},
 			fmt.Errorf("validation [regex('[a-z]*', test)] failed with value [123]"),

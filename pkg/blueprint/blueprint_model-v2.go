@@ -40,6 +40,7 @@ type ParameterV2 struct {
 	Label           interface{}   `yaml:"label"`
 	IgnoreIfSkipped interface{}   `yaml:"ignoreIfSkipped"`
 	OverrideDefault interface{}   `yaml:"overrideDefault"`
+	AllowEmpty      interface{}   `yaml:"allowEmpty"`
 }
 
 type FileV2 struct {

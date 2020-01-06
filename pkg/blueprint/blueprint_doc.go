@@ -261,7 +261,7 @@ func (variable *Variable) GetValidateExpr() (string, error) {
 func validateField(validateExpr string, variable *Variable, parameters map[string]interface{}, value interface{}) error {
 	if validateExpr != "" {
 		allowEmpty := false
-		if IsSecretType(variable.Type.Value) {
+		if IsSecretType(variable.Type.Value) || variable.AllowEmpty.Bool {
 			allowEmpty = true
 		}
 		validationErr := validatePrompt(variable.Name.Value, validateExpr, allowEmpty, parameters)(value)
@@ -359,7 +359,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, variable.AllowEmpty.Bool, parameters),
 			surveyOpts...,
 		)
 	case TypeSecret:

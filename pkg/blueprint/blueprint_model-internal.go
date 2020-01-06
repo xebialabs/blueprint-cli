@@ -35,6 +35,7 @@ type Variable struct {
 	Label           VarField
 	IgnoreIfSkipped VarField
 	OverrideDefault VarField
+	AllowEmpty      VarField
 	Meta            VariableMeta
 }
 
