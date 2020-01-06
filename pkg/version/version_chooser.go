@@ -76,19 +76,28 @@ func getVersionForApp(availableOfficialAppVersion string, availableAppVersions [
 }
 
 func getVersionFromConfigMap(application string) (*semver.Version, error) {
+
 	if application == "xlr" && models.AvailableXlrVersion != "" {
 		return GetVersionFromImageTag(models.AvailableXlrVersion)
+	}
+
+	if application == "xlr" && models.AvailableOfficialXlrVersion != "" {
+		return GetVersionFromImageTag(models.AvailableOfficialXlrVersion)
 	}
 
 	if application == "xld" && models.AvailableXldVersion != "" {
 		return GetVersionFromImageTag(models.AvailableXldVersion)
 	}
+
+	if application == "xld" && models.AvailableOfficialXldVersion != "" {
+		return GetVersionFromImageTag(models.AvailableOfficialXldVersion)
+	}
+
 	return nil, nil
 }
 
 func compareVersion(application, version string) (bool, error) {
 	currentVersion, err := getVersionFromConfigMap(application)
-
 	if err != nil {
 		return false, fmt.Errorf("%s:%s provided in config map is not valid", application, version)
 	}
