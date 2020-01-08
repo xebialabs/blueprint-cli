@@ -49,15 +49,14 @@ func doLogin(request *http.Request, cookieName string) (*string, error) {
 		return nil, errors.Newf("auth returned %d http code on login.", resp.StatusCode)
 	}
 
-	parsed, err := url.ParseQuery(resp.Header.Get("Set-Cookie"))
+    cookies := resp.Cookies()
+    for _, v := range cookies {
+        if v.Name == cookieName {
+            return &v.Value, nil
+        }
+    }
 
-	if err != nil {
-		return nil, err
-	}
-
-	token := parsed.Get(cookieName)
-
-	return &token, nil
+    return nil, errors.Newf("can't find cookie '%s'", cookieName)
 }
 
 func getEnding(url string) string {
