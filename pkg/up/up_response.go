@@ -21,14 +21,14 @@ func runAndCaptureResponse(cmd models.Command) error {
 		if err != nil {
 			return err
 		}
-		stars := "***************"
-		index := strings.Index(outStr, stars)
+		logCaptureChars := "*=*=*=*=*=*=*=*"
+		index := strings.Index(outStr, logCaptureChars)
 
 		if index != -1 {
-			// Flip the string, get the "first" instance of the ****** stuff, then get the position
-			lastIndex := strings.LastIndex(outStr, stars)
+			// Flip the string, get the "first" instance of the *=*=*=*=*=*=*=* stuff, then get the position
+			lastIndex := strings.LastIndex(outStr, logCaptureChars)
 			completedTask = true
-			util.Info(outStr[index:lastIndex+len(stars)] + "\n")
+			util.Info(outStr[index:lastIndex+len(logCaptureChars)] + "\n")
 		}
 	}
 
