@@ -100,6 +100,12 @@ func (result *K8SFnResult) GetConfigField(attr string, retry bool) string {
 				switch val {
 				case "bool":
 					return strconv.FormatBool(field.Bool())
+				case "special_string":
+					if strings.Contains(field.String(), "arn:aws") {
+						awsArn := strings.Split(field.String(), "/")
+						return awsArn[1]
+					}
+					return field.String()
 				case "encoded":
 					// use User_ClientCertificate and User_ClientKey if User_ClientCertificateData and User_ClientKeyData is empty
 					if strings.TrimSpace(field.String()) == "" && retry {
@@ -146,6 +152,7 @@ func (result *K8SFnResult) GetConfigField(attr string, retry bool) string {
 	return ""
 }
 
+// SpecialHandling Fields that need to be pre processed to get value out of it
 var SpecialHandling = map[string]string{
 	"Cluster_InsecureSkipTLSVerify":    "bool",
 	"Cluster_CertificateAuthorityData": "encoded",
@@ -153,6 +160,7 @@ var SpecialHandling = map[string]string{
 	"User_ClientKeyData":               "encoded",
 	"User_ClientCertificate":           "path",
 	"User_ClientKey":                   "path",
+	"Context_Cluster":                  "special_string",
 }
 
 // CallK8SFuncByName calls related K8S module function with parameters provided
@@ -177,7 +185,7 @@ func CallK8SFuncByName(module string, params ...string) (models.FnResult, error)
 
 // Utilities
 
-// GetK8SCredentialsFromSystem fetches stored K8S access keys from file or env keys
+// GetK8SConfigFromSystem fetches stored K8S access keys from file or env keys
 func GetK8SConfigFromSystem(context string) (K8SFnResult, error) {
 	// fetch k8s config yaml and parse
 	kubeConfigYaml, err := GetKubeConfigFile()

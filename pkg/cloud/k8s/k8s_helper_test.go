@@ -42,6 +42,10 @@ clusters:
   name: testCluster
 - cluster:
     certificate-authority-data: dGVzdCB0aGUgc2hpdCBvdXQgb2YgdGhpcw==
+    server: https://random.sk1.eu-west-1.eks.amazonaws.com
+  name: arn:aws:eks:eu-west-1:random:cluster/xl-up-master
+- cluster:
+    certificate-authority-data: dGVzdCB0aGUgc2hpdCBvdXQgb2YgdGhpcw==
     server: https://minikube:8443
   name: minikubeCluster
 - cluster:
@@ -67,6 +71,10 @@ contexts:
     namespace: test
     user: clusterUser_testCluster_testCluster
   name: testCluster
+- context:
+    cluster: arn:aws:eks:eu-west-1:random:cluster/xl-up-master
+    user: clusterUser_testCluster_testCluster
+  name: arn:aws:eks:eu-west-1:random:cluster/xl-up-master
 - context:
     cluster: testClusterNotFound
     namespace: test
@@ -477,6 +485,7 @@ func Test_getK8SConfigField(t *testing.T) {
 	config, _ := ParseKubeConfig([]byte(sampleKubeConfig))
 	fnRes, _ := GetContext(config, "testCluster")
 	fnResMini, _ := GetContext(config, "minikube")
+	fnResAWS, _ := GetContext(config, "arn:aws:eks:eu-west-1:random:cluster/xl-up-master")
 
 	// create a temp file
 	d1 := []byte("1234")
@@ -579,6 +588,14 @@ func Test_getK8SConfigField(t *testing.T) {
 				"User_clientCertificate",
 			},
 			"123==123",
+		},
+		{
+			"should return Context_Cluster only name not full arn",
+			args{
+				&fnResAWS,
+				"Context_Cluster",
+			},
+			"xl-up-master",
 		},
 	}
 	for _, tt := range tests {
