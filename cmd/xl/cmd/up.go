@@ -66,6 +66,7 @@ func init() {
 	upFlags.BoolVar(&upParams.NoCleanup, "no-cleanup", false, "Leave generated files on the filesystem")
 	upFlags.BoolVar(&upParams.Undeploy, "undeploy", false, "Undeploy the deployed resources")
 	upFlags.BoolVar(&upParams.DryRun, "dry-run", false, "Create files only, nothing will be deployed")
+	upFlags.BoolVar(&upParams.RollingUpdate, "rolling-update", false, "Perform rolling updates for XL Release and XL Deploy")
 	// hidden flags used for development and testing
 	upFlags.BoolVarP(&upParams.CfgOverridden, "dev", "d", false, "Enable dev mode, uses repository config from your local config instead")
 	if err := upFlags.MarkHidden("dev"); err != nil {

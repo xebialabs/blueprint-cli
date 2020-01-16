@@ -42,7 +42,7 @@ func pullSeedImage(SeedVersion string) models.Command {
 	}
 }
 
-func runSeed(SeedVersion string) (models.Command, error) {
+func runSeed(SeedVersion string, rollingUpdate bool) (models.Command, error) {
 	dir, err := os.Getwd()
 
 	if err != nil {
@@ -50,6 +50,10 @@ func runSeed(SeedVersion string) (models.Command, error) {
 	}
 
 	command := []string{"run", "--name", "xl-seed", "-v", dir + ":/data", fmt.Sprintf("%s:%s", SeedImage, SeedVersion), "--init", "xebialabs/common.yaml", "xebialabs.yaml"}
+
+	if rollingUpdate {
+		command = append(command, "--rolling-update")
+	}
 
 	return models.Command{
 		Name: Docker,
