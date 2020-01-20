@@ -3,19 +3,20 @@
 ## Requested resources in K8S production setup
 
 | Deployment            | Memory | CPU | PODs |
-|-----------------------|:------:|:---:|:----:|
-| Psql                  |   1Gi  | 0.5 |   1  |
-| Elasticsearch         |  2.5Gi | 0.5 |   1  |
-| Fluentd               |  0.5Gi | 0.1 |  3*  |
-| Grafana               |  0.2Gi | 0.1 |   1  |
-| Kibana                |   1Gi  | 0.5 |   1  |
-| XL Deploy             |   4Gi  |  2  |   2  |
-| XL Release            |   4Gi  |  2  |   2  |
-| Total: XebiaLabs      |  16Gi  |  8  |   4  |
-| Total: K8S-foundation |  6.2Gi | 1.9 |   7  |
+| --------------------- | :----: | :-: | :--: |
+| Psql                  |  1Gi   | 0.5 |  1   |
+| Elasticsearch         | 2.5Gi  | 0.5 |  1   |
+| Fluentd               | 0.5Gi  | 0.1 | 3\*  |
+| Grafana               | 0.2Gi  | 0.1 |  1   |
+| Kibana                |  1Gi   | 0.5 |  1   |
+| XL Deploy             |  4Gi   |  2  |  2   |
+| XL Release            |  4Gi   |  2  |  2   |
+| Total: XebiaLabs      |  16Gi  |  8  |  4   |
+| Total: K8S-foundation | 6.2Gi  | 1.9 |  7   |
 | Total: All            | 22.2Gi | 9.9 |  11  |
 
-\* **Fluentd** is a DaemonSet. Thus PODs count depends on your k8s cluster setup. For example: you will have 4 Fluentd pods if you have 4 scheduling nodes in k8s cluster. 
+\* **Fluentd** is a DaemonSet. Thus PODs count depends on your k8s cluster setup. For example: you will have 4 Fluentd pods if you have 4 scheduling nodes in k8s cluster.
+
 ## Run xl up for public repo
 
 `xl up`
@@ -34,14 +35,13 @@ blueprint:
     branch: master
     token: YOUR-PERSONAL-GITHUB-TOKEN
 
-``` 
+```
 
 and run :
 
 `xl up --dev`
 
-
-## Development 
+## Development
 
 For development purposes you have to specify the branch you are working on on the `~/.xebialabs/conf` :
 
@@ -55,8 +55,17 @@ blueprint:
     branch: YOUR-BRANCH
     token: YOUR-PERSONAL-GITHUB-TOKEN
 
-``` 
+```
 
 and run:
 
 `xl up --dev`
+
+## Rolling updates
+
+By default, XL-UP undeploys XLD & XLR before an update for any changes made to config. This behavior can be changed by passing `--rolling-update` flag to the CMD. This will do a rolling update for XLD/XLR without a downtime. Rolling updates can be done only one below occasions as it might cause issues when there are schema changes between major version updates
+
+-   Version updates without any schema changes between version. Do refer release notes to ensure that there are no schema changes in the new version
+-   Scaling up workers/masters without changing versions in XLD
+-   Scaling up XLR without changing versions
+-   Switch to custom containers for same version with additional plugins/config

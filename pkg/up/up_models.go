@@ -11,6 +11,7 @@ type UpParams struct {
 	NoCleanup         bool
 	Undeploy          bool
 	DryRun            bool
+	RollingUpdate     bool
 	SkipK8sConnection bool
 	SkipPrompts       bool
 	SeedVersion       string
