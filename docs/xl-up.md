@@ -15,7 +15,7 @@
 | Total: K8S-foundation | 6.2Gi  | 1.9 |  7   |
 | Total: All            | 22.2Gi | 9.9 |  11  |
 
-\* **Fluentd** is a DaemonSet. Thus PODs count depends on your k8s cluster setup. For example: you will have 4 Fluentd pods if you have 4 scheduling nodes in k8s cluster.
+\* **Fluentd** is a DaemonSet. Thus the Pod count depends on your k8s cluster setup. For example, you will have 4 Fluentd Pods if you have 4 scheduling nodes in k8s cluster.
 
 ## Run xl up for public repo
 
@@ -63,9 +63,9 @@ and run:
 
 ## Rolling updates
 
-By default, XL-UP undeploys XLD & XLR before an update for any changes made to config. This behavior can be changed by passing `--rolling-update` flag to the CMD. This will do a rolling update for XLD/XLR without a downtime. Rolling updates can be done only one below occasions as it might cause issues when there are schema changes between major version updates
+By default, XL-UP undeploys XL Deploy and XL Release before an update for any changes made to config. This behavior can be changed by passing the `--rolling-update` flag to the CMD. This will do a rolling update for XLD/XLR without a downtime. Rolling updates can be done only one the following situations as it might cause issues when there are schema changes between version updates:
 
--   Version updates without any schema changes between version. Do refer release notes to ensure that there are no schema changes in the new version
+-   Version updates without any schema changes between version. Refer to the product version release notes to ensure that there are no schema changes in the new version.
 -   Scaling up workers/masters without changing versions in XLD
 -   Scaling up XLR without changing versions
--   Switch to custom containers for same version with additional plugins/config
+-   Switching to custom containers for the same version with additional plugins/config
