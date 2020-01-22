@@ -3,6 +3,7 @@ package up
 import (
 	"fmt"
 	"io/ioutil"
+	"k8s.io/client-go/kubernetes"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -253,7 +254,10 @@ func decideVersionMatch(installedVersion string, newVersion string) (string, err
 	return "", nil
 }
 
-func updateXebialabsConfig() error {
-
+func updateXebialabsConfig(client *kubernetes.Clientset) error {
+	ip, err := getIp(client)
+	if err != nil {
+		return err
+	}
 	return nil
 }

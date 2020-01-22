@@ -274,7 +274,14 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	if saveConfig {
-
+		kubeClient, err := getKubeClient(answersFromInfra)
+		if err != nil {
+			return err
+		}
+		err = updateXebialabsConfig(kubeClient)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
