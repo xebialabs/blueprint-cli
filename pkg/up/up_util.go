@@ -252,3 +252,8 @@ func decideVersionMatch(installedVersion string, newVersion string) (string, err
 
 	return "", nil
 }
+
+func updateXebialabsConfig() error {
+
+	return nil
+}

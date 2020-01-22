@@ -267,6 +267,16 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			return err
 		}
 	}
+	saveConfig, err := askToSaveToConfig()
+
+	if err != nil {
+		return err
+	}
+
+	if saveConfig {
+
+	}
+
 	return nil
 }
 
