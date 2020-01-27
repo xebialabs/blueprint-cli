@@ -146,7 +146,6 @@ func getIp(client *kubernetes.Clientset) (string, error) {
 }
 
 func getNodePortIp(client *kubernetes.Clientset) (string, error) {
-	isMinikube := false
 	returnIp := ""
 	listOptions := metav1.ListOptions{}
 
@@ -167,11 +166,9 @@ func getNodePortIp(client *kubernetes.Clientset) (string, error) {
 				if err != nil {
 					return "", err
 				}
-				isMinikube = true
 			}
 		}
 	}
-	//TODO implement check for localhost but not on minikube
 	if returnIp != "" {
 		return returnIp, nil
 	}
