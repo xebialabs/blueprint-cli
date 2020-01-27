@@ -254,10 +254,15 @@ func decideVersionMatch(installedVersion string, newVersion string) (string, err
 	return "", nil
 }
 
-func updateXebialabsConfig(client *kubernetes.Clientset) error {
+func updateXebialabsConfig(client *kubernetes.Clientset, answers map[string]string) error {
 	ip, err := getIp(client)
 	if err != nil {
 		return err
 	}
+	XLDUsername := "admin"
+	XLDPass := answers["XldAdminPass"]
+	XLRUsername := "admin"
+	XLRPass := answers["XlrAdminPass"]
+	fmt.Println("Got details", ip, XLDUsername, XLDPass, XLRUsername, XLRPass)
 	return nil
 }

@@ -92,6 +92,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	var answers map[string]string
+
 	var defaultFromValues map[string]string
 
 	if upParams.AnswerFile != "" {
@@ -251,7 +252,6 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	util.Info("Generated files successfully! \n")
-
 	if !upParams.DryRun {
 		util.Info("Spinning up xl seed! \n\n")
 
@@ -278,7 +278,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err != nil {
 			return err
 		}
-		err = updateXebialabsConfig(kubeClient)
+		err = updateXebialabsConfig(kubeClient, answers)
 		if err != nil {
 			return err
 		}
