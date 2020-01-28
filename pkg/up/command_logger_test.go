@@ -77,11 +77,9 @@ func Test_logCapture(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			spy := &LogSpy{make(chan string)}
+			lastWritten = ""
 			// This routine is required for channels to work
-			go func() {
-				lastWritten = ""
-				logCapture(tt.data, spy.Callback)
-			}()
+			go logCapture(tt.data, spy.Callback)
 			for _, exp := range tt.expected {
 				select {
 				case out := <-spy.Val:
