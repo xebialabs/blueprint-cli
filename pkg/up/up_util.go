@@ -2,6 +2,8 @@ package up
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
+	"github.com/xebialabs/yaml"
 	"io/ioutil"
 	"k8s.io/client-go/kubernetes"
 	"os"
@@ -254,15 +256,57 @@ func decideVersionMatch(installedVersion string, newVersion string) (string, err
 	return "", nil
 }
 
+const xlReleaseContext = "xl-release"
+const xlReleaseUrl = xlReleaseContext + ".url"
+const xlReleaseUser = xlReleaseContext + ".username"
+const xlReleasePassword = xlReleaseContext + ".password"
+const xlDeployContext = "xl-deploy"
+const xlDeployUrl = xlDeployContext + ".url"
+const xlDeployUser = xlDeployContext + ".username"
+const xlDeployPassword = xlDeployContext + ".password"
+
 func updateXebialabsConfig(client *kubernetes.Clientset, answers map[string]string) error {
+	configPath, err := util.DefaultConfigfilePath()
+	if err != nil {
+		return err
+	}
+	v := viper.GetViper()
+
 	ip, err := getIp(client)
 	if err != nil {
 		return err
 	}
-	XLDUsername := "admin"
-	XLDPass := answers["XldAdminPass"]
-	XLRUsername := "admin"
-	XLRPass := answers["XlrAdminPass"]
-	fmt.Println("Got details", ip, XLDUsername, XLDPass, XLRUsername, XLRPass)
+	if answers["InstallXLD"] == "true" {
+		fmt.Println("Setting XLD")
+		XLDUsername := "admin"
+		XLDPass := answers["XldAdminPass"]
+		XLDURL := ip + "/xl-deploy"
+		viper.Set(xlDeployUrl, XLDURL)
+		viper.Set(xlDeployUser, XLDUsername)
+		viper.Set(xlDeployPassword, XLDPass)
+	}
+	if answers["InstallXLR"] == "true" {
+		fmt.Println("Setting XLR")
+		XLRUsername := "admin"
+		XLRPass := answers["XlrAdminPass"]
+		XLRURL := ip + "/xl-release"
+		viper.Set(xlReleaseUrl, XLRURL)
+		viper.Set(xlReleaseUser, XLRUsername)
+		viper.Set(xlReleasePassword, XLRPass)
+	}
+	return writeConfig(v, configPath)
+}
+
+func writeConfig(v *viper.Viper, configPath string) error {
+	c := util.SortMapStringInterface(v.AllSettings())
+	yamlBytes, err := yaml.Marshal(c)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(configPath, yamlBytes, 0640)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Config has successfully been updated")
 	return nil
 }
