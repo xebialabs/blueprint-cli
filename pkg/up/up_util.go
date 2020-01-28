@@ -265,7 +265,7 @@ const xlDeployUrl = xlDeployContext + ".url"
 const xlDeployUser = xlDeployContext + ".username"
 const xlDeployPassword = xlDeployContext + ".password"
 
-func updateXebialabsConfig(client *kubernetes.Clientset, answers map[string]string, v *viper.Viper) error {
+var updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[string]string, v *viper.Viper) error {
 	configPath, err := util.DefaultConfigfilePath()
 	if err != nil {
 		return err
@@ -296,11 +296,11 @@ func updateXebialabsConfig(client *kubernetes.Clientset, answers map[string]stri
 	if answers["InstallXLR"] == "true" || answers["InstallXLD"] == "true" {
 		return writeConfig(v, configPath)
 	}
-	fmt.Println("Neither Xld or Xlr were installed so config was not updated")
+	util.Print("Neither Xld or Xlr were installed so config was not updated")
 	return nil
 }
 
-func writeConfig(v *viper.Viper, configPath string) error {
+var writeConfig = func(v *viper.Viper, configPath string) error {
 	c := util.SortMapStringInterface(v.AllSettings())
 	yamlBytes, err := yaml.Marshal(c)
 	if err != nil {
@@ -310,6 +310,6 @@ func writeConfig(v *viper.Viper, configPath string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Config has successfully been updated")
+	util.Print("Config has successfully been updated")
 	return nil
 }

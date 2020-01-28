@@ -8,7 +8,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"testing"
-	"xl-cli/pkg/util"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -184,6 +183,27 @@ func TestDecideVersionMatch(t *testing.T) {
 	})
 }
 
+func TestWriteConfig(t *testing.T) {
+	v := viper.GetViper()
+	v.Set(xlDeployUser, "admin")
+	v.Set(xlReleaseUser, "admin")
+	v.Set(xlReleasePassword, "1234")
+	v.Set(xlDeployPassword, "12345")
+	v.Set(xlDeployUrl, "http://teshost/xl-deploy")
+	v.Set(xlReleaseUrl, "http://teshost/xl-release")
+	t.Run("should write config to file", func(t *testing.T) {
+		err := writeConfig(v, "config.yaml")
+		assert.Nil(t, err)
+		assert.FileExists(t, "config.yaml")
+		config := GetFileContentSafe("config.yaml")
+		assert.Contains(t, config, "admin")
+		assert.Contains(t, config, "1234")
+		assert.Contains(t, config, "12345")
+		assert.Contains(t, config, "http://teshost/xl-deploy")
+		assert.Contains(t, config, "http://teshost/xl-release")
+	})
+}
+
 func TestUpdateXebialabsConfig(t *testing.T) {
 	answerAllPositive := map[string]string{
 		"InstallXLD":   "true",
@@ -206,17 +226,16 @@ func TestUpdateXebialabsConfig(t *testing.T) {
 		"InstallXLR": "false",
 	}
 	var client *kubernetes.Clientset
-	GetIp = func(client *kubernetes.Clientset) (s2 string, err error) {
+	GetIp = func(client *kubernetes.Clientset) (string, error) {
 		return "http://testhost", nil
 	}
-	util.DefaultConfigfilePath = func() (s2 string, err error) {
-		return "config.yaml", nil
-	}
+	tempWriteConfig := writeConfig
 	writeConfig = func(v *viper.Viper, configPath string) error {
 		return nil
 	}
-	v := viper.GetViper()
 	t.Run("should update both when both present", func(t *testing.T) {
+		v := viper.New()
+		v.SetConfigType("yaml")
 		err := updateXebialabsConfig(client, answerAllPositive, v)
 		assert.Nil(t, err)
 		assert.Equal(t, "http://testhost/xl-deploy", v.Get(xlDeployUrl))
@@ -226,58 +245,51 @@ func TestUpdateXebialabsConfig(t *testing.T) {
 		assert.Equal(t, "1234", v.Get(xlDeployPassword))
 		assert.Equal(t, "12345", v.Get(xlReleasePassword))
 	})
-
 	t.Run("should not update XLD config when XLD was not deployed", func(t *testing.T) {
+		v := viper.New()
+		v.SetConfigType("yaml")
 		err := updateXebialabsConfig(client, answerInstallXLD, v)
 		assert.Nil(t, err)
 		assert.Equal(t, "http://testhost/xl-deploy", v.Get(xlDeployUrl))
-		assert.Equal(t, "", v.Get(xlReleaseUrl))
+		assert.Nil(t, v.Get(xlReleaseUrl))
 		assert.Equal(t, "admin", v.Get(xlDeployUser))
-		assert.Equal(t, "", v.Get(xlReleaseUser))
+		assert.Nil(t, v.Get(xlReleaseUser))
 		assert.Equal(t, "1234", v.Get(xlDeployPassword))
-		assert.Equal(t, "", v.Get(xlReleasePassword))
+		assert.Nil(t, v.Get(xlReleasePassword))
 	})
 
 	t.Run("should not update XLR config when XLR was not deployed", func(t *testing.T) {
+		v := viper.New()
+		v.SetConfigType("yaml")
 		err := updateXebialabsConfig(client, answerInstallXLR, v)
 		assert.Nil(t, err)
-		assert.Equal(t, "", v.Get(xlDeployUrl))
+		assert.Nil(t, v.Get(xlDeployUrl))
 		assert.Equal(t, "http://testhost/xl-release", v.Get(xlReleaseUrl))
-		assert.Equal(t, "", v.Get(xlDeployUser))
+		assert.Nil(t, v.Get(xlDeployUser))
 		assert.Equal(t, "admin", v.Get(xlReleaseUser))
-		assert.Equal(t, "", v.Get(xlDeployPassword))
+		assert.Nil(t, v.Get(xlDeployPassword))
 		assert.Equal(t, "12345", v.Get(xlReleasePassword))
 	})
-
 	t.Run("should not update XLR or XLR", func(t *testing.T) {
+		v := viper.New()
+		v.SetConfigType("yaml")
 		err := updateXebialabsConfig(client, answerNothingChanged, v)
 		assert.Nil(t, err)
-		assert.Equal(t, "", v.Get(xlDeployUrl))
-		assert.Equal(t, "", v.Get(xlReleaseUrl))
-		assert.Equal(t, "", v.Get(xlDeployUser))
-		assert.Equal(t, "", v.Get(xlReleaseUser))
-		assert.Equal(t, "", v.Get(xlDeployPassword))
-		assert.Equal(t, "", v.Get(xlReleasePassword))
+		assert.Nil(t, v.Get(xlDeployUrl))
+		assert.Nil(t, v.Get(xlReleaseUrl))
+		assert.Nil(t, v.Get(xlDeployUser))
+		assert.Nil(t, v.Get(xlReleaseUser))
+		assert.Nil(t, v.Get(xlDeployPassword))
+		assert.Nil(t, v.Get(xlReleasePassword))
 	})
+	writeConfig = tempWriteConfig
 }
 
-func TestWriteConfig(t *testing.T) {
-	v := viper.GetViper()
-	v.Set(xlDeployUser, "admin")
-	v.Set(xlReleaseUser, "admin")
-	v.Set(xlReleasePassword, "1234")
-	v.Set(xlDeployPassword, "12345")
-	v.Set(xlDeployUrl, "http://teshost/xl-deploy")
-	v.Set(xlReleaseUrl, "http://teshost/xl-release")
-	t.Run("should write config to file", func(t *testing.T) {
-		err := writeConfig(v, "config.yaml")
-		assert.Nil(t, err)
-		assert.FileExists(t, "config.yaml")
-		config := GetFileContent("config.yaml")
-		assert.Contains(t, config, "admin")
-		assert.Contains(t, config, "1234")
-		assert.Contains(t, config, "12345")
-		assert.Contains(t, config, "http://teshost/xl-deploy")
-		assert.Contains(t, config, "http://teshost/xl-release")
-	})
+func GetFileContentSafe(filePath string) string {
+	f, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		fmt.Println("Error getting file contents", err.Error())
+		return ""
+	}
+	return string(f)
 }

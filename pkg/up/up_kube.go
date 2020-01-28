@@ -33,7 +33,7 @@ const HOSTNAME = "hostname"
 const MINIKUBE = "minikube"
 const KUBERNETES = "kubernetes"
 
-func getKubeClient(answerMap map[string]string) (*kubernetes.Clientset, error) {
+var getKubeClient = func(answerMap map[string]string) (*kubernetes.Clientset, error) {
 	config, err := k8s.GetK8sConfiguration(answerMap)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func getURLWithPort(address string) string {
 	return HTTP + "://" + address + ":" + HTTPPORT
 }
 
-func GetIp(client *kubernetes.Clientset) (string, error) {
+var GetIp = func(client *kubernetes.Clientset) (string, error) {
 	namespacePresent, err := checkForNameSpace(client, NAMESPACE)
 	if err != nil {
 		return "", err

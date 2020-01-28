@@ -234,11 +234,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 	os.Setenv("AWS_ACCESS_KEY_ID", "dummy_val")
 	os.Setenv("AWS_SECRET_ACCESS_KEY", "dummy_val")
 
-	getKubeClient = func(answerMap map[string]string) (clientset *kubernetes.Clientset, err error) {
-		var client *kubernetes.Clientset
-		return client, nil
-	}
-
 	t.Run("should create output files for valid xl-up template with answers file", func(t *testing.T) {
 		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 		defer gb.Cleanup()
@@ -620,9 +615,15 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 	}
 
 	updateCalled := false
+	tempUpdateXebialabsConfig := updateXebialabsConfig
 	updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[string]string, v *viper.Viper) error {
 		updateCalled = true
 		return nil
+	}
+
+	getKubeClient = func(answerMap map[string]string) (clientset *kubernetes.Clientset, err error) {
+		client := kubernetes.Clientset{}
+		return &client, nil
 	}
 
 	t.Run("should save config when save config is answered yes", func(t *testing.T) {
@@ -638,7 +639,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				AdvancedSetup:     false,
 				CfgOverridden:     false,
 				NoCleanup:         false,
-				Undeploy:          true,
+				Undeploy:          false,
 				DryRun:            true,
 				SkipK8sConnection: true,
 				GITBranch:         GITBranch,
@@ -656,7 +657,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		return false, nil
 	}
 
-	updateCalled := false
+	updateCalled = false
 	t.Run("should not save config when save config is answered no", func(t *testing.T) {
 		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 		defer gb.Cleanup()
@@ -670,7 +671,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				AdvancedSetup:     false,
 				CfgOverridden:     false,
 				NoCleanup:         false,
-				Undeploy:          true,
+				Undeploy:          false,
 				DryRun:            true,
 				SkipK8sConnection: true,
 				GITBranch:         GITBranch,
@@ -683,6 +684,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		assert.Nil(t, err)
 		assert.False(t, updateCalled)
 	})
+	updateXebialabsConfig = tempUpdateXebialabsConfig
 }
 
 func Test_getVersion(t *testing.T) {
