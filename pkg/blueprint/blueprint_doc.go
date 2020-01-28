@@ -500,16 +500,25 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 	// for every variable defined in blueprint.yaml file
 	for i, variable := range blueprintDoc.Variables {
 		variable.ProcessExpression(data.TemplateData)
-		// process default field value
-		defaultVal := variable.GetDefaultVal()
-
+		var defaultVal interface{}
 		// override the default value if its passed and if the param is overridable.
 		if variable.OverrideDefault.Bool && util.MapContainsKeyWithVal(params.OverrideDefaults, variable.Name.Value) {
 			defaultVal = params.OverrideDefaults[variable.Name.Value]
+			if variable.Type.Value == TypeConfirm {
+				boolVal, err := strconv.ParseBool(params.OverrideDefaults[variable.Name.Value])
+				if err != nil {
+					util.Info("Error while processing default value !fn [%s] for [%s]. %s", defaultVal, variable.Name.Value, err.Error())
+					return nil, err
+				}
+				variable.Default.Bool = boolVal
+			}
 			// remove the variable from answers if this is coming from UP command so that question will be asked in the upgrade flow
 			if params.FromUpCommand {
 				delete(answerMap, variable.Name.Value)
 			}
+		} else {
+			// process default field value
+			defaultVal = variable.GetDefaultVal()
 		}
 
 		// skip question based on DependsOn fields, the default value if present is set as value

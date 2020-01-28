@@ -205,6 +205,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 	// enable for local testing
 	// TestLocalPath = "../../../xl-up-blueprint"
+	// ForceConfigMap = true
+	// MockConfigMap = ``
 
 	// enable for local testing with HTTP repo or a different git branch
 	// GITBranch = ""
@@ -236,7 +238,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		err := InvokeBlueprintAndSeed(
 			getLocalTestBlueprintContext(t),
 			UpParams{
-				// enable for local testing
 				LocalPath:         TestLocalPath,
 				BlueprintTemplate: "xl-infra",
 				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
@@ -346,6 +347,12 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
         K8sClientKeyFile: ../../templates/test/xl-up/cert
         InstallXLD: true
         InstallXLR: true
+        UseCustomRegistry: true
+        XlrVersion: xl-release:9.0.2
+        XldVersion: xl-deploy:9.0.2
+        DockerUser: yo
+        DockerPass: yo
+        RegistryURL: docker.io/xebialabs
         XldAdminPass: password
         XldLic: ../../templates/test/xl-up/cert
         XldDbName: xl-deploy
@@ -363,8 +370,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
         XlrReportDbPass: xl-release-report
         XlKeyStore: ../../templates/test/xl-up/cert
         XlKeyStorePass: test123
-        XlrOfficialVersion: 9.0.2
-        XldOfficialVersion: 9.0.2
         MonitoringInstall: true
         MonitoringUser: mon-user
         MonitoringUserPass: mon-pass
@@ -463,14 +468,17 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		// check values file
 		valsFile := GetFileContent(path.Join(gb.OutputDir, "values.xlvals"))
 		valueMap := map[string]string{
-			"MonitoringInstall":  "true",
-			"K8sSetup":           "PlainK8SCluster",
-			"K8sAuthentication":  "FilePath",
-			"PostgresMaxConn":    "400",
-			"XlrOfficialVersion": "9.0.2",
-			"XldOfficialVersion": "9.0.2",
-			"UseKubeconfig":      "false",
-			"K8sApiServerURL":    "https://k8s.com:6443",
+			"MonitoringInstall": "true",
+			"K8sSetup":          "PlainK8SCluster",
+			"K8sAuthentication": "FilePath",
+			"PostgresMaxConn":   "400",
+			"UseCustomRegistry": "true",
+			"XlrVersion":        "xl-release:9.0.2",
+			"XldVersion":        "xl-deploy:9.0.2",
+			"DockerUser":        "yo",
+			"RegistryURL":       "docker.io/xebialabs",
+			"UseKubeconfig":     "false",
+			"K8sApiServerURL":   "https://k8s.com:6443",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
@@ -482,6 +490,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			"XlrLic":             "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\nMB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz\\nOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B\\nAQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8\\nigrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH\\n+5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna\\n8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD\\nwZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV\\nE/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV\\nHQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA\\nhdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH\\n72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN\\nEYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw\\nOP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l\\nhHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9\\nLxjYOSJ5loUikwq6lQBA5Q==\\n-----END CERTIFICATE-----",
 			"K8sClientCertFile":  "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\nMB4XDTE5MDgxNjEzNTkxMVoXDTI0MDgxNDE0NTkxMVowLzEtMCsGA1UEAxMkMzMz\\nOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMzMIIBIjANBgkqhkiG9w0B\\nAQEFAAOCAQ8AMIIBCgKCAQEAxkkd68aG1Sy+S1P83iwMc5pFnehmVWsI7/fm6VK8\\nigrzO1MAAUve4WxGR9kDQgOFO9xia2uSUAm7tJ+Hr8oE0ka8c0aLzZizfonsmlRH\\n+5QidjwOEtztgEfenuUmlnN2yj1X0Fqd//XB9pyMAlRBVMiXjiJNwWEXWKvGrdna\\n8dXEoKIGizhvroGFYThjhgjhdtLnLWz1RKQtcjcnmOX4V/SangsIgkEzSvdj2TfD\\nwZon5q4zBasaGmhXr8xA2kRPXKyALaiThoJsRoW0haxNOXJvLNbRDheuNWe7ZGkV\\nE/XLqrQguamIvjyFET+2bHZZWlLInJRpSFAvZ3RCtMdknQIDAQABoyMwITAOBgNV\\nHQ8BAf8EBAMCAgQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA\\nhdUZZKy41R4YgoAPdIq5ftm3wX4yvB01WzB795U5SJ9ME25QaUw2JNdD/yBwC6wH\\n72RcA4L9SlJW0I2mUUtT9uYzF0r+NJJO1QJi6ek8Gu57WzQahs/JtN3giJNLH3eN\\nEYwMldMe9Z/6aa4PSKVaq130lLrAty7R/YFA0EDzSjZhea+mpTrpLL+4Ma+PbPCw\\nOP7FPOeFAnLXUajrwly1CIL7F/q9HNOlpGcebaS9Ea5a8xkGxPqEqf7M1PK2pn7l\\nhHxzUjQUG57tb4tKtUmS8/DchrT1crM4i3AMKzvLLOCX4PnDbhmHJlhcNTKJL6y9\\nLxjYOSJ5loUikwq6lQBA5Q==\\n-----END CERTIFICATE-----",
 			"MonitoringUserPass": "mon-pass",
+			"DockerPass":         "yo",
 		}
 		for k, v := range secretsMap {
 			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
