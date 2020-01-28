@@ -39,7 +39,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	versionHelper.AvailableXlrVersions = getAvailableVersions(upParams.XLRVersions, []string{CurrentXLRVersionSupported})
 
 	if !upParams.DryRun {
-		defer util.StopAndRemoveContainer(s)
+		defer StopAndRemoveContainer(s)
 	}
 
 	if upParams.SkipPrompts {

@@ -12,7 +12,7 @@ import (
 func runAndCaptureResponse(cmd models.Command) error {
 
 	completedTask := false
-	outStr, errorStr, err := util.ExecuteCommandAndShowLogs(cmd, s)
+	outStr, errorStr, err := ExecuteCommandAndShowLogs(cmd, s)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func runAndCaptureResponse(cmd models.Command) error {
 			return err
 		}
 		s.Stop()
-		util.StopAndRemoveContainer(s)
+		StopAndRemoveContainer(s)
 		if !completedTask {
 			return fmt.Errorf("Deployment was unsuccessful, please see xl-seed-error.txt and xl-seed-logs.txt for more details")
 		}
