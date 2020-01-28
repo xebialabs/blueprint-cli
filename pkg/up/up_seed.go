@@ -194,13 +194,11 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 		models.AvailableXlrVersion = getVersion(answersFromConfigMap, "XlrVersion", "PrevXlrVersion")
 		if models.AvailableXlrVersion != "" {
-			//answersFromConfigMap["XlrVersion"] = EmptyVersion
 			answersFromConfigMap["PrevXlrVersion"] = models.AvailableXlrVersion
 		}
 
 		models.AvailableXldVersion = getVersion(answersFromConfigMap, "XldVersion", "PrevXldVersion")
 		if models.AvailableXldVersion != "" {
-			//answersFromConfigMap["XldVersion"] = EmptyVersion
 			answersFromConfigMap["PrevXldVersion"] = models.AvailableXldVersion
 		}
 
