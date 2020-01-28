@@ -3,6 +3,7 @@ package up
 import (
 	b64 "encoding/base64"
 	"fmt"
+	"github.com/spf13/viper"
 	"strings"
 	"time"
 
@@ -278,7 +279,8 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		if err != nil {
 			return err
 		}
-		err = updateXebialabsConfig(kubeClient, answers)
+		v := viper.GetViper()
+		err = updateXebialabsConfig(kubeClient, answers, v)
 		if err != nil {
 			return err
 		}

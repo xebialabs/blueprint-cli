@@ -2,7 +2,9 @@ package up
 
 import (
 	"fmt"
+	"gopkg.in/AlecAivazis/survey.v1"
 	"io/ioutil"
+	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -231,6 +233,11 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
 	os.Setenv("AWS_ACCESS_KEY_ID", "dummy_val")
 	os.Setenv("AWS_SECRET_ACCESS_KEY", "dummy_val")
+
+	getKubeClient = func(answerMap map[string]string) (clientset *kubernetes.Clientset, err error) {
+		var client *kubernetes.Clientset
+		return client, nil
+	}
 
 	t.Run("should create output files for valid xl-up template with answers file", func(t *testing.T) {
 		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
@@ -606,6 +613,75 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		)
 
 		require.NotNil(t, err)
+	})
+
+	askToSaveToConfig = func(surveyOpts ...survey.AskOpt) (b bool, err error) {
+		return true, nil
+	}
+
+	updateCalled := false
+	updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[string]string, v *viper.Viper) error {
+		updateCalled = true
+		return nil
+	}
+
+	t.Run("should save config when save config is answered yes", func(t *testing.T) {
+		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
+		defer gb.Cleanup()
+		err := InvokeBlueprintAndSeed(
+			getLocalTestBlueprintContext(t),
+			UpParams{
+				// enable for local testing
+				LocalPath:         TestLocalPath,
+				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
+				QuickSetup:        true,
+				AdvancedSetup:     false,
+				CfgOverridden:     false,
+				NoCleanup:         false,
+				Undeploy:          true,
+				DryRun:            true,
+				SkipK8sConnection: true,
+				GITBranch:         GITBranch,
+				XLDVersions:       "9.0.2, 9.0.5",
+				XLRVersions:       "9.0.2, 9.0.6",
+			},
+			CLIVersion,
+			gb,
+		)
+		assert.Nil(t, err)
+		assert.True(t, updateCalled)
+	})
+
+	askToSaveToConfig = func(surveyOpts ...survey.AskOpt) (b bool, err error) {
+		return false, nil
+	}
+
+	updateCalled := false
+	t.Run("should not save config when save config is answered no", func(t *testing.T) {
+		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
+		defer gb.Cleanup()
+		err := InvokeBlueprintAndSeed(
+			getLocalTestBlueprintContext(t),
+			UpParams{
+				// enable for local testing
+				LocalPath:         TestLocalPath,
+				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
+				QuickSetup:        true,
+				AdvancedSetup:     false,
+				CfgOverridden:     false,
+				NoCleanup:         false,
+				Undeploy:          true,
+				DryRun:            true,
+				SkipK8sConnection: true,
+				GITBranch:         GITBranch,
+				XLDVersions:       "9.0.2, 9.0.5",
+				XLRVersions:       "9.0.2, 9.0.6",
+			},
+			CLIVersion,
+			gb,
+		)
+		assert.Nil(t, err)
+		assert.False(t, updateCalled)
 	})
 }
 
