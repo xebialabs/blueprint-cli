@@ -118,7 +118,8 @@ func writeCheck(currentStage string, writeFn func(currentStage string)) {
 		lastWritten = currentStage
 		message := ""
 		for _, desc := range strings.Split(deploymentDesc, ",") {
-			message += currentStage + desc + "\n\n"
+			desc = strings.Split(strings.TrimSpace(desc), " ")[0]
+			message += fmt.Sprintf("%s %s\n\n", currentStage, desc)
 		}
 		writeFn(message)
 	}

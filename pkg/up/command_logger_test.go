@@ -30,21 +30,21 @@ func Test_logCapture(t *testing.T) {
 			     * Deploy K8s-NameSpace 1.0 on K8S
 			       -------------------------------
 			`),
-			[]string{"Deploying K8s-NameSpace 1.0 \n\n"},
+			[]string{"Deploying K8s-NameSpace\n\n"},
 		},
 		{
 			"get executedLog output from logs for single deploy item",
 			[]byte(`2020-01-28 14:24:34.970 [task-sys-xl.task.dispatchers.state-management-dispatcher-16] {taskId=d9172126-e3f8-4b77-94ae-94b9558fd4c1, username=admin} INFO  c.x.d.e.tasker.TaskManagingActor - Task [d9172126-e3f8-4b77-94ae-94b9558fd4c1] is completed with state [DONE]
 			`),
-			[]string{"Deployed K8s-NameSpace 1.0 \n\n"},
+			[]string{"Deployed K8s-NameSpace\n\n"},
 		},
 		{
 			"get failExecutedLog output from logs for single deploy item",
 			[]byte(`2020-01-28 14:23:24.506 [task-sys-xl.task.dispatchers.state-management-dispatcher-51] {taskId=3d1a86d3-bd9b-40bc-9043-50ac4a7894f4, username=admin} INFO  c.x.d.e.tasker.TaskManagingActor - Task [3d1a86d3-bd9b-40bc-9043-50ac4a7894f4] is completed with state [FAILED]
 			`),
 			[]string{
-				"Failed deployment for K8s-NameSpace 1.0 \n\n",
-				"Undeploying K8s-NameSpace 1.0 \n\n",
+				"Failed deployment for K8s-NameSpace\n\n",
+				"Undeploying K8s-NameSpace\n\n",
 			},
 		},
 		{
@@ -56,21 +56,21 @@ func Test_logCapture(t *testing.T) {
             # [Serial] Deploy K8s-Ingress-Controller v0.6, PostgreSQL 10.5, Answers-Configmap-Deployment 21ea1ce3f6892fc6b82693a515a46251 on K8S
             #####################################################################################################################################
 			`),
-			[]string{"Deploying K8s-Ingress-Controller v0.6\n\nDeploying PostgreSQL 10.5\n\nDeploying Answers-Configmap-Deployment 21ea1ce3f6892fc6b82693a515a46251 \n\n"},
+			[]string{"Deploying K8s-Ingress-Controller\n\nDeploying PostgreSQL\n\nDeploying Answers-Configmap-Deployment\n\n"},
 		},
 		{
 			"get executedLog output from logs for multiple deploy item",
 			[]byte(`2020-01-28 14:23:24.506 [task-sys-xl.task.dispatchers.state-management-dispatcher-51] {taskId=3d1a86d3-bd9b-40bc-9043-50ac4a7894f4, username=admin} INFO  c.x.d.e.tasker.TaskManagingActor - Task [3d1a86d3-bd9b-40bc-9043-50ac4a7894f4] is completed with state [DONE]
 			`),
-			[]string{"Deployed K8s-Ingress-Controller v0.6\n\nDeployed PostgreSQL 10.5\n\nDeployed Answers-Configmap-Deployment 21ea1ce3f6892fc6b82693a515a46251 \n\n"},
+			[]string{"Deployed K8s-Ingress-Controller\n\nDeployed PostgreSQL\n\nDeployed Answers-Configmap-Deployment\n\n"},
 		},
 		{
 			"get failExecutedLog output from logs for multiple deploy item",
 			[]byte(`2020-01-28 14:23:24.506 [task-sys-xl.task.dispatchers.state-management-dispatcher-51] {taskId=3d1a86d3-bd9b-40bc-9043-50ac4a7894f4, username=admin} INFO  c.x.d.e.tasker.TaskManagingActor - Task [3d1a86d3-bd9b-40bc-9043-50ac4a7894f4] is completed with state [FAILED]
 			`),
 			[]string{
-				"Failed deployment for K8s-Ingress-Controller v0.6\n\nFailed deployment for PostgreSQL 10.5\n\nFailed deployment for Answers-Configmap-Deployment 21ea1ce3f6892fc6b82693a515a46251 \n\n",
-				"Undeploying K8s-Ingress-Controller v0.6\n\nUndeploying PostgreSQL 10.5\n\nUndeploying Answers-Configmap-Deployment 21ea1ce3f6892fc6b82693a515a46251 \n\n",
+				"Failed deployment for K8s-Ingress-Controller\n\nFailed deployment for PostgreSQL\n\nFailed deployment for Answers-Configmap-Deployment\n\n",
+				"Undeploying K8s-Ingress-Controller\n\nUndeploying PostgreSQL\n\nUndeploying Answers-Configmap-Deployment\n\n",
 			},
 		},
 	}

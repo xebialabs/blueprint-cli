@@ -253,7 +253,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	util.Info("Generated files successfully! \n")
 
 	if !upParams.DryRun {
-		util.Info("Spinning up xl seed! \n")
+		util.Info("Spinning up xl seed! \n\n")
 
 		if err = runAndCaptureResponse(pullSeedImage(upParams.SeedVersion)); err != nil {
 			return err
