@@ -205,6 +205,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 	// enable for local testing
 	// TestLocalPath = "../../../xl-up-blueprint"
+	// ForceConfigMap = true
+	// MockConfigMap = ``
 
 	// enable for local testing with HTTP repo or a different git branch
 	// GITBranch = ""
@@ -236,7 +238,6 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		err := InvokeBlueprintAndSeed(
 			getLocalTestBlueprintContext(t),
 			UpParams{
-				// enable for local testing
 				LocalPath:         TestLocalPath,
 				BlueprintTemplate: "xl-infra",
 				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
