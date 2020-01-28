@@ -265,14 +265,13 @@ const xlDeployUrl = xlDeployContext + ".url"
 const xlDeployUser = xlDeployContext + ".username"
 const xlDeployPassword = xlDeployContext + ".password"
 
-func updateXebialabsConfig(client *kubernetes.Clientset, answers map[string]string) error {
+func updateXebialabsConfig(client *kubernetes.Clientset, answers map[string]string, v *viper.Viper) error {
 	configPath, err := util.DefaultConfigfilePath()
 	if err != nil {
 		return err
 	}
-	v := viper.GetViper()
 
-	ip, err := getIp(client)
+	ip, err := GetIp(client)
 	if err != nil {
 		return err
 	}
@@ -294,7 +293,11 @@ func updateXebialabsConfig(client *kubernetes.Clientset, answers map[string]stri
 		viper.Set(xlReleaseUser, XLRUsername)
 		viper.Set(xlReleasePassword, XLRPass)
 	}
-	return writeConfig(v, configPath)
+	if answers["InstallXLR"] == "true" || answers["InstallXLD"] == "true" {
+		return writeConfig(v, configPath)
+	}
+	fmt.Println("Neither Xld or Xlr were installed so config was not updated")
+	return nil
 }
 
 func writeConfig(v *viper.Viper, configPath string) error {

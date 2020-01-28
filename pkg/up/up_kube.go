@@ -104,7 +104,7 @@ func getURLWithPort(address string) string {
 	return HTTP + "://" + address + ":" + HTTPPORT
 }
 
-func getIp(client *kubernetes.Clientset) (string, error) {
+func GetIp(client *kubernetes.Clientset) (string, error) {
 	namespacePresent, err := checkForNameSpace(client, NAMESPACE)
 	if err != nil {
 		return "", err
