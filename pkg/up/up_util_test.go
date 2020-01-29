@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"k8s.io/client-go/kubernetes"
+	"os"
 	"os/user"
 	"path/filepath"
 	"testing"
@@ -202,6 +203,8 @@ func TestWriteConfig(t *testing.T) {
 		assert.Contains(t, config, "http://teshost/xl-deploy")
 		assert.Contains(t, config, "http://teshost/xl-release")
 	})
+	err := os.Remove("config.yaml")
+	assert.Nil(t, err)
 }
 
 func TestUpdateXebialabsConfig(t *testing.T) {
@@ -253,9 +256,9 @@ func TestUpdateXebialabsConfig(t *testing.T) {
 		assert.Equal(t, "http://testhost/xl-deploy", v.GetString(xlDeployUrl))
 		assert.Equal(t, "", v.GetString(xlReleaseUrl))
 		assert.Equal(t, "admin", v.GetString(xlDeployUser))
-        assert.Equal(t, "", v.GetString(xlReleaseUser))
+		assert.Equal(t, "", v.GetString(xlReleaseUser))
 		assert.Equal(t, "1234", v.GetString(xlDeployPassword))
-        assert.Equal(t, "", v.GetString(xlReleasePassword))
+		assert.Equal(t, "", v.GetString(xlReleasePassword))
 	})
 
 	t.Run("should not update XLR config when XLR was not deployed", func(t *testing.T) {
@@ -263,11 +266,11 @@ func TestUpdateXebialabsConfig(t *testing.T) {
 		v.SetConfigType("yaml")
 		err := updateXebialabsConfig(client, answerInstallXLR, v)
 		assert.Nil(t, err)
-        assert.Equal(t, "", v.GetString(xlDeployUrl))
+		assert.Equal(t, "", v.GetString(xlDeployUrl))
 		assert.Equal(t, "http://testhost/xl-release", v.GetString(xlReleaseUrl))
-        assert.Equal(t, "", v.GetString(xlDeployUser))
+		assert.Equal(t, "", v.GetString(xlDeployUser))
 		assert.Equal(t, "admin", v.GetString(xlReleaseUser))
-        assert.Equal(t, "", v.GetString(xlDeployPassword))
+		assert.Equal(t, "", v.GetString(xlDeployPassword))
 		assert.Equal(t, "12345", v.GetString(xlReleasePassword))
 	})
 	t.Run("should not update XLR or XLR", func(t *testing.T) {
@@ -275,12 +278,12 @@ func TestUpdateXebialabsConfig(t *testing.T) {
 		v.SetConfigType("yaml")
 		err := updateXebialabsConfig(client, answerNothingChanged, v)
 		assert.Nil(t, err)
-        assert.Equal(t, "", v.GetString(xlDeployUrl))
-        assert.Equal(t, "", v.GetString(xlReleaseUrl))
-        assert.Equal(t, "", v.GetString(xlDeployUser))
-        assert.Equal(t, "", v.GetString(xlReleaseUser))
-        assert.Equal(t, "", v.GetString(xlDeployPassword))
-        assert.Equal(t, "", v.GetString(xlReleasePassword))
+		assert.Equal(t, "", v.GetString(xlDeployUrl))
+		assert.Equal(t, "", v.GetString(xlReleaseUrl))
+		assert.Equal(t, "", v.GetString(xlDeployUser))
+		assert.Equal(t, "", v.GetString(xlReleaseUser))
+		assert.Equal(t, "", v.GetString(xlDeployPassword))
+		assert.Equal(t, "", v.GetString(xlReleasePassword))
 	})
 	writeConfig = tempWriteConfig
 }
