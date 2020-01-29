@@ -280,18 +280,18 @@ var updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[strin
 		XLDUsername := "admin"
 		XLDPass := answers["XldAdminPass"]
 		XLDURL := ip + "/xl-deploy"
-		viper.Set(xlDeployUrl, XLDURL)
-		viper.Set(xlDeployUser, XLDUsername)
-		viper.Set(xlDeployPassword, XLDPass)
+        v.Set(xlDeployUrl, XLDURL)
+        v.Set(xlDeployUser, XLDUsername)
+        v.Set(xlDeployPassword, XLDPass)
 	}
 	if answers["InstallXLR"] == "true" {
 		fmt.Println("Setting XLR")
 		XLRUsername := "admin"
 		XLRPass := answers["XlrAdminPass"]
 		XLRURL := ip + "/xl-release"
-		viper.Set(xlReleaseUrl, XLRURL)
-		viper.Set(xlReleaseUser, XLRUsername)
-		viper.Set(xlReleasePassword, XLRPass)
+        v.Set(xlReleaseUrl, XLRURL)
+        v.Set(xlReleaseUser, XLRUsername)
+        v.Set(xlReleasePassword, XLRPass)
 	}
 	if answers["InstallXLR"] == "true" || answers["InstallXLD"] == "true" {
 		return writeConfig(v, configPath)
