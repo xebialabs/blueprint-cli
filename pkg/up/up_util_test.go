@@ -294,5 +294,6 @@ func GetFileContentSafe(filePath string) string {
 		fmt.Println("Error getting file contents", err.Error())
 		return ""
 	}
+
 	return string(f)
 }
