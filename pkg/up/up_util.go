@@ -285,7 +285,7 @@ var updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[strin
 		v.Set(xlDeployPassword, XLDPass)
 	}
 	if answers["InstallXLR"] == "true" {
-		fmt.Println("Setting XLR")
+		util.Info("Setting XLR config in CLI global config")
 		XLRUsername := "admin"
 		XLRPass := answers["XlrAdminPass"]
 		XLRURL := ip + "/xl-release"
