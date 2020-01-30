@@ -21,17 +21,19 @@ var getK8sNamespaces = func(client *kubernetes.Clientset, opts metav1.ListOption
 }
 
 // Constants to use
-const NAMESPACE = "xebialabs"
-const INGRESSPROXY = "haproxy-ingress"
-const LOADBALANCER = "loadbalancer"
-const HTTP = "http"
-const XLINTERNAL = "xebialabs-internal"
-const NODEPORT = "nodeport"
-const INTERNALIP = "internalip"
-const HTTPPORT = "30080"
-const HOSTNAME = "hostname"
-const MINIKUBE = "minikube"
-const KUBERNETES = "kubernetes"
+const (
+	NAMESPACE    = "xebialabs"
+	INGRESSPROXY = "haproxy-ingress"
+	LOADBALANCER = "loadbalancer"
+	HTTP         = "http"
+	XLINTERNAL   = "xebialabs-internal"
+	NODEPORT     = "nodeport"
+	INTERNALIP   = "internalip"
+	HTTPPORT     = "30080"
+	HOSTNAME     = "hostname"
+	MINIKUBE     = "minikube"
+	KUBERNETES   = "kubernetes"
+)
 
 var getKubeClient = func(answerMap map[string]string) (*kubernetes.Clientset, error) {
 	config, err := k8s.GetK8sConfiguration(answerMap)
@@ -117,32 +119,26 @@ var GetIp = func(client *kubernetes.Clientset) (string, error) {
 		}
 		var location string
 		for _, service := range serviceList.Items {
-			if strings.ToLower(service.GetObjectMeta().GetName()) == strings.ToLower(INGRESSPROXY) && strings.ToLower(string(service.Spec.Type)) == strings.ToLower(LOADBALANCER) {
+			if IsEqualIgnoreCase(service.GetObjectMeta().GetName(), INGRESSPROXY) && IsEqualIgnoreCase(string(service.Spec.Type), LOADBALANCER) {
 				for _, ingress := range service.Status.LoadBalancer.Ingress {
 					if ingress.Hostname != "" {
 						location = getURLWithoutPort(ingress.Hostname)
 						return location, nil
-					} else {
-						location = getURLWithoutPort(ingress.IP)
-						return location, nil
 					}
+					location = getURLWithoutPort(ingress.IP)
+					return location, nil
 				}
-			}
-		}
-
-		for _, service := range serviceList.Items {
-			if strings.ToLower(service.GetObjectMeta().GetName()) == strings.ToLower(XLINTERNAL) {
-				if strings.ToLower(string(service.Spec.Type)) == strings.ToLower(NODEPORT) {
+			} else if IsEqualIgnoreCase(service.GetObjectMeta().GetName(), XLINTERNAL) {
+				if IsEqualIgnoreCase(string(service.Spec.Type), NODEPORT) {
 					return getNodePortIp(client)
-				} else if strings.ToLower(string(service.Spec.Type)) == strings.ToLower(LOADBALANCER) && service.Spec.LoadBalancerIP != "" {
+				} else if IsEqualIgnoreCase(string(service.Spec.Type), LOADBALANCER) && service.Spec.LoadBalancerIP != "" {
 					location = getURLWithoutPort(service.Spec.LoadBalancerIP)
 					return location, nil
 				}
 			}
 		}
 	}
-	util.Error("Could not get the address of the cluster")
-	return "", errors.New("could not get the address of the cluster")
+	return "", fmt.Errorf("could not get the address of the cluster")
 }
 
 func getNodePortIp(client *kubernetes.Clientset) (string, error) {
@@ -155,13 +151,13 @@ func getNodePortIp(client *kubernetes.Clientset) (string, error) {
 	}
 	for _, node := range nodeList.Items {
 		for _, address := range node.Status.Addresses {
-			if strings.ToLower(string(address.Type)) == strings.ToLower(INTERNALIP) {
+			if IsEqualIgnoreCase(string(address.Type), INTERNALIP) {
 				ip := address.Address
 				if ip != "" {
 					returnIp = getURLWithPort(ip)
 				}
 			}
-			if strings.ToLower(string(address.Type)) == strings.ToLower(HOSTNAME) && strings.ToLower(address.Address) == strings.ToLower(MINIKUBE) {
+			if IsEqualIgnoreCase(string(address.Type), HOSTNAME) && IsEqualIgnoreCase(address.Address, MINIKUBE) {
 				returnIp, err = getMinikubeEndpoint(client)
 				if err != nil {
 					return "", err
@@ -172,8 +168,7 @@ func getNodePortIp(client *kubernetes.Clientset) (string, error) {
 	if returnIp != "" {
 		return returnIp, nil
 	}
-	util.Error("Unable to get NodePort IP")
-	return "", errors.New("unable to get nodeport ip")
+	return "", fmt.Errorf("unable to get nodeport ip")
 }
 
 func getMinikubeEndpoint(client *kubernetes.Clientset) (string, error) {
@@ -183,7 +178,7 @@ func getMinikubeEndpoint(client *kubernetes.Clientset) (string, error) {
 		return "", err
 	}
 	for _, endpoint := range endpointList.Items {
-		if strings.ToLower(endpoint.GetObjectMeta().GetName()) == strings.ToLower(KUBERNETES) {
+		if IsEqualIgnoreCase(endpoint.GetObjectMeta().GetName(), KUBERNETES) {
 			for _, subset := range endpoint.Subsets {
 				for _, address := range subset.Addresses {
 					if address.IP != "" {
@@ -193,5 +188,5 @@ func getMinikubeEndpoint(client *kubernetes.Clientset) (string, error) {
 			}
 		}
 	}
-	return "", errors.New("unable to get minikube endpoint")
+	return "", fmt.Errorf("unable to get minikube endpoint")
 }
