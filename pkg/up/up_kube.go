@@ -148,7 +148,7 @@ func processServiceList(name string, service v1.Service, client *kubernetes.Clie
 	return "", nil, false
 }
 
-func getNodePortIp(client *kubernetes.Clientset) (string, error) {
+var getNodePortIp = func(client *kubernetes.Clientset) (string, error) {
 	returnIp := ""
 	listOptions := metav1.ListOptions{}
 
@@ -156,9 +156,9 @@ func getNodePortIp(client *kubernetes.Clientset) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	returnIp, s2, err2 := processNodeList(nodeList, returnIp, err, client)
+	returnIp, err2 := processNodeList(nodeList, client)
 	if err2 != nil {
-		return s2, err2
+		return returnIp, err2
 	}
 	if returnIp != "" {
 		return returnIp, nil
@@ -166,27 +166,29 @@ func getNodePortIp(client *kubernetes.Clientset) (string, error) {
 	return "", fmt.Errorf("unable to get nodeport ip")
 }
 
-func processNodeList(nodeList *v1.NodeList, returnIp string, err error, client *kubernetes.Clientset) (string, string, error) {
+func processNodeList(nodeList *v1.NodeList, client *kubernetes.Clientset) (string, error) {
 	for _, node := range nodeList.Items {
 		for _, address := range node.Status.Addresses {
 			if IsEqualIgnoreCase(string(address.Type), INTERNALIP) {
 				ip := address.Address
 				if ip != "" {
-					returnIp = getURLWithPort(ip)
+					returnIp := getURLWithPort(ip)
+					return returnIp, nil
 				}
 			}
 			if IsEqualIgnoreCase(string(address.Type), HOSTNAME) && IsEqualIgnoreCase(address.Address, MINIKUBE) {
-				returnIp, err = getMinikubeEndpoint(client)
+				returnIp, err := getMinikubeEndpoint(client)
 				if err != nil {
-					return "", "", err
+					return "", err
 				}
+				return returnIp, nil
 			}
 		}
 	}
-	return returnIp, "", nil
+	return "", nil
 }
 
-func getMinikubeEndpoint(client *kubernetes.Clientset) (string, error) {
+var getMinikubeEndpoint = func(client *kubernetes.Clientset) (string, error) {
 	listOptions := metav1.ListOptions{}
 	endpointList, err := client.CoreV1().Endpoints(NAMESPACE).List(listOptions)
 	if err != nil {
