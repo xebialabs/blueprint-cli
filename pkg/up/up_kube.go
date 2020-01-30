@@ -114,28 +114,38 @@ var GetIp = func(client *kubernetes.Clientset) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		var location string
 		for _, service := range serviceList.Items {
-			if IsEqualIgnoreCase(service.GetObjectMeta().GetName(), INGRESSPROXY) && IsEqualIgnoreCase(string(service.Spec.Type), LOADBALANCER) {
-				for _, ingress := range service.Status.LoadBalancer.Ingress {
-					if ingress.Hostname != "" {
-						location = getURLWithoutPort(ingress.Hostname)
-						return location, nil
-					}
-					location = getURLWithoutPort(ingress.IP)
-					return location, nil
-				}
-			} else if IsEqualIgnoreCase(service.GetObjectMeta().GetName(), XLINTERNAL) {
-				if IsEqualIgnoreCase(string(service.Spec.Type), NODEPORT) {
-					return getNodePortIp(client)
-				} else if IsEqualIgnoreCase(string(service.Spec.Type), LOADBALANCER) && service.Spec.LoadBalancerIP != "" {
-					location = getURLWithoutPort(service.Spec.LoadBalancerIP)
-					return location, nil
-				}
+			name := service.GetObjectMeta().GetName()
+			ip, err2, done := processService(name, service, client)
+			if done {
+				return ip, err2
 			}
 		}
 	}
 	return "", fmt.Errorf("could not get the address of the cluster")
+}
+
+func processService(name string, service v1.Service, client *kubernetes.Clientset) (string, error, bool) {
+	location := ""
+	if IsEqualIgnoreCase(name, INGRESSPROXY) && IsEqualIgnoreCase(string(service.Spec.Type), LOADBALANCER) {
+		for _, ingress := range service.Status.LoadBalancer.Ingress {
+			if ingress.Hostname != "" {
+				location = getURLWithoutPort(ingress.Hostname)
+				return location, nil, true
+			}
+			location = getURLWithoutPort(ingress.IP)
+			return location, nil, true
+		}
+	} else if IsEqualIgnoreCase(name, XLINTERNAL) {
+		if IsEqualIgnoreCase(string(service.Spec.Type), NODEPORT) {
+			ip, err := getNodePortIp(client)
+			return ip, err, true
+		} else if IsEqualIgnoreCase(string(service.Spec.Type), LOADBALANCER) && service.Spec.LoadBalancerIP != "" {
+			location = getURLWithoutPort(service.Spec.LoadBalancerIP)
+			return location, nil, true
+		}
+	}
+	return "", nil, false
 }
 
 func getNodePortIp(client *kubernetes.Clientset) (string, error) {
@@ -146,6 +156,17 @@ func getNodePortIp(client *kubernetes.Clientset) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	returnIp, s2, err2 := processNodeList(nodeList, returnIp, err, client)
+	if err2 != nil {
+		return s2, err2
+	}
+	if returnIp != "" {
+		return returnIp, nil
+	}
+	return "", fmt.Errorf("unable to get nodeport ip")
+}
+
+func processNodeList(nodeList *v1.NodeList, returnIp string, err error, client *kubernetes.Clientset) (string, string, error) {
 	for _, node := range nodeList.Items {
 		for _, address := range node.Status.Addresses {
 			if IsEqualIgnoreCase(string(address.Type), INTERNALIP) {
@@ -157,15 +178,12 @@ func getNodePortIp(client *kubernetes.Clientset) (string, error) {
 			if IsEqualIgnoreCase(string(address.Type), HOSTNAME) && IsEqualIgnoreCase(address.Address, MINIKUBE) {
 				returnIp, err = getMinikubeEndpoint(client)
 				if err != nil {
-					return "", err
+					return "", "", err
 				}
 			}
 		}
 	}
-	if returnIp != "" {
-		return returnIp, nil
-	}
-	return "", fmt.Errorf("unable to get nodeport ip")
+	return returnIp, "", nil
 }
 
 func getMinikubeEndpoint(client *kubernetes.Clientset) (string, error) {
@@ -174,16 +192,24 @@ func getMinikubeEndpoint(client *kubernetes.Clientset) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	s2, err2, done := processEndpointList(endpointList)
+	if done {
+		return s2, err2
+	}
+	return "", fmt.Errorf("unable to get minikube endpoint")
+}
+
+func processEndpointList(endpointList *v1.EndpointsList) (string, error, bool) {
 	for _, endpoint := range endpointList.Items {
 		if IsEqualIgnoreCase(endpoint.GetObjectMeta().GetName(), KUBERNETES) {
 			for _, subset := range endpoint.Subsets {
 				for _, address := range subset.Addresses {
 					if address.IP != "" {
-						return getURLWithPort(address.IP), nil
+						return getURLWithPort(address.IP), nil, true
 					}
 				}
 			}
 		}
 	}
-	return "", fmt.Errorf("unable to get minikube endpoint")
+	return "", nil, false
 }
