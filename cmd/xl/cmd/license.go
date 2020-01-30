@@ -29,16 +29,11 @@ func PrintLicenses(out io.Writer) {
 	}
 	sort.Strings(all)
 	fmt.Fprintf(out, "## Licenses information\n\n")
-	fmt.Fprintf(out, "This notice contains information about the OSS software used in the XL Cli.\n")
-	fmt.Fprintf(out, "The XL Cli contains the following OSS components: \n\n")
-	for _, licName := range all {
-		fmt.Fprintf(out, " * %s\n", exandName(licName))
-	}
-	fmt.Fprintf(out, "\nThe full text of the licenses are:\n")
+	fmt.Fprintf(out, "This notice contains information about the OSS software used in the XL CLI.\n")
+	fmt.Fprintf(out, "The XL CLI uses the following Open source components. Visit the respective URL to view their licence\n")
+	fmt.Fprintf(out, "--------------------------------------------------------------------------------------------------------\n\n")
 	for _, lic := range all {
 		s, _ := box.FindString(lic)
-		fmt.Fprintf(out, "\n--------------------------------------------------------------------------------\n")
-		fmt.Fprintf(out, "## %s\n\n", cutExtension(lic))
 		fmt.Fprintf(out, s)
 	}
 }

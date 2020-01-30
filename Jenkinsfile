@@ -36,7 +36,7 @@ pipeline {
 
             steps {
                 checkout scm
-                sh "./gradlew goClean goBuild sonarqube -Dsonar.branch.name=${getBranch()} --info -x updateLicenses"
+                sh "./gradlew clean build sonarqube -Dsonar.branch.name=${getBranch()} --info -x updateLicenses"
                 stash name: "xl-up", includes: "build/linux-amd64/xl"
                 script {
                   if (fileExists('build/version.dump') == true) {
@@ -221,7 +221,7 @@ def runXlUpOnEks(String awsAccessKeyId, String awsSecretKeyId, String eksEndpoin
 
 
 def runXlUpOnPrem(String nfsSharePath) {
-    sh """ if [[ ! -f "temp/xl-up-blueprint/k8sClientCert-onprem.crt" ]]; then 
+    sh """ if [[ ! -f "temp/xl-up-blueprint/k8sClientCert-onprem.crt" ]]; then
         echo ${ON_PREM_CERT} >> temp/xl-up-blueprint/k8sClientCert-onprem-tmp.crt
         tr ' ' '\\n' < temp/xl-up-blueprint/k8sClientCert-onprem-tmp.crt > temp/xl-up-blueprint/k8sClientCert-onprem-tmp2.crt
         tr '%' ' ' < temp/xl-up-blueprint/k8sClientCert-onprem-tmp2.crt > temp/xl-up-blueprint/k8sClientCert-onprem.crt

@@ -73,59 +73,15 @@ golang {
     packagePath = 'github.com/xebialabs/xl-cli' // go import path of project to be built, NOT local file system path!
 }
 
-dependencies {
-    golang {
-        // *** WARNING *** since we now have license information embedded in the application
-        // You need to do some additional steps when adding a library. See README for more details
-        // *** NOTICE **** always verify the information from the tool since its based on heuristics
-        build name: 'github.com/gobuffalo/packr',           tag: 'v2.0.1'
-        build name: 'github.com/spf13/cobra',               tag: 'v0.0.3'
-        build name: 'github.com/spf13/viper',               tag: 'v1.1.0'
-        build name: 'github.com/mitchellh/go-homedir',      tag: 'v1.0.0'
-        build name: 'github.com/xebialabs/yaml',            branch: 'v2'
-        build name: 'github.com/jhoonb/archivex/archivex'
-        build name: 'github.com/mholt/archiver',            tag: 'v3.1.1'
-        build name: 'github.com/olekukonko/tablewriter',    tag: 'v0.0.1'
-        build name: 'github.com/Masterminds/sprig',         tag: 'v2.20.0'
-        build name: 'github.com/Masterminds/semver',        tag: 'v3.0.1'
-        build name: 'gopkg.in/AlecAivazis/survey.v1',       tag: 'v1.8.0'
-        build name: 'github.com/aws/aws-sdk-go',            tag: 'v1.15.45'
-        build name: 'k8s.io/api',                           tag: 'kubernetes-1.14.0'
-        build name: 'k8s.io/client-go',                     tag: 'kubernetes-1.14.0'
-        build name: 'k8s.io/apimachinery',                  tag: 'kubernetes-1.14.0'
-        build name: 'github.com/huandu/xstrings',           tag: 'v1.2.0'
-        build name: 'github.com/deckarep/golang-set',       tag: 'v1.7.1'
-        build name: 'github.com/magiconair/properties',     tag: 'v1.8.0'
-        build name: 'github.com/thoas/go-funk',             tag: '0.4'
-        build name: 'github.com/ktrysmt/go-bitbucket',      commit: 'e8d45e2203f6e2abeb7270941cca51568b3631a1'
-        build name: 'github.com/google/go-github',          tag: 'v21.0.0'
-        build name: 'github.com//xanzy/go-gitlab',          tag: 'v0.20.1'
-        build name: 'github.com/gogo/protobuf/sortkeys',    tag: 'v1.2.1'
-        build name: 'github.com/disiqueira/gotree',         tag: '2.0.3'
-        build name: 'github.com/briandowns/spinner',        tag: '1.4'
-        build name: 'github.com/fatih/color',               tag: 'v1.7.0'
-        build name: 'github.com/Knetic/govaluate',          tag: '3.0.0'
-        build name: 'github.com/mattn/go-isatty',           tag: 'v0.0.6'
-        build name: 'gopkg.in/src-d/go-git.v4',             tag: 'v4.10.0'
-        build name: 'github.com/dlclark/regexp2',           tag: 'v1.1.6'
-        test name: 'github.com/stretchr/testify',           tag: 'v1.2.2'
-        test name: 'github.com/jarcoal/httpmock',           tag: 'v1.0.4'
-    }
-}
-
 task installTemplify(type: Go) {
+    outputs.files ".gogradle/project_gopath/bin/templify"
     go "get github.com/wlbr/templify"
 }
 
 task installPackr(type: Go) {
+    outputs.files ".gogradle/project_gopath/bin/packr"
     go "get github.com/gobuffalo/packr/packr"
 }
-
-task installGlice(type: Go) {
-    go "get github.com/ribice/glice"
-}
-
-installDependencies.dependsOn installTemplify, installPackr
 
 goBuild {
     // Cross-compile platforms, update as necessary.
@@ -161,23 +117,10 @@ goBuild {
     // The ${} placeholder will be rendered in cross-compile
     go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
     dumpVersion
-
-    finalizedBy ':copyVendor' // so that editors can find the source of dependencies
 }
 
 aws {
     profileName = "default"
-}
-
-goBuild.dependsOn goTest
-
-goClean.doFirst {
-    delete 'build'
-}
-
-task copyVendor(type: Copy) {
-    from "vendor"
-    into ".gogradle/project_gopath/src"
 }
 
 task upx {
@@ -220,49 +163,61 @@ task uploadLinuxToS3(type: AmazonS3FileUploadTask) {
 
 task removeLicenseFolder {
     doLast {
-        runCmd("rm", "-f", "licenses/*")
+        runCmd("rm", "-f", "licenses/licences.md")
     }
 }
 
-task downloadLicenses {
-    doLast {
-        def authToken = project.property('githubOauthToken')
-        def goPath = Paths.get("${System.getenv("GOPATH")}/bin/glice").toString()
-        runCmd (goPath, "-r", "-f", "-gh", authToken)
+task downloadLicenses(type: Copy) {
+  dependsOn removeLicenseFolder
+  into 'licenses'
+  from 'go.mod'
+  rename { it - 'go.mod' + 'licences.md'}
+  filter { line ->
+    def result = (line =~ /^[\s]+[a-zA-Z0-9.\/-]+/)
+    if (result) {
+        return "http://${result[0].trim()}"
     }
-}
-
-task moveLicensesToFolder {
-    def licenseFiles = "*-license.MD"
-    doLast {
-        copy {
-            from(".") {
-                include licenseFiles
-            }
-            into "licenses"
-            delete fileTree(".").matching {
-                include licenseFiles
-            }
-        }
-    }
+  }
 }
 
 task updateLicenses {
-    inputs.files "build.gradle"
-
-    dependsOn 'installGlice'
-    dependsOn 'removeLicenseFolder'
-    dependsOn 'downloadLicenses'
-    dependsOn 'moveLicensesToFolder'
-
-    tasks.findByName('removeLicenseFolder').mustRunAfter 'installGlice'
-    tasks.findByName('downloadLicenses').mustRunAfter 'removeLicenseFolder'
-    tasks.findByName('moveLicensesToFolder').mustRunAfter 'downloadLicenses'
+    inputs.files "go.mod"
+    dependsOn downloadLicenses
 }
 
+task test {
+    dependsOn goTest
+}
+
+clean.doFirst {
+    delete 'build'
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "xl-cli"
+        property "sonar.projectName", "xl-cli"
+        property "sonar.sources", "./"
+        property "sonar.exclusions", "**/*_test.go,**/vendor/**"
+        property "sonar.go.coverage.reportPaths", ".gogradle/reports/coverage/**/*.out"
+    }
+}
+
+// The way tasks dependOn here are very important, please don't change unless there is a valid reason
+check.dependsOn installTemplify, installPackr
+goBuild.dependsOn goPrepare, goTest
 goBuild.finalizedBy updateLicenses
 build.dependsOn goBuild
-clean.dependsOn goClean
+goTest.dependsOn goPrepare
+goClean.dependsOn clean
+
+// disable these tasks as dependencies are mnaged with go modules
+project.gradle.startParameter.excludedTaskNames.add('installDependencies')
+project.gradle.startParameter.excludedTaskNames.add('resolveBuildDependencies')
+project.gradle.startParameter.excludedTaskNames.add('resolveTestDependencies')
+project.gradle.startParameter.excludedTaskNames.add('goVendor')
+
+/* Private utility functions  */
 
 def runCmd(Object... args) {
     def stdout = new ByteArrayOutputStream()
@@ -295,14 +250,4 @@ def validateVersions(key) {
     }
     if (!valid) throw new GradleException("Invalid versions passed for ${key} property, pass comma seperated versions in semver format. E.g: 9.0.5, 9.5")
     return cleanVersions.join(',')
-}
-
-sonarqube {
-    properties {
-        property "sonar.projectKey", "xl-cli"
-        property "sonar.projectName", "xl-cli"
-        property "sonar.sources", "./"
-        property "sonar.exclusions", "**/*_test.go,**/vendor/**"
-        property "sonar.go.coverage.reportPaths", ".gogradle/reports/coverage/**/*.out"
-    }
 }
