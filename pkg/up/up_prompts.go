@@ -47,7 +47,7 @@ var askToSaveToConfig = func(surveyOpts ...survey.AskOpt) (bool, error) {
 	if !SkipPrompts {
 		err = survey.AskOne(
 			&survey.Confirm{
-				Message: "Do you want to save modify your xebialabs/config.yaml to point to new XL Release and Deploy instances",
+				Message: "Do you want to modify your xebialabs/config.yaml to point to new XL Release and XL Deploy instances deployed",
 				Default: true,
 				Help:    "Your xebialabs config file stores the credentials of your XL Release and Deploy instances which the CLI uses to connect",
 			},
