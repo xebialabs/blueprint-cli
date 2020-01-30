@@ -28,11 +28,13 @@ var deploymentDesc = ""
 
 var phase = UNKNOWN
 
-// TODO a better way or to use the APIs available
-var generatedPlan = "c.x.d.s.deployment.DeploymentService - Generated plan"
-var phaseLogEnd = "on K8S"
-var executedLog = "is completed with state [DONE]"
-var failExecutedLog = "is completed with state [FAILED]"
+// TODO find a better way or to use the APIs available, as this is fragile
+const (
+	GENERATEDPLAN   = "c.x.d.s.deployment.DeploymentService - Generated plan"
+	PHASELOGEND     = "on K8S"
+	EXECUTEDLOG     = "is completed with state [DONE]"
+	FAILEXECUTEDLOG = "is completed with state [FAILED]"
+)
 
 func identifyPhase(log string) (phase int, start int) {
 	switch {
@@ -55,12 +57,12 @@ func identifyPhase(log string) (phase int, start int) {
 
 func logCapture(data []byte, writeFn func(currentStage string)) {
 	eventLog := string(data)
-	if strings.Contains(eventLog, generatedPlan) {
-		currentTask = getCurrentTask(eventLog, strings.Index(eventLog, generatedPlan))
+	if strings.Contains(eventLog, GENERATEDPLAN) {
+		currentTask = getCurrentTask(eventLog, strings.Index(eventLog, GENERATEDPLAN))
 		if currentTask != "" {
 			var start int
 			phase, start = identifyPhase(eventLog)
-			end := strings.Index(eventLog, phaseLogEnd)
+			end := strings.Index(eventLog, PHASELOGEND)
 
 			if start >= 0 && end >= 0 {
 				deploymentDesc = eventLog[start:end]
@@ -69,7 +71,7 @@ func logCapture(data []byte, writeFn func(currentStage string)) {
 		}
 	}
 
-	if strings.Contains(eventLog, failExecutedLog) {
+	if strings.Contains(eventLog, FAILEXECUTEDLOG) {
 		if phase == DEPLOYING || phase == UPDATING {
 			writeCheck("Failed deployment for", writeFn)
 			phase = UNDEPLOYING
@@ -79,7 +81,7 @@ func logCapture(data []byte, writeFn func(currentStage string)) {
 		}
 	}
 
-	if strings.Contains(eventLog, executedLog) {
+	if strings.Contains(eventLog, EXECUTEDLOG) {
 		writeCheck(getCurrentStage(true, phase), writeFn)
 	}
 }
@@ -134,7 +136,7 @@ func getIndexPlusLen(eventLog string, ident string) int {
 }
 
 func getCurrentTask(eventLog string, index int) string {
-	start := index + len(generatedPlan)
+	start := index + len(GENERATEDPLAN)
 	end := strings.Index(eventLog, "\n")
 
 	if end > 0 && start > 0 {
