@@ -1,11 +1,12 @@
 package auth
 
 import (
-    "github.com/xebialabs/xl-cli/pkg/models"
-    "gopkg.in/errgo.v2/fmt/errors"
-    "net/http"
-    "net/url"
-    "strings"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+
+	"github.com/xebialabs/xl-cli/pkg/models"
 )
 
 type session struct {
@@ -33,9 +34,9 @@ type authModel struct {
 
 // disable redirects because when using oidc the client gets lost following links
 var client = &http.Client{
-    CheckRedirect: func(req *http.Request, via []*http.Request) error {
-        return http.ErrUseLastResponse
-    },
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
 }
 
 func doLogin(request *http.Request, cookieName string) (*string, error) {
@@ -46,17 +47,17 @@ func doLogin(request *http.Request, cookieName string) (*string, error) {
 	}
 
 	if resp.StatusCode >= 400 {
-		return nil, errors.Newf("auth returned %d http code on login.", resp.StatusCode)
+		return nil, fmt.Errorf("auth returned %d http code on login", resp.StatusCode)
 	}
 
-    cookies := resp.Cookies()
-    for _, v := range cookies {
-        if v.Name == cookieName {
-            return &v.Value, nil
-        }
-    }
+	cookies := resp.Cookies()
+	for _, v := range cookies {
+		if v.Name == cookieName {
+			return &v.Value, nil
+		}
+	}
 
-    return nil, errors.Newf("can't find cookie '%s'", cookieName)
+	return nil, fmt.Errorf("can't find cookie '%s'", cookieName)
 }
 
 func getEnding(url string) string {
@@ -116,8 +117,8 @@ func login(product models.Product, serverUrl string, username string, password s
 	err := (error)(nil)
 	loginToken := ""
 
-    loginRequest, err = createLoginRequest(loginPath, username, password)
-    if product == models.XLR {
+	loginRequest, err = createLoginRequest(loginPath, username, password)
+	if product == models.XLR {
 		loginToken = models.XLR_LOGIN_TOKEN
 	} else {
 		loginToken = models.XLD_LOGIN_TOKEN
