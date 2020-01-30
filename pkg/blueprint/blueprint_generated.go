@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -8,7 +9,6 @@ import (
 
 	"github.com/xebialabs/xl-cli/pkg/util"
 
-	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -25,7 +25,7 @@ func (generatedBlueprint *GeneratedBlueprint) createDirectoryIfNeeded(dirName st
 	util.Verbose("[file] Checking whether path %s exists\n", dirName)
 	if exists(dirName) {
 		if b, _ := isDirectory(dirName); !b {
-			return errors.New(dirName + " exists but is not a directory.")
+			return fmt.Errorf("%s exists but is not a directory", dirName)
 		}
 		return nil
 	}

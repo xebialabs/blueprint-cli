@@ -39,7 +39,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	versionHelper.AvailableXlrVersions = getAvailableVersions(upParams.XLRVersions, []string{CurrentXLRVersionSupported})
 
 	if !upParams.DryRun {
-		defer util.StopAndRemoveContainer(s)
+		defer StopAndRemoveContainer(s)
 	}
 
 	if upParams.SkipPrompts {
@@ -253,7 +253,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	util.Info("Generated files successfully! \n")
 
 	if !upParams.DryRun {
-		util.Info("Spinning up xl seed! \n")
+		util.Info("Spinning up xl seed! \n\n")
 
 		if err = runAndCaptureResponse(pullSeedImage(upParams.SeedVersion)); err != nil {
 			return err

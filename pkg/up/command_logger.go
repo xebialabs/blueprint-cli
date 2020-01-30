@@ -1,4 +1,4 @@
-package util
+package up
 
 import (
 	"fmt"
@@ -12,6 +12,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/osSpecific"
+	"github.com/xebialabs/xl-cli/pkg/util"
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
@@ -23,15 +24,17 @@ const (
 )
 
 var currentTask = ""
-var ctDesc = ""
+var deploymentDesc = ""
 
 var phase = UNKNOWN
 
-// TODO a better way or to use the APIs available
-var generatedPlan = "c.x.d.s.deployment.DeploymentService - Generated plan"
-var phaseLogEnd = "on K8S"
-var executedLog = "is completed with state [DONE]"
-var failExecutedLog = "is completed with state [FAILED]"
+// TODO find a better way or to use the APIs available, as this is fragile
+const (
+	GENERATEDPLAN   = "c.x.d.s.deployment.DeploymentService - Generated plan"
+	PHASELOGEND     = "on K8S"
+	EXECUTEDLOG     = "is completed with state [DONE]"
+	FAILEXECUTEDLOG = "is completed with state [FAILED]"
+)
 
 func identifyPhase(log string) (phase int, start int) {
 	switch {
@@ -52,35 +55,34 @@ func identifyPhase(log string) (phase int, start int) {
 	}
 }
 
-func logCapture(w io.Writer, d []byte, s *spinner.Spinner) {
-	eventLog := string(d)
-
-	if strings.Index(eventLog, generatedPlan) != -1 {
-		currentTask = getCurrentTask(eventLog, strings.Index(eventLog, generatedPlan))
+func logCapture(data []byte, writeFn func(currentStage string)) {
+	eventLog := string(data)
+	if strings.Contains(eventLog, GENERATEDPLAN) {
+		currentTask = getCurrentTask(eventLog, strings.Index(eventLog, GENERATEDPLAN))
 		if currentTask != "" {
-			phase2, start := identifyPhase(eventLog)
-			phase = phase2
-			end := strings.Index(eventLog, phaseLogEnd)
+			var start int
+			phase, start = identifyPhase(eventLog)
+			end := strings.Index(eventLog, PHASELOGEND)
 
 			if start >= 0 && end >= 0 {
-				ctDesc = eventLog[start:end]
-				write(getCurrentStage(false, phase), s, w)
+				deploymentDesc = eventLog[start:end]
+				writeCheck(getCurrentStage(false, phase), writeFn)
 			}
 		}
 	}
 
-	if strings.Index(eventLog, failExecutedLog) != -1 {
+	if strings.Contains(eventLog, FAILEXECUTEDLOG) {
 		if phase == DEPLOYING || phase == UPDATING {
-			write("Failed deploying for ", s, w)
+			writeCheck("Failed deployment for", writeFn)
 			phase = UNDEPLOYING
-			write(getCurrentStage(false, phase), s, w)
+			writeCheck(getCurrentStage(false, phase), writeFn)
 		} else {
-			write("Failed undeploying for ", s, w)
+			writeCheck("Failed undeployment for", writeFn)
 		}
 	}
 
-	if strings.Index(eventLog, executedLog) != -1 {
-		write(getCurrentStage(true, phase), s, w)
+	if strings.Contains(eventLog, EXECUTEDLOG) {
+		writeCheck(getCurrentStage(true, phase), writeFn)
 	}
 }
 
@@ -109,17 +111,19 @@ func getCurrentStage(isExecuted bool, phase int) string {
 
 var lastWritten = ""
 
-func write(currentStage string, s *spinner.Spinner, w io.Writer) {
+func writeCheck(currentStage string, writeFn func(currentStage string)) {
 	if phase == UNKNOWN || currentStage == lastWritten {
 		return
 	}
 
-	if ctDesc != "" {
+	if deploymentDesc != "" {
 		lastWritten = currentStage
-
-		s.Stop()
-		w.Write([]byte(currentStage + ctDesc + "\n\n"))
-		s.Start()
+		message := ""
+		for _, desc := range strings.Split(deploymentDesc, ",") {
+			desc = strings.Split(strings.TrimSpace(desc), " ")[0]
+			message += fmt.Sprintf("%s %s\n\n", currentStage, desc)
+		}
+		writeFn(message)
 	}
 }
 
@@ -132,7 +136,7 @@ func getIndexPlusLen(eventLog string, ident string) int {
 }
 
 func getCurrentTask(eventLog string, index int) string {
-	start := index + len(generatedPlan)
+	start := index + len(GENERATEDPLAN)
 	end := strings.Index(eventLog, "\n")
 
 	if end > 0 && start > 0 {
@@ -140,8 +144,8 @@ func getCurrentTask(eventLog string, index int) string {
 		words := strings.Split(task, " ")
 
 		for _, word := range words {
-			char := strings.Split(word, "-")
-			if len(char) > 1 {
+			part := strings.Split(word, "-")
+			if len(part) > 1 {
 				return word
 			}
 		}
@@ -149,11 +153,11 @@ func getCurrentTask(eventLog string, index int) string {
 	return ""
 }
 
-func copyAndCapture(w io.Writer, r io.Reader, s *spinner.Spinner) ([]byte, error) {
+func copyAndCapture(writer io.Writer, reader io.Reader, spinner *spinner.Spinner) ([]byte, error) {
 	var out []byte
 	buf := make([]byte, 1024, 1024)
 	for {
-		n, err := r.Read(buf[:])
+		n, err := reader.Read(buf[:])
 		if err != nil {
 			// Read returns io.EOF at the end of file, which is not an error for us
 			if err == io.EOF {
@@ -163,25 +167,29 @@ func copyAndCapture(w io.Writer, r io.Reader, s *spinner.Spinner) ([]byte, error
 			return out, err
 		}
 		if n > 0 {
-			d := buf[:n]
-			out = append(out, d...)
+			data := buf[:n]
+			out = append(out, data...)
 
-			if IsVerbose {
-				_, err := w.Write(d)
+			if util.IsVerbose {
+				_, err := writer.Write(data)
 				if err != nil {
 					return out, err
 				}
 			}
 
-			logCapture(w, d, s)
+			logCapture(data, func(content string) {
+				spinner.Stop()
+				writer.Write([]byte(content))
+				spinner.Start()
+			})
 		}
 	}
 }
 
-func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (string, string, error) {
+func ExecuteCommandAndShowLogs(command models.Command, spinner *spinner.Spinner) (string, string, error) {
 	cmd := exec.Command(command.Name, command.Args...)
-	if !IsVerbose {
-		s.Start()
+	if !util.IsVerbose {
+		spinner.Start()
 	}
 
 	cmd.SysProcAttr = osSpecific.GetSyscall()
@@ -213,7 +221,7 @@ func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (stri
 		for {
 			select {
 			case <-sig:
-				s.Stop()
+				spinner.Stop()
 				cancel := false
 				survey.AskOne(
 					&survey.Confirm{
@@ -221,11 +229,11 @@ func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (stri
 						Default: false,
 					}, &cancel, nil)
 				if cancel {
-					s.Stop()
-					StopAndRemoveContainer(s)
+					spinner.Stop()
+					StopAndRemoveContainer(spinner)
 					os.Exit(1)
 				} else {
-					s.Start()
+					spinner.Start()
 				}
 			case <-done:
 				return
@@ -234,12 +242,12 @@ func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (stri
 	}()
 
 	go func() {
-		stdout, errStdout = copyAndCapture(os.Stdout, stdoutIn, s)
+		stdout, errStdout = copyAndCapture(os.Stdout, stdoutIn, spinner)
 		wg.Done()
 		done <- true
 	}()
 
-	stderr, errStderr = copyAndCapture(os.Stderr, stderrIn, s)
+	stderr, errStderr = copyAndCapture(os.Stderr, stderrIn, spinner)
 	wg.Wait()
 
 	err = cmd.Wait()
@@ -247,18 +255,18 @@ func ExecuteCommandAndShowLogs(command models.Command, s *spinner.Spinner) (stri
 	outStr, errStr := string(stdout), string(stderr)
 
 	if errStdout != nil || errStderr != nil {
-		Info("failed to capture stdout or stderr\n")
+		util.Info("failed to capture stdout or stderr\n")
 	}
 
-	if !IsVerbose {
-		s.Stop()
+	if !util.IsVerbose {
+		spinner.Stop()
 	}
 
 	return outStr, errStr, nil
 }
 
-func StopAndRemoveContainer(s *spinner.Spinner) {
-	Verbose("stopping the container")
+func StopAndRemoveContainer(spinner *spinner.Spinner) {
+	util.Verbose("stopping the container")
 
 	stopContainer := models.Command{
 		Name: "docker",
@@ -266,10 +274,10 @@ func StopAndRemoveContainer(s *spinner.Spinner) {
 	}
 	ExecuteCommandAndShowLogs(stopContainer, s)
 
-	Verbose("removing the container")
+	util.Verbose("removing the container")
 	rmContainer := models.Command{
 		Name: "docker",
 		Args: []string{"rm", "xl-seed"},
 	}
-	ExecuteCommandAndShowLogs(rmContainer, s)
+	ExecuteCommandAndShowLogs(rmContainer, spinner)
 }

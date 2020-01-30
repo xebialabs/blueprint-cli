@@ -1,12 +1,12 @@
 package xl
 
 import (
-	"errors"
 	"fmt"
-	"github.com/xebialabs/xl-cli/pkg/util"
-	"gopkg.in/src-d/go-git.v4"
 	"path/filepath"
 	"time"
+
+	"github.com/xebialabs/xl-cli/pkg/util"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 //////// Generic interface /////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ func (s GitRepo) Remote() (string, error) {
 		return "", err
 	}
 	if len(remote.Config().URLs) == 0 {
-		return "", errors.New("error while trying to get remote url for origin: URL not set")
+		return "", fmt.Errorf("error while trying to get remote url for origin: URL not set")
 	}
 	return remote.Config().URLs[0], nil
 }
