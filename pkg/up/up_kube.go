@@ -116,17 +116,17 @@ var GetIp = func(client *kubernetes.Clientset) (string, error) {
 		}
 		for _, service := range serviceList.Items {
 			name := service.GetObjectMeta().GetName()
-			ip, err2, done := processService(name, service, client)
+			s2, err2, done := processServiceList(name, service, client)
 			if done {
-				return ip, err2
+				return s2, err2
 			}
 		}
 	}
 	return "", fmt.Errorf("could not get the address of the cluster")
 }
 
-func processService(name string, service v1.Service, client *kubernetes.Clientset) (string, error, bool) {
-	location := ""
+func processServiceList(name string, service v1.Service, client *kubernetes.Clientset) (string, error, bool) {
+	var location string
 	if IsEqualIgnoreCase(name, INGRESSPROXY) && IsEqualIgnoreCase(string(service.Spec.Type), LOADBALANCER) {
 		for _, ingress := range service.Status.LoadBalancer.Ingress {
 			if ingress.Hostname != "" {
@@ -192,24 +192,16 @@ func getMinikubeEndpoint(client *kubernetes.Clientset) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	s2, err2, done := processEndpointList(endpointList)
-	if done {
-		return s2, err2
-	}
-	return "", fmt.Errorf("unable to get minikube endpoint")
-}
-
-func processEndpointList(endpointList *v1.EndpointsList) (string, error, bool) {
 	for _, endpoint := range endpointList.Items {
 		if IsEqualIgnoreCase(endpoint.GetObjectMeta().GetName(), KUBERNETES) {
 			for _, subset := range endpoint.Subsets {
 				for _, address := range subset.Addresses {
 					if address.IP != "" {
-						return getURLWithPort(address.IP), nil, true
+						return getURLWithPort(address.IP), nil
 					}
 				}
 			}
 		}
 	}
-	return "", nil, false
+	return "", fmt.Errorf("unable to get minikube endpoint")
 }
