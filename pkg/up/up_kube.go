@@ -1,10 +1,7 @@
 package up
 
 import (
-	"errors"
 	"fmt"
-	"strings"
-
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	v1 "k8s.io/api/core/v1"
