@@ -296,7 +296,7 @@ var updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[strin
 	if answers["InstallXLR"] == "true" || answers["InstallXLD"] == "true" {
 		return writeConfig(v, configPath)
 	}
-	util.Print("Neither Xld or Xlr were installed so config was not updated")
+	util.Info("Neither XL Release or XL Deploy were installed so config was not updated")
 	return nil
 }
 
