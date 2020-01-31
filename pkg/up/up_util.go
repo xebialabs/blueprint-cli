@@ -2,15 +2,16 @@ package up
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
-	"github.com/xebialabs/yaml"
 	"io/ioutil"
-	"k8s.io/client-go/kubernetes"
 	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
+
+	"github.com/spf13/viper"
+	"github.com/xebialabs/yaml"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 
@@ -256,14 +257,16 @@ func decideVersionMatch(installedVersion string, newVersion string) (string, err
 	return "", nil
 }
 
-const xlReleaseContext = "xl-release"
-const xlReleaseUrl = xlReleaseContext + ".url"
-const xlReleaseUser = xlReleaseContext + ".username"
-const xlReleasePassword = xlReleaseContext + ".password"
-const xlDeployContext = "xl-deploy"
-const xlDeployUrl = xlDeployContext + ".url"
-const xlDeployUser = xlDeployContext + ".username"
-const xlDeployPassword = xlDeployContext + ".password"
+const (
+	xlReleaseContext  = "xl-release"
+	xlReleaseUrl      = xlReleaseContext + ".url"
+	xlReleaseUser     = xlReleaseContext + ".username"
+	xlReleasePassword = xlReleaseContext + ".password"
+	xlDeployContext   = "xl-deploy"
+	xlDeployUrl       = xlDeployContext + ".url"
+	xlDeployUser      = xlDeployContext + ".username"
+	xlDeployPassword  = xlDeployContext + ".password"
+)
 
 var updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[string]string, v *viper.Viper) error {
 	configPath, err := util.DefaultConfigfilePath()
@@ -276,7 +279,7 @@ var updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[strin
 		return err
 	}
 	if answers["InstallXLD"] == "true" {
-		fmt.Println("Setting XLD")
+		util.Info("Setting XLD config in CLI global config\n")
 		XLDUsername := "admin"
 		XLDPass := answers["XldAdminPass"]
 		XLDURL := ip + "/xl-deploy"
@@ -285,7 +288,7 @@ var updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[strin
 		v.Set(xlDeployPassword, XLDPass)
 	}
 	if answers["InstallXLR"] == "true" {
-		util.Info("Setting XLR config in CLI global config")
+		util.Info("Setting XLR config in CLI global config\n")
 		XLRUsername := "admin"
 		XLRPass := answers["XlrAdminPass"]
 		XLRURL := ip + "/xl-release"
@@ -296,7 +299,7 @@ var updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[strin
 	if answers["InstallXLR"] == "true" || answers["InstallXLD"] == "true" {
 		return writeConfig(v, configPath)
 	}
-	util.Info("Neither XL Release or XL Deploy were installed so config was not updated")
+	util.Info("Neither XL Release or XL Deploy were installed hence config was not updated\n")
 	return nil
 }
 
@@ -310,7 +313,7 @@ var writeConfig = func(v *viper.Viper, configPath string) error {
 	if err != nil {
 		return err
 	}
-	util.Print("Config has successfully been updated")
+	util.Info("Config has been updated successfully\n")
 	return nil
 }
 
