@@ -3,9 +3,10 @@ package up
 import (
 	b64 "encoding/base64"
 	"fmt"
-	"github.com/spf13/viper"
 	"strings"
 	"time"
+
+	"github.com/spf13/viper"
 
 	"gopkg.in/AlecAivazis/survey.v1"
 
@@ -243,7 +244,8 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	util.IsQuiet = true
-	if err = runApplicationBlueprint(&upParams, blueprintContext, gb, CliVersion, preparedData, answers, answersFromInfra, defaultFromValues); err != nil {
+	answerFromUp, err := runApplicationBlueprint(&upParams, blueprintContext, gb, CliVersion, preparedData, answers, answersFromInfra, defaultFromValues)
+	if err != nil {
 		return err
 	}
 	util.IsQuiet = false
@@ -280,7 +282,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			return err
 		}
 		v := viper.GetViper()
-		err = updateXebialabsConfig(kubeClient, answers, v)
+		err = updateXebialabsConfig(kubeClient, answerFromUp, v)
 		if err != nil {
 			return err
 		}
@@ -326,7 +328,7 @@ func runApplicationBlueprint(
 	CliVersion string,
 	preparedData *blueprint.PreparedData,
 	answers, answersFromInfra, defaultFromValues map[string]string,
-) error {
+) (map[string]string, error) {
 	var err error
 	// Switch blueprint once the infrastructure is done.
 	if upParams.BlueprintTemplate != "" && strings.Contains(upParams.BlueprintTemplate, DefaultInfraBlueprintTemplate) {
@@ -338,11 +340,11 @@ func runApplicationBlueprint(
 	if answers != nil {
 		answers, err = mergeAndGetAnswers(answers, answersFromInfra)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	_, _, err = blueprint.InstantiateBlueprint(
+	preparedData, _, err = blueprint.InstantiateBlueprint(
 		blueprint.BlueprintParams{
 			TemplatePath:         upParams.BlueprintTemplate,
 			AnswersMap:           answers,
@@ -356,9 +358,9 @@ func runApplicationBlueprint(
 		blueprintContext, gb,
 	)
 	if err != nil {
-		return fmt.Errorf("error while creating Blueprint: %s", err)
+		return nil, fmt.Errorf("error while creating Blueprint: %s", err)
 	}
-	return nil
+	return processAnswerMapFromPreparedData(preparedData), nil
 }
 
 func getAvailableVersions(versions string, defaultVersions []string) []string {
