@@ -2,16 +2,16 @@ package up
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"io/ioutil"
-	"k8s.io/client-go/kubernetes"
 	"os"
 	"os/user"
 	"path/filepath"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"k8s.io/client-go/kubernetes"
 )
 
 func TestGetLocalContext(t *testing.T) {
@@ -208,26 +208,6 @@ func TestWriteConfig(t *testing.T) {
 }
 
 func TestUpdateXebialabsConfig(t *testing.T) {
-	answerAllPositive := map[string]string{
-		"InstallXLD":   "true",
-		"InstallXLR":   "true",
-		"XlrAdminPass": "12345",
-		"XldAdminPass": "1234",
-	}
-	answerInstallXLD := map[string]string{
-		"InstallXLD":   "true",
-		"InstallXLR":   "false",
-		"XldAdminPass": "1234",
-	}
-	answerInstallXLR := map[string]string{
-		"InstallXLD":   "false",
-		"InstallXLR":   "true",
-		"XlrAdminPass": "12345",
-	}
-	answerNothingChanged := map[string]string{
-		"InstallXLD": "false",
-		"InstallXLR": "false",
-	}
 	var client *kubernetes.Clientset
 	GetIp = func(client *kubernetes.Clientset) (string, error) {
 		return "http://testhost", nil
@@ -239,6 +219,12 @@ func TestUpdateXebialabsConfig(t *testing.T) {
 	t.Run("should update both when both present", func(t *testing.T) {
 		v := viper.New()
 		v.SetConfigType("yaml")
+		answerAllPositive := map[string]string{
+			"InstallXLD":   "true",
+			"InstallXLR":   "true",
+			"XlrAdminPass": "12345",
+			"XldAdminPass": "1234",
+		}
 		err := updateXebialabsConfig(client, answerAllPositive, v)
 		assert.Nil(t, err)
 		assert.Equal(t, "http://testhost/xl-deploy", v.GetString(xlDeployUrl))
@@ -251,6 +237,11 @@ func TestUpdateXebialabsConfig(t *testing.T) {
 	t.Run("should not update XLD config when XLD was not deployed", func(t *testing.T) {
 		v := viper.New()
 		v.SetConfigType("yaml")
+		answerInstallXLD := map[string]string{
+			"InstallXLD":   "true",
+			"InstallXLR":   "false",
+			"XldAdminPass": "1234",
+		}
 		err := updateXebialabsConfig(client, answerInstallXLD, v)
 		assert.Nil(t, err)
 		assert.Equal(t, "http://testhost/xl-deploy", v.GetString(xlDeployUrl))
@@ -264,6 +255,11 @@ func TestUpdateXebialabsConfig(t *testing.T) {
 	t.Run("should not update XLR config when XLR was not deployed", func(t *testing.T) {
 		v := viper.New()
 		v.SetConfigType("yaml")
+		answerInstallXLR := map[string]string{
+			"InstallXLD":   "false",
+			"InstallXLR":   "true",
+			"XlrAdminPass": "12345",
+		}
 		err := updateXebialabsConfig(client, answerInstallXLR, v)
 		assert.Nil(t, err)
 		assert.Equal(t, "", v.GetString(xlDeployUrl))
@@ -276,6 +272,10 @@ func TestUpdateXebialabsConfig(t *testing.T) {
 	t.Run("should not update XLR or XLR", func(t *testing.T) {
 		v := viper.New()
 		v.SetConfigType("yaml")
+		answerNothingChanged := map[string]string{
+			"InstallXLD": "false",
+			"InstallXLR": "false",
+		}
 		err := updateXebialabsConfig(client, answerNothingChanged, v)
 		assert.Nil(t, err)
 		assert.Equal(t, "", v.GetString(xlDeployUrl))
@@ -296,4 +296,82 @@ func GetFileContentSafe(filePath string) string {
 	}
 
 	return string(f)
+}
+
+func Test_shouldUpdateConfig(t *testing.T) {
+	GetIp = func(client *kubernetes.Clientset) (string, error) {
+		return "http://testhost", nil
+	}
+	tests := []struct {
+		name    string
+		answers map[string]string
+		v       *viper.Viper
+		want    bool
+		wantErr bool
+	}{
+		{
+			"should return false when XLD/XLR not installed",
+			map[string]string{
+				"InstallXLD": "false",
+				"InstallXLR": "false",
+			},
+			viper.New(),
+			false,
+			false,
+		},
+		{
+			"should return false when XLD/XLR is installed but config didn't change",
+			map[string]string{
+				"InstallXLD":   "true",
+				"InstallXLR":   "true",
+				"XlrAdminPass": "12345",
+				"XldAdminPass": "1234",
+			},
+			func() *viper.Viper {
+				v := viper.New()
+				v.Set(xlReleaseUrl, "http://testhost/xl-release")
+				v.Set(xlReleaseUser, "admin")
+				v.Set(xlReleasePassword, "12345")
+				v.Set(xlDeployUrl, "http://testhost/xl-deploy")
+				v.Set(xlDeployUser, "admin")
+				v.Set(xlDeployPassword, "1234")
+				return v
+			}(),
+			false,
+			false,
+		},
+		{
+			"should return true when XLD/XLR is installed and config changed",
+			map[string]string{
+				"InstallXLD":   "true",
+				"InstallXLR":   "true",
+				"XlrAdminPass": "12345",
+				"XldAdminPass": "1234",
+			},
+			func() *viper.Viper {
+				v := viper.New()
+				v.Set(xlReleaseUrl, "http://testhostold/xl-release")
+				v.Set(xlReleaseUser, "admin")
+				v.Set(xlReleasePassword, "12345")
+				v.Set(xlDeployUrl, "http://testhost/xl-deploy")
+				v.Set(xlDeployUser, "admin")
+				v.Set(xlDeployPassword, "1234")
+				return v
+			}(),
+			true,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := shouldUpdateConfig(nil, tt.answers, tt.v)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("shouldUpdateConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("shouldUpdateConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"k8s.io/client-go/kubernetes"
 
 	"gopkg.in/AlecAivazis/survey.v1"
 
@@ -125,6 +126,15 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	// adjust the generated values from xl-infra blueprint
 	answersFromInfra := processAnswerMapFromPreparedData(preparedData)
 
+	var kubeClient *kubernetes.Clientset
+
+	if !upParams.SkipK8sConnection {
+		kubeClient, err = getKubeClient(answersFromInfra)
+		if err != nil {
+			return err
+		}
+	}
+
 	if upParams.Undeploy {
 		if !SkipPrompts {
 			shouldUndeploy := false
@@ -138,12 +148,6 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			}
 		}
 
-		kubeClient, err := getKubeClient(answersFromInfra)
-
-		if err != nil {
-			return err
-		}
-
 		if err = undeployAll(kubeClient); err != nil {
 			return fmt.Errorf("an error occurred while undeploying - %s", err)
 		}
@@ -155,7 +159,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 	configMap := ""
 	if !upParams.SkipK8sConnection {
-		if configMap, err = getKubeConfigMap(answersFromInfra); err != nil {
+		if configMap, err = getKubeConfigMap(kubeClient); err != nil {
 			return err
 		}
 	} else {
@@ -244,7 +248,9 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	util.IsQuiet = true
+
 	answerFromUp, err := runApplicationBlueprint(&upParams, blueprintContext, gb, CliVersion, preparedData, answers, answersFromInfra, defaultFromValues)
+
 	if err != nil {
 		return err
 	}
@@ -270,20 +276,18 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			return err
 		}
 	}
-	saveConfig, err := askToSaveToConfig()
 
-	if err != nil {
-		return err
-	}
-
-	if saveConfig {
-		kubeClient, err := getKubeClient(answersFromInfra)
-		if err != nil {
-			return err
-		}
+	if !upParams.SkipK8sConnection {
 		v := viper.GetViper()
-		err = updateXebialabsConfig(kubeClient, answerFromUp, v)
-		if err != nil {
+		if ok, err := shouldUpdateConfig(kubeClient, answerFromUp, v); ok && err == nil {
+			if saveConfig, err := askToSaveToConfig(); saveConfig && err == nil {
+				if err := updateXebialabsConfig(kubeClient, answerFromUp, v); err != nil {
+					return err
+				}
+			} else if err != nil {
+				return err
+			}
+		} else if err != nil {
 			return err
 		}
 	}

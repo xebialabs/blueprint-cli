@@ -13,18 +13,13 @@ import (
 func Test_getKubeConfigMap(t *testing.T) {
 
 	tests := []struct {
-		name      string
-		answerMap map[string]string
-		want      string
-		wantErr   bool
-		prepare   func()
+		name    string
+		want    string
+		wantErr bool
+		prepare func()
 	}{
 		{
 			"Should return empty when namespace is not available",
-			map[string]string{
-				"K8sApiServerURL": "localhost",
-				"K8sToken":        "localhost",
-			},
 			"",
 			false,
 			func() {
@@ -38,10 +33,6 @@ func Test_getKubeConfigMap(t *testing.T) {
 		},
 		{
 			"Should return config map string when namespace is available",
-			map[string]string{
-				"K8sApiServerURL": "localhost",
-				"K8sToken":        "localhost",
-			},
 			"map data",
 			false,
 			func() {
@@ -70,7 +61,7 @@ func Test_getKubeConfigMap(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.prepare()
-			got, err := getKubeConfigMap(tt.answerMap)
+			got, err := getKubeConfigMap(nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getKubeConfigMap() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -90,38 +81,28 @@ func Test_checkForNameSpace(t *testing.T) {
 			},
 		}, nil
 	}
-	type args struct {
-		client    *kubernetes.Clientset
-		namespace string
-	}
 	tests := []struct {
-		name    string
-		args    args
-		want    bool
-		wantErr bool
+		name      string
+		namespace string
+		want      bool
+		wantErr   bool
 	}{
 		{
 			"should return true when namespace found",
-			args{
-				nil,
-				"xebialabs",
-			},
+			"xebialabs",
 			true,
 			false,
 		},
 		{
 			"should return false when namespace not found",
-			args{
-				nil,
-				"somens",
-			},
+			"somens",
 			false,
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := checkForNameSpace(tt.args.client, tt.args.namespace)
+			got, err := checkForNameSpace(nil, tt.namespace)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("checkForNameSpace() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -2,6 +2,7 @@ package up
 
 import (
 	"fmt"
+
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	v1 "k8s.io/api/core/v1"
@@ -46,18 +47,13 @@ var getKubeClient = func(answerMap map[string]string) (*kubernetes.Clientset, er
 	return client, nil
 }
 
-func getKubeConfigMap(answerMap map[string]string) (string, error) {
-	// Step 1 Get connection
-	client, err := getKubeClient(answerMap)
-	if err != nil {
-		return "", err
-	}
-	// Step 2 Check for namespace
+func getKubeConfigMap(client *kubernetes.Clientset) (string, error) {
+	// Step 1 Check for namespace
 	isNamespaceAvailable, err := checkForNameSpace(client, NAMESPACE)
 	if err != nil {
 		return "", err
 	}
-	// Step 3 Check for version
+	// Step 2 Check for version
 	if isNamespaceAvailable {
 		util.Verbose("the namespace %s is available...\n", NAMESPACE)
 
