@@ -9,6 +9,10 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/spf13/viper"
+	"github.com/xebialabs/yaml"
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
 
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
@@ -251,4 +255,102 @@ func decideVersionMatch(installedVersion string, newVersion string) (string, err
 	}
 
 	return "", nil
+}
+
+const (
+	xlReleaseContext    = "xl-release"
+	xlReleaseUrl        = xlReleaseContext + ".url"
+	xlReleaseUser       = xlReleaseContext + ".username"
+	xlReleasePassword   = xlReleaseContext + ".password"
+	xlReleaseAuthmethod = xlReleaseContext + ".authmethod"
+	xlDeployContext     = "xl-deploy"
+	xlDeployUrl         = xlDeployContext + ".url"
+	xlDeployUser        = xlDeployContext + ".username"
+	xlDeployPassword    = xlDeployContext + ".password"
+	xlDeployAuthmethod  = xlDeployContext + ".authmethod"
+	XLDUsername         = "admin"
+	XLDAuthmethod       = "http"
+	XLRUsername         = "admin"
+	XLRAuthmethod       = "basic"
+)
+
+var shouldUpdateConfig = func(client *kubernetes.Clientset, answers map[string]string, v *viper.Viper) (bool, error) {
+	ip, err := GetIp(client)
+	if err != nil {
+		return false, err
+	}
+	if answers["InstallXLD"] == "true" {
+		XLDPass := answers["XldAdminPass"]
+		XLDURL := ip + "/xl-deploy"
+		configPass := v.Get(xlDeployPassword)
+		configIP := v.Get(xlDeployUrl)
+
+		if configIP != XLDURL || configPass != XLDPass {
+			return true, nil
+		}
+	}
+	if answers["InstallXLR"] == "true" {
+		XLRPass := answers["XlrAdminPass"]
+		XLRURL := ip + "/xl-release"
+		configPass := v.Get(xlReleasePassword)
+		configIP := v.Get(xlReleaseUrl)
+
+		if configIP != XLRURL || configPass != XLRPass {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+var updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[string]string, v *viper.Viper) error {
+	configPath, err := util.DefaultConfigfilePath()
+	if err != nil {
+		return err
+	}
+
+	ip, err := GetIp(client)
+	if err != nil {
+		return err
+	}
+	if answers["InstallXLD"] == "true" {
+		util.Info("Setting XLD config in CLI global config\n")
+		XLDPass := answers["XldAdminPass"]
+		XLDURL := ip + "/xl-deploy"
+		v.Set(xlDeployUrl, XLDURL)
+		v.Set(xlDeployUser, XLDUsername)
+		v.Set(xlDeployPassword, XLDPass)
+		v.Set(xlDeployAuthmethod, XLDAuthmethod)
+	}
+	if answers["InstallXLR"] == "true" {
+		util.Info("Setting XLR config in CLI global config\n")
+		XLRPass := answers["XlrAdminPass"]
+		XLRURL := ip + "/xl-release"
+		v.Set(xlReleaseUrl, XLRURL)
+		v.Set(xlReleaseUser, XLRUsername)
+		v.Set(xlReleasePassword, XLRPass)
+		v.Set(xlReleaseAuthmethod, XLRAuthmethod)
+	}
+	if answers["InstallXLR"] == "true" || answers["InstallXLD"] == "true" {
+		return writeConfig(v, configPath)
+	}
+	util.Info("Neither XL Release or XL Deploy were installed hence config was not updated\n")
+	return nil
+}
+
+var writeConfig = func(v *viper.Viper, configPath string) error {
+	c := util.SortMapStringInterface(v.AllSettings())
+	yamlBytes, err := yaml.Marshal(c)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(configPath, yamlBytes, 0640)
+	if err != nil {
+		return err
+	}
+	util.Info("Config has been updated successfully\n")
+	return nil
+}
+
+func IsEqualIgnoreCase(lhs, rhs string) bool {
+	return strings.ToLower(lhs) == strings.ToLower(rhs)
 }

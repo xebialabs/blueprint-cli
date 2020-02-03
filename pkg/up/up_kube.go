@@ -18,10 +18,22 @@ var getK8sNamespaces = func(client *kubernetes.Clientset, opts metav1.ListOption
 	return client.CoreV1().Namespaces().List(opts)
 }
 
-// The namespace to use
-const NAMESPACE = "xebialabs"
+// Constants to use
+const (
+	NAMESPACE    = "xebialabs"
+	INGRESSPROXY = "haproxy-ingress"
+	LOADBALANCER = "loadbalancer"
+	HTTP         = "http"
+	XLINTERNAL   = "xebialabs-internal"
+	NODEPORT     = "nodeport"
+	INTERNALIP   = "internalip"
+	HTTPPORT     = "30080"
+	HOSTNAME     = "hostname"
+	MINIKUBE     = "minikube"
+	KUBERNETES   = "kubernetes"
+)
 
-func getKubeClient(answerMap map[string]string) (*kubernetes.Clientset, error) {
+var getKubeClient = func(answerMap map[string]string) (*kubernetes.Clientset, error) {
 	config, err := k8s.GetK8sConfiguration(answerMap)
 	if err != nil {
 		return nil, err
@@ -35,18 +47,13 @@ func getKubeClient(answerMap map[string]string) (*kubernetes.Clientset, error) {
 	return client, nil
 }
 
-func getKubeConfigMap(answerMap map[string]string) (string, error) {
-	// Step 1 Get connection
-	client, err := getKubeClient(answerMap)
-	if err != nil {
-		return "", err
-	}
-	// Step 2 Check for namespace
+func getKubeConfigMap(client *kubernetes.Clientset) (string, error) {
+	// Step 1 Check for namespace
 	isNamespaceAvailable, err := checkForNameSpace(client, NAMESPACE)
 	if err != nil {
 		return "", err
 	}
-	// Step 3 Check for version
+	// Step 2 Check for version
 	if isNamespaceAvailable {
 		util.Verbose("the namespace %s is available...\n", NAMESPACE)
 
@@ -82,4 +89,117 @@ func checkForNameSpace(client *kubernetes.Clientset, namespace string) (bool, er
 		}
 	}
 	return false, nil
+}
+
+func getURLWithoutPort(address string) string {
+	return HTTP + "://" + address
+}
+
+func getURLWithPort(address string) string {
+	return HTTP + "://" + address + ":" + HTTPPORT
+}
+
+var GetIp = func(client *kubernetes.Clientset) (string, error) {
+	namespacePresent, err := checkForNameSpace(client, NAMESPACE)
+	if err != nil {
+		return "", err
+	}
+	if namespacePresent {
+		listOptions := metav1.ListOptions{}
+		serviceList, err := client.CoreV1().Services(NAMESPACE).List(listOptions)
+		if err != nil {
+			return "", err
+		}
+		for _, service := range serviceList.Items {
+			name := service.GetObjectMeta().GetName()
+			s2, err2, done := processServiceList(name, service, client)
+			if done {
+				return s2, err2
+			}
+		}
+	}
+	return "", fmt.Errorf("could not get the address of the cluster")
+}
+
+func processServiceList(name string, service v1.Service, client *kubernetes.Clientset) (string, error, bool) {
+	var location string
+	if IsEqualIgnoreCase(name, INGRESSPROXY) && IsEqualIgnoreCase(string(service.Spec.Type), LOADBALANCER) {
+		for _, ingress := range service.Status.LoadBalancer.Ingress {
+			if ingress.Hostname != "" {
+				location = getURLWithoutPort(ingress.Hostname)
+				return location, nil, true
+			}
+			location = getURLWithoutPort(ingress.IP)
+			return location, nil, true
+		}
+	} else if IsEqualIgnoreCase(name, XLINTERNAL) {
+		if IsEqualIgnoreCase(string(service.Spec.Type), NODEPORT) {
+			ip, err := getNodePortIp(client)
+			return ip, err, true
+		} else if IsEqualIgnoreCase(string(service.Spec.Type), LOADBALANCER) && service.Spec.LoadBalancerIP != "" {
+			location = getURLWithoutPort(service.Spec.LoadBalancerIP)
+			return location, nil, true
+		}
+	}
+	return "", nil, false
+}
+
+var getNodePortIp = func(client *kubernetes.Clientset) (string, error) {
+	returnIp := ""
+	listOptions := metav1.ListOptions{}
+
+	nodeList, err := client.CoreV1().Nodes().List(listOptions)
+	if err != nil {
+		return "", err
+	}
+	returnIp, err2 := processNodeList(nodeList, client)
+	if err2 != nil {
+		return returnIp, err2
+	}
+	if returnIp != "" {
+		return returnIp, nil
+	}
+	return "", fmt.Errorf("unable to get nodeport ip")
+}
+
+func processNodeList(nodeList *v1.NodeList, client *kubernetes.Clientset) (string, error) {
+	for _, node := range nodeList.Items {
+		for _, address := range node.Status.Addresses {
+			if IsEqualIgnoreCase(string(address.Type), INTERNALIP) {
+				ip := address.Address
+				if ip != "" {
+					returnIp := getURLWithPort(ip)
+					return returnIp, nil
+				}
+			}
+			if IsEqualIgnoreCase(string(address.Type), HOSTNAME) && IsEqualIgnoreCase(address.Address, MINIKUBE) {
+				returnIp, err := getMinikubeEndpoint(client)
+				if err != nil {
+					return "", err
+				}
+				return returnIp, nil
+			}
+		}
+	}
+	return "", nil
+}
+
+var getMinikubeEndpoint = func(client *kubernetes.Clientset) (string, error) {
+	listOptions := metav1.ListOptions{}
+	endpointList, err := client.CoreV1().Endpoints(NAMESPACE).List(listOptions)
+	if err != nil {
+		return "", err
+	}
+	for _, endpoint := range endpointList.Items {
+		if IsEqualIgnoreCase(endpoint.GetObjectMeta().GetName(), KUBERNETES) {
+			for _, subset := range endpoint.Subsets {
+				for _, address := range subset.Addresses {
+					if address.IP != "" {
+						return getURLWithPort(address.IP), nil
+					}
+				}
+			}
+		}
+	}
+	return "", fmt.Errorf("unable to get minikube endpoint")
 }

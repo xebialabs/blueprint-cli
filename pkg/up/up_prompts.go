@@ -40,3 +40,21 @@ func askOverrideAnswerFile(surveyOpts ...survey.AskOpt) (bool, error) {
 	}
 	return answer, err
 }
+
+var askToSaveToConfig = func(surveyOpts ...survey.AskOpt) (bool, error) {
+	answer := false
+	var err error
+	if !SkipPrompts {
+		err = survey.AskOne(
+			&survey.Confirm{
+				Message: "Do you want to modify your xebialabs/config.yaml to point to the new XL Release and XL Deploy instances deployed",
+				Default: true,
+				Help:    "Your xebialabs config file stores the credentials of your XL Release and XL Deploy instances which the CLI uses to connect in order to apply DevOps-as-code YAML configurations",
+			},
+			&answer,
+			survey.Required,
+			surveyOpts...,
+		)
+	}
+	return answer, err
+}

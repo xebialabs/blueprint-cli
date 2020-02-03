@@ -13,6 +13,11 @@ import (
 	"strings"
 	"testing"
 
+	"gopkg.in/AlecAivazis/survey.v1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -581,7 +586,41 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		}
 	})
 
-	t.Run("should error when passing --undeploy flag for non existing config", func(t *testing.T) {
+	undeployCalled := false
+	undeployAll = func(client *kubernetes.Clientset) error {
+		undeployCalled = true
+		return nil
+	}
+
+	getKubeClient = func(answerMap map[string]string) (clientset *kubernetes.Clientset, err error) {
+		client := kubernetes.Clientset{}
+		return &client, nil
+	}
+
+	getK8sConfigMaps = func(client *kubernetes.Clientset, opts metav1.ListOptions) (*v1.ConfigMapList, error) {
+		return &v1.ConfigMapList{
+			Items: []v1.ConfigMap{
+				v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{Name: ConfigMapName},
+					Data: map[string]string{
+						DataFile: `
+                        InstallXLD: true
+                        InstallXLR: true
+                        `,
+					},
+				},
+			},
+		}, nil
+	}
+	getK8sNamespaces = func(client *kubernetes.Clientset, opts metav1.ListOptions) (*v1.NamespaceList, error) {
+		return &v1.NamespaceList{
+			Items: []v1.Namespace{
+				v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: NAMESPACE}},
+			},
+		}, nil
+	}
+
+	t.Run("should undeploy when passing --undeploy flag for existing config", func(t *testing.T) {
 		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 		defer gb.Cleanup()
 		err := InvokeBlueprintAndSeed(
@@ -596,7 +635,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				NoCleanup:         false,
 				Undeploy:          true,
 				DryRun:            true,
-				SkipK8sConnection: true,
+				SkipK8sConnection: false,
 				GITBranch:         GITBranch,
 				XLDVersions:       "9.0.2, 9.0.5",
 				XLRVersions:       "9.0.2, 9.0.6",
@@ -605,8 +644,89 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 			gb,
 		)
 
-		require.NotNil(t, err)
+		require.Nil(t, err)
+		assert.True(t, undeployCalled)
 	})
+
+	askToSaveToConfig = func(surveyOpts ...survey.AskOpt) (b bool, err error) {
+		return true, nil
+	}
+
+	updateCalled := false
+	tempUpdateXebialabsConfig := updateXebialabsConfig
+	updateXebialabsConfig = func(client *kubernetes.Clientset, answers map[string]string, v *viper.Viper) error {
+		updateCalled = true
+		return nil
+	}
+
+	getKubeClient = func(answerMap map[string]string) (clientset *kubernetes.Clientset, err error) {
+		client := kubernetes.Clientset{}
+		return &client, nil
+	}
+
+	GetIp = func(client *kubernetes.Clientset) (string, error) {
+		return "http://testhost", nil
+	}
+
+	t.Run("should save config when save config is answered yes", func(t *testing.T) {
+		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
+		defer gb.Cleanup()
+		err := InvokeBlueprintAndSeed(
+			getLocalTestBlueprintContext(t),
+			UpParams{
+				// enable for local testing
+				LocalPath:         TestLocalPath,
+				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
+				QuickSetup:        true,
+				AdvancedSetup:     false,
+				CfgOverridden:     false,
+				NoCleanup:         false,
+				Undeploy:          false,
+				DryRun:            true,
+				SkipK8sConnection: false,
+				GITBranch:         GITBranch,
+				XLDVersions:       "9.0.2, 9.0.5",
+				XLRVersions:       "9.0.2, 9.0.6",
+			},
+			CLIVersion,
+			gb,
+		)
+		require.Nil(t, err)
+		assert.True(t, updateCalled)
+	})
+
+	askToSaveToConfig = func(surveyOpts ...survey.AskOpt) (b bool, err error) {
+		return false, nil
+	}
+
+	updateCalled = false
+	t.Run("should not save config when save config is answered no", func(t *testing.T) {
+		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
+		defer gb.Cleanup()
+		err := InvokeBlueprintAndSeed(
+			getLocalTestBlueprintContext(t),
+			UpParams{
+				// enable for local testing
+				LocalPath:         TestLocalPath,
+				AnswerFile:        GetTestTemplateDir(path.Join("xl-up", "answer-xl-up.yaml")),
+				QuickSetup:        true,
+				AdvancedSetup:     false,
+				CfgOverridden:     false,
+				NoCleanup:         false,
+				Undeploy:          false,
+				DryRun:            true,
+				SkipK8sConnection: true,
+				GITBranch:         GITBranch,
+				XLDVersions:       "9.0.2, 9.0.5",
+				XLRVersions:       "9.0.2, 9.0.6",
+			},
+			CLIVersion,
+			gb,
+		)
+		assert.Nil(t, err)
+		assert.False(t, updateCalled)
+	})
+	updateXebialabsConfig = tempUpdateXebialabsConfig
 }
 
 func Test_getVersion(t *testing.T) {

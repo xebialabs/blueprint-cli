@@ -6,6 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/viper"
+	"k8s.io/client-go/kubernetes"
+
 	"gopkg.in/AlecAivazis/survey.v1"
 
 	"gopkg.in/yaml.v2"
@@ -92,6 +95,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	var answers map[string]string
+
 	var defaultFromValues map[string]string
 
 	if upParams.AnswerFile != "" {
@@ -122,6 +126,15 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	// adjust the generated values from xl-infra blueprint
 	answersFromInfra := processAnswerMapFromPreparedData(preparedData)
 
+	var kubeClient *kubernetes.Clientset
+
+	if !upParams.SkipK8sConnection {
+		kubeClient, err = getKubeClient(answersFromInfra)
+		if err != nil {
+			return err
+		}
+	}
+
 	if upParams.Undeploy {
 		if !SkipPrompts {
 			shouldUndeploy := false
@@ -134,15 +147,10 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 				return fmt.Errorf("undeployment cancelled by user")
 			}
 		}
-
-		kubeClient, err := getKubeClient(answersFromInfra)
-
-		if err != nil {
-			return err
-		}
-
-		if err = undeployAll(kubeClient); err != nil {
-			return fmt.Errorf("an error occurred while undeploying - %s", err)
+		if !upParams.SkipK8sConnection {
+			if err = undeployAll(kubeClient); err != nil {
+				return fmt.Errorf("an error occurred while undeploying - %s", err)
+			}
 		}
 
 		util.Info("Everything has been undeployed!\n")
@@ -152,7 +160,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 
 	configMap := ""
 	if !upParams.SkipK8sConnection {
-		if configMap, err = getKubeConfigMap(answersFromInfra); err != nil {
+		if configMap, err = getKubeConfigMap(kubeClient); err != nil {
 			return err
 		}
 	} else {
@@ -241,7 +249,10 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	util.IsQuiet = true
-	if err = runApplicationBlueprint(&upParams, blueprintContext, gb, CliVersion, preparedData, answers, answersFromInfra, defaultFromValues); err != nil {
+
+	answerFromUp, err := runApplicationBlueprint(&upParams, blueprintContext, gb, CliVersion, preparedData, answers, answersFromInfra, defaultFromValues)
+
+	if err != nil {
 		return err
 	}
 	util.IsQuiet = false
@@ -251,7 +262,6 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	}
 
 	util.Info("Generated files successfully! \n")
-
 	if !upParams.DryRun {
 		util.Info("Spinning up xl seed! \n\n")
 
@@ -267,6 +277,22 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 			return err
 		}
 	}
+
+	if !upParams.SkipK8sConnection {
+		v := viper.GetViper()
+		if ok, err := shouldUpdateConfig(kubeClient, answerFromUp, v); ok && err == nil {
+			if saveConfig, err := askToSaveToConfig(); saveConfig && err == nil {
+				if err := updateXebialabsConfig(kubeClient, answerFromUp, v); err != nil {
+					return err
+				}
+			} else if err != nil {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -307,7 +333,7 @@ func runApplicationBlueprint(
 	CliVersion string,
 	preparedData *blueprint.PreparedData,
 	answers, answersFromInfra, defaultFromValues map[string]string,
-) error {
+) (map[string]string, error) {
 	var err error
 	// Switch blueprint once the infrastructure is done.
 	if upParams.BlueprintTemplate != "" && strings.Contains(upParams.BlueprintTemplate, DefaultInfraBlueprintTemplate) {
@@ -319,11 +345,11 @@ func runApplicationBlueprint(
 	if answers != nil {
 		answers, err = mergeAndGetAnswers(answers, answersFromInfra)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	_, _, err = blueprint.InstantiateBlueprint(
+	preparedData, _, err = blueprint.InstantiateBlueprint(
 		blueprint.BlueprintParams{
 			TemplatePath:         upParams.BlueprintTemplate,
 			AnswersMap:           answers,
@@ -337,9 +363,9 @@ func runApplicationBlueprint(
 		blueprintContext, gb,
 	)
 	if err != nil {
-		return fmt.Errorf("error while creating Blueprint: %s", err)
+		return nil, fmt.Errorf("error while creating Blueprint: %s", err)
 	}
-	return nil
+	return processAnswerMapFromPreparedData(preparedData), nil
 }
 
 func getAvailableVersions(versions string, defaultVersions []string) []string {
