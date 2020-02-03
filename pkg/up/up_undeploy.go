@@ -11,7 +11,10 @@ import (
 
 const LabelSelector = "organization=xebialabs"
 
-func undeployAll(client *kubernetes.Clientset) error {
+var undeployAll = func(client *kubernetes.Clientset) error {
+	if client == nil {
+		return fmt.Errorf("invalid kubernetes client or invalid config")
+	}
 	if err := undeployNamespace(client); err != nil {
 		return err
 	}

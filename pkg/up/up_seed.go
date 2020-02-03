@@ -147,9 +147,10 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 				return fmt.Errorf("undeployment cancelled by user")
 			}
 		}
-
-		if err = undeployAll(kubeClient); err != nil {
-			return fmt.Errorf("an error occurred while undeploying - %s", err)
+		if !upParams.SkipK8sConnection {
+			if err = undeployAll(kubeClient); err != nil {
+				return fmt.Errorf("an error occurred while undeploying - %s", err)
+			}
 		}
 
 		util.Info("Everything has been undeployed!\n")
