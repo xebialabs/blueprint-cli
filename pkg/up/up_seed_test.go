@@ -363,7 +363,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
         XldDbName: xl-deploy
         XldDbUser: xl-deploy
         XldDbPass: xl-deploy
-        NfsServerHost: nfs-test.com
+        NfsServerHost: 12.2.2.2
         NfsSharePath: /xebialabs
         XlrAdminPass: password
         XlrLic: ../../templates/test/xl-up/cert
