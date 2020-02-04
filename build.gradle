@@ -205,7 +205,7 @@ sonarqube {
 
 // The way tasks dependOn here are very important, please don't change unless there is a valid reason
 check.dependsOn installTemplify, installPackr
-goBuild.dependsOn goPrepare, goTest
+goBuild.dependsOn goPrepare, test
 goBuild.finalizedBy updateLicenses
 build.dependsOn goBuild
 goTest.dependsOn goPrepare
