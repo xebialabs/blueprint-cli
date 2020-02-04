@@ -47,6 +47,7 @@ pipeline {
                 }
                 archiveArtifacts artifacts: 'build/*/xl', fingerprint: true
                 archiveArtifacts artifacts: 'build/*/xl.exe', fingerprint: true
+                archiveArtifacts artifacts: '.gogradle/reports/test/*', fingerprint: true
             }
         }
 
