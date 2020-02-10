@@ -25,8 +25,8 @@ var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 var applyValues map[string]string
 
 const (
-	CurrentXLDVersionSupported = "9.5, 9.6"
-	CurrentXLRVersionSupported = "9.5, 9.6"
+	CurrentXLDVersionsSupported = "9.5, 9.6"
+	CurrentXLRVersionsSupported = "9.5, 9.6"
 )
 
 // SkipPrompts can be set to true to skip asking prompts
@@ -38,8 +38,8 @@ var EmptyVersion = ""
 // InvokeBlueprintAndSeed will invoke blueprint and then call XL Seed
 func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upParams UpParams, CliVersion string, gb *blueprint.GeneratedBlueprint) error {
 
-	versionHelper.AvailableXldVersions = getAvailableVersions(upParams.XLDVersions, []string{CurrentXLDVersionSupported})
-	versionHelper.AvailableXlrVersions = getAvailableVersions(upParams.XLRVersions, []string{CurrentXLRVersionSupported})
+	versionHelper.AvailableXldVersions = getAvailableVersions(upParams.XLDVersions, CurrentXLDVersionsSupported)
+	versionHelper.AvailableXlrVersions = getAvailableVersions(upParams.XLRVersions, CurrentXLRVersionsSupported)
 
 	if !upParams.DryRun {
 		defer StopAndRemoveContainer(s)
@@ -368,15 +368,19 @@ func runApplicationBlueprint(
 	return processAnswerMapFromPreparedData(preparedData), nil
 }
 
-func getAvailableVersions(versions string, defaultVersions []string) []string {
-	if versions != "" && versions != "undefined" {
-		versionSlice := []string{}
-		for _, ver := range strings.Split(versions, ",") {
-			versionSlice = append(versionSlice, strings.TrimSpace(ver))
-		}
-		return versionSlice
+func SplitAndTrimToStringArray(in string) []string {
+	slice := []string{}
+	for _, it := range strings.Split(in, ",") {
+		slice = append(slice, strings.TrimSpace(it))
 	}
-	return defaultVersions
+	return slice
+}
+
+func getAvailableVersions(versions string, defaultVersions string) []string {
+	if versions != "" && versions != "undefined" {
+		return SplitAndTrimToStringArray(versions)
+	}
+	return SplitAndTrimToStringArray(defaultVersions)
 }
 
 func getVersion(answerMapFromConfigMap map[string]string, key, prevKey string) string {
