@@ -777,20 +777,26 @@ func Test_getAvailableVersions(t *testing.T) {
 	tests := []struct {
 		name            string
 		versions        string
-		defaultVersions []string
+		defaultVersions string
 		want            []string
 	}{
 		{
 			"return default when no version given",
 			"",
-			[]string{"9.0.0"},
-			[]string{"9.0.0"},
+			"9.0.0, 9.6",
+			[]string{"9.0.0", "9.6"},
 		},
 		{
 			"return version array when given",
 			"9.0.5, 9.6.5 ,9.5",
-			[]string{"9.0.0"},
+			"9.0.0",
 			[]string{"9.0.5", "9.6.5", "9.5"},
+		},
+		{
+			"return version array when given",
+			"9.5, 9.6",
+			"9.0.0",
+			[]string{"9.5", "9.6"},
 		},
 	}
 	for _, tt := range tests {
