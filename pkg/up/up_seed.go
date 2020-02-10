@@ -278,7 +278,7 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		}
 	}
 
-	if !upParams.SkipK8sConnection {
+	if !upParams.SkipK8sConnection && !upParams.DryRun {
 		v := viper.GetViper()
 		if ok, err := shouldUpdateConfig(kubeClient, answerFromUp, v); ok && err == nil {
 			if saveConfig, err := askToSaveToConfig(); saveConfig && err == nil {
