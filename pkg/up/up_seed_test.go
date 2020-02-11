@@ -670,7 +670,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 
 	tempSpinUpSeed := spinUpSeed
 
-	spinUpSeed = func(err error, upParams UpParams) error {
+	spinUpSeed = func(upParams UpParams) error {
 		return nil
 	}
 

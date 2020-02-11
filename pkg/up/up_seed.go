@@ -265,9 +265,9 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	if !upParams.DryRun {
 		util.Info("Spinning up xl seed! \n\n")
 
-		err2 := spinUpSeed(err, upParams)
-		if err2 != nil {
-			return err2
+		err = spinUpSeed(upParams)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -289,8 +289,8 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	return nil
 }
 
-var spinUpSeed = func(err error, upParams UpParams) error {
-	if err = runAndCaptureResponse(pullSeedImage(upParams.SeedVersion)); err != nil {
+var spinUpSeed = func(upParams UpParams) error {
+	if err := runAndCaptureResponse(pullSeedImage(upParams.SeedVersion)); err != nil {
 		return err
 	}
 	seed, err := runSeed(upParams.SeedVersion, upParams.RollingUpdate)
