@@ -25,8 +25,8 @@ var s = spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 var applyValues map[string]string
 
 const (
-	CurrentXLDVersionsSupported = "9.5, 9.6"
-	CurrentXLRVersionsSupported = "9.5, 9.6"
+	CurrentXLDVersionsSupported = "9.5.1, 9.6"
+	CurrentXLRVersionsSupported = "9.5.2, 9.6"
 )
 
 // SkipPrompts can be set to true to skip asking prompts
