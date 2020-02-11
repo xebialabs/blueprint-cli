@@ -668,6 +668,12 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		return "http://testhost", nil
 	}
 
+	tempSpinUpSeed := spinUpSeed
+
+	spinUpSeed = func(upParams UpParams) error {
+		return nil
+	}
+
 	t.Run("should save config when save config is answered yes", func(t *testing.T) {
 		gb := &blueprint.GeneratedBlueprint{OutputDir: models.BlueprintOutputDir}
 		defer gb.Cleanup()
@@ -682,7 +688,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				CfgOverridden:     false,
 				NoCleanup:         false,
 				Undeploy:          false,
-				DryRun:            true,
+				DryRun:            false,
 				SkipK8sConnection: false,
 				GITBranch:         GITBranch,
 				XLDVersions:       "9.0.2, 9.0.5",
@@ -714,8 +720,8 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 				CfgOverridden:     false,
 				NoCleanup:         false,
 				Undeploy:          false,
-				DryRun:            true,
-				SkipK8sConnection: true,
+				DryRun:            false,
+				SkipK8sConnection: false,
 				GITBranch:         GITBranch,
 				XLDVersions:       "9.0.2, 9.0.5",
 				XLRVersions:       "9.0.2, 9.0.6",
@@ -727,6 +733,7 @@ func TestInvokeBlueprintAndSeed(t *testing.T) {
 		assert.False(t, updateCalled)
 	})
 	updateXebialabsConfig = tempUpdateXebialabsConfig
+	spinUpSeed = tempSpinUpSeed
 }
 
 func Test_getVersion(t *testing.T) {

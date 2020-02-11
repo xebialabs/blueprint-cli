@@ -265,20 +265,13 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 	if !upParams.DryRun {
 		util.Info("Spinning up xl seed! \n\n")
 
-		if err = runAndCaptureResponse(pullSeedImage(upParams.SeedVersion)); err != nil {
-			return err
-		}
-		seed, err := runSeed(upParams.SeedVersion, upParams.RollingUpdate)
+		err = spinUpSeed(upParams)
 		if err != nil {
-			return err
-		}
-
-		if err = runAndCaptureResponse(seed); err != nil {
 			return err
 		}
 	}
 
-	if !upParams.SkipK8sConnection {
+	if !upParams.SkipK8sConnection && !upParams.DryRun {
 		v := viper.GetViper()
 		if ok, err := shouldUpdateConfig(kubeClient, answerFromUp, v); ok && err == nil {
 			if saveConfig, err := askToSaveToConfig(); saveConfig && err == nil {
@@ -293,6 +286,21 @@ func InvokeBlueprintAndSeed(blueprintContext *blueprint.BlueprintContext, upPara
 		}
 	}
 
+	return nil
+}
+
+var spinUpSeed = func(upParams UpParams) error {
+	if err := runAndCaptureResponse(pullSeedImage(upParams.SeedVersion)); err != nil {
+		return err
+	}
+	seed, err := runSeed(upParams.SeedVersion, upParams.RollingUpdate)
+	if err != nil {
+		return err
+	}
+
+	if err = runAndCaptureResponse(seed); err != nil {
+		return err
+	}
 	return nil
 }
 
