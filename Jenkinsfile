@@ -47,6 +47,7 @@ pipeline {
                 }
                 archiveArtifacts artifacts: 'build/*/xl', fingerprint: true
                 archiveArtifacts artifacts: 'build/*/xl.exe', fingerprint: true
+                archiveArtifacts artifacts: '.gogradle/reports/test/*', fingerprint: true
             }
         }
 
@@ -238,7 +239,7 @@ def runXlUpOnPrem(String nfsSharePath) {
     sh "sed -ie 's@https://k8s.com:6443@${ON_PREM_K8S_API_URL}@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/on-prem-xld-xlr-mon-full.yaml"
     sh "sed -ie 's@K8sClientCertFile: ../xl-up/__test__/files/test-file@K8sClientCertFile: temp/xl-up-blueprint/k8sClientCert-onprem.crt@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/on-prem-xld-xlr-mon-full.yaml"
     sh "sed -ie 's@K8sClientKeyFile: ../xl-up/__test__/files/test-file@K8sClientKeyFile: temp/xl-up-blueprint/k8sClientCert-onprem.key@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/on-prem-xld-xlr-mon-full.yaml"
-    sh "sed -ie 's@nfs-test.com@${NSF_SERVER_HOST}@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/on-prem-xld-xlr-mon-full.yaml"
+    sh "sed -ie 's@12.2.2.2@${NSF_SERVER_HOST}@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/on-prem-xld-xlr-mon-full.yaml"
     sh "sed -ie 's@/xebialabs@/${nfsSharePath}@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/on-prem-xld-xlr-mon-full.yaml"
     sh "sed -ie 's@XldLic: ./deployit-license.lic@XldLic: temp/xl-up-blueprint/deployit-license.lic@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/on-prem-xld-xlr-mon-full.yaml"
     sh "sed -ie 's@XlrLic: ./xl-release.lic@XlrLic: temp/xl-up-blueprint/xl-release.lic@g' temp/xl-up-blueprint/integration-tests/test-cases/jenkins/on-prem-xld-xlr-mon-full.yaml"
