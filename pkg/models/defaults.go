@@ -33,21 +33,8 @@ func GetRepoProvider(s string) (string, error) {
 }
 
 const (
-	DefaultXlDeployUrl        = "http://localhost:4516/"
-	DefaultXlDeployUsername   = "admin"
-	DefaultXlDeployPassword   = "admin"
-	DefaultXlDeployAuthMethod = "http"
-
-	DefaultXlReleaseUrl        = "http://localhost:5516/"
-	DefaultXlReleaseUsername   = "admin"
-	DefaultXlReleasePassword   = "admin"
-	DefaultXlReleaseAuthMethod = "http"
-
 	DefaultBlueprintRepositoryProvider = ProviderHttp
 	DefaultBlueprintRepositoryName     = "XL Blueprints"
 	DefaultBlueprintRepositoryUrl      = "https://dist.xebialabs.com/public/blueprints/" + BlueprintCurrentCLIVersion + "/"
 	DefaultXLUPBlueprintRepositoryUrl  = "https://dist.xebialabs.com/public/xl-up-blueprints/" + BlueprintCurrentCLIVersion + "/"
 )
-
-const XldApiVersion = "xl-deploy/v1"
-const XlrApiVersion = "xl-release/v1"
