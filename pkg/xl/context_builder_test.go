@@ -35,7 +35,6 @@ func TestContextBuilder(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.NotNil(t, c)
-		assert.NotNil(t, c.values)
 	})
 
 	t.Run("build context from YAML", func(t *testing.T) {
@@ -94,18 +93,6 @@ blueprint:
 		err = yaml.Unmarshal(configbytes, parsed)
 		require.Nil(t, err)
 
-	})
-
-	t.Run("validate that names of values are correct", func(t *testing.T) {
-		v, _, _, _ := blueprint.GetDefaultBlueprintViperConfig(viper.New(), "")
-
-		values := make(map[string]string)
-		values["!incorrectKey"] = "test value"
-
-		_, err := BuildContext(v, DummyCLIVersion)
-
-		assert.NotNil(t, err)
-		assert.Equal(t, "the name of the value !incorrectKey is invalid. It must start with an alphabetical character or an underscore and be followed by zero or more alphanumerical characters or underscores", err.Error())
 	})
 
 	t.Run("Should get default flag value for server values when there's no override", func(t *testing.T) {
