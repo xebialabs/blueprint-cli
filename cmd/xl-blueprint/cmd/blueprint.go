@@ -3,10 +3,10 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/xebialabs/xl-cli/pkg/blueprint"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
-	"github.com/xebialabs/xl-cli/pkg/xl"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint"
+	"github.com/xebialabs/xl-blueprint/pkg/models"
+	"github.com/xebialabs/xl-blueprint/pkg/util"
+	"github.com/xebialabs/xl-blueprint/pkg/xl"
 )
 
 var blueprintCmd = &cobra.Command{
@@ -14,7 +14,7 @@ var blueprintCmd = &cobra.Command{
 	Short: "Create a Blueprint",
 	Long:  `Create a Blueprint for XL Platform Releases and Deployments`,
 	Run: func(cmd *cobra.Command, args []string) {
-		context, err := xl.BuildContext(viper.GetViper(), nil, nil, nil, CliVersion)
+		context, err := xl.BuildContext(viper.GetViper(), CliVersion)
 		if err != nil {
 			util.Fatal("Error while reading configuration: %s\n", err)
 		}

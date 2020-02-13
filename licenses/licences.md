@@ -3,7 +3,6 @@ http://github.com/Masterminds/goutils
 http://github.com/Masterminds/semver
 http://github.com/Masterminds/sprig
 http://github.com/aws/aws-sdk-go
-http://github.com/briandowns/spinner
 http://github.com/deckarep/golang-set
 http://github.com/disiqueira/gotree
 http://github.com/dlclark/regexp2
@@ -41,7 +40,6 @@ http://github.com/spf13/pflag
 http://github.com/spf13/viper
 http://github.com/stretchr/testify
 http://github.com/thoas/go-funk
-http://github.com/wlbr/templify
 http://github.com/xanzy/go-gitlab
 http://github.com/xebialabs/yaml
 http://github.com/xi2/xz

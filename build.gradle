@@ -39,7 +39,7 @@ publishing {
     publications {
         maven(MavenPublication) {
             groupId 'com.xebialabs.xlclient'
-            artifactId 'xl-client'
+            artifactId 'xl-blueprint'
             artifact("./build/darwin-amd64/xl") {
                 classifier = 'darwin-amd64'
                 extension = 'bin'
@@ -70,17 +70,7 @@ publishing {
 
 golang {
     goVersion = '1.12'
-    packagePath = 'github.com/xebialabs/xl-cli' // go import path of project to be built, NOT local file system path!
-}
-
-task installTemplify(type: Go) {
-    outputs.files ".gogradle/project_gopath/bin/templify"
-    go "get github.com/wlbr/templify"
-}
-
-task installPackr(type: Go) {
-    outputs.files ".gogradle/project_gopath/bin/packr"
-    go "get github.com/gobuffalo/packr/packr"
+    packagePath = 'github.com/xebialabs/xl-blueprint' // go import path of project to be built, NOT local file system path!
 }
 
 goBuild {
@@ -92,8 +82,8 @@ goBuild {
     environment "CGO_ENABLED", "0" // To make sure a fully statically linked binary is produced even when building on linux
 
     def gitCommit = runCmd('git', 'rev-parse', 'HEAD')
-    def gitVersion = runCmd('git', 'describe', '--long', '--dirty')
-    def gitVersionShort = gitVersion.startsWith("xl-client-") ? gitVersion.substring(10) : gitVersion
+    def gitVersion = runCmd('git', 'describe', '--long', '--dirty', '--always')
+    def gitVersionShort = gitVersion.startsWith("xl-blueprint-") ? gitVersion.substring(10) : gitVersion
 
     def simpleDateFormat = new SimpleDateFormat("yyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
@@ -101,8 +91,6 @@ goBuild {
 
     def ldflags = " -ldflags='" +
         ldflag("CliVersion", { -> project.version}) +
-        versionLdFlag("XLDVersions") +
-        versionLdFlag("XLRVersions") +
         ldflag("BuildVersion", gitVersionShort) +
         ldflag("BuildGitCommit", gitCommit) +
         ldflag("BuildDate", date) +
@@ -112,10 +100,8 @@ goBuild {
     println("LDFlags: ${ldflags}cp")
     def debugFlags = project.hasProperty("debug") ? " -gcflags \"all=-N -l\"" : ""
 
-    run Paths.get("\${GOPATH}/bin/packr").toString() + " -i cmd/xl"
-    go "generate cmd/xl/cmd/wrapper.go"
     // The ${} placeholder will be rendered in cross-compile
-    go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
+    go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl-blueprint\${GOEXE} cmd/xl-blueprint/main.go"
     dumpVersion
 }
 
@@ -127,13 +113,13 @@ task upx {
     dependsOn goBuild
     doLast {
         exec {
-            commandLine 'upx', "${project.buildDir}/darwin-amd64/xl"
+            commandLine 'upx', "${project.buildDir}/darwin-amd64/xl-blueprint"
         }
         exec {
-            commandLine 'upx', "${project.buildDir}/linux-amd64/xl"
+            commandLine 'upx', "${project.buildDir}/linux-amd64/xl-blueprint"
         }
         exec {
-            commandLine 'upx', "${project.buildDir}/windows-amd64/xl.exe"
+            commandLine 'upx', "${project.buildDir}/windows-amd64/xl-blueprint.exe"
         }
     }
 }
@@ -144,21 +130,21 @@ task uploadToS3 {
 }
 
 task uploadDarwinToS3(type: AmazonS3FileUploadTask) {
-    file file("${project.buildDir}/darwin-amd64/xl")
-    bucketName 'xl-cli'
-    key "bin/${project.version}/darwin-amd64/xl"
+    file file("${project.buildDir}/darwin-amd64/xl-blueprint")
+    bucketName 'xl-blueprint'
+    key "bin/${project.version}/darwin-amd64/xl-blueprint"
 }
 
 task uploadWindowsToS3(type: AmazonS3FileUploadTask) {
-    file file("${project.buildDir}/windows-amd64/xl.exe")
-    bucketName 'xl-cli'
-    key "bin/${project.version}/windows-amd64/xl.exe"
+    file file("${project.buildDir}/windows-amd64/xl-blueprint.exe")
+    bucketName 'xl-blueprint'
+    key "bin/${project.version}/windows-amd64/xl-blueprint.exe"
 }
 
 task uploadLinuxToS3(type: AmazonS3FileUploadTask) {
-    file file("${project.buildDir}/linux-amd64/xl")
-    bucketName 'xl-cli'
-    key "bin/${project.version}/linux-amd64/xl"
+    file file("${project.buildDir}/linux-amd64/xl-blueprint")
+    bucketName 'xl-blueprint'
+    key "bin/${project.version}/linux-amd64/xl-blueprint"
 }
 
 task removeLicenseFolder {
@@ -204,7 +190,6 @@ sonarqube {
 }
 
 // The way tasks dependOn here are very important, please don't change unless there is a valid reason
-check.dependsOn installTemplify, installPackr
 goBuild.dependsOn goPrepare, test
 goBuild.finalizedBy updateLicenses
 build.dependsOn goBuild
@@ -229,7 +214,7 @@ def runCmd(Object... args) {
 }
 
 def ldflag(c, v) {
-    "-X \"github.com/xebialabs/xl-cli/cmd/xl/cmd.${c}=${v}\" "
+    "-X \"github.com/xebialabs/xl-blueprint/cmd/xl-blueprint/cmd.${c}=${v}\" "
 }
 
 def versionLdFlag(key) {

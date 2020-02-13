@@ -13,8 +13,8 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-blueprint/pkg/models"
+	"github.com/xebialabs/xl-blueprint/pkg/util"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 

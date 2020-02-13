@@ -8,9 +8,9 @@ import (
 
 	"github.com/xanzy/go-gitlab"
 
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint/repository"
+	"github.com/xebialabs/xl-blueprint/pkg/models"
+	"github.com/xebialabs/xl-blueprint/pkg/util"
 )
 
 type GitLabBlueprintRepository struct {

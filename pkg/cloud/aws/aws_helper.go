@@ -11,8 +11,8 @@ import (
     "github.com/aws/aws-sdk-go/aws/credentials"
     "github.com/aws/aws-sdk-go/aws/endpoints"
     "github.com/aws/aws-sdk-go/aws/session"
-    "github.com/xebialabs/xl-cli/pkg/models"
-    "github.com/xebialabs/xl-cli/pkg/util"
+    "github.com/xebialabs/xl-blueprint/pkg/models"
+    "github.com/xebialabs/xl-blueprint/pkg/util"
 )
 
 const (

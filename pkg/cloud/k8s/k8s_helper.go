@@ -14,8 +14,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-blueprint/pkg/models"
+	"github.com/xebialabs/xl-blueprint/pkg/util"
 )
 
 const (

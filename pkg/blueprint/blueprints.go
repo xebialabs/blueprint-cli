@@ -12,8 +12,8 @@ import (
 	funk "github.com/thoas/go-funk"
 
 	"github.com/magiconair/properties"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-blueprint/pkg/models"
+	"github.com/xebialabs/xl-blueprint/pkg/util"
 
 	"github.com/Masterminds/sprig"
 	survey "gopkg.in/AlecAivazis/survey.v1"

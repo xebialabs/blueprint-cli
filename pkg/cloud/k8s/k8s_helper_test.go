@@ -8,7 +8,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-blueprint/pkg/models"
 )
 
 var simpleSampleKubeConfig = `apiVersion: v1

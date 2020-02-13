@@ -1,3 +1,0 @@
-K8sSetup: MinikubeK8s
-UseKubeconfig: true
-K8sApiServerURL: https://192.168.99.100:8443
