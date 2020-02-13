@@ -14,11 +14,11 @@ import (
 
 	"github.com/Knetic/govaluate"
 	"github.com/dlclark/regexp2"
-	"github.com/xebialabs/xl-cli/pkg/cloud/aws"
-	"github.com/xebialabs/xl-cli/pkg/cloud/k8s"
-	"github.com/xebialabs/xl-cli/pkg/osHelper"
-	"github.com/xebialabs/xl-cli/pkg/util"
-	versionHelper "github.com/xebialabs/xl-cli/pkg/version"
+	"github.com/xebialabs/xl-blueprint/pkg/cloud/aws"
+	"github.com/xebialabs/xl-blueprint/pkg/cloud/k8s"
+	"github.com/xebialabs/xl-blueprint/pkg/osHelper"
+	"github.com/xebialabs/xl-blueprint/pkg/util"
+	versionHelper "github.com/xebialabs/xl-blueprint/pkg/version"
 )
 
 func regexMatch(pattern, value string) (bool, error) {

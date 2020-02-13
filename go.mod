@@ -1,4 +1,4 @@
-module github.com/xebialabs/xl-cli
+module github.com/xebialabs/xl-blueprint
 
 go 1.12
 

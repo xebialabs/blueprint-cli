@@ -3,8 +3,8 @@ package xl
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/xebialabs/xl-cli/pkg/blueprint"
-	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint"
+	"github.com/xebialabs/xl-blueprint/pkg/util"
 )
 
 // root

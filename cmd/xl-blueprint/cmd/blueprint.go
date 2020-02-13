@@ -3,10 +3,10 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/xebialabs/xl-cli/pkg/blueprint"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
-	"github.com/xebialabs/xl-cli/pkg/xl"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint"
+	"github.com/xebialabs/xl-blueprint/pkg/models"
+	"github.com/xebialabs/xl-blueprint/pkg/util"
+	"github.com/xebialabs/xl-blueprint/pkg/xl"
 )
 
 var blueprintCmd = &cobra.Command{

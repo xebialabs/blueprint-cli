@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xebialabs/xl-cli/pkg/models"
+	"github.com/xebialabs/xl-blueprint/pkg/models"
 )
 
 func Test_showVersions(t *testing.T) {

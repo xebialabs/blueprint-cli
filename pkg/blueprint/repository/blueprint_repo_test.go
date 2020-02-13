@@ -2,7 +2,7 @@ package repository
 
 import (
     "github.com/stretchr/testify/assert"
-    "github.com/xebialabs/xl-cli/pkg/models"
+    "github.com/xebialabs/xl-blueprint/pkg/models"
     "net/url"
     "testing"
 )

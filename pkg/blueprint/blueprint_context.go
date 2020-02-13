@@ -3,7 +3,7 @@ package blueprint
 import (
 	"bytes"
 	"fmt"
-    "github.com/xebialabs/xl-cli/pkg/blueprint/repository/gitlab"
+    "github.com/xebialabs/xl-blueprint/pkg/blueprint/repository/gitlab"
 	"io/ioutil"
 	"path"
 	"sort"
@@ -16,15 +16,15 @@ import (
 
 	"gopkg.in/AlecAivazis/survey.v1"
 
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/bitbucketserver"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/github"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/bitbucket"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/http"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/local"
-	"github.com/xebialabs/xl-cli/pkg/blueprint/repository/mock"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint/repository"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint/repository/bitbucketserver"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint/repository/github"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint/repository/bitbucket"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint/repository/http"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint/repository/local"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint/repository/mock"
+	"github.com/xebialabs/xl-blueprint/pkg/models"
+	"github.com/xebialabs/xl-blueprint/pkg/util"
 )
 
 const (

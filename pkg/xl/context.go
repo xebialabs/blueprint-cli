@@ -1,8 +1,8 @@
 package xl
 
 import (
-	"github.com/xebialabs/xl-cli/pkg/blueprint"
-	"github.com/xebialabs/xl-cli/pkg/util"
+	"github.com/xebialabs/xl-blueprint/pkg/blueprint"
+	"github.com/xebialabs/xl-blueprint/pkg/util"
 )
 
 type Context struct {

@@ -2,7 +2,7 @@ package repository
 
 import (
     "github.com/thoas/go-funk"
-    "github.com/xebialabs/xl-cli/pkg/models"
+    "github.com/xebialabs/xl-blueprint/pkg/models"
     "net/url"
     "path"
     "strings"
