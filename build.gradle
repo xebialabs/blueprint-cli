@@ -101,7 +101,7 @@ goBuild {
     def debugFlags = project.hasProperty("debug") ? " -gcflags \"all=-N -l\"" : ""
 
     // The ${} placeholder will be rendered in cross-compile
-    go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl-blueprint/main.go"
+    go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl-blueprint\${GOEXE} cmd/xl-blueprint/main.go"
     dumpVersion
 }
 
