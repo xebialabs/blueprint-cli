@@ -8,7 +8,6 @@ require (
 	github.com/Masterminds/semver v1.4.2
 	github.com/Masterminds/sprig v2.20.0+incompatible
 	github.com/aws/aws-sdk-go v1.15.45
-	github.com/briandowns/spinner v0.0.0-20181018151057-dd69c579ff20
 	github.com/deckarep/golang-set v1.7.1
 	github.com/disiqueira/gotree v1.0.1-0.20180907134536-53a8e837f295
 	github.com/dlclark/regexp2 v1.1.6
@@ -46,7 +45,6 @@ require (
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.4.0
 	github.com/thoas/go-funk v0.4.0
-	github.com/wlbr/templify v0.0.0-20190823200653-c12e62ca00c1 // indirect
 	github.com/xanzy/go-gitlab v0.23.0
 	github.com/xebialabs/yaml v0.0.0-20200128093352-413cb2a60ded
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect

@@ -8,7 +8,6 @@ import (
 )
 
 // root
-
 func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 	rootFlags := command.PersistentFlags()
 	rootFlags.StringVar(cfgFile, "config", "", "config file (default: $HOME/.xebialabs/config.yaml)")
@@ -19,7 +18,6 @@ func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 }
 
 // Blueprints
-
 func BuildContext(v *viper.Viper, CLIVersion string) (*Context, error) {
 	var blueprintContext *blueprint.BlueprintContext
 

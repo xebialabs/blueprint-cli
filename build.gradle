@@ -73,16 +73,6 @@ golang {
     packagePath = 'github.com/xebialabs/xl-cli' // go import path of project to be built, NOT local file system path!
 }
 
-task installTemplify(type: Go) {
-    outputs.files ".gogradle/project_gopath/bin/templify"
-    go "get github.com/wlbr/templify"
-}
-
-task installPackr(type: Go) {
-    outputs.files ".gogradle/project_gopath/bin/packr"
-    go "get github.com/gobuffalo/packr/packr"
-}
-
 goBuild {
     // Cross-compile platforms, update as necessary.
     targetPlatform = [
@@ -112,7 +102,6 @@ goBuild {
     println("LDFlags: ${ldflags}cp")
     def debugFlags = project.hasProperty("debug") ? " -gcflags \"all=-N -l\"" : ""
 
-    run Paths.get("\${GOPATH}/bin/packr").toString() + " -i cmd/xl"
     // The ${} placeholder will be rendered in cross-compile
     go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl\${GOEXE} cmd/xl/main.go"
     dumpVersion
@@ -203,7 +192,6 @@ sonarqube {
 }
 
 // The way tasks dependOn here are very important, please don't change unless there is a valid reason
-check.dependsOn installTemplify, installPackr
 goBuild.dependsOn goPrepare, test
 goBuild.finalizedBy updateLicenses
 build.dependsOn goBuild
