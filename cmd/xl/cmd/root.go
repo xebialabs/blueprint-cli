@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
-	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 	"github.com/xebialabs/xl-cli/pkg/xl"
 	"github.com/xebialabs/yaml"
@@ -44,11 +43,6 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	err := xl.ProcessCredentials()
-	if err != nil {
-		util.Fatal("Error processing server credentials:\n%s", err)
-	}
-
 	if util.IsQuiet && util.IsVerbose {
 		util.Fatal("Cannot use --quiet (-q) and --verbose (-v) flags together\n")
 	}
@@ -75,7 +69,7 @@ func initConfig() {
 	viper.SetConfigType("yaml")
 	// If a config file is found, read it in.
 
-	err = viper.ReadInConfig()
+	err := viper.ReadInConfig()
 	if err == nil {
 		util.Verbose("Using configuration file: %s\n", viper.ConfigFileUsed())
 	} else {
@@ -114,18 +108,6 @@ func writeDefaultConfigurationFile() error {
 
 	// using MapSlice to maintain order of keys
 	slices := yaml.MapSlice{
-		{models.XLD, yaml.MapSlice{
-			{"username", models.DefaultXlDeployUsername},
-			{"password", models.DefaultXlDeployPassword},
-			{"url", models.DefaultXlDeployUrl},
-			{"authmethod", models.DefaultXlDeployAuthMethod},
-		}},
-		{models.XLR, yaml.MapSlice{
-			{"username", models.DefaultXlReleaseUsername},
-			{"password", models.DefaultXlReleasePassword},
-			{"url", models.DefaultXlReleaseUrl},
-			{"authmethod", models.DefaultXlReleaseAuthMethod},
-		}},
 		{"blueprint", blueprintConfData},
 	}
 

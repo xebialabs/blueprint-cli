@@ -1,13 +1,10 @@
 package xl
 
 import (
-	"fmt"
-	"github.com/xebialabs/xl-cli/pkg/models"
-	"net/url"
+	"time"
 
 	"github.com/xebialabs/xl-cli/pkg/blueprint"
 	"github.com/xebialabs/xl-cli/pkg/util"
-	"time"
 )
 
 type ChangedIds struct {
@@ -46,9 +43,8 @@ type TaskInfo struct {
 }
 
 type Changes struct {
-	Server *SimpleHTTPServer
-	Ids    *[]ChangedIds
-	Task   *TaskInfo
+	Ids  *[]ChangedIds
+	Task *TaskInfo
 }
 
 type AsCodeResponse struct {
@@ -58,8 +54,6 @@ type AsCodeResponse struct {
 }
 
 type Context struct {
-	XLDeploy         XLServer
-	XLRelease        XLServer
 	BlueprintContext *blueprint.BlueprintContext
 	values           map[string]string
 	scmInfo          *SCMInfo
@@ -88,125 +82,5 @@ type SCMInfo struct {
 }
 
 func (c *Context) PrintConfiguration() {
-	util.Info("XL Deploy:\n  URL: %s\n  Username: %s\n  Applications home: %s\n  Environments home: %s\n  Infrastructure home: %s\n  Configuration home: %s\n",
-		c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Url.String(),
-		c.XLDeploy.(*XLDeployServer).Server.(*SimpleHTTPServer).Username,
-		c.XLDeploy.(*XLDeployServer).ApplicationsHome,
-		c.XLDeploy.(*XLDeployServer).EnvironmentsHome,
-		c.XLDeploy.(*XLDeployServer).InfrastructureHome,
-		c.XLDeploy.(*XLDeployServer).ConfigurationHome)
-
-	util.Info("XL Release:\n  URL: %s\n  Username: %s\n  Home: %s\n",
-		c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Url.String(),
-		c.XLRelease.(*XLReleaseServer).Server.(*SimpleHTTPServer).Username,
-		c.XLRelease.(*XLReleaseServer).Home)
-
 	util.Info("Active Blueprint Context:\n  %s\n", (*c.BlueprintContext.ActiveRepo).GetInfo())
-}
-
-func (c *Context) GetDocumentHandlingServer(doc *Document) (XLServer, error) {
-	if c.XLDeploy != nil && c.XLDeploy.AcceptsDoc(doc) {
-		return c.XLDeploy, nil
-	}
-
-	if c.XLRelease != nil && c.XLRelease.AcceptsDoc(doc) {
-		return c.XLRelease, nil
-	}
-
-	return nil, fmt.Errorf("unknown apiVersion: %s", doc.ApiVersion)
-}
-
-func (c *Context) preProcessAndGetServer(doc *Document, artifactsDir string) (XLServer, error) {
-	err := doc.Preprocess(c, artifactsDir)
-	if err != nil {
-		return nil, err
-	}
-
-	if doc.ApiVersion == "" {
-		return nil, fmt.Errorf("apiVersion missing")
-	}
-	server, err := c.GetDocumentHandlingServer(doc)
-	if err != nil {
-		return nil, err
-	}
-	return server, nil
-}
-
-func (c *Context) ProcessSingleDocument(doc *Document, artifactsDir string) (*Changes, error) {
-	server, err := c.preProcessAndGetServer(doc, artifactsDir)
-	defer doc.Cleanup()
-	if err != nil {
-		return nil, err
-	}
-	return server.SendDoc(doc, c.scmInfo)
-}
-
-func (c *Context) ProcessSingleDocumentAndGetContents(doc *Document, artifactsDir string, fileName string) ([]byte, error) {
-	err := doc.ConditionalPreprocess(c, artifactsDir)
-	if err != nil {
-		return nil, err
-	}
-
-	defer doc.Cleanup()
-
-	documentBytes, err := doc.RenderYamlDocument()
-
-	if doc.ApiVersion == "" {
-		return nil, fmt.Errorf("apiVersion missing")
-	}
-
-	return documentBytes, err
-}
-
-func (c *Context) PreviewSingleDocument(doc *Document, artifactsDir string) (*models.PreviewResponse, error) {
-	server, err := c.preProcessAndGetServer(doc, artifactsDir)
-	defer doc.Cleanup()
-	if err != nil {
-		return nil, err
-	}
-	return server.PreviewDoc(doc)
-}
-
-func (c *Context) GenerateSingleXLDDocument(generateFilename string, generatePath string, generateOverride bool, generatePermissions bool, users bool, roles bool, includeSecrets bool, includeDefaults bool) error {
-	finalPath := url.QueryEscape(generatePath)
-
-	if generatePath != "" {
-		util.Info("Generating definitions for path %s from XL Deploy to %s\n", generatePath, generateFilename)
-	} else {
-		util.Info("Generating definitions from XL Deploy to %s\n", generateFilename)
-	}
-	return c.XLDeploy.GenerateDoc(generateFilename, finalPath, generateOverride, generatePermissions, users, roles, false, false, includeSecrets, includeDefaults, "", false, false, false, false, false)
-}
-
-func (c *Context) GenerateSingleXLRDocument(
-	generateFilename string,
-	generatePath string,
-	generateOverride bool,
-	users bool,
-	roles bool,
-	environments bool,
-	applications bool,
-	includeSecrets bool,
-	ciName string,
-	templates bool,
-	deliveryPatterns bool,
-	dashboards bool,
-	configurations bool,
-	permissions bool,
-	riskProfiles bool,
-) error {
-	finalPath := url.QueryEscape(generatePath)
-	finalName := url.QueryEscape(ciName)
-
-	if generatePath != "" {
-		util.Info("Generating definitions for path %s from XL Release to %s\n", generatePath, generateFilename)
-	} else {
-		util.Info("Generating definitions from XL Release to %s\n", generateFilename)
-	}
-
-	if len(generatePath) == 0 && !users && !roles && !environments && !applications && len(ciName) == 0 && !templates && !deliveryPatterns && !dashboards && !configurations && !permissions && !riskProfiles {
-		return fmt.Errorf("not possible to generate a definition without a proper input. For more information please read help section")
-	}
-
-	return c.XLRelease.GenerateDoc(generateFilename, finalPath, generateOverride, permissions, users, roles, environments, applications, includeSecrets, false, finalName, templates, deliveryPatterns, dashboards, configurations, riskProfiles)
 }

@@ -2,12 +2,10 @@ package xl
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"regexp"
-	"strings"
-
 	"sort"
+	"strings"
 
 	"github.com/magiconair/properties"
 	"github.com/spf13/cobra"
@@ -17,6 +15,8 @@ import (
 	"github.com/xebialabs/xl-cli/pkg/models"
 	"github.com/xebialabs/xl-cli/pkg/util"
 )
+
+// root
 
 func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 	rootFlags := command.PersistentFlags()
@@ -46,31 +46,11 @@ func PrepareRootCmdFlags(command *cobra.Command, cfgFile *string) {
 	blueprint.SetRootFlags(rootFlags)
 }
 
+// Blueprints
+
 func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles []string, scmInfo *SCMInfo, CLIVersion string) (*Context, error) {
-	var xlDeploy *XLDeployServer
-	var xlRelease *XLReleaseServer
 	var blueprintContext *blueprint.BlueprintContext
 
-	xldServerConfig, err := readServerConfig(v, string(models.XLD), true, models.XLD)
-	if err != nil {
-		return nil, err
-	}
-	if xldServerConfig != nil {
-		xlDeploy = &XLDeployServer{Server: xldServerConfig}
-		xlDeploy.ApplicationsHome = v.GetString("xl-deploy.applications-home")
-		xlDeploy.ConfigurationHome = v.GetString("xl-deploy.configuration-home")
-		xlDeploy.EnvironmentsHome = v.GetString("xl-deploy.environments-home")
-		xlDeploy.InfrastructureHome = v.GetString("xl-deploy.infrastructure-home")
-	}
-
-	xlrServerConfig, err := readServerConfig(v, string(models.XLR), true, models.XLR)
-	if err != nil {
-		return nil, err
-	}
-	if xlrServerConfig != nil {
-		xlRelease = &XLReleaseServer{Server: xlrServerConfig}
-		xlRelease.Home = v.GetString("xl-release.home")
-	}
 	configPath, err := util.DefaultConfigfilePath()
 	if err != nil {
 		return nil, err
@@ -81,102 +61,15 @@ func BuildContext(v *viper.Viper, valueOverrides *map[string]string, valueFiles 
 		return nil, err
 	}
 
-	// Get cobra flag values
-	configDefaults := getServerConfigDefaults(v)
-
-	values, err := mergeValues("XL_VALUE_", valueOverrides, valueFiles, configDefaults)
+	values, err := mergeValues("XL_VALUE_", valueOverrides, valueFiles, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Context{
-		XLDeploy:         xlDeploy,
-		XLRelease:        xlRelease,
 		BlueprintContext: blueprintContext,
 		values:           values,
-		scmInfo:          scmInfo,
 	}, nil
-}
-
-func setEnvVariableIfNotPresent(key string, value string) {
-	_, present := os.LookupEnv(key)
-	if !present {
-		os.Setenv(key, value)
-	}
-}
-
-func processServerCredentials(serverKind string) error {
-	credentialsEnvKey := fmt.Sprintf("XL_%s_CREDENTIALS", serverKind)
-	usernameEnvKey := fmt.Sprintf("XL_%s_USERNAME", serverKind)
-	passwordEnvKey := fmt.Sprintf("XL_%s_PASSWORD", serverKind)
-
-	credentials, credentialsPresent := os.LookupEnv(credentialsEnvKey)
-	if credentialsPresent {
-		credentialsArray := strings.Split(credentials, ":")
-		if len(credentialsArray) != 2 {
-			return fmt.Errorf("environment variable %s has an invalid format. It must container a username and a password separated by a colon", credentialsEnvKey)
-		}
-
-		setEnvVariableIfNotPresent(usernameEnvKey, credentialsArray[0])
-		setEnvVariableIfNotPresent(passwordEnvKey, credentialsArray[1])
-	}
-	return nil
-}
-
-func ProcessCredentials() error {
-	err := processServerCredentials("DEPLOY")
-	if err != nil {
-		return err
-	}
-	return processServerCredentials("RELEASE")
-}
-
-func readServerConfig(v *viper.Viper, prefix string, credentialsRequired bool, product models.Product) (*SimpleHTTPServer, error) {
-	urlString := v.GetString(fmt.Sprintf("%s.url", prefix))
-	if urlString == "" {
-		return nil, nil
-	}
-
-	u, err := url.ParseRequestURI(urlString)
-	if err != nil {
-		return nil, err
-	}
-
-	username := v.GetString(fmt.Sprintf("%s.username", prefix))
-	if credentialsRequired && username == "" {
-		return nil, fmt.Errorf("configuration property %s.username is required if %s.url is set", prefix, prefix)
-	}
-
-	password := v.GetString(fmt.Sprintf("%s.password", prefix))
-	if credentialsRequired && password == "" {
-		return nil, fmt.Errorf("configuration property %s.password is required if %s.url is set", prefix, prefix)
-	}
-
-	authMethod := v.GetString(fmt.Sprintf("%s.authmethod", prefix))
-	if authMethod == "" {
-		authMethod = models.AuthMethodHttp
-	}
-
-	return &SimpleHTTPServer{
-		Url:        *u,
-		AuthMethod: authMethod,
-		Username:   username,
-		Password:   password,
-		Product:    product,
-	}, nil
-}
-
-func getServerConfigDefaults(v *viper.Viper) *map[string]string {
-	m := make(map[string]string)
-	m["XL_DEPLOY_URL"] = v.GetString(models.ViperKeyXLDUrl)
-	m["XL_DEPLOY_USERNAME"] = v.GetString(models.ViperKeyXLDUsername)
-	m["XL_DEPLOY_PASSWORD"] = v.GetString(models.ViperKeyXLDPassword)
-	m["XL_DEPLOY_AUTHMETHOD"] = v.GetString(models.ViperKeyXLDAuthMethod)
-	m["XL_RELEASE_URL"] = v.GetString(models.ViperKeyXLRUrl)
-	m["XL_RELEASE_USERNAME"] = v.GetString(models.ViperKeyXLRUsername)
-	m["XL_RELEASE_PASSWORD"] = v.GetString(models.ViperKeyXLRPassword)
-	m["XL_RELEASE_AUTHMETHOD"] = v.GetString(models.ViperKeyXLRAuthMethod)
-	return &m
 }
 
 func mergeValues(envPrefix string, flagOverrides *map[string]string, valueFiles []string, configDefaults *map[string]string) (map[string]string, error) {

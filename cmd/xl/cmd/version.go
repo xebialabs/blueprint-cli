@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/xebialabs/xl-cli/pkg/xl"
 	"runtime"
+
+	"github.com/spf13/cobra"
 )
 
 var BuildVersion = "undefined"
@@ -18,8 +18,6 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("CLI version:             %s\n", CliVersion)
 		fmt.Printf("Git version:             %s\n", BuildVersion)
-		fmt.Printf("API version XL Deploy:   %s\n", xl.XldApiVersion)
-		fmt.Printf("API version XL Release:  %s\n", xl.XlrApiVersion)
 		fmt.Printf("Git commit:              %s\n", BuildGitCommit)
 		fmt.Printf("Build date:              %s\n", BuildDate)
 		fmt.Printf("GO version:              %s\n", runtime.Version())
