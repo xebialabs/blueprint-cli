@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/xebialabs/xl-blueprint/pkg/util"
+	"github.com/xebialabs/blueprint-cli/pkg/util"
 	"github.com/xebialabs/yaml"
 )
 

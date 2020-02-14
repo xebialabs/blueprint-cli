@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xebialabs/xl-blueprint/pkg/util"
+	"github.com/xebialabs/blueprint-cli/pkg/util"
 )
 
 func TestGeneratedBlueprintRegistersCreatedFile(t *testing.T) {

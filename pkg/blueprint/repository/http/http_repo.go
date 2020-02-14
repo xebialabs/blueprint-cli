@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xebialabs/xl-blueprint/pkg/blueprint/repository"
-	"github.com/xebialabs/xl-blueprint/pkg/models"
-	"github.com/xebialabs/xl-blueprint/pkg/util"
+	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository"
+	"github.com/xebialabs/blueprint-cli/pkg/models"
+	"github.com/xebialabs/blueprint-cli/pkg/util"
 )
 
 const (

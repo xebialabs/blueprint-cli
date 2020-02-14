@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	versionHelper "github.com/xebialabs/xl-blueprint/pkg/version"
+	versionHelper "github.com/xebialabs/blueprint-cli/pkg/version"
 )
 
 func Test_processCustomExpression(t *testing.T) {

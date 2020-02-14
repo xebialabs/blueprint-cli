@@ -7,7 +7,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xebialabs/xl-blueprint/pkg/models"
+	"github.com/xebialabs/blueprint-cli/pkg/models"
 )
 
 const mockEndpoint = "http://mock.repo.server.com/"
