@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	"github.com/xebialabs/xl-blueprint/pkg/blueprint"
-	"github.com/xebialabs/xl-blueprint/pkg/util"
+	"github.com/xebialabs/blueprint-cli/pkg/blueprint"
+	"github.com/xebialabs/blueprint-cli/pkg/util"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"

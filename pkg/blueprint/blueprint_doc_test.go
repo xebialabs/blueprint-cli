@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xebialabs/xl-blueprint/pkg/cloud/aws"
+	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
 )
 
 var SampleKubeConfig = `apiVersion: v1

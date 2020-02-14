@@ -15,8 +15,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xebialabs/xl-blueprint/pkg/models"
-	"github.com/xebialabs/xl-blueprint/pkg/util"
+	"github.com/xebialabs/blueprint-cli/pkg/models"
+	"github.com/xebialabs/blueprint-cli/pkg/util"
 	"github.com/xebialabs/yaml"
 )
 

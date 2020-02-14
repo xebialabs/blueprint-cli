@@ -13,10 +13,10 @@ import (
 	"github.com/thoas/go-funk"
 	"gopkg.in/AlecAivazis/survey.v1"
 
-	"github.com/xebialabs/xl-blueprint/pkg/cloud/aws"
-	"github.com/xebialabs/xl-blueprint/pkg/cloud/k8s"
-	"github.com/xebialabs/xl-blueprint/pkg/models"
-	"github.com/xebialabs/xl-blueprint/pkg/util"
+	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
+	"github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"
+	"github.com/xebialabs/blueprint-cli/pkg/models"
+	"github.com/xebialabs/blueprint-cli/pkg/util"
 	"github.com/xebialabs/yaml"
 )
 

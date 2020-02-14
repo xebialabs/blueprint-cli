@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver"
-	"github.com/xebialabs/xl-blueprint/pkg/models"
+	"github.com/xebialabs/blueprint-cli/pkg/models"
 )
 
 const (

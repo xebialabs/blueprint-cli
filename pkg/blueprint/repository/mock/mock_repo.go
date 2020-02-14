@@ -3,8 +3,8 @@ package mock
 import (
 	"fmt"
 
-	"github.com/xebialabs/xl-blueprint/pkg/models"
-	"github.com/xebialabs/xl-blueprint/pkg/util"
+	"github.com/xebialabs/blueprint-cli/pkg/models"
+	"github.com/xebialabs/blueprint-cli/pkg/util"
 )
 
 // Mock Blueprint Repository Provider implementation

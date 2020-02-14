@@ -8,9 +8,9 @@ import (
     "strconv"
 
     "github.com/google/go-github/github"
-	"github.com/xebialabs/xl-blueprint/pkg/blueprint/repository"
-	"github.com/xebialabs/xl-blueprint/pkg/models"
-	"github.com/xebialabs/xl-blueprint/pkg/util"
+	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository"
+	"github.com/xebialabs/blueprint-cli/pkg/models"
+	"github.com/xebialabs/blueprint-cli/pkg/util"
 )
 
 type GitHubBlueprintRepository struct {
