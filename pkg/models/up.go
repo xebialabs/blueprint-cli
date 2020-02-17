@@ -1,6 +1,0 @@
-package models
-
-var AvailableXlrVersion string
-var AvailableXldVersion string
-var AvailableOfficialXlrVersion string
-var AvailableOfficialXldVersion string
