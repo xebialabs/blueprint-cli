@@ -32,7 +32,7 @@ func Test_processCustomExpression(t *testing.T) {
 	type args struct {
 		exStr       string
 		parameters  map[string]interface{}
-		overrideFns map[string]govaluate.ExpressionFunction
+		overrideFns ExpressionOverrideFn
 	}
 	tests := []struct {
 		name       string
@@ -931,11 +931,13 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Foo": "foo0",
 				},
-				map[string]govaluate.ExpressionFunction{
-					"strlen": func(args ...interface{}) (interface{}, error) {
-						length := len(args[0].(string)) + 1
-						return (float64)(length), nil
-					},
+				func(params map[string]interface{}) map[string]govaluate.ExpressionFunction {
+					return map[string]govaluate.ExpressionFunction{
+						"strlen": func(args ...interface{}) (interface{}, error) {
+							length := len(args[0].(string)) + 1
+							return (float64)(length), nil
+						},
+					}
 				},
 			},
 			float64(5),
@@ -950,11 +952,13 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Foo": "foo0",
 				},
-				map[string]govaluate.ExpressionFunction{
-					"strlenNew": func(args ...interface{}) (interface{}, error) {
-						length := len(args[0].(string)) - 1
-						return (float64)(length), nil
-					},
+				func(params map[string]interface{}) map[string]govaluate.ExpressionFunction {
+					return map[string]govaluate.ExpressionFunction{
+						"strlenNew": func(args ...interface{}) (interface{}, error) {
+							length := len(args[0].(string)) - 1
+							return (float64)(length), nil
+						},
+					}
 				},
 			},
 			float64(3),
@@ -994,7 +998,7 @@ func Test_processCustomExpression_no_k8s(t *testing.T) {
 	type args struct {
 		exStr       string
 		parameters  map[string]interface{}
-		overrideFns map[string]govaluate.ExpressionFunction
+		overrideFns ExpressionOverrideFn
 	}
 	tests := []struct {
 		name       string

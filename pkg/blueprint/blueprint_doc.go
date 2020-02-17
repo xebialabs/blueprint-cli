@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Knetic/govaluate"
 	"github.com/thoas/go-funk"
 	"gopkg.in/AlecAivazis/survey.v1"
 
@@ -70,7 +69,7 @@ func NewPreparedData() *PreparedData {
 // regular Expressions
 var regExFn = regexp.MustCompile(`([\w\d]+).([\w\d]+)\(([,/\-:\s\w\d]*)\)(?:\.([\w\d]*)|\[([\d]+)\])*`)
 
-func GetProcessedExpressionValue(val VarField, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) (VarField, error) {
+func GetProcessedExpressionValue(val VarField, parameters map[string]interface{}, overrideFns ExpressionOverrideFn) (VarField, error) {
 	switch val.Tag {
 	case tagExpressionV1, tagExpressionV2:
 		procVal, err := ProcessCustomExpression(val.Value, parameters, overrideFns)
@@ -99,12 +98,12 @@ func GetProcessedExpressionValue(val VarField, parameters map[string]interface{}
 	return val, nil
 }
 
-func (variable *Variable) ProcessExpression(parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) error {
+func (variable *Variable) ProcessExpression(parameters map[string]interface{}, overrideFns ExpressionOverrideFn) error {
 	fieldsToSkip := []string{"Validate", "Options"} // these fields have special processing
 	return ProcessExpressionField(variable, fieldsToSkip, parameters, variable.Name.Value, overrideFns)
 }
 
-func ProcessExpressionField(item interface{}, fieldsToSkip []string, parameters map[string]interface{}, id string, overrideFns map[string]govaluate.ExpressionFunction) error {
+func ProcessExpressionField(item interface{}, fieldsToSkip []string, parameters map[string]interface{}, id string, overrideFns ExpressionOverrideFn) error {
 	itemR := reflect.ValueOf(item).Elem()
 	typeOfT := itemR.Type()
 	// iterate over the struct fields and map them
@@ -177,7 +176,7 @@ func (variable *Variable) GetValueFieldVal() interface{} {
 	return variable.Value.Value
 }
 
-func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabel bool, overrideFns map[string]govaluate.ExpressionFunction) []string {
+func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabel bool, overrideFns ExpressionOverrideFn) []string {
 	options := []string{}
 	for _, option := range variable.Options {
 		switch option.Tag {
@@ -258,7 +257,7 @@ func (variable *Variable) GetValidateExpr() (string, error) {
 	return "", fmt.Errorf("only '!expr' tag is supported for validate attribute")
 }
 
-func validateField(validateExpr string, variable *Variable, parameters map[string]interface{}, value interface{}, overrideFns map[string]govaluate.ExpressionFunction) error {
+func validateField(validateExpr string, variable *Variable, parameters map[string]interface{}, value interface{}, overrideFns ExpressionOverrideFn) error {
 	if validateExpr != "" {
 		allowEmpty := false
 		if IsSecretType(variable.Type.Value) || variable.AllowEmpty.Bool {
@@ -272,7 +271,7 @@ func validateField(validateExpr string, variable *Variable, parameters map[strin
 	return nil
 }
 
-func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) (interface{}, error) {
+func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[string]interface{}, overrideFns ExpressionOverrideFn) (interface{}, error) {
 	// get validate expression
 	validateExpr, err := variable.GetValidateExpr()
 	if err != nil {
@@ -339,7 +338,7 @@ func (variable *Variable) GetHelpText() string {
 	return ""
 }
 
-func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction, surveyOpts ...survey.AskOpt) (interface{}, error) {
+func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[string]interface{}, overrideFns ExpressionOverrideFn, surveyOpts ...survey.AskOpt) (interface{}, error) {
 	var answer string
 	var err error
 	defaultValStr := fmt.Sprintf("%v", defaultVal)
@@ -472,7 +471,7 @@ func (blueprintDoc *BlueprintConfig) validate() error {
 }
 
 // prepare template data by getting user input and calling named functions
-func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams, data *PreparedData, overrideFns map[string]govaluate.ExpressionFunction, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
+func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams, data *PreparedData, overrideFns ExpressionOverrideFn, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
 	// if exists, get map of answers from file
 	var answerMap map[string]string
 	var err error
@@ -687,7 +686,7 @@ func validateFiles(configs *[]TemplateConfig) error {
 	return nil
 }
 
-func validatePrompt(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) func(val interface{}) error {
+func validatePrompt(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}, overrideFns ExpressionOverrideFn) func(val interface{}) error {
 	return func(val interface{}) error {
 		var value interface{}
 		switch valType := val.(type) {
@@ -724,7 +723,7 @@ func validatePrompt(varName string, validateExpr string, allowEmpty bool, parame
 	}
 }
 
-func validateFilePath(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) func(val interface{}) error {
+func validateFilePath(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}, overrideFns ExpressionOverrideFn) func(val interface{}) error {
 	return func(val interface{}) error {
 		err := survey.Required(val)
 		if err != nil {

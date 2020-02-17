@@ -8,7 +8,6 @@ import (
 
 	"text/template"
 
-	"github.com/Knetic/govaluate"
 	"github.com/fatih/color"
 	funk "github.com/thoas/go-funk"
 
@@ -66,7 +65,7 @@ func shouldSkipFile(templateConfig TemplateConfig, parameters map[string]interfa
 	return false, nil
 }
 
-func (config *TemplateConfig) ProcessExpression(parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) error {
+func (config *TemplateConfig) ProcessExpression(parameters map[string]interface{}, overrideFns ExpressionOverrideFn) error {
 	fieldsToSkip := []string{""} // these fields have special processing
 	return ProcessExpressionField(config, fieldsToSkip, parameters, config.Path, overrideFns)
 }
@@ -88,7 +87,7 @@ func InstantiateBlueprint(
 	params BlueprintParams,
 	blueprintContext *BlueprintContext,
 	generatedBlueprint *GeneratedBlueprint,
-	overrideFns map[string]govaluate.ExpressionFunction,
+	overrideFns ExpressionOverrideFn,
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
 	var err error
@@ -222,7 +221,7 @@ func prepareMergedTemplateData(
 	blueprintContext *BlueprintContext,
 	blueprints map[string]*models.BlueprintRemote,
 	params BlueprintParams,
-	overrideFns map[string]govaluate.ExpressionFunction,
+	overrideFns ExpressionOverrideFn,
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
 	// get blueprint definition
@@ -309,7 +308,7 @@ func prepareMergedTemplateData(
 	return mergedData, mergedBlueprintDoc, nil
 }
 
-func evaluateAndSkipIfDependsOnIsFalse(dependsOn []VarField, mergedData *PreparedData, overrideFns map[string]govaluate.ExpressionFunction) (bool, error) {
+func evaluateAndSkipIfDependsOnIsFalse(dependsOn []VarField, mergedData *PreparedData, overrideFns ExpressionOverrideFn) (bool, error) {
 	for _, dependOn := range dependsOn {
 		procDependsOn, err := GetProcessedExpressionValue(dependOn, mergedData.TemplateData, overrideFns)
 		if err != nil {

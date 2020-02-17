@@ -19,6 +19,8 @@ import (
 	"github.com/xebialabs/blueprint-cli/pkg/util"
 )
 
+type ExpressionOverrideFn = func(params map[string]interface{}) map[string]govaluate.ExpressionFunction
+
 func regexMatch(pattern, value string) (bool, error) {
 	re, err := regexp2.Compile(pattern, 0)
 	if err != nil {
@@ -38,7 +40,7 @@ func regexMatch(pattern, value string) (bool, error) {
 	return true, nil
 }
 
-func getExpressionFunctions(params map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) map[string]govaluate.ExpressionFunction {
+func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map[string]govaluate.ExpressionFunction) map[string]govaluate.ExpressionFunction {
 	baseFnMap := map[string]govaluate.ExpressionFunction{
 		"strlen": func(args ...interface{}) (interface{}, error) {
 			length := len(args[0].(string))
@@ -263,8 +265,8 @@ func getExpressionFunctions(params map[string]interface{}, overrideFns map[strin
 		},
 	}
 
-	if overrideFns != nil {
-		for k, v := range overrideFns {
+	if overrideFnMethods != nil {
+		for k, v := range overrideFnMethods {
 			baseFnMap[k] = v
 		}
 	}
@@ -274,12 +276,17 @@ func getExpressionFunctions(params map[string]interface{}, overrideFns map[strin
 
 // ProcessCustomExpression evaluates the expressions passed in the blueprint.yaml file using https://github.com/Knetic/govaluate
 // {parameters} are the result of the spec -> parameters defined in the blueprint yaml. Parameters needs to be defined before use.
-func ProcessCustomExpression(exStr string, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) (interface{}, error) {
+func ProcessCustomExpression(exStr string, parameters map[string]interface{}, overrideFns ExpressionOverrideFn) (interface{}, error) {
 	util.Verbose("[expression] Evaluating expression [%s]\n", exStr)
 
 	expressionParams := FixValueTypes(parameters)
+	var overrideFnMethods map[string]govaluate.ExpressionFunction
 
-	expression, err := govaluate.NewEvaluableExpressionWithFunctions(exStr, getExpressionFunctions(expressionParams, overrideFns))
+	if overrideFns != nil {
+		overrideFnMethods = overrideFns(expressionParams)
+	}
+
+	expression, err := govaluate.NewEvaluableExpressionWithFunctions(exStr, getExpressionFunctions(expressionParams, overrideFnMethods))
 	if err != nil {
 		return nil, err
 	}
