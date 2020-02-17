@@ -881,7 +881,7 @@ func TestParseDependsOnValue(t *testing.T) {
 			Type:      VarField{Value: TypeInput},
 			DependsOn: VarField{Value: "aws.creds", Tag: tagExpressionV2},
 		}
-		err := v.ProcessExpression(map[string]interface{}{"Foo": nil})
+		err := v.ProcessExpression(map[string]interface{}{"Foo": nil}, nil)
 		require.NotNil(t, err)
 	})
 	t.Run("should return parsed bool value for DependsOn field from expression", func(t *testing.T) {
@@ -892,7 +892,7 @@ func TestParseDependsOnValue(t *testing.T) {
 			DependsOn: VarField{Value: "Foo > 10", Tag: tagExpressionV2},
 		}
 
-		v.ProcessExpression(map[string]interface{}{"Foo": 100})
+		v.ProcessExpression(map[string]interface{}{"Foo": 100}, nil)
 		val, err := ParseDependsOnValue(v.DependsOn, map[string]interface{}{"Foo": 100})
 		require.Nil(t, err)
 		require.True(t, val)

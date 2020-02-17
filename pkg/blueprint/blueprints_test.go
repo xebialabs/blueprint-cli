@@ -113,6 +113,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			},
 			getLocalTestBlueprintContext(t),
 			gb,
+			nil,
 		)
 
 		require.NotNil(t, err)
@@ -132,7 +133,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.NotNil(t, err)
 		assert.Equal(t, "parameter AppName must have a 'prompt' field", err.Error())
@@ -165,7 +166,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -227,7 +228,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -289,7 +290,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -338,7 +339,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -404,7 +405,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				},
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -481,7 +482,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -550,7 +551,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -603,7 +604,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -664,7 +665,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -713,7 +714,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -808,7 +809,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		   				PrintSummaryTable:  true,
 		   			},
 		   			getLocalTestBlueprintContext(t),
-		   			gb,
+		   			gb, nil,
 		   		) */
 		data, doc, err := InstantiateBlueprint(
 			BlueprintParams{
@@ -820,7 +821,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -913,7 +914,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				PrintSummaryTable:  true,
 			},
 			getLocalTestBlueprintContext(t),
-			gb,
+			gb, nil,
 		)
 		require.Nil(t, err)
 		require.NotNil(t, data)
@@ -1713,7 +1714,7 @@ func Test_evaluateAndSkipIfDependsOnIsFalse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := evaluateAndSkipIfDependsOnIsFalse([]VarField{tt.args.dependsOn}, tt.args.mergedData)
+			got, err := evaluateAndSkipIfDependsOnIsFalse([]VarField{tt.args.dependsOn}, tt.args.mergedData, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("evaluateAndCheckDependsOnIsTrue() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -2106,6 +2107,7 @@ func Test_prepareMergedTemplateData(t *testing.T) {
 				tt.args.blueprintContext,
 				tt.args.blueprints,
 				tt.args.params,
+				nil,
 				tt.args.surveyOpts...,
 			)
 			if (err != nil) != tt.wantErr {
@@ -2159,7 +2161,7 @@ func TestTemplateConfig_ProcessExpression(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.config.ProcessExpression(tt.parameters)
+			err := tt.config.ProcessExpression(tt.parameters, nil)
 			if tt.wantErr {
 				assert.NotNil(t, err)
 			} else {

@@ -141,7 +141,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "Foo", Tag: tagExpressionV2},
 		}
-		v.ProcessExpression(map[string]interface{}{"Foo": nil})
+		v.ProcessExpression(map[string]interface{}{"Foo": nil}, nil)
 		defaultVal := v.GetDefaultVal()
 		assert.Equal(t, "", defaultVal)
 	})
@@ -152,7 +152,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Type:    VarField{Value: TypeInput},
 			Default: VarField{Value: "'foo' + 'bar'", Tag: tagExpressionV2},
 		}
-		v.ProcessExpression(dummyData)
+		v.ProcessExpression(dummyData, nil)
 		defaultVal := v.GetDefaultVal()
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
@@ -162,7 +162,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		}
 		v.ProcessExpression(map[string]interface{}{
 			"Foo": 100,
-		})
+		}, nil)
 		defaultVal = v.GetDefaultVal()
 		assert.Equal(t, "true", defaultVal)
 	})
@@ -207,7 +207,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "Foo", Tag: tagExpressionV2},
 		}
-		v.ProcessExpression(map[string]interface{}{"Foo": nil})
+		v.ProcessExpression(map[string]interface{}{"Foo": nil}, nil)
 		val := v.GetValueFieldVal()
 		assert.Equal(t, "", val)
 	})
@@ -218,7 +218,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Type:  VarField{Value: TypeInput},
 			Value: VarField{Value: "'foo' + 'bar'", Tag: tagExpressionV2},
 		}
-		v.ProcessExpression(dummyData)
+		v.ProcessExpression(dummyData, nil)
 		defaultVal := v.GetValueFieldVal()
 		assert.Equal(t, "foobar", defaultVal)
 		v = Variable{
@@ -228,7 +228,7 @@ func TestGetValueFieldVal(t *testing.T) {
 		}
 		v.ProcessExpression(map[string]interface{}{
 			"Foo": 100,
-		})
+		}, nil)
 		defaultVal = v.GetValueFieldVal()
 		assert.Equal(t, "true", defaultVal)
 	})
@@ -241,7 +241,7 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "a"}, {Value: "b"}, {Value: "c"}},
 		}
-		values := v.GetOptions(dummyData, true)
+		values := v.GetOptions(dummyData, true, nil)
 		assert.Len(t, values, 3)
 		assert.Equal(t, []string{"a", "b", "c"}, values)
 	})
@@ -252,7 +252,7 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "aVal"}, {Label: "bLabel", Value: "bVal"}, {Label: "cLabel", Value: "cVal"}},
 		}
-		values := v.GetOptions(dummyData, true)
+		values := v.GetOptions(dummyData, true, nil)
 		assert.Len(t, values, 3)
 		assert.Equal(t, []string{"aVal", "bVal [bLabel]", "cVal [cLabel]"}, values)
 	})
@@ -263,7 +263,7 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "aVal"}, {Label: "bLabel", Value: "bVal"}, {Label: "cLabel", Value: "cVal"}},
 		}
-		values := v.GetOptions(dummyData, false)
+		values := v.GetOptions(dummyData, false, nil)
 		assert.Len(t, values, 3)
 		assert.Equal(t, []string{"aVal", "bVal", "cVal"}, values)
 	})
@@ -274,7 +274,7 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "aws.regions(ecs)", Tag: tagFnV1}},
 		}
-		values := v.GetOptions(dummyData, true)
+		values := v.GetOptions(dummyData, true, nil)
 		assert.True(t, len(values) > 1)
 	})
 
@@ -284,7 +284,7 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "aws.regs", Tag: tagFnV1}},
 		}
-		out := v.GetOptions(dummyData, true)
+		out := v.GetOptions(dummyData, true, nil)
 		require.Equal(t, []string{}, out)
 	})
 
@@ -297,7 +297,7 @@ func TestGetOptions(t *testing.T) {
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": true,
 			"Bar": []string{"test", "foo"},
-		}, true)
+		}, true, nil)
 		assert.True(t, len(values) == 2)
 	})
 
@@ -309,7 +309,7 @@ func TestGetOptions(t *testing.T) {
 		}
 		values := v.GetOptions(map[string]interface{}{
 			"Provider": "GCP",
-		}, true)
+		}, true, nil)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 2)
 	})
@@ -325,7 +325,7 @@ func TestGetOptions(t *testing.T) {
 			"Foo1": "test",
 			"Foo2": "foo",
 			"Bar":  []string{"test", "foo"},
-		}, true)
+		}, true, nil)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 2)
 	})
@@ -339,7 +339,7 @@ func TestGetOptions(t *testing.T) {
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
 			"Bar": []string{"test", "foo"},
-		}, true)
+		}, true, nil)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 3)
 	})
@@ -353,7 +353,7 @@ func TestGetOptions(t *testing.T) {
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
 			"Bar": []string{"test", "foo"},
-		}, true)
+		}, true, nil)
 		assert.NotNil(t, values)
 		assert.True(t, len(values) == 2)
 	})
@@ -367,7 +367,7 @@ func TestGetOptions(t *testing.T) {
 		values := v.GetOptions(map[string]interface{}{
 			"Foo": false,
 			"Bar": []string{"test", "foo"},
-		}, true)
+		}, true, nil)
 		assert.Equal(t, []string{}, values)
 	})
 
@@ -377,7 +377,7 @@ func TestGetOptions(t *testing.T) {
 			Type:    VarField{Value: TypeSelect},
 			Options: []VarField{{Value: "aws.regs()", Tag: tagExpressionV2}},
 		}
-		out := v.GetOptions(dummyData, true)
+		out := v.GetOptions(dummyData, true, nil)
 		assert.Equal(t, []string{}, out)
 	})
 }
@@ -737,7 +737,7 @@ func TestValidatePrompt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := validatePrompt(tt.args.varName, tt.args.validateExpr, tt.args.emtpyAllowed, tt.args.params)(tt.args.value)
+			got := validatePrompt(tt.args.varName, tt.args.validateExpr, tt.args.emtpyAllowed, tt.args.params, nil)(tt.args.value)
 			if tt.want == nil || got == nil {
 				assert.Equal(t, tt.want, got)
 			} else {
@@ -797,7 +797,7 @@ func TestValidateFilePath(t *testing.T) {
 				ioutil.WriteFile(tt.args.value, contents, os.ModePerm)
 			}
 
-			got := validateFilePath(tt.args.varName, tt.args.validateExpr, tt.args.emtpyAllowed, tt.args.params)(tt.args.value)
+			got := validateFilePath(tt.args.varName, tt.args.validateExpr, tt.args.emtpyAllowed, tt.args.params, nil)(tt.args.value)
 			if tt.want == nil || got == nil {
 				assert.Equal(t, tt.want, got)
 			} else {
@@ -965,7 +965,7 @@ func TestVerifyVariableValue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.variable.VerifyVariableValue(tt.answer, tt.parameters)
+			got, err := tt.variable.VerifyVariableValue(tt.answer, tt.parameters, nil)
 			assert.Equal(t, tt.errOut, err)
 			assert.Equal(t, tt.wantOut, got)
 		})
@@ -1368,6 +1368,7 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 					FromUpCommand:      tt.args.upMode,
 				},
 				NewPreparedData(),
+				nil,
 			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BlueprintYaml.prepareTemplateData() error = %v, wantErr %v", err, tt.wantErr)
@@ -1923,7 +1924,7 @@ func TestVariable_ProcessExpression(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.variable.ProcessExpression(tt.parameters)
+			err := tt.variable.ProcessExpression(tt.parameters, nil)
 			if tt.wantErr {
 				assert.NotNil(t, err)
 			} else {

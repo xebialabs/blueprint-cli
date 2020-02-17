@@ -8,6 +8,7 @@ import (
 
 	"text/template"
 
+	"github.com/Knetic/govaluate"
 	"github.com/fatih/color"
 	funk "github.com/thoas/go-funk"
 
@@ -65,9 +66,9 @@ func shouldSkipFile(templateConfig TemplateConfig, parameters map[string]interfa
 	return false, nil
 }
 
-func (config *TemplateConfig) ProcessExpression(parameters map[string]interface{}) error {
+func (config *TemplateConfig) ProcessExpression(parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) error {
 	fieldsToSkip := []string{""} // these fields have special processing
-	return ProcessExpressionField(config, fieldsToSkip, parameters, config.Path)
+	return ProcessExpressionField(config, fieldsToSkip, parameters, config.Path, overrideFns)
 }
 
 type BlueprintParams struct {
@@ -87,6 +88,7 @@ func InstantiateBlueprint(
 	params BlueprintParams,
 	blueprintContext *BlueprintContext,
 	generatedBlueprint *GeneratedBlueprint,
+	overrideFns map[string]govaluate.ExpressionFunction,
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
 	var err error
@@ -107,7 +109,7 @@ func InstantiateBlueprint(
 		}
 	}
 
-	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, params, surveyOpts...)
+	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, params, overrideFns, surveyOpts...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -152,7 +154,7 @@ func InstantiateBlueprint(
 
 	// execute each template file found
 	for _, config := range blueprintDoc.TemplateConfigs {
-		config.ProcessExpression(preparedData.TemplateData)
+		config.ProcessExpression(preparedData.TemplateData, overrideFns)
 		skipFile, err := shouldSkipFile(config, preparedData.TemplateData)
 		if err != nil {
 			return nil, nil, err
@@ -220,6 +222,7 @@ func prepareMergedTemplateData(
 	blueprintContext *BlueprintContext,
 	blueprints map[string]*models.BlueprintRemote,
 	params BlueprintParams,
+	overrideFns map[string]govaluate.ExpressionFunction,
 	surveyOpts ...survey.AskOpt,
 ) (*PreparedData, *BlueprintConfig, error) {
 	// get blueprint definition
@@ -255,14 +258,14 @@ func prepareMergedTemplateData(
 		}
 		if ok {
 			// Evaluate dependsOn
-			ok, err = evaluateAndSkipIfDependsOnIsFalse(blueprintDoc.DependsOn, mergedData)
+			ok, err = evaluateAndSkipIfDependsOnIsFalse(blueprintDoc.DependsOn, mergedData, overrideFns)
 			if err != nil {
 				return nil, nil, err
 			}
 		}
 		if ok {
 			// ask for user input
-			preparedData, err := blueprintDoc.BlueprintConfig.prepareTemplateData(params, mergedData, surveyOpts...)
+			preparedData, err := blueprintDoc.BlueprintConfig.prepareTemplateData(params, mergedData, overrideFns, surveyOpts...)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -306,9 +309,9 @@ func prepareMergedTemplateData(
 	return mergedData, mergedBlueprintDoc, nil
 }
 
-func evaluateAndSkipIfDependsOnIsFalse(dependsOn []VarField, mergedData *PreparedData) (bool, error) {
+func evaluateAndSkipIfDependsOnIsFalse(dependsOn []VarField, mergedData *PreparedData, overrideFns map[string]govaluate.ExpressionFunction) (bool, error) {
 	for _, dependOn := range dependsOn {
-		procDependsOn, err := GetProcessedExpressionValue(dependOn, mergedData.TemplateData)
+		procDependsOn, err := GetProcessedExpressionValue(dependOn, mergedData.TemplateData, overrideFns)
 		if err != nil {
 			return false, err
 		}

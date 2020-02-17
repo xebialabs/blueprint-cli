@@ -18,7 +18,6 @@ import (
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/blueprint-cli/pkg/osHelper"
 	"github.com/xebialabs/blueprint-cli/pkg/util"
-	versionHelper "github.com/xebialabs/blueprint-cli/pkg/version"
 )
 
 func regexMatch(pattern, value string) (bool, error) {
@@ -40,8 +39,8 @@ func regexMatch(pattern, value string) (bool, error) {
 	return true, nil
 }
 
-func getExpressionFunctions(params map[string]interface{}) map[string]govaluate.ExpressionFunction {
-	return map[string]govaluate.ExpressionFunction{
+func getExpressionFunctions(params map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) map[string]govaluate.ExpressionFunction {
+	baseFnMap := map[string]govaluate.ExpressionFunction{
 		"strlen": func(args ...interface{}) (interface{}, error) {
 			length := len(args[0].(string))
 			return (float64)(length), nil
@@ -249,44 +248,6 @@ func getExpressionFunctions(params map[string]interface{}) map[string]govaluate.
 			return osHelper.GetPropertyByName(module)
 		},
 
-		// xl up helper functions
-		"version": func(args ...interface{}) (interface{}, error) {
-			if len(args) < 1 {
-				return nil, fmt.Errorf("invalid number of arguments for  expression function 'xlUp', expecting 1 (module name) got %d", len(args))
-			}
-			/* Available modules:
-			   - _showapplicableversions
-			   - checkversion
-			   - getversionfromtag
-			*/
-
-			var params []string
-			module := fmt.Sprintf("%v", args[0])
-
-			if !funk.Contains([]string{"_showapplicableversions", "checkversion", "getversionfromtag"}, module) {
-				return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'version'", module)
-			}
-
-			if len(args) == 2 && module == "_showapplicableversions" {
-				params = append(params, fmt.Sprintf("%v", args[1]))
-			}
-
-			if len(args) == 3 && module == "checkversion" {
-				params = append(params, fmt.Sprintf("%v", args[1]))
-				params = append(params, fmt.Sprintf("%v", args[2]))
-			}
-
-			if len(args) == 2 && module == "getversionfromtag" {
-				params = append(params, fmt.Sprintf("%v", args[1]))
-			}
-
-			result, err := versionHelper.GetPropertyByName(module, params...)
-			if err != nil {
-				return nil, fmt.Errorf("Error when executing expression function '%s', %s", module, err.Error())
-			}
-			return result, nil
-		},
-
 		// normalize windows paths to mountable docker paths
 		"normalizePath": func(args ...interface{}) (interface{}, error) {
 			if len(args) != 1 {
@@ -301,26 +262,25 @@ func getExpressionFunctions(params map[string]interface{}) map[string]govaluate.
 
 			return path, nil
 		},
-
-		// create a unique hash of all answer values
-		"md5HashOfAnswersIncluding": func(args ...interface{}) (interface{}, error) {
-			return util.Md5HashFromFilteredMap(params, args, false)
-		},
-		// create a unique hash of all answer values
-		"md5HashOfAnswersNotIncluding": func(args ...interface{}) (interface{}, error) {
-			return util.Md5HashFromFilteredMap(params, args, true)
-		},
 	}
+
+	if overrideFns != nil {
+		for k, v := range overrideFns {
+			baseFnMap[k] = v
+		}
+	}
+
+	return baseFnMap
 }
 
 // ProcessCustomExpression evaluates the expressions passed in the blueprint.yaml file using https://github.com/Knetic/govaluate
 // {parameters} are the result of the spec -> parameters defined in the blueprint yaml. Parameters needs to be defined before use.
-func ProcessCustomExpression(exStr string, parameters map[string]interface{}) (interface{}, error) {
+func ProcessCustomExpression(exStr string, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) (interface{}, error) {
 	util.Verbose("[expression] Evaluating expression [%s]\n", exStr)
 
 	expressionParams := FixValueTypes(parameters)
 
-	expression, err := govaluate.NewEvaluableExpressionWithFunctions(exStr, getExpressionFunctions(expressionParams))
+	expression, err := govaluate.NewEvaluableExpressionWithFunctions(exStr, getExpressionFunctions(expressionParams, overrideFns))
 	if err != nil {
 		return nil, err
 	}

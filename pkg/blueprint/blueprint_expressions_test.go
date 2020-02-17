@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/Knetic/govaluate"
 	"github.com/stretchr/testify/assert"
-	versionHelper "github.com/xebialabs/blueprint-cli/pkg/version"
 )
 
 func Test_processCustomExpression(t *testing.T) {
@@ -29,12 +29,10 @@ func Test_processCustomExpression(t *testing.T) {
 	ioutil.WriteFile(filepath.Join(tmpDir, "config"), d1, os.ModePerm)
 	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
 
-	versionHelper.AvailableXldVersions = []string{"9.0.5"}
-	versionHelper.AvailableXlrVersions = []string{"9.0.6"}
-
 	type args struct {
-		exStr      string
-		parameters map[string]interface{}
+		exStr       string
+		parameters  map[string]interface{}
+		overrideFns map[string]govaluate.ExpressionFunction
 	}
 	tests := []struct {
 		name       string
@@ -52,6 +50,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"foo": "foo",
 				},
+				nil,
 			},
 			nil,
 			nil,
@@ -65,6 +64,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Foo": "100",
 				},
+				nil,
 			},
 			float64(100),
 			nil,
@@ -78,6 +78,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Foo": "100",
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -92,6 +93,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": true,
 					"Bar": false,
 				},
+				nil,
 			},
 			false,
 			nil,
@@ -105,6 +107,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Foo": 100,
 				},
+				nil,
 			},
 			false,
 			nil,
@@ -119,6 +122,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": "10",
 					"Bar": "200",
 				},
+				nil,
 			},
 			float64(200),
 			nil,
@@ -133,6 +137,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": "10",
 					"Bar": "200",
 				},
+				nil,
 			},
 			"200",
 			nil,
@@ -147,6 +152,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": true,
 					"Bar": []string{"test", "foo"},
 				},
+				nil,
 			},
 			[]string{"test", "foo"},
 			nil,
@@ -161,6 +167,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": "10",
 					"Bar": "200",
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -175,6 +182,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": "75",
 					"Bar": 25,
 				},
+				nil,
 			},
 			float64(100),
 			nil,
@@ -189,6 +197,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"Foo": "foo",
 					"Bar": "bar",
 				},
+				nil,
 			},
 			"foo+bar",
 			nil,
@@ -202,6 +211,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Foo": "foo0",
 				},
+				nil,
 			},
 			float64(4),
 			nil,
@@ -216,6 +226,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"arg1": "2",
 					"arg2": 1,
 				},
+				nil,
 			},
 			float64(2),
 			nil,
@@ -229,6 +240,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"arg": "1234",
 				},
+				nil,
 			},
 			float64(4),
 			nil,
@@ -242,6 +254,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"arg": "9",
 				},
+				nil,
 			},
 			"009",
 			nil,
@@ -255,6 +268,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"arg": "90",
 				},
+				nil,
 			},
 			"090",
 			nil,
@@ -268,6 +282,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"arg": "100",
 				},
+				nil,
 			},
 			float64(100),
 			nil,
@@ -282,6 +297,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"arg1": "2",
 					"arg2": "1",
 				},
+				nil,
 			},
 			float64(2),
 			nil,
@@ -295,6 +311,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"arg": "2.12556",
 				},
+				nil,
 			},
 			float64(2),
 			nil,
@@ -306,6 +323,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"regex('[a-zA-Z-]*')",
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			nil,
@@ -319,6 +337,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"TestVar": "SomeName",
 				},
+				nil,
 			},
 			false,
 			nil,
@@ -332,6 +351,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"TestVar": "SomeName",
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -345,6 +365,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"TestVar": "SomeName123",
 				},
+				nil,
 			},
 			false,
 			nil,
@@ -358,6 +379,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"TestVar": "axaxa",
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -371,6 +393,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"TestVar": "john",
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -384,6 +407,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"TestVar": "1234567890123456",
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -398,6 +422,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"TestVar1": 123,
 					"TestVar2": 100,
 				},
+				nil,
 			},
 			100.0,
 			nil,
@@ -413,6 +438,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"Bar":  200,
 					"Fooz": "test",
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -428,6 +454,7 @@ func Test_processCustomExpression(t *testing.T) {
 					"Bar":  200,
 					"Fooz": "1.88888",
 				},
+				nil,
 			},
 			float64(3),
 			nil,
@@ -439,6 +466,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"strlen(randPassword())",
 				map[string]interface{}{},
+				nil,
 			},
 			float64(16),
 			nil,
@@ -452,6 +480,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": testFilePath,
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -465,6 +494,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": filepath.Join(tmpDir, "not-valid.txt"),
 				},
+				nil,
 			},
 			false,
 			nil,
@@ -478,6 +508,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": tmpDir,
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -491,6 +522,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": "~/",
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -504,6 +536,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": filepath.Join("/", "not", "exists"),
 				},
+				nil,
 			},
 			false,
 			nil,
@@ -517,6 +550,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": "http//xebialabs.com",
 				},
+				nil,
 			},
 			false,
 			nil,
@@ -530,6 +564,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": "http://xebialabs.com",
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -543,6 +578,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": "/path/to/my folder/valid/unix-file",
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -556,6 +592,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": "D:\\my folder\file.crt",
 				},
+				nil,
 			},
 			true,
 			nil,
@@ -569,6 +606,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": "D:\\my folder\file.crt",
 				},
+				nil,
 			},
 			false,
 			nil,
@@ -582,6 +620,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": "/path/to/my folder/valid/unix-file",
 				},
+				nil,
 			},
 			false,
 			nil,
@@ -595,6 +634,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": "../path/to/my-folder/valid/unix-file",
 				},
+				nil,
 			},
 			false,
 			nil,
@@ -608,6 +648,7 @@ func Test_processCustomExpression(t *testing.T) {
 				map[string]interface{}{
 					"Test": "D://my folder/file.crt",
 				},
+				nil,
 			},
 			false,
 			nil,
@@ -621,6 +662,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"awsCredentials()",
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			nil,
@@ -632,6 +674,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"awsCredentials('unknown')",
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			nil,
@@ -643,6 +686,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"regex('^(true|false|1|0)$', awsCredentials('IsAvailable'))",
 				map[string]interface{}{},
+				nil,
 			},
 			true,
 			nil,
@@ -654,6 +698,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"regex('^(true|false|1|0)$', awsCredentials('AccessKeyID'))",
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			func(result interface{}) bool {
@@ -667,6 +712,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"awsRegions()",
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			nil,
@@ -678,6 +724,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"awsRegions('ecs')",
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			func(result interface{}) bool {
@@ -698,6 +745,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"regex('[a-zA-Z0-9-]+', awsRegions('ecs', 0))",
 				map[string]interface{}{},
+				nil,
 			},
 			true,
 			nil,
@@ -709,6 +757,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"awsRegions('ecs', 10000)",
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			nil,
@@ -722,6 +771,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"k8sConfig()",
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			nil,
@@ -733,6 +783,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"k8sConfig('ClusterServer', 'unknown')",
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			nil,
@@ -744,6 +795,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"k8sConfig('IsConfigAvailable')",
 				map[string]interface{}{},
+				nil,
 			},
 			true,
 			nil,
@@ -755,6 +807,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"k8sConfig('IsAvailable')",
 				map[string]interface{}{},
+				nil,
 			},
 			true,
 			nil,
@@ -766,6 +819,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"k8sConfig('IsAvailable', 'unknown')",
 				map[string]interface{}{},
+				nil,
 			},
 			false,
 			nil,
@@ -777,6 +831,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"k8sConfig('ClusterServer')",
 				map[string]interface{}{},
+				nil,
 			},
 			"https://test.hcp.eastus.azmk8s.io:443",
 			nil,
@@ -790,6 +845,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"os()",
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			nil,
@@ -801,6 +857,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"os('unknown')",
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			nil,
@@ -812,73 +869,10 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"os('_operatingsystem') != ''",
 				map[string]interface{}{},
+				nil,
 			},
 			true,
 			nil,
-			false,
-		},
-
-		// version helper functions
-		{
-			"should error on empty module for version expression",
-			false,
-			args{
-				"version()",
-				map[string]interface{}{},
-			},
-			nil,
-			nil,
-			true,
-		},
-		{
-			"should error on unknown module for version expression",
-			false,
-			args{
-				"version('unknown')",
-				map[string]interface{}{},
-			},
-			nil,
-			nil,
-			true,
-		},
-		{
-			"should return list of versions for valid XLD version expression",
-			false,
-			args{
-				"version('_showapplicableversions')",
-				map[string]interface{}{},
-			},
-			nil,
-			func(result interface{}) bool {
-				switch result.(type) {
-				case []string:
-					if len(result.([]string)) > 0 {
-						return true
-					}
-				}
-
-				return false
-			},
-			false,
-		},
-		{
-			"should return list of versions for valid XLR version expression",
-			false,
-			args{
-				"version('_showapplicableversions', 'xlr')",
-				map[string]interface{}{},
-			},
-			nil,
-			func(result interface{}) bool {
-				switch result.(type) {
-				case []string:
-					if len(result.([]string)) > 0 {
-						return true
-					}
-				}
-
-				return false
-			},
 			false,
 		},
 		{
@@ -887,6 +881,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				"normalizePath('/home/test/some/path')",
 				map[string]interface{}{},
+				nil,
 			},
 			"/home/test/some/path",
 			nil,
@@ -898,6 +893,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				`normalizePath('C:\\Users\\Someone\\place')`,
 				map[string]interface{}{},
+				nil,
 			},
 			"/C/Users/Someone/place",
 			nil,
@@ -909,6 +905,7 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				`normalizePath()`,
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			nil,
@@ -920,56 +917,47 @@ func Test_processCustomExpression(t *testing.T) {
 			args{
 				`normalizePath('/some/place', 'something')`,
 				map[string]interface{}{},
+				nil,
 			},
 			nil,
 			nil,
 			true,
 		},
 		{
-			"should create hash from answers map",
+			"should use functions defined in overrideFns instead of default",
 			false,
 			args{
-				`md5HashOfAnswersIncluding()`,
+				"strlen(Foo)",
 				map[string]interface{}{
-					"foo":  "bar",
-					"bar":  10,
-					"fooo": true,
-					"baar": "hello",
+					"Foo": "foo0",
+				},
+				map[string]govaluate.ExpressionFunction{
+					"strlen": func(args ...interface{}) (interface{}, error) {
+						length := len(args[0].(string)) + 1
+						return (float64)(length), nil
+					},
 				},
 			},
-			"8e95292b8f637910ed4af0c262177e02",
+			float64(5),
 			nil,
 			false,
 		},
 		{
-			"should create hash from filtered answers map",
+			"should use functions defined in overrideFns",
 			false,
 			args{
-				`md5HashOfAnswersIncluding('foo', 'bar')`,
+				"strlenNew(Foo)",
 				map[string]interface{}{
-					"foo":  "bar",
-					"bar":  10,
-					"fooo": true,
-					"baar": "hello",
+					"Foo": "foo0",
+				},
+				map[string]govaluate.ExpressionFunction{
+					"strlenNew": func(args ...interface{}) (interface{}, error) {
+						length := len(args[0].(string)) - 1
+						return (float64)(length), nil
+					},
 				},
 			},
-			"d2639145905a67631756942d27ce0f1f",
-			nil,
-			false,
-		},
-		{
-			"should create hash from inverse filtered answers map",
-			false,
-			args{
-				`md5HashOfAnswersNotIncluding('fooo', 'baar')`,
-				map[string]interface{}{
-					"foo":  "bar",
-					"bar":  10,
-					"fooo": true,
-					"baar": "hello",
-				},
-			},
-			"d2639145905a67631756942d27ce0f1f",
+			float64(3),
 			nil,
 			false,
 		},
@@ -979,7 +967,7 @@ func Test_processCustomExpression(t *testing.T) {
 			continue
 		}
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ProcessCustomExpression(tt.args.exStr, tt.args.parameters)
+			got, err := ProcessCustomExpression(tt.args.exStr, tt.args.parameters, tt.args.overrideFns)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("processCustomExpression() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1004,8 +992,9 @@ func Test_processCustomExpression_no_k8s(t *testing.T) {
 	os.Setenv("KUBECONFIG", filepath.Join(tmpDir, "config"))
 
 	type args struct {
-		exStr      string
-		parameters map[string]interface{}
+		exStr       string
+		parameters  map[string]interface{}
+		overrideFns map[string]govaluate.ExpressionFunction
 	}
 	tests := []struct {
 		name       string
@@ -1022,6 +1011,7 @@ func Test_processCustomExpression_no_k8s(t *testing.T) {
 			args{
 				"k8sConfig('IsConfigAvailable')",
 				map[string]interface{}{},
+				nil,
 			},
 			false,
 			nil,
@@ -1033,6 +1023,7 @@ func Test_processCustomExpression_no_k8s(t *testing.T) {
 			args{
 				"k8sConfig('IsAvailable')",
 				map[string]interface{}{},
+				nil,
 			},
 			false,
 			nil,
@@ -1044,6 +1035,7 @@ func Test_processCustomExpression_no_k8s(t *testing.T) {
 			args{
 				"k8sConfig('ClusterServer')",
 				map[string]interface{}{},
+				nil,
 			},
 			"",
 			nil,
@@ -1055,7 +1047,7 @@ func Test_processCustomExpression_no_k8s(t *testing.T) {
 			continue
 		}
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ProcessCustomExpression(tt.args.exStr, tt.args.parameters)
+			got, err := ProcessCustomExpression(tt.args.exStr, tt.args.parameters, tt.args.overrideFns)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("processCustomExpression() error = %v, wantErr %v", err, tt.wantErr)
 				return

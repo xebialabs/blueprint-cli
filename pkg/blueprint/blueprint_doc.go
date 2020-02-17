@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Knetic/govaluate"
 	"github.com/thoas/go-funk"
 	"gopkg.in/AlecAivazis/survey.v1"
 
@@ -70,10 +71,10 @@ func NewPreparedData() *PreparedData {
 // regular Expressions
 var regExFn = regexp.MustCompile(`([\w\d]+).([\w\d]+)\(([,/\-:\s\w\d]*)\)(?:\.([\w\d]*)|\[([\d]+)\])*`)
 
-func GetProcessedExpressionValue(val VarField, parameters map[string]interface{}) (VarField, error) {
+func GetProcessedExpressionValue(val VarField, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) (VarField, error) {
 	switch val.Tag {
 	case tagExpressionV1, tagExpressionV2:
-		procVal, err := ProcessCustomExpression(val.Value, parameters)
+		procVal, err := ProcessCustomExpression(val.Value, parameters, overrideFns)
 		if err != nil {
 			return val, err
 		}
@@ -99,12 +100,12 @@ func GetProcessedExpressionValue(val VarField, parameters map[string]interface{}
 	return val, nil
 }
 
-func (variable *Variable) ProcessExpression(parameters map[string]interface{}) error {
+func (variable *Variable) ProcessExpression(parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) error {
 	fieldsToSkip := []string{"Validate", "Options"} // these fields have special processing
-	return ProcessExpressionField(variable, fieldsToSkip, parameters, variable.Name.Value)
+	return ProcessExpressionField(variable, fieldsToSkip, parameters, variable.Name.Value, overrideFns)
 }
 
-func ProcessExpressionField(item interface{}, fieldsToSkip []string, parameters map[string]interface{}, id string) error {
+func ProcessExpressionField(item interface{}, fieldsToSkip []string, parameters map[string]interface{}, id string, overrideFns map[string]govaluate.ExpressionFunction) error {
 	itemR := reflect.ValueOf(item).Elem()
 	typeOfT := itemR.Type()
 	// iterate over the struct fields and map them
@@ -116,7 +117,7 @@ func ProcessExpressionField(item interface{}, fieldsToSkip []string, parameters 
 		if !util.IsStringInSlice(fieldName, fieldsToSkip) && field.IsValid() {
 			switch val := value.(type) {
 			case VarField:
-				procVal, err := GetProcessedExpressionValue(val, parameters)
+				procVal, err := GetProcessedExpressionValue(val, parameters, overrideFns)
 				if err != nil {
 					return fmt.Errorf("Error while processing !expr [%s] for [%s] of [%s]. %s", val.Value, fieldName, id, err.Error())
 				}
@@ -177,7 +178,7 @@ func (variable *Variable) GetValueFieldVal() interface{} {
 	return variable.Value.Value
 }
 
-func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabel bool) []string {
+func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabel bool, overrideFns map[string]govaluate.ExpressionFunction) []string {
 	options := []string{}
 	for _, option := range variable.Options {
 		switch option.Tag {
@@ -190,7 +191,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabe
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Value, opts)
 			options = append(options, opts...)
 		case tagExpressionV1, tagExpressionV2:
-			opts, err := ProcessCustomExpression(option.Value, parameters)
+			opts, err := ProcessCustomExpression(option.Value, parameters, overrideFns)
 			if err != nil {
 				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
 				return options
@@ -258,13 +259,13 @@ func (variable *Variable) GetValidateExpr() (string, error) {
 	return "", fmt.Errorf("only '!expr' tag is supported for validate attribute")
 }
 
-func validateField(validateExpr string, variable *Variable, parameters map[string]interface{}, value interface{}) error {
+func validateField(validateExpr string, variable *Variable, parameters map[string]interface{}, value interface{}, overrideFns map[string]govaluate.ExpressionFunction) error {
 	if validateExpr != "" {
 		allowEmpty := false
 		if IsSecretType(variable.Type.Value) || variable.AllowEmpty.Bool {
 			allowEmpty = true
 		}
-		validationErr := validatePrompt(variable.Name.Value, validateExpr, allowEmpty, parameters)(value)
+		validationErr := validatePrompt(variable.Name.Value, validateExpr, allowEmpty, parameters, overrideFns)(value)
 		if validationErr != nil {
 			return fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", value, variable.Name.Value, validationErr.Error())
 		}
@@ -272,7 +273,7 @@ func validateField(validateExpr string, variable *Variable, parameters map[strin
 	return nil
 }
 
-func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[string]interface{}) (interface{}, error) {
+func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) (interface{}, error) {
 	// get validate expression
 	validateExpr, err := variable.GetValidateExpr()
 	if err != nil {
@@ -302,7 +303,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		return answerBool, nil
 	case TypeSelect:
 		// check if answer is one of the options, error if not
-		options := variable.GetOptions(parameters, false)
+		options := variable.GetOptions(parameters, false, overrideFns)
 		answerStr := fmt.Sprintf("%v", value)
 		if !funk.Contains(options, answerStr) {
 			return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Value)
@@ -310,7 +311,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		return answerStr, nil
 	case TypeFile, TypeSecretFile:
 		// do validation if needed
-		err := validateField(validateExpr, variable, parameters, value)
+		err := validateField(validateExpr, variable, parameters, value, overrideFns)
 		if err != nil {
 			return "", err
 		}
@@ -324,7 +325,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		return string(data), nil
 	default:
 		// do validation if needed
-		err := validateField(validateExpr, variable, parameters, value)
+		err := validateField(validateExpr, variable, parameters, value, overrideFns)
 		if err != nil {
 			return "", err
 		}
@@ -339,7 +340,7 @@ func (variable *Variable) GetHelpText() string {
 	return ""
 }
 
-func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[string]interface{}, surveyOpts ...survey.AskOpt) (interface{}, error) {
+func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction, surveyOpts ...survey.AskOpt) (interface{}, error) {
 	var answer string
 	var err error
 	defaultValStr := fmt.Sprintf("%v", defaultVal)
@@ -359,7 +360,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, variable.AllowEmpty.Bool, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, variable.AllowEmpty.Bool, parameters, overrideFns),
 			surveyOpts...,
 		)
 	case TypeSecret:
@@ -373,7 +374,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, true, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, true, parameters, overrideFns),
 			surveyOpts...,
 		)
 
@@ -392,7 +393,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:          variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 	case TypeFile, TypeSecretFile:
@@ -404,7 +405,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&filePath,
-			validateFilePath(variable.Name.Value, validateExpr, false, parameters),
+			validateFilePath(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 		filePath = strings.TrimSpace(filePath)
@@ -416,7 +417,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		}
 		answer = string(data)
 	case TypeSelect:
-		options := variable.GetOptions(parameters, true)
+		options := variable.GetOptions(parameters, true, overrideFns)
 		err = survey.AskOne(
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("Select value for %s?", variable.Name.Value)),
@@ -426,7 +427,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:     variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 		answer = findLabelValueFromOptions(answer, variable.Options)
@@ -439,7 +440,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&confirm,
-			validatePrompt(variable.Name.Value, validateExpr, false, parameters),
+			validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 		if err != nil {
@@ -472,7 +473,7 @@ func (blueprintDoc *BlueprintConfig) validate() error {
 }
 
 // prepare template data by getting user input and calling named functions
-func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams, data *PreparedData, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
+func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams, data *PreparedData, overrideFns map[string]govaluate.ExpressionFunction, surveyOpts ...survey.AskOpt) (*PreparedData, error) {
 	// if exists, get map of answers from file
 	var answerMap map[string]string
 	var err error
@@ -499,7 +500,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 
 	// for every variable defined in blueprint.yaml file
 	for i, variable := range blueprintDoc.Variables {
-		variable.ProcessExpression(data.TemplateData)
+		variable.ProcessExpression(data.TemplateData, overrideFns)
 		var defaultVal interface{}
 		// override the default value if its passed and if the param is overridable.
 		if variable.OverrideDefault.Bool && util.MapContainsKeyWithVal(params.OverrideDefaults, variable.Name.Value) {
@@ -552,7 +553,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 		// check answers file for variable value, if exists
 		if usingAnswersFile {
 			if util.MapContainsKeyWithVal(answerMap, variable.Name.Value) {
-				answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Value], data.TemplateData)
+				answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Value], data.TemplateData, overrideFns)
 				if err != nil {
 					return nil, err
 				}
@@ -569,7 +570,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 
 		// skip user input if it is in default mode and default value is present
 		if params.UseDefaultsAsValue && defaultVal != nil && defaultVal != "" {
-			finalVal, err := variable.VerifyVariableValue(defaultVal, data.TemplateData)
+			finalVal, err := variable.VerifyVariableValue(defaultVal, data.TemplateData, overrideFns)
 			if err != nil {
 				return nil, err
 			}
@@ -598,7 +599,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 		util.Verbose("[dataPrep] Processing template variable [Name: %s, Type: %s]\n", variable.Name.Value, variable.Type.Value)
 		var answer interface{}
 		if shouldAskForInput(variable) {
-			answer, err = variable.GetUserInput(defaultVal, data.TemplateData, surveyOpts...)
+			answer, err = variable.GetUserInput(defaultVal, data.TemplateData, overrideFns, surveyOpts...)
 		}
 		if err != nil {
 			return nil, err
@@ -687,7 +688,7 @@ func validateFiles(configs *[]TemplateConfig) error {
 	return nil
 }
 
-func validatePrompt(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}) func(val interface{}) error {
+func validatePrompt(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) func(val interface{}) error {
 	return func(val interface{}) error {
 		var value interface{}
 		switch valType := val.(type) {
@@ -710,7 +711,7 @@ func validatePrompt(varName string, validateExpr string, allowEmpty bool, parame
 			if varName != "" {
 				parameters[varName] = value
 			}
-			isSuccess, err := ProcessCustomExpression(validateExpr, parameters)
+			isSuccess, err := ProcessCustomExpression(validateExpr, parameters, overrideFns)
 			if err != nil {
 				return err
 			}
@@ -724,13 +725,13 @@ func validatePrompt(varName string, validateExpr string, allowEmpty bool, parame
 	}
 }
 
-func validateFilePath(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}) func(val interface{}) error {
+func validateFilePath(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}, overrideFns map[string]govaluate.ExpressionFunction) func(val interface{}) error {
 	return func(val interface{}) error {
 		err := survey.Required(val)
 		if err != nil {
 			return err
 		}
-		validationErr := validatePrompt(varName, validateExpr, allowEmpty, parameters)(val)
+		validationErr := validatePrompt(varName, validateExpr, allowEmpty, parameters, overrideFns)(val)
 
 		if validationErr != nil {
 			return fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", val, varName, validationErr.Error())
