@@ -3,23 +3,22 @@ package blueprint
 import (
 	"bytes"
 	"fmt"
-    "github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/gitlab"
 	"io/ioutil"
 	"path"
 	"sort"
 	"strings"
 
-	"github.com/xebialabs/yaml"
-
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"github.com/xebialabs/yaml"
 
 	"gopkg.in/AlecAivazis/survey.v1"
 
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository"
+	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/bitbucket"
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/bitbucketserver"
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/github"
-	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/bitbucket"
+	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/gitlab"
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/http"
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/local"
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/mock"
@@ -205,8 +204,8 @@ func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*
 			repo, err = bitbucketserver.NewBitbucketServerBlueprintRepository(repoDefinition)
 		case models.ProviderHttp:
 			repo, err = http.NewHttpBlueprintRepository(repoDefinition, CLIVersion)
-        case models.ProviderGitLab:
-            repo, err = gitlab.NewGitLabBlueprintRepository(repoDefinition)
+		case models.ProviderGitLab:
+			repo, err = gitlab.NewGitLabBlueprintRepository(repoDefinition)
 		default:
 			return nil, fmt.Errorf("no blueprint provider implementation found for %s", repoProvider)
 		}

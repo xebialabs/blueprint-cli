@@ -10,10 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/thoas/go-funk"
-
 	"github.com/Knetic/govaluate"
 	"github.com/dlclark/regexp2"
+	"github.com/thoas/go-funk"
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/blueprint-cli/pkg/osHelper"

@@ -2,16 +2,14 @@ package blueprint
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/xebialabs/blueprint-cli/pkg/models"
-
 	"github.com/xebialabs/blueprint-cli/pkg/util"
-
-	"io"
-	"os"
-	"path/filepath"
 )
 
 // GeneratedBlueprint keeps track of all files and directories that were generated as part of the blueprint process.

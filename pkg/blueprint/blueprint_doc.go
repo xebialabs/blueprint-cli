@@ -23,10 +23,9 @@ import (
 
 // Constants
 const (
-	FnAWS     = "aws"
-	FnK8S     = "k8s"
-	FnOs      = "os"
-	FnVersion = "version"
+	FnAWS = "aws"
+	FnK8S = "k8s"
+	FnOs  = "os"
 
 	tagFnV1          = "!fn"
 	tagExpressionV1  = "!expression"
