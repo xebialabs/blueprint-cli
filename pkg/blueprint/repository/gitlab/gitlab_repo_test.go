@@ -70,7 +70,7 @@ func TestGitLabBlueprintRepository_GetFileContents(t *testing.T) {
 func TestNewGitLabBlueprintRepository(t *testing.T) {
 	t.Run("should error when repo-name is not set", func(t *testing.T) {
 		repo, err := NewGitLabBlueprintRepository(map[string]string{
-		    "url":  "http://localhost",
+			"url":  "http://localhost",
 			"name": "test",
 			"type": "gitlab",
 		})
@@ -81,27 +81,27 @@ func TestNewGitLabBlueprintRepository(t *testing.T) {
 		repo, err := NewGitLabBlueprintRepository(map[string]string{
 			"name":      "test",
 			"type":      "gitlab",
-            "url":       "http://localhost",
+			"url":       "http://localhost",
 			"repo-name": "blueprints",
 		})
 		require.NotNil(t, err)
 		require.Nil(t, repo)
 	})
-    t.Run("should error when url is not set", func(t *testing.T) {
-        repo, err := NewGitLabBlueprintRepository(map[string]string{
-            "name":      "test",
-            "type":      "gitlab",
-            "owner":     "xebialabs",
-            "repo-name": "blueprints",
-        })
-        require.NotNil(t, err)
-        require.Nil(t, repo)
-    })
+	t.Run("should error when url is not set", func(t *testing.T) {
+		repo, err := NewGitLabBlueprintRepository(map[string]string{
+			"name":      "test",
+			"type":      "gitlab",
+			"owner":     "xebialabs",
+			"repo-name": "blueprints",
+		})
+		require.NotNil(t, err)
+		require.Nil(t, repo)
+	})
 	t.Run("should set master as branch when not set", func(t *testing.T) {
 		repo, err := NewGitLabBlueprintRepository(map[string]string{
 			"name":      "test",
 			"type":      "gitlab",
-            "url":       "http://localhost",
+			"url":       "http://localhost",
 			"repo-name": "blueprints",
 			"owner":     "xebialabs",
 			"isMock":    "true",
@@ -117,7 +117,7 @@ func TestNewGitLabBlueprintRepository(t *testing.T) {
 		repo, err := NewGitLabBlueprintRepository(map[string]string{
 			"name":      "test",
 			"type":      "gitlab",
-            "url":       "http://localhost",
+			"url":       "http://localhost",
 			"repo-name": "blueprints",
 			"owner":     "xebialabs",
 			"branch":    "development",

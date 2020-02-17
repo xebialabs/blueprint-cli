@@ -103,6 +103,8 @@ goBuild {
     // The ${} placeholder will be rendered in cross-compile
     go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl-blueprint\${GOEXE} cmd/blueprint/main.go"
     dumpVersion
+
+    finalizedBy gofmt
 }
 
 aws {

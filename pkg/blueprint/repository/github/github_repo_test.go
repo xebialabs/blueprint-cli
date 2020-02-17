@@ -129,7 +129,7 @@ func TestNewGitHubBlueprintRepository(t *testing.T) {
 			"type":      "github",
 			"repo-name": "blueprints",
 			"owner":     "xebialabs",
-            "isMock":    "true",
+			"isMock":    "true",
 		})
 		require.Nil(t, err)
 		require.NotNil(t, repo)
@@ -145,7 +145,7 @@ func TestNewGitHubBlueprintRepository(t *testing.T) {
 			"repo-name": "blueprints",
 			"owner":     "xebialabs",
 			"branch":    "development",
-            "isMock":    "true",
+			"isMock":    "true",
 		})
 		require.Nil(t, err)
 		require.NotNil(t, repo)

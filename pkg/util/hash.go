@@ -22,12 +22,12 @@ func Md5HashFromFilteredMap(params map[string]interface{}, filters []interface{}
 		filteredParams := make(map[string]interface{})
 		for k, v := range params {
 			if invert {
-                // add items that are not filtered
+				// add items that are not filtered
 				if !funk.Contains(filters, k) {
 					filteredParams[k] = v
 				}
 			} else {
-                // add items that are filtered
+				// add items that are filtered
 				if funk.Contains(filters, k) {
 					filteredParams[k] = v
 				}

@@ -1,13 +1,13 @@
 package github
 
 import (
-    "context"
-    "encoding/json"
-    "github.com/google/go-github/github"
-    "io"
-    "net/url"
-    "os"
-    "path/filepath"
+	"context"
+	"encoding/json"
+	"github.com/google/go-github/github"
+	"io"
+	"net/url"
+	"os"
+	"path/filepath"
 )
 
 // GitHub Mock Service Base & Client to fetch local JSON test files
@@ -21,7 +21,7 @@ type localFileFetcher struct {
 }
 
 func (c *localFileFetcher) GetFileReader(appendExt bool, params ...string) (*os.File, error) {
-    params = append([]string {c.SourceDir}, params...)
+	params = append([]string{c.SourceDir}, params...)
 	sourcePath := filepath.Join(params...)
 	if appendExt {
 		// if this is an API call, append default file extension
@@ -72,17 +72,17 @@ func (s *mockRepoService) GetContents(ctx context.Context, owner, repo, path str
 	}
 
 	// decode file contents to raw JSon type
-    var rawJSON json.RawMessage
-    err = s.client.DecodeToGithubEntity(fileReader, &rawJSON)
-    if err != nil {
-        return nil, nil, nil, err
-    }
+	var rawJSON json.RawMessage
+	err = s.client.DecodeToGithubEntity(fileReader, &rawJSON)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 
-    // unmarshal raw JSON to Github entity
-    fileUnmarshalError := json.Unmarshal(rawJSON, &fileContent)
-    if fileUnmarshalError == nil {
-        return fileContent, nil, resp, nil
-    }
+	// unmarshal raw JSON to Github entity
+	fileUnmarshalError := json.Unmarshal(rawJSON, &fileContent)
+	if fileUnmarshalError == nil {
+		return fileContent, nil, resp, nil
+	}
 	return fileContent, nil, nil, nil
 }
 

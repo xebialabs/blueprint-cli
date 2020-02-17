@@ -5,22 +5,22 @@ import (
 	"fmt"
 	"net/url"
 	"path"
-    "strconv"
+	"strconv"
 
-    "github.com/google/go-github/github"
+	"github.com/google/go-github/github"
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/blueprint-cli/pkg/models"
 	"github.com/xebialabs/blueprint-cli/pkg/util"
 )
 
 type GitHubBlueprintRepository struct {
-	Client        *GithubClient
-	Name          string
-	RepoName      string
-	Owner         string
-	Branch        string
-	Token         string
-	IsMock        bool
+	Client   *GithubClient
+	Name     string
+	RepoName string
+	Owner    string
+	Branch   string
+	Token    string
+	IsMock   bool
 }
 
 func NewGitHubBlueprintRepository(confMap map[string]string) (*GitHubBlueprintRepository, error) {
@@ -53,10 +53,10 @@ func NewGitHubBlueprintRepository(confMap map[string]string) (*GitHubBlueprintRe
 	}
 
 	// parse mock switch if available
-    repo.IsMock = false
-    if util.MapContainsKeyWithVal(confMap, "isMock") {
-        repo.IsMock, _ = strconv.ParseBool(confMap["isMock"])
-    }
+	repo.IsMock = false
+	if util.MapContainsKeyWithVal(confMap, "isMock") {
+		repo.IsMock, _ = strconv.ParseBool(confMap["isMock"])
+	}
 
 	return repo, nil
 }
@@ -124,11 +124,11 @@ func (repo *GitHubBlueprintRepository) ListBlueprintsFromRepo() (map[string]*mod
 
 			// Add remote definition file to blueprint
 			blueprints[currentPath].DefinitionFile = repository.GenerateBlueprintFileDefinition(
-			    blueprints,
-			    currentPath,
-			    filename,
-			    entry.GetPath(),
-			    parsedUrl,
+				blueprints,
+				currentPath,
+				filename,
+				entry.GetPath(),
+				parsedUrl,
 			)
 		} else if entry.GetType() == "tree" {
 			// pass
@@ -137,7 +137,7 @@ func (repo *GitHubBlueprintRepository) ListBlueprintsFromRepo() (map[string]*mod
 			if currentPath != "." && path.Dir(entry.GetPath()) != "." {
 				// Add remote template file to blueprint
 				blueprints[currentPath].AddFile(
-				    repository.GenerateBlueprintFileDefinition(blueprints, currentPath, filename, entry.GetPath(), parsedUrl),
+					repository.GenerateBlueprintFileDefinition(blueprints, currentPath, filename, entry.GetPath(), parsedUrl),
 				)
 			}
 		}

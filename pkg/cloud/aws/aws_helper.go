@@ -1,18 +1,18 @@
 package aws
 
 import (
-    "fmt"
-    "sort"
-    "strconv"
+	"fmt"
+	"sort"
+	"strconv"
 
-    "reflect"
-    "strings"
+	"reflect"
+	"strings"
 
-    "github.com/aws/aws-sdk-go/aws/credentials"
-    "github.com/aws/aws-sdk-go/aws/endpoints"
-    "github.com/aws/aws-sdk-go/aws/session"
-    "github.com/xebialabs/blueprint-cli/pkg/models"
-    "github.com/xebialabs/blueprint-cli/pkg/util"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/xebialabs/blueprint-cli/pkg/models"
+	"github.com/xebialabs/blueprint-cli/pkg/util"
 )
 
 const (
@@ -61,7 +61,7 @@ func GetAvailableAWSRegionsForService(serviceName string) ([]string, error) {
 		regions = append(regions, key)
 	}
 
-    sort.Strings(regions)
+	sort.Strings(regions)
 	return regions, nil
 }
 
@@ -74,9 +74,9 @@ func GetAWSCredentialsFromSystem() (credentials.Value, error) {
 }
 
 func GetAWSCredentialsField(v *credentials.Value, field string) string {
-    r := reflect.ValueOf(v)
-    f := reflect.Indirect(r).FieldByName(field)
-    return f.String()
+	r := reflect.ValueOf(v)
+	f := reflect.Indirect(r).FieldByName(field)
+	return f.String()
 }
 
 // CallAWSFuncByName calls related AWS module function with parameters provided

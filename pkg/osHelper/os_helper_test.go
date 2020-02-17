@@ -1,10 +1,10 @@
 package osHelper
 
 import (
-    "runtime"
-    "testing"
+	"runtime"
+	"testing"
 
-    "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 var currentOperatingSystem = "windows"

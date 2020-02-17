@@ -21,7 +21,7 @@ type localFileFetcher struct {
 }
 
 func (c *localFileFetcher) GetFileReader(appendExt bool, params ...string) (*os.File, error) {
-	params = append([]string {c.SourceDir}, params...)
+	params = append([]string{c.SourceDir}, params...)
 	sourcePath := filepath.Join(params...)
 	if appendExt {
 		// if this is an API call, append default file extension

@@ -3,9 +3,9 @@ package models
 import "net/url"
 
 const (
-	BlueprintOutputDir             = "xebialabs"
-	BlueprintFinalPrompt           = "Confirm to generate blueprint files?"
-	UpFinalPrompt                  = "Do you want to proceed to the deployment with these values?"
+	BlueprintOutputDir   = "xebialabs"
+	BlueprintFinalPrompt = "Confirm to generate blueprint files?"
+	UpFinalPrompt        = "Do you want to proceed to the deployment with these values?"
 )
 
 // Function Result definition
