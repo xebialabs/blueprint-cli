@@ -1,6 +1,6 @@
-# XL CLI
+# XL Blueprint CLI
 
-Project for XL DevOps as Code command line interface. Released binaries of XL CLI can/should be found at https://dist.xebialabs.com/public/xl-cli/.
+Project for XL Blueprint command line interface.
 
 ## Environment
 
@@ -83,42 +83,6 @@ Other incrementer rules are:
 * incrementMinorIfNotOnRelease
 * incrementPrerelease
 
-Examples:
-
-Starting point is xl-client.8.2.0-alpha.3
-
-./gradlew release
-
--> xl-client.8.2.0-alpha.4
-
-./gradlew release -Prelease.versionIncrementer=incrementPrerelease
-
--> xl-client.8.2.0-alpha.5
-
-./gradlew release -Drelease.prereleasePhase=rc
-
--> xl-client.8.2.0-rc.1
-
-./gradlew release
-
--> xl-client.8.2.0-rc.2
-
-./gradlew release -Prelease.versionIncrementer=incrementPatch
-
--> xl-client.8.2.1
-
-./gradlew release -Prelease.versionIncrementer=incrementMinor
-
--> xl-client.8.3.0
-
-./gradlew release -Prelease.versionIncrementer=incrementMajor
-
--> xl-client.9.0.0
-
-./gradlew release -Drelease.prereleasePhase=alpha
-
--> xl-client.9.0.0-alpha.0
-
 Authorization flags:
 * SSH: -Prelease.customKeyFile="./keys/secret_key_rsa" -Prelease.customKeyPassword=password
 * basic auth: -Prelease.customUsername=username -Prelease.customPassword=password
@@ -126,20 +90,3 @@ Authorization flags:
 Jenkins integration flags: ./gradlew release -Prelease.disableChecks -Prelease.pushTagsOnly
 
 Other documentation on: http://axion-release-plugin.readthedocs.io/en/latest/
-
-
-## xl-up
-
-To test the blueprint locally you need `xl cli` on your machine  and also clone this repository:
-
-```$xslt
-xl up -b xl-infra -l /PATH/TO/xl-up-blueprint/
-```
-
-When you make a PR and also want to run integration test against an existing EKS cluster, GKE or Plain mutlinode K8s cluster then add label ``run-xl-up-pr`` in your github PR, then this pr will run against master in xl-up-blueprint branch. If you are working in story that has changes also in xl-up-blueprint repo in a branch with the same name then also add ``same-branch-on-xl-up-blueprint`` label in your pr
-
-To specify default versions of XLDeploy and XLRelease supported by xl up while building cli use below flags,
-
-```$xslt
-./gradlew clean build  -PXLDVersions=9.0.6 -PXLRVersions=9.0.9
-```
