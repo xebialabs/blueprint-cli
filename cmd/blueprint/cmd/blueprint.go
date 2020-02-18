@@ -11,8 +11,8 @@ import (
 
 var blueprintCmd = &cobra.Command{
 	Use:   "blueprint",
-	Short: "Create a Blueprint",
-	Long:  `Create a Blueprint for XL Platform Releases and Deployments`,
+	Short: "(default) Create a Blueprint",
+	Long:  "Process a Blueprint from the active repository",
 	Run: func(cmd *cobra.Command, args []string) {
 		context, err := xl.BuildContext(viper.GetViper(), CliVersion)
 		if err != nil {

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -19,18 +20,45 @@ var initCfgTry = 0
 var CliVersion = "undefined"
 var cfgFile string
 
+// Override by changing binaryName in build.gradle
+var BinaryName string = "xl-blueprint"
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "xl",
-	Short: "The xl command line tool interacts with XL Release and XL Deploy",
-	Long: "XL Cli " + CliVersion + "\n" + `The xl command line tool provides a fast and straightforward method for provisioning
-XL Release and XL Deploy with YAML files. The files can include items like
-releases, pipelines, applications and target environments.`,
+	Use:   BinaryName,
+	Short: fmt.Sprintf("The %s command line tool parses Go-style templates.", BinaryName),
+	Long:  fmt.Sprintf("%s %s\nThe %s command line tool parses Go-style templates.", BinaryName, CliVersion, BinaryName),
+}
+
+func isABlueprintFlag(arg string) bool {
+	if strings.HasPrefix(arg, "-") {
+		for _, cmd := range rootCmd.Commands() {
+			if cmd.Use == "blueprint" {
+				pflag := cmd.Flags().Lookup(arg[1:])
+				if pflag == nil {
+					pflag = cmd.Flags().ShorthandLookup(arg[1:])
+				}
+
+				if pflag != nil {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	if len(os.Args) == 1 {
+		// os.Args will only have one entry if the executable was called with no parameters
+		os.Args = append(os.Args, "blueprint")
+	} else if isABlueprintFlag(os.Args[1]) {
+		// Slip "blueprint" into position [1] (between the command and the remaining flags)
+		os.Args = append(os.Args[0:1], append([]string{"blueprint"}, os.Args[1:]...)...)
+	}
+
 	if err := rootCmd.Execute(); err != nil {
 		util.Fatal("Error occurred when running command: %s\n", err)
 	}

@@ -35,20 +35,22 @@ apply plugin: 'maven-publish'
 apply plugin: 'jp.classmethod.aws.s3'
 apply plugin: 'org.sonarqube'
 
+ext.binaryName = "xl-blueprint"
+
 publishing {
     publications {
         maven(MavenPublication) {
             groupId 'com.xebialabs.xlclient'
             artifactId 'blueprint-cli'
-            artifact("./build/darwin-amd64/xl-blueprint") {
+            artifact("./build/darwin-amd64/${binaryName}") {
                 classifier = 'darwin-amd64'
                 extension = 'bin'
             }
-            artifact("./build/linux-amd64/xl-blueprint") {
+            artifact("./build/linux-amd64/${binaryName}") {
                 classifier = 'linux-amd64'
                 extension = 'bin'
             }
-            artifact("./build/windows-amd64/xl-blueprint.exe") {
+            artifact("./build/windows-amd64/${binaryName}.exe") {
                 classifier = 'windows-amd64'
                 extension = 'exe'
             }
@@ -94,6 +96,7 @@ goBuild {
         ldflag("BuildVersion", gitVersionShort) +
         ldflag("BuildGitCommit", gitCommit) +
         ldflag("BuildDate", date) +
+        ldflag("BinaryName", binaryName) +
         (project.hasProperty("optimise") ? "-s -w" : "") +
         "'"
 
@@ -101,7 +104,7 @@ goBuild {
     def debugFlags = project.hasProperty("debug") ? " -gcflags \"all=-N -l\"" : ""
 
     // The ${} placeholder will be rendered in cross-compile
-    go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/xl-blueprint\${GOEXE} cmd/blueprint/main.go"
+    go "build${debugFlags}${ldflags} -o ./build/\${GOOS}-\${GOARCH}/${binaryName}\${GOEXE} cmd/blueprint/main.go"
     dumpVersion
 
     finalizedBy gofmt
@@ -115,13 +118,13 @@ task upx {
     dependsOn goBuild
     doLast {
         exec {
-            commandLine 'upx', "${project.buildDir}/darwin-amd64/xl-blueprint"
+            commandLine 'upx', "${project.buildDir}/darwin-amd64/${binaryName}"
         }
         exec {
-            commandLine 'upx', "${project.buildDir}/linux-amd64/xl-blueprint"
+            commandLine 'upx', "${project.buildDir}/linux-amd64/${binaryName}"
         }
         exec {
-            commandLine 'upx', "${project.buildDir}/windows-amd64/xl-blueprint.exe"
+            commandLine 'upx', "${project.buildDir}/windows-amd64/${binaryName}.exe"
         }
     }
 }
