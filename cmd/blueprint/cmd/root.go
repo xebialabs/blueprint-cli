@@ -30,34 +30,31 @@ var rootCmd = &cobra.Command{
 	Long:  fmt.Sprintf("%s %s\nThe %s command line tool parses Go-style templates.", BinaryName, CliVersion, BinaryName),
 }
 
-func isABlueprintFlag(arg string) bool {
-	if strings.HasPrefix(arg, "-") {
-		for _, cmd := range rootCmd.Commands() {
-			if cmd.Use == "blueprint" {
-				pflag := cmd.Flags().Lookup(arg[1:])
-				if pflag == nil {
-					pflag = cmd.Flags().ShorthandLookup(arg[1:])
-				}
-
-				if pflag != nil {
-					return true
-				}
-			}
+func hasSubCommand(args []string) bool {
+	argsString := strings.Join(args, " ")
+	for _, cmd := range rootCmd.Commands() {
+		if strings.Contains(argsString, cmd.Use) {
+			return true
 		}
 	}
 	return false
 }
 
+func addDefaultCommandIfNeeded(args []string) []string {
+	if len(args) == 1 {
+		// os.Args will only have one entry if the executable was called with no parameters
+		args = append(args, "blueprint")
+	} else if !hasSubCommand(args) {
+		// Slip "blueprint" into position [1] (between the command and the remaining flags)
+		args = append(args[0:1], append([]string{"blueprint"}, args[1:]...)...)
+	}
+	return args
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	if len(os.Args) == 1 {
-		// os.Args will only have one entry if the executable was called with no parameters
-		os.Args = append(os.Args, "blueprint")
-	} else if isABlueprintFlag(os.Args[1]) {
-		// Slip "blueprint" into position [1] (between the command and the remaining flags)
-		os.Args = append(os.Args[0:1], append([]string{"blueprint"}, os.Args[1:]...)...)
-	}
+	os.Args = addDefaultCommandIfNeeded(os.Args)
 
 	if err := rootCmd.Execute(); err != nil {
 		util.Fatal("Error occurred when running command: %s\n", err)
