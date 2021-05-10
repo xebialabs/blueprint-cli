@@ -142,7 +142,7 @@ func ConstructLocalBlueprintContext(localRepoPath string) (*BlueprintContext, er
 	var err error
 
 	if !util.PathExists(localRepoPath, true) {
-		return nil, fmt.Errorf("Error: Provided development local repository directory [%s] is not valid\n", localRepoPath)
+		return nil, fmt.Errorf("error: provided development local repository directory [%s] is not valid", localRepoPath)
 	}
 
 	localRepo, err = local.NewLocalBlueprintRepository(map[string]string{
@@ -171,7 +171,7 @@ func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*
 	var currentRepo *repository.BlueprintRepository
 	var definedRepos []*repository.BlueprintRepository
 
-	repoDefinitions := make([]ConfMap, 1, 1)
+	repoDefinitions := make([]ConfMap, 1)
 	err = v.UnmarshalKey(RepositoryConfigKey, &repoDefinitions)
 	if err != nil {
 		return nil, fmt.Errorf("bad format in blueprint context: blueprint repositories should be a non-empty YAML list")
@@ -215,7 +215,7 @@ func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*
 		definedRepos = append(definedRepos, &repo)
 
 		// Set current repo if name is matching
-		if strings.ToLower(repo.GetName()) == strings.ToLower(activeRepoName) {
+		if strings.EqualFold(repo.GetName(), activeRepoName) {
 			currentRepo = &repo
 		}
 	}
