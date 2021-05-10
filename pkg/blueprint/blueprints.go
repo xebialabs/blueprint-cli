@@ -321,7 +321,7 @@ func evaluateAndSkipIfDependsOnIsFalse(dependsOn []VarField, mergedData *Prepare
 		if err != nil {
 			return false, err
 		}
-		if dependsOnVal == false {
+		if !dependsOnVal {
 			return false, nil
 		}
 	}

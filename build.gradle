@@ -24,8 +24,8 @@ buildscript {
 }
 
 plugins {
-    id 'com.github.blindpirate.gogradle' version '0.11.3'
-    id "jp.classmethod.aws" version "0.38"
+    id 'com.github.blindpirate.gogradle' version '0.11.4'
+    id "jp.classmethod.aws" version "0.41"
     id 'org.sonarqube' version '2.6.2'
 }
 
@@ -71,7 +71,7 @@ publishing {
 }
 
 golang {
-    goVersion = '1.12'
+    goVersion = '1.16'
     packagePath = 'github.com/xebialabs/blueprint-cli' // go import path of project to be built, NOT local file system path!
 }
 

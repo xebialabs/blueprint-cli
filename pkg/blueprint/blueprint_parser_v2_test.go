@@ -101,7 +101,7 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 		metadata := []byte("test: blueprint")
 		_, err := parseTemplateMetadataV2(&metadata, templatePath, &blueprintRepository)
 		require.NotNil(t, err)
-		assert.Equal(t, fmt.Sprintf("yaml: unmarshal errors:\n  line 1: field test not found in type blueprint.BlueprintYamlV2"), err.Error())
+		assert.Equal(t, "yaml: unmarshal errors:\n  line 1: field test not found in type blueprint.BlueprintYamlV2", err.Error())
 	})
 
 	t.Run("should error on missing api version", func(t *testing.T) {

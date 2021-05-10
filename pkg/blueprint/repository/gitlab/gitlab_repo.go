@@ -69,13 +69,7 @@ func NewGitLabBlueprintRepository(confMap map[string]string) (*GitLabBlueprintRe
 }
 
 func (repo *GitLabBlueprintRepository) Initialize() error {
-	repo.Client = NewGitLabClient(repo.Token, repo.IsMock)
-	if repo.Client.GitLabClient != nil {
-		err := repo.Client.GitLabClient.SetBaseURL(fmt.Sprintf("%s/api/v4", repo.Url))
-		if err != nil {
-			return err
-		}
-	}
+	repo.Client = NewGitLabClient(repo.Token, repo.IsMock, repo.Url)
 	return nil
 }
 

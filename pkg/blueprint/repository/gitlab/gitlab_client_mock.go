@@ -50,7 +50,7 @@ func (c *localFileFetcher) DecodeToGitLabEntity(fileReader io.Reader, v interfac
 // Repository Service Mock implementation for tests
 type mockRepositoriesService gitlabMockService
 
-func (s *mockRepositoriesService) ListTree(pid interface{}, opt *gitlab.ListTreeOptions, options ...gitlab.OptionFunc) ([]*gitlab.TreeNode, *gitlab.Response, error) {
+func (s *mockRepositoriesService) ListTree(pid interface{}, opt *gitlab.ListTreeOptions, options ...gitlab.RequestOptionFunc) ([]*gitlab.TreeNode, *gitlab.Response, error) {
 	ownerRepo := strings.Split(pid.(string), "/")
 
 	// try to find local file
@@ -78,7 +78,7 @@ func (s *mockRepositoriesService) ListTree(pid interface{}, opt *gitlab.ListTree
 // Branches Service Mock implementation for tests
 type mockBranchesService gitlabMockService
 
-func (s *mockBranchesService) GetBranch(pid interface{}, branch string, options ...gitlab.OptionFunc) (*gitlab.Branch, *gitlab.Response, error) {
+func (s *mockBranchesService) GetBranch(pid interface{}, branch string, options ...gitlab.RequestOptionFunc) (*gitlab.Branch, *gitlab.Response, error) {
 	ownerRepo := strings.Split(pid.(string), "/")
 
 	// try to find local file
@@ -96,7 +96,7 @@ func (s *mockBranchesService) GetBranch(pid interface{}, branch string, options 
 // RepositoryFiles Services Mock implementation for tests
 type mockRepositoryFilesService gitlabMockService
 
-func (s *mockRepositoryFilesService) GetRawFile(pid interface{}, fileName string, opt *gitlab.GetRawFileOptions, options ...gitlab.OptionFunc) ([]byte, *gitlab.Response, error) {
+func (s *mockRepositoryFilesService) GetRawFile(pid interface{}, fileName string, opt *gitlab.GetRawFileOptions, options ...gitlab.RequestOptionFunc) ([]byte, *gitlab.Response, error) {
 	ownerRepo := strings.Split(pid.(string), "/")
 	escapedPath := (&url.URL{Path: fileName}).String()
 	fileReader, err := s.client.GetFileReader(false, "repos", ownerRepo[0], ownerRepo[1], "contents", escapedPath)

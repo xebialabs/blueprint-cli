@@ -117,7 +117,7 @@ func ProcessExpressionField(item interface{}, fieldsToSkip []string, parameters 
 			case VarField:
 				procVal, err := GetProcessedExpressionValue(val, parameters, overrideFns)
 				if err != nil {
-					return fmt.Errorf("Error while processing !expr [%s] for [%s] of [%s]. %s", val.Value, fieldName, id, err.Error())
+					return fmt.Errorf("error while processing !expr [%s] for [%s] of [%s]. %s", val.Value, fieldName, id, err.Error())
 				}
 				field.Set(reflect.ValueOf(procVal))
 			}

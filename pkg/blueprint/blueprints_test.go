@@ -147,7 +147,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 				TemplatePath: "answer-input",
 				AnswersMap: map[string]string{
 					"Test":               "testing",
-					"ClientCert":         "FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5\\nQJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ\\n",
+					"ClientCert":         "FshYmQzRUNbYTA4Icc3V7JEgLXMNjcSLY9L1H4XQD79coMBRbbJFtOsp0Yk2btCKCAYLio0S8Jw85W5mgpLkasvCrXO5\nQJGxFvtQc2tHGLj0kNzM9KyAqbUJRe1l40TqfMdscEaWJimtd4oygqVc6y7zW1Wuj1EcDUvMD8qK8FEWfQgm5ilBIldQ\n",
 					"TestDepends":        "true",
 					"TestDepends2":       "false",
 					"TestDepends3":       "false",
@@ -196,7 +196,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"AppName":            "TestApp",
 			"SuperSecret":        "invisible",
 			"AWSRegion":          "eu-central-1",
-			"DiskSize":           "100",
+			"DiskSize":           "100.0",
 			"DiskSizeWithBuffer": "125.1",
 			"ShouldNotBeThere":   "",
 		}
@@ -258,7 +258,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"AppName":            "TestApp",
 			"SuperSecret":        "invisible",
 			"AWSRegion":          "eu-central-1",
-			"DiskSize":           "100",
+			"DiskSize":           "100.0",
 			"DiskSizeWithBuffer": "125.1",
 			"ShouldNotBeThere":   "",
 		}
@@ -361,7 +361,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
 		valueMap := map[string]string{
 			"Test":               "testing",
-			"ClientCert":         "this is a multiline\\ntext\\n\\nwith escape chars\\n",
+			"ClientCert":         "this is a multiline\\ntext\\\\n\\nwith escape chars\\n",
 			"AppName":            "TestApp",
 			"SuperSecret":        "supersecret",
 			"AWSRegion":          "eu-central-1",
@@ -427,11 +427,11 @@ func TestInstantiateBlueprint(t *testing.T) {
 		valsFile := GetFileContent(path.Join(gb.OutputDir, valuesFile))
 		valueMap := map[string]string{
 			"Test":               "testing",
-			"ClientCert":         "this is a multiline\\ntext\\n\\nwith escape chars\\n",
+			"ClientCert":         "this is a multiline\\ntext\\\\n\\nwith escape chars\\n",
 			"AppName":            "TestApp",
 			"SuperSecret":        "supersecret",
 			"AWSRegion":          "eu-central-1",
-			"DiskSize":           "10",
+			"DiskSize":           "10.0",
 			"DiskSizeWithBuffer": "125.6",
 			"ShouldNotBeThere":   "shouldnotbehere",
 			"File":               "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\nLzEtMCsGA1UEAxMkMzMzOTBhMDEtMTJiNi00NzViLWFiZjYtNmY4OGRhZTEyYmMz\\n-----END CERTIFICATE-----\\n",
@@ -445,7 +445,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 		secretsMap := map[string]string{
 			"AWSAccessKey":    "accesskey",
 			"AWSAccessSecret": "accesssecret",
-			"SecretFile":      "-----BEGIN CERTIFICATE-----\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\n-----END CERTIFICATE-----\\n",
+			"SecretFile":      "-----BEGIN CERTIFICATE-----\\\\nMIIDDDCCAfSgAwIBAgIRAJpYCmNgnRC42l6lqK7rxOowDQYJKoZIhvcNAQELBQAw\\\\n-----END CERTIFICATE-----\\\\n",
 		}
 		for k, v := range secretsMap {
 			assert.Contains(t, secretsFile, fmt.Sprintf("%s = %s", k, v))
@@ -505,7 +505,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"K8sConfig":                   "true",
 			"K8sClusterName":              "https://test.hcp.eastus.azmk8s.io:443",
 			"UseAWSCredentialsFromSystem": "true",
-			"AWSRegion":                   "ap-northeast-1",
+			"AWSRegion":                   "af-south-1",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
@@ -574,7 +574,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"K8sConfig":                   "false",
 			"K8sClusterName":              "defaultVal",
 			"UseAWSCredentialsFromSystem": "false",
-			"AWSRegion":                   "ap-northeast-1",
+			"AWSRegion":                   "af-south-1",
 		}
 		for k, v := range valueMap {
 			assert.Contains(t, valsFile, fmt.Sprintf("%s = %s", k, v))
@@ -769,7 +769,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"Test":               "hello", // value from parameterOverride using !expr "TestCompose"
 			"TestFoo":            "hello", // value from parameterOverride
 			"TestCompose":        "hello", // value from parameterOverride using !expr "TestFoo"
-			"ClientCert":         "this is a multiline\\ntext\\n\\nwith escape chars\\n",
+			"ClientCert":         "this is a multiline\\ntext\\\\n\\nwith escape chars\\n",
 			"AppName":            "TestApp",
 			"SuperSecret":        "supersecret",
 			"AWSRegion":          "eu-central-1",
@@ -876,7 +876,7 @@ func TestInstantiateBlueprint(t *testing.T) {
 			"Test":               "TestComposeTrue", // value from parameterOverride using !expr "TestCompose"
 			"TestFoo":            "hello",           // value from parameterOverride
 			"TestCompose":        "TestComposeTrue", // value from parameterOverride using !expr "TestComposeTrue"
-			"ClientCert":         "this is a multiline\\ntext\\n\\nwith escape chars\\n",
+			"ClientCert":         "this is a multiline\\ntext\\\\n\\nwith escape chars\\n",
 			"AppName":            "TestApp",
 			"SuperSecret":        "supersecret",
 			"AWSRegion":          "eu-central-1",

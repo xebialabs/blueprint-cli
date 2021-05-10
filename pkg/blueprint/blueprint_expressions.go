@@ -143,7 +143,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 					}
 					return nil, nil
 				}
-				return nil, fmt.Errorf("Error when executing expression function 'awsCredentials', %s", err.Error())
+				return nil, fmt.Errorf("error when executing expression function 'awsCredentials', %s", err.Error())
 			}
 
 			if attr == "IsAvailable" {
@@ -171,7 +171,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 
 			regions, err := aws.GetAvailableAWSRegionsForService(serviceName)
 			if err != nil {
-				return nil, fmt.Errorf("Error when executing expression function 'awsRegions', %s", err.Error())
+				return nil, fmt.Errorf("error when executing expression function 'awsRegions', %s", err.Error())
 			}
 
 			if i >= len(regions) {
@@ -220,7 +220,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 				if strings.Contains(err.Error(), "Specified context was not found in the Kubernetes config file") && attr == "IsAvailable" {
 					return false, nil
 				}
-				return nil, fmt.Errorf("Error when executing expression function 'k8sConfig', %s", err.Error())
+				return nil, fmt.Errorf("error when executing expression function 'k8sConfig', %s", err.Error())
 			}
 
 			if attr == "IsAvailable" {
