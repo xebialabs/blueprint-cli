@@ -409,7 +409,7 @@ func TestBlueprintContext_fetchFileContents(t *testing.T) {
 		t.Run("should error on non-existing remote file path", func(t *testing.T) {
 			_, err := repo.fetchFileContents("non-existing-path/file.yaml", true)
 			require.NotNil(t, err)
-			assert.Equal(t, "Get http://mock.repo.server.com/non-existing-path/file.yaml.tmpl: no responder found", err.Error())
+			assert.Equal(t, "Get \"http://mock.repo.server.com/non-existing-path/file.yaml.tmpl\": no responder found", err.Error())
 		})
 	})
 }
