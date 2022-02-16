@@ -194,7 +194,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			// - 1: Context name [optional]
 			attr := fmt.Sprintf("%v", args[0])
 
-			if !funk.Contains([]string{"ClusterServer", "ClusterInsecureSkipTLSVerify", "ContextCluster", "ContextNamespace", "ContextUser", "UserClientCertificateData", "UserClientKeyData", "IsAvailable", "IsConfigAvailable"}, attr) {
+			if !funk.Contains([]string{"ClusterServer", "ClusterInsecureSkipTLSVerify", "ContextCluster", "ContextNamespace", "ContextUser", "UserClientCertificateData", "UserClientKeyData", "IsAvailable", "IsConfigAvailable", "UserToken", "IsUserTokenAvailable"}, attr) {
 				return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'k8sConfig'", attr)
 			}
 
@@ -226,6 +226,11 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			if attr == "IsAvailable" {
 				return k8sConfig.Cluster.Server != "", nil
 			}
+
+			if attr == "IsUserTokenAvailable" {
+			    return k8sConfig.User.Token != "", nil
+            }
+
 			return k8sConfig.GetConfigField(attr, true), nil
 		},
 
