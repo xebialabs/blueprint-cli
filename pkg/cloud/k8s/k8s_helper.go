@@ -62,6 +62,7 @@ type K8sUserItem struct {
 	ClientKeyData         string `yaml:"client-key-data,omitempty"`
 	ClientCertificate     string `yaml:"client-certificate,omitempty"`
 	ClientKey             string `yaml:"client-key,omitempty"`
+	Token                 string `yaml:"token,omitempty"`
 }
 
 type K8SFnResult struct {
