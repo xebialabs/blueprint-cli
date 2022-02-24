@@ -14,6 +14,7 @@ const (
 	ProviderBitbucketServer string = "bitbucketserver"
 	ProviderGitLab          string = "gitlab"
 	ProviderHttp            string = "http"
+	ProviderZip             string = "zip"
 )
 
 const (
@@ -21,7 +22,7 @@ const (
 	BlueprintCurrentCLIVersion = "${CLIVersion}"
 )
 
-var RepoProviders = []string{ProviderMock, ProviderLocal, ProviderGitHub, ProviderBitbucket, ProviderBitbucketServer, ProviderGitLab, ProviderHttp}
+var RepoProviders = []string{ProviderMock, ProviderLocal, ProviderGitHub, ProviderBitbucket, ProviderBitbucketServer, ProviderGitLab, ProviderHttp, ProviderZip}
 
 func GetRepoProvider(s string) (string, error) {
 	for _, repoProvider := range RepoProviders {

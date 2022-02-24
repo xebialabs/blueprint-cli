@@ -3,6 +3,9 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository"
+	"github.com/xebialabs/blueprint-cli/pkg/models"
+	"github.com/xebialabs/blueprint-cli/pkg/util"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -10,11 +13,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository"
-	"github.com/xebialabs/blueprint-cli/pkg/models"
-	"github.com/xebialabs/blueprint-cli/pkg/util"
 )
 
 const (
@@ -162,27 +160,10 @@ func (repo *HttpBlueprintRepository) getResponseFromUrl(filePath string) (*http.
 	return response, nil
 }
 
-func URLExists(URL string) bool {
-	httpClient := &http.Client{
-		Timeout: 2 * time.Second,
-	}
-
-	resp, err := httpClient.Get(URL)
-	if err != nil {
-		return false
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return false
-	}
-
-	return true
-}
-
 func getCLIVersionURL(url, CLIVersion string) string {
 	if strings.Contains(url, models.BlueprintCurrentCLIVersion) {
 		URL := strings.Replace(url, models.BlueprintCurrentCLIVersion, CLIVersion, -1)
-		if URLExists(URL) {
+		if util.URLExists(URL) {
 			return URL
 		}
 		re := regexp.MustCompile("^([0-9]+).([0-9]+).([0-9]+)")
@@ -195,14 +176,14 @@ func getCLIVersionURL(url, CLIVersion string) string {
 				for zDigit >= 0 {
 					// Match on x.y.z
 					URL := strings.Replace(url, models.BlueprintCurrentCLIVersion, fmt.Sprintf("%s.%d.%d", versions[1], yDigit, zDigit), -1)
-					if URLExists(URL) {
+					if util.URLExists(URL) {
 						return URL
 					}
 					zDigit--
 				}
 				// Match on x.y
 				URL := strings.Replace(url, models.BlueprintCurrentCLIVersion, fmt.Sprintf("%s.%d", versions[1], yDigit), -1)
-				if URLExists(URL) {
+				if util.URLExists(URL) {
 					return URL
 				}
 				yDigit--

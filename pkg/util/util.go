@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/user"
 	"path"
@@ -10,6 +11,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/mitchellh/go-homedir"
 	funk "github.com/thoas/go-funk"
@@ -58,6 +60,32 @@ func PathExists(filename string, mustBeDir bool) bool {
 		return err == nil && info.IsDir()
 	}
 	return err == nil
+}
+
+func FileExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) || os.IsPermission(err) {
+		return false
+	}
+
+	return err == nil && !info.IsDir()
+}
+
+func URLExists(URL string) bool {
+	httpClient := &http.Client{
+		Timeout: 2 * time.Second,
+	}
+
+	resp, err := httpClient.Get(URL)
+	if err != nil {
+		return false
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return false
+	}
+
+	return true
 }
 
 func ExpandHomeDirIfNeeded(path string, currentUser *user.User) string {
