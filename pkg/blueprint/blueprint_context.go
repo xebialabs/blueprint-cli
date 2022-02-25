@@ -22,6 +22,7 @@ import (
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/http"
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/local"
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/mock"
+	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/zip"
 	"github.com/xebialabs/blueprint-cli/pkg/models"
 	"github.com/xebialabs/blueprint-cli/pkg/util"
 )
@@ -206,6 +207,8 @@ func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*
 			repo, err = http.NewHttpBlueprintRepository(repoDefinition, CLIVersion)
 		case models.ProviderGitLab:
 			repo, err = gitlab.NewGitLabBlueprintRepository(repoDefinition)
+		case models.ProviderZip:
+			repo, err = zip.NewZipBlueprintRepository(repoDefinition, CLIVersion)
 		default:
 			return nil, fmt.Errorf("no blueprint provider implementation found for %s", repoProvider)
 		}
@@ -233,6 +236,7 @@ func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*
 
 func (blueprintContext *BlueprintContext) initCurrentRepoClient() (map[string]*models.BlueprintRemote, error) {
 	err := (*blueprintContext.ActiveRepo).Initialize()
+	util.Verbose("Using active blueprint repo\n%s\n", (*blueprintContext.ActiveRepo).GetInfo())
 	if err != nil {
 		return nil, err
 	}
