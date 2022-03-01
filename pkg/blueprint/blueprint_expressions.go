@@ -228,8 +228,8 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			}
 
 			if attr == "IsUserTokenAvailable" {
-			    return k8sConfig.User.Token != "", nil
-            }
+				return k8sConfig.User.Token != "", nil
+			}
 
 			return k8sConfig.GetConfigField(attr, true), nil
 		},

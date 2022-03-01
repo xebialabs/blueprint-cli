@@ -382,9 +382,10 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			answer = defaultValStr
 		}
 	case TypeEditor, TypeSecretEditor:
+		questionMsg := prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the value of %s?", variable.Name.Value))
 		err = survey.AskOne(
 			&survey.Editor{
-				Message:       prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the value of %s?", variable.Name.Value)),
+				Message:       questionMsg,
 				Default:       defaultValStr,
 				HideDefault:   true,
 				AppendDefault: true,
@@ -394,6 +395,11 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
+		// if user bypassed question, replace with default value
+		if answer == "" {
+			util.Verbose("[input] Got empty response for secret field '%s', replacing with default value: %s\n", variable.Name.Value, defaultVal)
+			answer = defaultValStr
+		}
 	case TypeFile, TypeSecretFile:
 		var filePath string
 		err = survey.AskOne(
