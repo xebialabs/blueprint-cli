@@ -128,13 +128,11 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			if len(args) != 1 {
 				return nil, fmt.Errorf("invalid number of arguments for expression function 'awsCredentials', expecting 1 got %d", len(args))
 			}
-
 			// possible attributes: [IsAvailable, AccessKeyID, SecretAccessKey, ProviderName]
 			attr := fmt.Sprintf("%v", args[0])
-			if !funk.Contains([]string{"IsAvailable", "AccessKeyID", "SecretAccessKey", "ProviderName"}, attr) {
+			if !funk.Contains([]string{"IsAvailable", "AccessKeyID", "SecretAccessKey", "ProviderName", "SessionToken"}, attr) {
 				return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'awsCredentials'", attr)
 			}
-
 			creds, err := aws.GetAWSCredentialsFromSystem()
 			if err != nil {
 				if strings.Contains(err.Error(), "NoCredentialProviders: no valid providers in chain") {
@@ -149,6 +147,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			if attr == "IsAvailable" {
 				return creds.AccessKeyID != "", nil
 			}
+
 			return aws.GetAWSCredentialsField(&creds, attr), nil
 		},
 		"awsRegions": func(args ...interface{}) (interface{}, error) {
