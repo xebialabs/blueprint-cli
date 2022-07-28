@@ -3,6 +3,7 @@ module github.com/xebialabs/blueprint-cli
 go 1.16
 
 require (
+	github.com/briandowns/spinner v1.12.0
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
