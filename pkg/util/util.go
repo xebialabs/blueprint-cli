@@ -71,6 +71,16 @@ func FileExists(path string) bool {
 	return err == nil && !info.IsDir()
 }
 
+func FileRead(path string) ([]byte, error) {
+	fileData, err := os.ReadFile(path)
+
+	if err == nil {
+		return fileData, nil
+	} else {
+		return nil, err
+	}
+}
+
 func URLExists(URL string) bool {
 	httpClient := &http.Client{
 		Timeout: 2 * time.Second,

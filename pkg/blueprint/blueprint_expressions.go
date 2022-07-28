@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	b64 "encoding/base64"
 	"fmt"
 	"math"
 	"net/url"
@@ -103,6 +104,43 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 				return true, nil
 			}
 			return false, nil
+		},
+		"ifFileReadBytes": func(args ...interface{}) (interface{}, error) {
+			currentUser, err := user.Current()
+			if err != nil {
+				return nil, fmt.Errorf("cannot get current user: %s", err.Error())
+			}
+			content := strings.TrimSpace(args[0].(string))
+			filePath := util.ExpandHomeDirIfNeeded(content, currentUser)
+			if util.PathExists(filePath, false) {
+				if fileContent, err := util.FileRead(filePath); err == nil {
+					return fileContent, nil
+				} else {
+					return content, fmt.Errorf("cannot read file %s: %s", filePath, err.Error())
+				}
+			}
+			return content, nil
+		},
+		"ifBase64": func(args ...interface{}) (interface{}, error) {
+			content := args[0]
+			switch contentType := content.(type) {
+			default:
+				return content, fmt.Errorf("cannot base 64 encode input content with unknown type: %s", content)
+			case string:
+				if _, err := b64.StdEncoding.DecodeString(contentType); err == nil { // check if already is base64
+					return contentType, nil
+				} else {
+					contentTypeByte := []byte(contentType)
+					return b64.StdEncoding.EncodeToString(contentTypeByte), nil
+				}
+			case []byte:
+				var dst [4]byte
+				if _, err := b64.StdEncoding.Decode(dst[:], contentType); err == nil { // check if already is base64
+					return contentType, nil
+				} else {
+					return b64.StdEncoding.EncodeToString(contentType), nil
+				}
+			}
 		},
 		"isDir": func(args ...interface{}) (interface{}, error) {
 			currentUser, err := user.Current()
