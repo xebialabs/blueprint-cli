@@ -3,13 +3,13 @@ module github.com/xebialabs/blueprint-cli
 go 1.16
 
 require (
-	github.com/briandowns/spinner v1.12.0
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/Netflix/go-expect v0.0.0-20210429232723-e923ed2d1db5 // indirect
 	github.com/aws/aws-sdk-go v1.38.35
+	github.com/briandowns/spinner v1.12.0
 	github.com/dlclark/regexp2 v1.4.0
 	github.com/fatih/color v1.10.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
