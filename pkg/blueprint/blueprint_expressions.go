@@ -188,10 +188,10 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			var resource k8s.Resource
 			if len(args) == 3 {
 				res := resource.CreateResource(namespace, resourceType, args[2])
-				return res.GetFilteredResource(args[3]), nil
+				return res.GetFilteredResource(args[3].(string)), nil
 			} else {
 				res := resource.CreateResource(namespace, resourceType, nil)
-				return res.GetFilteredResource(args[2]), nil
+				return res.GetFilteredResource(args[2].(string)), nil
 			}
 		},
 		// aws helper functions
