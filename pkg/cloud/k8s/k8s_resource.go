@@ -61,7 +61,7 @@ func (r Resource) DeleteResourceStartsWith(pattern string) {
 	r.DeleteFilteredResources([]string{pattern}, false, false)
 }
 
-func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool) {
+func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, s *spinner.Spinner) {
 	r.spin.Start()
 	if name, status := r.Name.(string); status {
 		if force {
