@@ -54,11 +54,11 @@ func (r Resource) CreateResource(namespace, resourceType string, resourceName Re
 }
 
 func (r Resource) DeleteResource(pattern string) {
-	r.DeleteFilteredResources([]string{pattern}, true, false, s)
+	r.DeleteFilteredResources([]string{pattern}, true, false)
 }
 
 func (r Resource) DeleteResourceStartsWith(pattern string) {
-	r.DeleteFilteredResources([]string{pattern}, false, false, s)
+	r.DeleteFilteredResources([]string{pattern}, false, false)
 }
 
 func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool) {
