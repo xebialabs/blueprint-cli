@@ -78,9 +78,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 		}
 	} else {
 		// Delete logic by pattern matching
-		output := r.GetResources()
-		output = strings.Replace(output, "\n", " ", -1)
-		tokens := strings.Split(output, " ")
+		tokens := r.GetResources()
 
 		for _, value := range tokens {
 			found := true
@@ -123,9 +121,7 @@ func (r Resource) RemoveFinalizers(pattern string) {
 		}
 	} else {
 		// Delete logic by pattern matching
-		output := r.GetResources()
-		output = strings.Replace(output, "\n", " ", -1)
-		tokens := strings.Split(output, " ")
+		tokens := r.GetResources()
 
 		for _, value := range tokens {
 			if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
@@ -142,7 +138,7 @@ func (r Resource) RemoveFinalizers(pattern string) {
 	r.spin.Stop()
 }
 
-func (r Resource) GetFilteredResources(pattern string) string {
+func (r Resource) GetFilteredResource(pattern string) string {
 	r.spin.Start()
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace}
@@ -167,7 +163,7 @@ func (r Resource) GetFilteredResources(pattern string) string {
 	return ""
 }
 
-func (r Resource) GetResources() string {
+func (r Resource) GetResources() []string {
 	r.spin.Start()
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace}
@@ -177,6 +173,10 @@ func (r Resource) GetResources() string {
 	} else {
 		util.Fatal("Error occurred while fetching resource of type %s\n", r.Type)
 	}
+
+	output = strings.Replace(output, "\n", " ", -1)
+	tokens := strings.Split(output, " ")
+
 	r.spin.Stop()
-	return output
+	return tokens
 }

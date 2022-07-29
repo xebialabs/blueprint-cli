@@ -160,7 +160,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			}
 			return true, nil
 		},
-		"k8sResource": func(args ...interface{}) (interface{}, error) {
+		"k8sResources": func(args ...interface{}) (interface{}, error) {
 			if len(args) > 3 || len(args) < 2 {
 				return nil, fmt.Errorf("invalid number of arguments for expression function 'k8sResource', expecting 2 or 3 got %d", len(args))
 			}
@@ -175,6 +175,23 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			} else {
 				res := resource.CreateResource(namespace, resourceType, nil)
 				return res.GetResources(), nil
+			}
+		},
+		"k8sResource": func(args ...interface{}) (interface{}, error) {
+			if len(args) > 4 || len(args) < 3 {
+				return nil, fmt.Errorf("invalid number of arguments for expression function 'k8sResource', expecting 3 or 4 got %d", len(args))
+			}
+
+			namespace := args[0].(string)
+			resourceType := args[1].(string)
+
+			var resource k8s.Resource
+			if len(args) == 3 {
+				res := resource.CreateResource(namespace, resourceType, args[2])
+				return res.GetFilteredResource(args[3]), nil
+			} else {
+				res := resource.CreateResource(namespace, resourceType, nil)
+				return res.GetFilteredResource(args[2]), nil
 			}
 		},
 		// aws helper functions
