@@ -54,14 +54,14 @@ func (r Resource) CreateResource(namespace, resourceType string, resourceName Re
 }
 
 func (r Resource) DeleteResource(pattern string) {
-	r.DeleteFilteredResources([]string{pattern}, true, false)
+	r.DeleteFilteredResources([]string{pattern}, true, false, s)
 }
 
 func (r Resource) DeleteResourceStartsWith(pattern string) {
-	r.DeleteFilteredResources([]string{pattern}, false, false)
+	r.DeleteFilteredResources([]string{pattern}, false, false, s)
 }
 
-func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, s *spinner.Spinner) {
+func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool) {
 	r.spin.Start()
 	if name, status := r.Name.(string); status {
 		if force {
@@ -69,10 +69,10 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 		} else {
 			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace}
 		}
-		s.Prefix = fmt.Sprintf("Deleting %s...\t", name)
+		r.spin.Prefix = fmt.Sprintf("Deleting %s...\t", name)
 		if output, ok := r.Run(); ok {
 			output = strings.Replace(output, "\n", "", -1)
-			s.Prefix = output + "\t"
+			r.spin.Prefix = output + "\t"
 		} else {
 			util.Fatal("\nError while deleting %s\n", name)
 		}
@@ -114,10 +114,10 @@ func (r Resource) RemoveFinalizers(pattern string) {
 	r.spin.Start()
 	if name, status := r.Name.(string); status {
 		r.Args = []string{"patch", r.Type, name, "-n", r.Namespace, "-p", "{\"metadata\":{\"finalizers\":[]}}", "--type=merge"}
-		s.Prefix = fmt.Sprintf("Deleting %s...\t", name)
+		r.spin.Prefix = fmt.Sprintf("Deleting %s...\t", name)
 		if output, ok := r.Run(); ok {
 			output = strings.Replace(output, "\n", "", -1)
-			s.Prefix = output + "\t"
+			r.spin.Prefix = output + "\t"
 		} else {
 			util.Fatal("\nError while deleting %s\n", name)
 		}
