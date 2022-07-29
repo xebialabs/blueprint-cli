@@ -141,7 +141,7 @@ func (r Resource) RemoveFinalizers(pattern string) {
 func (r Resource) GetFilteredResource(pattern string) string {
 	r.spin.Start()
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
-	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "name", "--sort-by='{.metadata.name}'"}
+	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "name", "--sort-by=metadata.name"}
 	output, ok := r.Command.Run()
 	if ok {
 		r.spin.Prefix = fmt.Sprintf("Resources of type %s fetched successfully\n\t", r.Type)
@@ -166,7 +166,7 @@ func (r Resource) GetFilteredResource(pattern string) string {
 func (r Resource) GetResources() []string {
 	r.spin.Start()
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
-	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "name", "--sort-by='{.metadata.name}'"}
+	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "name", "--sort-by=metadata.name"}
 	output, ok := r.Command.Run()
 	if ok {
 		r.spin.Prefix = fmt.Sprintf("Resources of type %s fetched successfully\n\t", r.Type)
