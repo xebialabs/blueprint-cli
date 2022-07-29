@@ -149,8 +149,8 @@ func (r Resource) GetFilteredResource(pattern string) string {
 		util.Fatal("Error occurred while fetching resource of type %s\n", r.Type)
 	}
 
-	output = strings.Replace(output, "\n", " ", -1)
-	tokens := strings.TrimSpace(strings.Split(output, " "))
+	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
+	tokens := strings.Split(output, " ")
 
 	for _, value := range tokens {
 		if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
@@ -174,8 +174,8 @@ func (r Resource) GetResources() []string {
 		util.Fatal("Error occurred while fetching resource of type %s\n", r.Type)
 	}
 
-	output = strings.Replace(output, "\n", " ", -1)
-	tokens := strings.TrimSpace(strings.Split(output, " "))
+	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
+	tokens := strings.Split(output, " ")
 
 	r.spin.Stop()
 	return tokens
