@@ -150,7 +150,7 @@ func (r Resource) GetFilteredResource(pattern string) string {
 	}
 
 	output = strings.Replace(output, "\n", " ", -1)
-	tokens := strings.TrimSpace().Split(output, " ")
+	tokens := strings.TrimSpace(strings.Split(output, " "))
 
 	for _, value := range tokens {
 		if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
@@ -175,7 +175,7 @@ func (r Resource) GetResources() []string {
 	}
 
 	output = strings.Replace(output, "\n", " ", -1)
-	tokens := strings.TrimSpace().Split(output, " ")
+	tokens := strings.TrimSpace(strings.Split(output, " "))
 
 	r.spin.Stop()
 	return tokens
