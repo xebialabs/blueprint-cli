@@ -318,7 +318,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			*/
 			module := fmt.Sprintf("%v", args[0])
 
-			if !funk.Contains([]string{"_defaultapiserverurl", "_operatingsystem", "getcertfilelocation", "getkeyfilelocation"}, module) {
+			if !funk.Contains([]string{"_defaultapiserverurl", "_operatingsystem", "_datetime", "getcertfilelocation", "getkeyfilelocation"}, module) {
 				return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'os'", module)
 			}
 			return osHelper.GetPropertyByName(module)
