@@ -113,14 +113,14 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			content := strings.TrimSpace(args[0].(string))
 			filePath := util.ExpandHomeDirIfNeeded(content, currentUser)
 
-			fmt.Println("filePath : %s\n", filePath)
+			fmt.Printf("filePath : %s\n", filePath)
 
 			if util.PathExists(filePath, false) {
 				if fileContent, err := util.FileRead(filePath); err == nil {
-					fmt.Println("fileContent : %s\n", fileContent)
+					fmt.Printf("fileContent : %s\n", fileContent)
 					return fileContent, nil
 				} else {
-					fmt.Println("error : %s\n", err.Error())
+					fmt.Printf("error : %s\n", err.Error())
 					return content, fmt.Errorf("cannot read file %s: %s", filePath, err.Error())
 				}
 			}
@@ -139,7 +139,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 					return b64.StdEncoding.EncodeToString(contentTypeByte), nil
 				}
 			case []byte:
-				var dst [4]byte
+				dst := make([]byte, b64.StdEncoding.DecodedLen(len(contentType[:])))
 				if _, err := b64.StdEncoding.Decode(dst[:], contentType); err == nil { // check if already is base64
 					return contentType, nil
 				} else {
