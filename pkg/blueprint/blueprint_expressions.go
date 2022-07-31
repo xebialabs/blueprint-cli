@@ -113,14 +113,14 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			content := strings.TrimSpace(args[0].(string))
 			filePath := util.ExpandHomeDirIfNeeded(content, currentUser)
 
-			fmt.println("filePath : %s\n", filePath)
+			fmt.Println("filePath : %s\n", filePath)
 
 			if util.PathExists(filePath, false) {
 				if fileContent, err := util.FileRead(filePath); err == nil {
-					fmt.println("fileContent : %s\n", fileContent)
+					fmt.Println("fileContent : %s\n", fileContent)
 					return fileContent, nil
 				} else {
-					fmt.println("error : %s\n", err.Error())
+					fmt.Println("error : %s\n", err.Error())
 					return content, fmt.Errorf("cannot read file %s: %s", filePath, err.Error())
 				}
 			}
