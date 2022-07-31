@@ -2,7 +2,6 @@ package osHelper
 
 import (
 	"fmt"
-	"go/format"
 	"log"
 	"os"
 	"path/filepath"
