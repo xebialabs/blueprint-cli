@@ -112,10 +112,15 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			}
 			content := strings.TrimSpace(args[0].(string))
 			filePath := util.ExpandHomeDirIfNeeded(content, currentUser)
+
+			fmt.println("filePath : %s\n", filePath)
+
 			if util.PathExists(filePath, false) {
 				if fileContent, err := util.FileRead(filePath); err == nil {
+					fmt.println("fileContent : %s\n", fileContent)
 					return fileContent, nil
 				} else {
+					fmt.println("error : %s\n", err.Error())
 					return content, fmt.Errorf("cannot read file %s: %s", filePath, err.Error())
 				}
 			}
@@ -186,7 +191,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			resourceType := args[1].(string)
 
 			var resource k8s.Resource
-			if len(args) == 3 {
+			if len(args) == 4 {
 				res := resource.CreateResource(namespace, resourceType, args[2])
 				return res.GetFilteredResource(args[3].(string)), nil
 			} else {
