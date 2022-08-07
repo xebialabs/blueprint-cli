@@ -194,7 +194,7 @@ func (r Resource) GetFilteredResources(pattern string) string {
   filtered := []string{}
 	for _, value := range tokens {
 		if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
-			filtered.append(value)
+			filtered = append(filtered, value)
 		}
 	}
 
