@@ -178,7 +178,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 				return res.GetResources(), nil
 			} else if len(args) == 4 {
         res := resource.CreateResource(namespace, resourceType, args[2])
-				return res.GetFilteredResources(args[3]), nil
+				return res.GetFilteredResources(args[3].string), nil
 			} else {
 				res := resource.CreateResource(namespace, resourceType, nil)
 				return res.GetResources(), nil
