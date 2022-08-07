@@ -75,7 +75,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			return fmt.Sprintf("%v", args[0]), nil
 		},
   	"length": func(args ...interface{}) (interface{}, error) {
-			return len(([]string) args[0]), nil
+			return len(args[0].([]string)), nil
 		},
 		"regex": func(args ...interface{}) (interface{}, error) {
 			if len(args) != 2 {
