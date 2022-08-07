@@ -74,6 +74,9 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 		"string": func(args ...interface{}) (interface{}, error) {
 			return fmt.Sprintf("%v", args[0]), nil
 		},
+  	"length": func(args ...interface{}) (interface{}, error) {
+			return len(args[0]), nil
+		},
 		"regex": func(args ...interface{}) (interface{}, error) {
 			if len(args) != 2 {
 				return nil, fmt.Errorf("invalid number of arguments for regex expression, expecting 2 got %d", len(args))
@@ -162,7 +165,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			return true, nil
 		},
 		"k8sResources": func(args ...interface{}) (interface{}, error) {
-			if len(args) > 3 || len(args) < 2 {
+			if len(args) > 4 || len(args) < 2 {
 				return nil, fmt.Errorf("invalid number of arguments for expression function 'k8sResource', expecting 2 or 3 got %d", len(args))
 			}
 
@@ -173,6 +176,9 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			if len(args) == 3 {
 				res := resource.CreateResource(namespace, resourceType, args[2])
 				return res.GetResources(), nil
+			} else if len(args) == 4 {
+        res := resource.CreateResource(namespace, resourceType, args[2])
+				return res.GetResources(args[3]), nil
 			} else {
 				res := resource.CreateResource(namespace, resourceType, nil)
 				return res.GetResources(), nil
