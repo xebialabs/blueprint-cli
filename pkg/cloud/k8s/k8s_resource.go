@@ -162,7 +162,7 @@ func (r Resource) GetFilteredResource(pattern string) string {
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
 	if name, status := r.Name.(string); status {
-		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
+		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name", "--ignore-not-found=true"}
 	}
 	output, ok := r.Command.Run()
 	if ok {
@@ -194,7 +194,7 @@ func (r Resource) GetFilteredResources(pattern string) []string {
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
 	if name, status := r.Name.(string); status {
-		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
+		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name", "--ignore-not-found=true"}
 	}
 	output, ok := r.Command.Run()
 	if ok {
@@ -226,7 +226,7 @@ func (r Resource) GetResources() []string {
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
 	if name, status := r.Name.(string); status {
-		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
+		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name", "--ignore-not-found=true"}
 	}
 	output, ok := r.Command.Run()
 	if ok {
