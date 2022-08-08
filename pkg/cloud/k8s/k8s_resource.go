@@ -226,8 +226,15 @@ func (r Resource) GetResources() []string {
 	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
 	tokens := strings.Split(output, " ")
 
+	filtered := []string{}
+	for _, value := range tokens {
+		if len(strings.TrimSpace(value)) > 0 {
+			filtered = append(filtered, value)
+		}
+	}
+
 	r.spin.Stop()
-	return tokens
+	return filtered
 }
 
 func (r Resource) ExistResource() bool {
