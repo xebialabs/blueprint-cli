@@ -64,15 +64,16 @@ func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn) {
 }
 
 func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, confirm confirmFn) {
-	r.spin.Start()
 	if name, status := r.Name.(string); status {
 		if force {
 			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "--force"}
 		} else {
 			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace}
 		}
+		r.spin.Stop()
 		if doDelete, err := confirm(r.Type, name); doDelete && err == nil {
 			r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, name)
+			r.spin.Start()
 			if output, ok := r.Run(); ok {
 				output = strings.Replace(output, "\n", "", -1)
 				r.spin.Prefix = output + "\t"
@@ -103,7 +104,10 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 				}
 			}
 			if found {
+				r.spin.Stop()
 				if doDelete, err := confirm(r.Type, value); doDelete && err == nil {
+					r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, value)
+					r.spin.Start()
 					r.Args = []string{"delete", r.Type, value, "-n", r.Namespace}
 					output, ok := r.Run()
 					if !ok {
@@ -126,7 +130,7 @@ func (r Resource) RemoveFinalizers(pattern string) {
 	r.spin.Start()
 	if name, status := r.Name.(string); status {
 		r.Args = []string{"patch", r.Type, name, "-n", r.Namespace, "-p", "{\"metadata\":{\"finalizers\":[]}}", "--type=merge"}
-		r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, name)
+		r.spin.Prefix = fmt.Sprintf("Deleting finalizers %s/%s...\t", r.Type, name)
 		if output, ok := r.Run(); ok {
 			output = strings.Replace(output, "\n", "", -1)
 			r.spin.Prefix = output + "\t"
@@ -140,6 +144,7 @@ func (r Resource) RemoveFinalizers(pattern string) {
 		for _, value := range tokens {
 			if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
 				r.Args = []string{"delete", r.Type, value, "-n", r.Namespace}
+				r.spin.Prefix = fmt.Sprintf("Deleting finalizers %s/%s...\t", r.Type, value)
 				output, ok := r.Run()
 				if !ok {
 					util.Fatal("Error while deleting %s/%s\n", r.Type, value)
