@@ -63,7 +63,7 @@ func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn) {
 	r.DeleteFilteredResources([]string{pattern}, false, false, confirm)
 }
 
-func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool,  confirm confirmFn) {
+func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, confirm confirmFn) {
 	r.spin.Start()
 	if name, status := r.Name.(string); status {
 		if force {
@@ -72,17 +72,17 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace}
 		}
 		if doDelete, err := confirm(r.Type, name); doDelete && err == nil {
-  		r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, name)
-  		if output, ok := r.Run(); ok {
-  			output = strings.Replace(output, "\n", "", -1)
-  			r.spin.Prefix = output + "\t"
-  		} else {
-  			util.Fatal("\nError while deleting %s/%s\n", r.Type, name)
-  		}
+			r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, name)
+			if output, ok := r.Run(); ok {
+				output = strings.Replace(output, "\n", "", -1)
+				r.spin.Prefix = output + "\t"
+			} else {
+				util.Fatal("\nError while deleting %s/%s\n", r.Type, name)
+			}
 		} else if err != nil {
-		  util.Fatal("Error while deleting %s/%s: %s\n", r.Type, name, err)
+			util.Fatal("Error while deleting %s/%s: %s\n", r.Type, name, err)
 		} else {
-		  util.Info("Skipping delete of the resource %s/%s", r.Type, name)
+			util.Info("Skipping delete of the resource %s/%s", r.Type, name)
 		}
 	} else {
 		// Delete logic by pattern matching
@@ -103,19 +103,19 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 				}
 			}
 			if found {
-  		  if doDelete, err := confirm(r.Type, value); doDelete && err == nil {
-  				r.Args = []string{"delete", r.Type, value, "-n", r.Namespace}
-  				output, ok := r.Run()
-  				if !ok {
-  					util.Fatal("Error while deleting %s/%s\n", r.Type, value)
-  				} else {
-  					util.Info(output)
-  				}
-  		  } else if err != nil {
-    		  util.Fatal("Error while deleting %s/%s: %s\n", r.Type, value, err)
-    		} else {
-    		  util.Info("Skipping delete of the resource %s/%s", r.Type, value)
-    		}
+				if doDelete, err := confirm(r.Type, value); doDelete && err == nil {
+					r.Args = []string{"delete", r.Type, value, "-n", r.Namespace}
+					output, ok := r.Run()
+					if !ok {
+						util.Fatal("Error while deleting %s/%s\n", r.Type, value)
+					} else {
+						util.Info(output)
+					}
+				} else if err != nil {
+					util.Fatal("Error while deleting %s/%s: %s\n", r.Type, value, err)
+				} else {
+					util.Info("Skipping delete of the resource %s/%s", r.Type, value)
+				}
 			}
 		}
 	}
@@ -163,6 +163,8 @@ func (r Resource) GetFilteredResource(pattern string) string {
 		util.Fatal("Error occurred while fetching resource of type %s\n", r.Type)
 	}
 
+	util.Verbose("GetFilteredResource output: %s", output)
+
 	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
 	tokens := strings.Split(output, " ")
 
@@ -188,10 +190,12 @@ func (r Resource) GetFilteredResources(pattern string) []string {
 		util.Fatal("Error occurred while fetching resource of type %s\n", r.Type)
 	}
 
+	util.Verbose("GetFilteredResources output: %s", output)
+
 	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
 	tokens := strings.Split(output, " ")
 
-  filtered := []string{}
+	filtered := []string{}
 	for _, value := range tokens {
 		if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
 			filtered = append(filtered, value)
@@ -212,6 +216,8 @@ func (r Resource) GetResources() []string {
 	} else {
 		util.Fatal("Error occurred while fetching resource of type %s\n", r.Type)
 	}
+
+	util.Verbose("GetResources output: %s", output)
 
 	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
 	tokens := strings.Split(output, " ")

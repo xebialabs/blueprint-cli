@@ -74,7 +74,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 		"string": func(args ...interface{}) (interface{}, error) {
 			return fmt.Sprintf("%v", args[0]), nil
 		},
-  	"length": func(args ...interface{}) (interface{}, error) {
+		"length": func(args ...interface{}) (interface{}, error) {
 			return len(args[0].([]string)), nil
 		},
 		"regex": func(args ...interface{}) (interface{}, error) {
@@ -177,7 +177,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 				res := resource.CreateResource(namespace, resourceType, args[2])
 				return res.GetResources(), nil
 			} else if len(args) == 4 {
-        res := resource.CreateResource(namespace, resourceType, args[2])
+				res := resource.CreateResource(namespace, resourceType, args[2])
 				return res.GetFilteredResources(args[3].(string)), nil
 			} else {
 				res := resource.CreateResource(namespace, resourceType, nil)
