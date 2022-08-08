@@ -64,7 +64,7 @@ func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn) {
 }
 
 func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, confirm confirmFn) {
-	if name, status := r.Name.(string); status {
+	if name, status := r.Name.(string); status && name != "" {
 		if force {
 			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "--force"}
 		} else {
@@ -128,7 +128,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 
 func (r Resource) RemoveFinalizers(pattern string) {
 	r.spin.Start()
-	if name, status := r.Name.(string); status {
+	if name, status := r.Name.(string); status && name != "" {
 		r.Args = []string{"patch", r.Type, name, "-n", r.Namespace, "-p", "{\"metadata\":{\"finalizers\":[]}}", "--type=merge"}
 		r.spin.Prefix = fmt.Sprintf("Deleting finalizers %s/%s...\t", r.Type, name)
 		if output, ok := r.Run(); ok {
@@ -161,7 +161,7 @@ func (r Resource) GetFilteredResource(pattern string) string {
 	r.spin.Start()
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
-	if name, status := r.Name.(string); status {
+	if name, status := r.Name.(string); status && name != "" {
 		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name", "--ignore-not-found=true"}
 	}
 	output, ok := r.Command.Run()
@@ -193,7 +193,7 @@ func (r Resource) GetFilteredResources(pattern string) []string {
 	r.spin.Start()
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
-	if name, status := r.Name.(string); status {
+	if name, status := r.Name.(string); status && name != "" {
 		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name", "--ignore-not-found=true"}
 	}
 	output, ok := r.Command.Run()
@@ -225,7 +225,7 @@ func (r Resource) GetResources() []string {
 	r.spin.Start()
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
-	if name, status := r.Name.(string); status {
+	if name, status := r.Name.(string); status && name != "" {
 		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name", "--ignore-not-found=true"}
 	}
 	output, ok := r.Command.Run()
