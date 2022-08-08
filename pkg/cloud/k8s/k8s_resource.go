@@ -171,6 +171,8 @@ func (r Resource) GetFilteredResource(pattern string) string {
 	for _, value := range tokens {
 		if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
 			r.spin.Stop()
+
+			util.Verbose("GetFilteredResource returning %s\n", value)
 			return value
 		}
 	}
@@ -203,6 +205,8 @@ func (r Resource) GetFilteredResources(pattern string) []string {
 	}
 
 	r.spin.Stop()
+
+	util.Verbose("GetFilteredResources returning %s\n", strings.Join(filtered, ","))
 	return filtered
 }
 
