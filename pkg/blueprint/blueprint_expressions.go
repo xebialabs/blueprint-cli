@@ -76,8 +76,9 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 		},
 		"length": func(args ...interface{}) (interface{}, error) {
 			arrayList := args[0].([]string)
-			util.Verbose("Calculate length of %s\n", strings.Join(arrayList, ","))
-			return len(arrayList), nil
+			arrayListLen := len(arrayList)
+			util.Verbose("Calculate length of %s: %d\n", strings.Join(arrayList, ","), arrayListLen)
+			return strconv.Itoa(arrayListLen), nil
 		},
 		"regex": func(args ...interface{}) (interface{}, error) {
 			if len(args) != 2 {
