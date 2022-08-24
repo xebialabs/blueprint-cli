@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/user"
 	"path"
 	"path/filepath"
@@ -71,6 +72,16 @@ func FileExists(path string) bool {
 	return err == nil && !info.IsDir()
 }
 
+func FileRead(path string) ([]byte, error) {
+	fileData, err := os.ReadFile(path)
+
+	if err == nil {
+		return fileData, nil
+	} else {
+		return nil, err
+	}
+}
+
 func URLExists(URL string) bool {
 	httpClient := &http.Client{
 		Timeout: 2 * time.Second,
@@ -105,6 +116,15 @@ func PrintableFileName(path string) string {
 	} else {
 		return filepath.Base(path)
 	}
+}
+
+func ProcessCmdResult(cmd exec.Cmd) ([]byte, error) {
+	Verbose("\nExecuting command: %s\n", cmd.String())
+	cmdOutput, err := cmd.CombinedOutput()
+	if err != nil {
+		Error("\nError while executing: command: %s\n%s\n", cmd.String(), cmdOutput)
+	}
+	return cmdOutput, err
 }
 
 func TransformToMap(spec interface{}) []map[interface{}]interface{} {

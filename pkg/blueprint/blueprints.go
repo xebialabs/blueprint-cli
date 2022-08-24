@@ -124,7 +124,7 @@ func InstantiateBlueprint(
 			return nil, nil, err
 		}
 		if !toContinue {
-			return nil, nil, fmt.Errorf("xl up execution cancelled")
+			return nil, nil, fmt.Errorf("xl execution cancelled")
 		}
 	}
 

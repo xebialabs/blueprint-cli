@@ -7,11 +7,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 const (
 	_DefaultApiServerUrl = "_defaultapiserverurl"
 	Os                   = "_operatingsystem"
+	DateTime             = "_datetime"
 	CertFileLocation     = "getcertfilelocation"
 	KeyFileLocation      = "getkeyfilelocation"
 )
@@ -52,6 +54,11 @@ func GetOperatingSystem() string {
 	return runtime.GOOS
 }
 
+func GetDateTime() string {
+	currentTime := time.Now()
+	return fmt.Sprintf("%04d%02d%02d-%02d%02d%02d", currentTime.Year(), currentTime.Month(), currentTime.Day(), currentTime.Hour(), currentTime.Minute(), currentTime.Second())
+}
+
 func DefaultApiServerUrl(ios IOperatingSystem) string {
 	if ios.getOs() == "windows" || ios.getOs() == "darwin" {
 		return "https://host.docker.internal:6443"
@@ -73,6 +80,8 @@ func GetPropertyByName(module string) (interface{}, error) {
 		return DefaultApiServerUrl(&OperatingSystem{}), nil
 	case Os:
 		return GetOperatingSystem(), nil
+	case DateTime:
+		return GetDateTime(), nil
 	case CertFileLocation:
 		return GetLocation("cert.crt"), nil
 	case KeyFileLocation:

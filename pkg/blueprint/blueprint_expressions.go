@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	b64 "encoding/base64"
 	"fmt"
 	"math"
 	"net/url"
@@ -73,6 +74,12 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 		"string": func(args ...interface{}) (interface{}, error) {
 			return fmt.Sprintf("%v", args[0]), nil
 		},
+		"length": func(args ...interface{}) (interface{}, error) {
+			arrayList := args[0].([]string)
+			arrayListLen := len(arrayList)
+			util.Verbose("Calculate length of %s: %d\n", strings.Join(arrayList, ","), arrayListLen)
+			return strconv.Itoa(arrayListLen), nil
+		},
 		"regex": func(args ...interface{}) (interface{}, error) {
 			if len(args) != 2 {
 				return nil, fmt.Errorf("invalid number of arguments for regex expression, expecting 2 got %d", len(args))
@@ -104,6 +111,44 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			}
 			return false, nil
 		},
+		"ifFileReadBytes": func(args ...interface{}) (interface{}, error) {
+			currentUser, err := user.Current()
+			if err != nil {
+				return nil, fmt.Errorf("cannot get current user: %s", err.Error())
+			}
+			content := strings.TrimSpace(args[0].(string))
+			filePath := util.ExpandHomeDirIfNeeded(content, currentUser)
+
+			if util.PathExists(filePath, false) {
+				if fileContent, err := util.FileRead(filePath); err == nil {
+					return fileContent, nil
+				} else {
+					return content, fmt.Errorf("cannot read file %s: %s", filePath, err.Error())
+				}
+			}
+			return content, nil
+		},
+		"ifBase64": func(args ...interface{}) (interface{}, error) {
+			content := args[0]
+			switch contentType := content.(type) {
+			default:
+				return nil, fmt.Errorf("cannot base 64 encode input content with unknown type: %s", content)
+			case string:
+				if _, err := b64.StdEncoding.DecodeString(contentType); err == nil { // check if already is base64
+					return contentType, nil
+				} else {
+					contentTypeByte := []byte(contentType)
+					return b64.StdEncoding.EncodeToString(contentTypeByte), nil
+				}
+			case []byte:
+				dst := make([]byte, b64.StdEncoding.DecodedLen(len(contentType[:])))
+				if _, err := b64.StdEncoding.Decode(dst[:], contentType); err == nil { // check if already is base64
+					return string(contentType), nil
+				} else {
+					return b64.StdEncoding.EncodeToString(contentType), nil
+				}
+			}
+		},
 		"isDir": func(args ...interface{}) (interface{}, error) {
 			currentUser, err := user.Current()
 			if err != nil {
@@ -122,7 +167,43 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			}
 			return true, nil
 		},
+		"k8sResources": func(args ...interface{}) (interface{}, error) {
+			if len(args) > 4 || len(args) < 2 {
+				return nil, fmt.Errorf("invalid number of arguments for expression function 'k8sResource', expecting 2 or 3 got %d", len(args))
+			}
 
+			namespace := args[0].(string)
+			resourceType := args[1].(string)
+
+			var resource k8s.Resource
+			if len(args) == 3 {
+				res := resource.CreateResource(namespace, resourceType, args[2])
+				return res.GetResources(), nil
+			} else if len(args) == 4 {
+				res := resource.CreateResource(namespace, resourceType, args[2])
+				return res.GetFilteredResources(args[3].(string)), nil
+			} else {
+				res := resource.CreateResource(namespace, resourceType, nil)
+				return res.GetResources(), nil
+			}
+		},
+		"k8sResource": func(args ...interface{}) (interface{}, error) {
+			if len(args) > 4 || len(args) < 3 {
+				return nil, fmt.Errorf("invalid number of arguments for expression function 'k8sResource', expecting 3 or 4 got %d", len(args))
+			}
+
+			namespace := args[0].(string)
+			resourceType := args[1].(string)
+
+			var resource k8s.Resource
+			if len(args) == 4 {
+				res := resource.CreateResource(namespace, resourceType, args[2])
+				return res.GetFilteredResource(args[3].(string)), nil
+			} else {
+				res := resource.CreateResource(namespace, resourceType, nil)
+				return res.GetFilteredResource(args[2].(string)), nil
+			}
+		},
 		// aws helper functions
 		"awsCredentials": func(args ...interface{}) (interface{}, error) {
 			if len(args) != 1 {
@@ -247,7 +328,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			*/
 			module := fmt.Sprintf("%v", args[0])
 
-			if !funk.Contains([]string{"_defaultapiserverurl", "_operatingsystem", "getcertfilelocation", "getkeyfilelocation"}, module) {
+			if !funk.Contains([]string{"_defaultapiserverurl", "_operatingsystem", "_datetime", "getcertfilelocation", "getkeyfilelocation"}, module) {
 				return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'os'", module)
 			}
 			return osHelper.GetPropertyByName(module)
