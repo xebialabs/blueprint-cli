@@ -61,7 +61,7 @@ type getCallerIdentityWrapper struct {
 func connectToEKS(answerMap map[string]string) (*restclient.Config, error) {
 	fmt.Println("Connecting to EKS")
 	clusterID := getClusterIDFromClusterName(answerMap)
-	
+
 	var sess *session.Session
 	var err error
 	var ssoCredentials, _ = GetRequiredPropertyFromMap("UseAWSSsoCredentials", answerMap)

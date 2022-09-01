@@ -2,11 +2,13 @@ package k8s
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
+	"github.com/xebialabs/blueprint-cli/pkg/osHelper"
 	"github.com/xebialabs/blueprint-cli/pkg/util"
 )
 
@@ -55,15 +57,15 @@ func (r Resource) CreateResource(namespace, resourceType string, resourceName Re
 
 type confirmFn func(string, string) (bool, error)
 
-func (r Resource) DeleteResource(pattern string, confirm confirmFn) {
-	r.DeleteFilteredResources([]string{pattern}, true, false, confirm)
+func (r Resource) DeleteResource(pattern string, confirm confirmFn, backupPath string) {
+	r.DeleteFilteredResources([]string{pattern}, true, false, confirm, backupPath)
 }
 
-func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn) {
-	r.DeleteFilteredResources([]string{pattern}, false, false, confirm)
+func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn, backupPath string) {
+	r.DeleteFilteredResources([]string{pattern}, false, false, confirm, backupPath)
 }
 
-func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, confirm confirmFn) {
+func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, confirm confirmFn, backupPath string) {
 	if name, status := r.Name.(string); status && name != "" {
 		if force {
 			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "--force"}
@@ -74,6 +76,14 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 		if doDelete, err := confirm(r.Type, name); doDelete && err == nil {
 			r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, name)
 			r.spin.Start()
+
+			if backupPath != "" {
+				filepath := r.Filename()
+				if err = r.SaveFile(filepath); err != nil {
+					util.Fatal("Error while deleting %s/%s\n", r.Type, name)
+				}
+			}
+
 			if output, ok := r.Run(); ok {
 				output = strings.Replace(output, "\n", "", -1)
 				r.spin.Prefix = output + "\t"
@@ -108,6 +118,14 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 				if doDelete, err := confirm(r.Type, value); doDelete && err == nil {
 					r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, value)
 					r.spin.Start()
+
+					if backupPath != "" {
+						filepath := r.filename(value)
+						if err = r.saveFile(value, filepath); err != nil {
+							util.Fatal("Error while deleting %s/%s\n", r.Type, value)
+						}
+					}
+
 					r.Args = []string{"delete", r.Type, value, "-n", r.Namespace}
 					output, ok := r.Run()
 					if !ok {
@@ -253,4 +271,36 @@ func (r Resource) GetResources() []string {
 
 func (r Resource) ExistResource() bool {
 	return len(r.GetResources()) > 0
+}
+
+func (r Resource) SaveFile(filePath string) error {
+	return r.saveFile(r.Name, filePath)
+}
+
+func (r Resource) saveFile(anyName interface{}, filePath string) error {
+
+	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "json"}
+	if name, status := anyName.(string); status && name != "" {
+		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "json"}
+	}
+	output, ok := r.Command.Run()
+
+	if ok {
+		err := ioutil.WriteFile(filePath, []byte(output), 0644)
+		return err
+	} else {
+		return fmt.Errorf("error occurred while fetching resource %s/%s", r.Type, anyName)
+	}
+}
+
+func (r Resource) Filename() string {
+	return r.filename(r.Name)
+}
+
+func (r Resource) filename(anyName interface{}) string {
+	if name, status := anyName.(string); status && name != "" {
+		return fmt.Sprintf("%s_%s_%s.yaml", r.Type, name, osHelper.GetDateTime())
+	} else {
+		return fmt.Sprintf("%s_%s.yaml", r.Type, osHelper.GetDateTime())
+	}
 }
