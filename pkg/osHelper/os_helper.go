@@ -90,3 +90,13 @@ func GetPropertyByName(module string) (interface{}, error) {
 		return nil, fmt.Errorf("%s is not a valid OS module", module)
 	}
 }
+
+func ProcessCmdResult(cmd exec.Cmd) ([]byte, error) {
+	return util.ProcessCmdResult(cmd)
+}
+
+func ProcessCmdResultWithoutLog(cmd exec.Cmd) ([]byte, error) {
+	util.Verbose("\nExecuting command: %s\n", cmd.String())
+	cmdOutput, err := cmd.CombinedOutput()
+	return cmdOutput, err
+}
