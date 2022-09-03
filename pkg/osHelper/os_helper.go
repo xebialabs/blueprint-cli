@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/xebialabs/blueprint-cli/pkg/util"
 )
 
 const (

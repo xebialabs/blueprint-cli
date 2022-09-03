@@ -78,9 +78,9 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			r.spin.Start()
 
 			if backupPath != "" {
-				filepath := r.Filename()
-				if err = r.SaveFile(filepath); err != nil {
-					util.Fatal("Error while deleting %s/%s\n", r.Type, name)
+				filepath := r.Filename(".yaml")
+				if err = r.SaveYamlFile(filepath); err != nil {
+					util.Fatal("Error while deleting %s\n", r.ResourceName())
 				}
 			}
 
@@ -88,12 +88,12 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 				output = strings.Replace(output, "\n", "", -1)
 				r.spin.Prefix = output + "\t"
 			} else {
-				util.Fatal("\nError while deleting %s/%s\n", r.Type, name)
+				util.Fatal("\nError while deleting %s\n", r.ResourceName())
 			}
 		} else if err != nil {
-			util.Fatal("Error while deleting %s/%s: %s\n", r.Type, name, err)
+			util.Fatal("Error while deleting %s: %s\n", r.ResourceName(), err)
 		} else {
-			util.Info("Skipping delete of the resource %s/%s", r.Type, name)
+			util.Info("Skipping delete of the resource %s", r.ResourceName())
 		}
 	} else {
 		// Delete logic by pattern matching
@@ -120,8 +120,8 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 					r.spin.Start()
 
 					if backupPath != "" {
-						filepath := r.filename(value)
-						if err = r.saveFile(value, filepath); err != nil {
+						filepath := r.filename(value, ".yaml")
+						if err = r.saveYamlFile(value, filepath); err != nil {
 							util.Fatal("Error while deleting %s/%s\n", r.Type, value)
 						}
 					}
@@ -273,15 +273,45 @@ func (r Resource) ExistResource() bool {
 	return len(r.GetResources()) > 0
 }
 
-func (r Resource) SaveFile(filePath string) error {
-	return r.saveFile(r.Name, filePath)
+func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
+
+	resource := r.ResourceName()
+
+	util.Verbose("Waiting for %s to be %s in the namespace %s for %d minutes\n", resource, condition, r.Namespace, timeoutMinutes)
+
+	r.spin.Prefix = fmt.Sprintf("Waiting for %s to be %s...\t", resource, condition)
+	r.spin.Start()
+
+	var i int
+	for start := time.Now(); ; {
+		if time.Since(start) > (time.Minute * time.Duration(timeoutMinutes)) {
+			return fmt.Errorf("timeout while waiting for %s to be %s", resource, condition)
+		} else {
+			_, err := osHelper.ProcessCmdResultWithoutLog(*exec.Command("kubectl", "wait",
+				"--for", fmt.Sprintf("condition=%s", condition),
+				resource,
+				fmt.Sprintf("--timeout=%ds", timeoutMinutes*60),
+				"-n", r.Namespace))
+			if err == nil {
+				util.Info("%s is %s in the namespace %s\n", resource, condition, r.Namespace)
+				break
+			}
+		}
+		time.Sleep(time.Second)
+		i++
+	}
+	return nil
 }
 
-func (r Resource) saveFile(anyName interface{}, filePath string) error {
+func (r Resource) SaveYamlFile(filePath string) error {
+	return r.saveYamlFile(r.Name, filePath)
+}
 
-	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "json"}
+func (r Resource) saveYamlFile(anyName interface{}, filePath string) error {
+
+	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "yaml"}
 	if name, status := anyName.(string); status && name != "" {
-		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "json"}
+		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "yaml"}
 	}
 	output, ok := r.Command.Run()
 
@@ -289,18 +319,46 @@ func (r Resource) saveFile(anyName interface{}, filePath string) error {
 		err := ioutil.WriteFile(filePath, []byte(output), 0644)
 		return err
 	} else {
-		return fmt.Errorf("error occurred while fetching resource %s/%s", r.Type, anyName)
+		return fmt.Errorf("error occurred while fetching resource %s", r.ResourceName())
 	}
 }
 
-func (r Resource) Filename() string {
-	return r.filename(r.Name)
+func (r Resource) SaveDescribeFile(filePath string) error {
+	return r.saveDescribeFile(r.Name, filePath)
 }
 
-func (r Resource) filename(anyName interface{}) string {
+func (r Resource) saveDescribeFile(anyName interface{}, filePath string) error {
+
+	r.Command.Args = []string{"describe", r.Type, "-n", r.Namespace}
 	if name, status := anyName.(string); status && name != "" {
-		return fmt.Sprintf("%s_%s_%s.yaml", r.Type, name, osHelper.GetDateTime())
+		r.Command.Args = []string{"describe", r.Type, name, "-n", r.Namespace}
+	}
+	output, ok := r.Command.Run()
+
+	if ok {
+		err := ioutil.WriteFile(filePath, []byte(output), 0644)
+		return err
 	} else {
-		return fmt.Sprintf("%s_%s.yaml", r.Type, osHelper.GetDateTime())
+		return fmt.Errorf("error occurred while fetching resource %s", r.ResourceName())
+	}
+}
+
+func (r Resource) Filename(suffix string) string {
+	return r.filename(r.Name, suffix)
+}
+
+func (r Resource) ResourceName() string {
+	resource := r.Type
+	if name, status := r.Name.(string); status && name != "" {
+		resource = r.Type + "/" + name
+	}
+	return resource
+}
+
+func (r Resource) filename(anyName interface{}, suffix string) string {
+	if name, status := anyName.(string); status && name != "" {
+		return fmt.Sprintf("%s_%s_%s%s", r.Type, name, osHelper.GetDateTime(), suffix)
+	} else {
+		return fmt.Sprintf("%s_%s%s", r.Type, osHelper.GetDateTime(), suffix)
 	}
 }
