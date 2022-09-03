@@ -2,8 +2,9 @@ package k8s
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 type Command struct {
 	Maincmd string
 	Args    []string
+	StdOut  *os.File
 }
 
 type Kube struct {
@@ -32,11 +34,22 @@ type Resource struct {
 type ResourceName interface{}
 
 func (c Command) Run() (string, bool) {
-	output, err := util.ProcessCmdResult(*exec.Command(c.Maincmd, c.Args...))
-	if err != nil {
-		return string(output), false
+	if c.StdOut == nil {
+		output, err := util.ProcessCmdResult(*exec.Command(c.Maincmd, c.Args...))
+		if err != nil {
+			return string(output), false
+		} else {
+			return string(output), true
+		}
 	} else {
-		return string(output), true
+		cmd := exec.Command(c.Maincmd, c.Args...)
+		cmd.Stdout = c.StdOut
+		err := util.ProcessCmdResultWithoutOutput(*cmd)
+		if err != nil {
+			return err.Error(), false
+		} else {
+			return "", true
+		}
 	}
 }
 
@@ -313,13 +326,20 @@ func (r Resource) saveYamlFile(anyName interface{}, filePath string) error {
 	if name, status := anyName.(string); status && name != "" {
 		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "yaml"}
 	}
+
+	outfile, err := r.makeFile(filePath)
+	if err != nil {
+		return fmt.Errorf("error occurred while creating resource %s file %s: %s", r.ResourceName(), filePath, err.Error())
+	}
+	defer outfile.Close()
+	r.Command.StdOut = outfile
+
 	output, ok := r.Command.Run()
 
 	if ok {
-		err := ioutil.WriteFile(filePath, []byte(output), 0644)
-		return err
+		return nil
 	} else {
-		return fmt.Errorf("error occurred while fetching resource %s", r.ResourceName())
+		return fmt.Errorf("error occurred while fetching resource %s: %s", r.ResourceName(), output)
 	}
 }
 
@@ -333,26 +353,25 @@ func (r Resource) saveDescribeFile(anyName interface{}, filePath string) error {
 	if name, status := anyName.(string); status && name != "" {
 		r.Command.Args = []string{"describe", r.Type, name, "-n", r.Namespace}
 	}
+
+	outfile, err := r.makeFile(filePath)
+	if err != nil {
+		return fmt.Errorf("error occurred while creating resource %s file %s: %s", r.ResourceName(), filePath, err.Error())
+	}
+	defer outfile.Close()
+	r.Command.StdOut = outfile
+
 	output, ok := r.Command.Run()
 
 	if ok {
-		err := ioutil.WriteFile(filePath, []byte(output), 0644)
-		return err
+		return nil
 	} else {
-		return fmt.Errorf("error occurred while fetching resource %s", r.ResourceName())
+		return fmt.Errorf("error occurred while fetching resource %s: %s", r.ResourceName(), output)
 	}
 }
 
 func (r Resource) Filename(suffix string) string {
 	return r.filename(r.Name, suffix)
-}
-
-func (r Resource) ResourceName() string {
-	resource := r.Type
-	if name, status := r.Name.(string); status && name != "" {
-		resource = r.Type + "/" + name
-	}
-	return resource
 }
 
 func (r Resource) filename(anyName interface{}, suffix string) string {
@@ -361,4 +380,52 @@ func (r Resource) filename(anyName interface{}, suffix string) string {
 	} else {
 		return fmt.Sprintf("%s_%s%s", r.Type, osHelper.GetDateTime(), suffix)
 	}
+}
+
+func (r Resource) SaveLogFile(filePath string, sinceTime int32) error {
+	return r.saveLogFile(r.Name, filePath, sinceTime)
+}
+
+func (r Resource) saveLogFile(anyName interface{}, filePath string, sinceTime int32) error {
+
+	if sinceTime < 0 {
+		sinceTime = 60
+	}
+
+	r.Command.Args = []string{"logs", r.Type, "-n", r.Namespace, "--all-containers=true", fmt.Sprint("--since=%dm", sinceTime)}
+	if name, status := anyName.(string); status && name != "" {
+		r.Command.Args = []string{"logs", r.Type, name, "-n", r.Namespace, "--all-containers=true", fmt.Sprint("--since=%dm", sinceTime)}
+	}
+
+	outfile, err := r.makeFile(filePath)
+	if err != nil {
+		return fmt.Errorf("error occurred while creating resource %s file %s: %s", r.ResourceName(), filePath, err.Error())
+	}
+	defer outfile.Close()
+	r.Command.StdOut = outfile
+
+	output, ok := r.Command.Run()
+
+	if ok {
+		return nil
+	} else {
+		return fmt.Errorf("error occurred while fetching resource %s: %s", r.ResourceName(), output)
+	}
+}
+
+func (r Resource) makeFile(filePath string) (*os.File, error) {
+	path := filepath.Dir(filePath)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err := os.Mkdir(path, 0644)
+		return nil, err
+	}
+	return os.Create(filePath)
+}
+
+func (r Resource) ResourceName() string {
+	resource := r.Type
+	if name, status := r.Name.(string); status && name != "" {
+		resource = r.Type + "/" + name
+	}
+	return resource
 }
