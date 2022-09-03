@@ -188,65 +188,55 @@ func (r Resource) RemoveFinalizers(pattern string) {
 	r.spin.Stop()
 }
 
-func (r Resource) GetFilteredResource(pattern string) string {
-	r.spin.Start()
-	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
-	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
-	if name, status := r.Name.(string); status && name != "" {
-		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name", "--ignore-not-found=true"}
-	}
-	output, ok := r.Command.Run()
-	if ok {
-		r.spin.Prefix = fmt.Sprintf("Resources of type %s fetched successfully\n\t", r.Type)
-	} else {
-		util.Fatal("Error occurred while fetching resource of type %s\n", r.Type)
-	}
+func (r Resource) GetFilteredResource(patterns []string, anyPosition bool) string {
 
-	util.Verbose("GetFilteredResource output: %s", output)
-
-	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
-	tokens := strings.Split(output, " ")
+	tokens := r.GetResources()
 
 	for _, value := range tokens {
-		if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
-			r.spin.Stop()
-
+		found := true
+		for _, pattern := range patterns {
+			hasPattern := false
+			if anyPosition {
+				hasPattern = strings.Contains(value, pattern)
+			} else {
+				hasPattern = strings.HasPrefix(value, pattern)
+			}
+			if !(found && hasPattern && !strings.Contains(value, "/")) {
+				found = false
+				break
+			}
+		}
+		if found {
 			util.Verbose("GetFilteredResource returning %s\n", value)
 			return value
 		}
 	}
 
-	r.spin.Stop()
 	return ""
 }
 
-func (r Resource) GetFilteredResources(pattern string) []string {
-	r.spin.Start()
-	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
-	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
-	if name, status := r.Name.(string); status && name != "" {
-		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name", "--ignore-not-found=true"}
-	}
-	output, ok := r.Command.Run()
-	if ok {
-		r.spin.Prefix = fmt.Sprintf("Resources of type %s fetched successfully\n", r.Type)
-	} else {
-		util.Fatal("Error occurred while fetching resource of type %s\n", r.Type)
-	}
-
-	util.Verbose("GetFilteredResources output: %s", output)
-
-	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
-	tokens := strings.Split(output, " ")
-
+func (r Resource) GetFilteredResources(patterns []string, anyPosition bool) []string {
 	filtered := []string{}
+	tokens := r.GetResources()
+
 	for _, value := range tokens {
-		if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
+		found := true
+		for _, pattern := range patterns {
+			hasPattern := false
+			if anyPosition {
+				hasPattern = strings.Contains(value, pattern)
+			} else {
+				hasPattern = strings.HasPrefix(value, pattern)
+			}
+			if !(found && hasPattern && !strings.Contains(value, "/")) {
+				found = false
+				break
+			}
+		}
+		if found {
 			filtered = append(filtered, value)
 		}
 	}
-
-	r.spin.Stop()
 
 	util.Verbose("GetFilteredResources returning %s\n", strings.Join(filtered, ","))
 	return filtered
