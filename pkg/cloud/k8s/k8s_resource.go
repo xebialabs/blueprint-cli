@@ -103,6 +103,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			} else {
 				util.Fatal("\nError while deleting %s\n", r.ResourceName())
 			}
+			r.spin.Stop()
 		} else if err != nil {
 			util.Fatal("Error while deleting %s: %s\n", r.ResourceName(), err)
 		} else {
@@ -126,8 +127,8 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 					break
 				}
 			}
+			r.spin.Stop()
 			if found {
-				r.spin.Stop()
 				if doDelete, err := confirm(r.Type, value); doDelete && err == nil {
 					r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, value)
 					r.spin.Start()
@@ -296,7 +297,7 @@ func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
 				fmt.Sprintf("--timeout=%ds", timeoutMinutes*60),
 				"-n", r.Namespace))
 			if err == nil {
-				util.Info("%s is %s in the namespace %s\n", resource, condition, r.Namespace)
+				util.Info("%s is %s in the namespace %s\n", resource, strings.ToLower(condition), r.Namespace)
 				break
 			}
 		}
@@ -311,6 +312,10 @@ func (r Resource) SaveYamlFile(filePath string) error {
 }
 
 func (r Resource) saveYamlFile(anyName interface{}, filePath string) error {
+
+	r.spin.Prefix = fmt.Sprintf("Saving YAML file for %s...\t", r.ResourceName())
+	r.spin.Start()
+	defer r.spin.Stop()
 
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "yaml"}
 	if name, status := anyName.(string); status && name != "" {
@@ -338,6 +343,10 @@ func (r Resource) SaveDescribeFile(filePath string) error {
 }
 
 func (r Resource) saveDescribeFile(anyName interface{}, filePath string) error {
+
+	r.spin.Prefix = fmt.Sprintf("Saving describe file for %s...\t", r.ResourceName())
+	r.spin.Start()
+	defer r.spin.Stop()
 
 	r.Command.Args = []string{"describe", r.Type, "-n", r.Namespace}
 	if name, status := anyName.(string); status && name != "" {
@@ -378,13 +387,17 @@ func (r Resource) SaveLogFile(filePath string, sinceTime int32) error {
 
 func (r Resource) saveLogFile(anyName interface{}, filePath string, sinceTime int32) error {
 
+	r.spin.Prefix = fmt.Sprintf("Saving logs file for %s...\t", r.ResourceName())
+	r.spin.Start()
+	defer r.spin.Stop()
+
 	if sinceTime < 0 {
 		sinceTime = 60
 	}
 
 	r.Command.Args = []string{"logs", r.Type, "-n", r.Namespace, "--all-containers=true", fmt.Sprint("--since=%dm", sinceTime)}
 	if name, status := anyName.(string); status && name != "" {
-		r.Command.Args = []string{"logs", r.Type, name, "-n", r.Namespace, "--all-containers=true", fmt.Sprint("--since=%dm", sinceTime)}
+		r.Command.Args = []string{"logs", fmt.Sprint("%s/%s", r.Type, name), "-n", r.Namespace, "--all-containers=true", "--since=" + string(sinceTime) + "m"}
 	}
 
 	outfile, err := r.makeFile(filePath)
