@@ -398,7 +398,7 @@ func (r Resource) saveLogFile(anyName interface{}, filePath string, sinceTime in
 
 	r.Command.Args = []string{"logs", r.Type, "-n", r.Namespace, "--all-containers=true", fmt.Sprint("--since=%dm", sinceTime)}
 	if name, status := anyName.(string); status && name != "" {
-		r.Command.Args = []string{"logs", fmt.Sprint("%s/%s", r.Type, name), "-n", r.Namespace, "--all-containers=true", "--since=" + strconv.Itoa(sinceTime) + "m"}
+		r.Command.Args = []string{"logs", fmt.Sprint("%s/%s", r.Type, name), "-n", r.Namespace, "--all-containers=true", "--since=" + strconv.Itoa(int(sinceTime)) + "m"}
 	}
 
 	outfile, err := r.makeFile(filePath)
