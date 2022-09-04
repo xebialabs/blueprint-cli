@@ -277,6 +277,50 @@ func (r Resource) ExistResource() bool {
 	return len(r.GetResources()) > 0
 }
 
+func (r Resource) Status() string {
+	r.spin.Start()
+	r.spin.Prefix = fmt.Sprintf("Fetching status %s from %s namespace\t", r.Type, r.Namespace)
+	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.phase"}
+	if name, status := r.Name.(string); status && name != "" {
+		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.phase"}}
+	}
+	output, ok := r.Command.Run()
+	if ok {
+		r.spin.Prefix = fmt.Sprintf("Resources of type %s fetched status successfully\n", r.Type)
+	} else {
+		util.Fatal("Error occurred while fetching resource status of type %s\n", r.Type)
+	}
+
+	util.Verbose("Get status output: %s", output)
+
+	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
+
+	r.spin.Stop()
+	return output
+}
+
+func (r Resource) StatusReason() string {
+	r.spin.Start()
+	r.spin.Prefix = fmt.Sprintf("Fetching status reason %s from %s namespace\t", r.Type, r.Namespace)
+	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.reason"}
+	if name, status := r.Name.(string); status && name != "" {
+		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.reason"}}
+	}
+	output, ok := r.Command.Run()
+	if ok {
+		r.spin.Prefix = fmt.Sprintf("Resources of type %s fetched status reason successfully\n", r.Type)
+	} else {
+		util.Fatal("Error occurred while fetching resource status reason of type %s\n", r.Type)
+	}
+
+	util.Verbose("Get status reason output: %s", output)
+
+	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
+
+	r.spin.Stop()
+	return output
+}
+
 func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
 
 	resource := r.ResourceName()
