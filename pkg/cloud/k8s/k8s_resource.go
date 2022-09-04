@@ -282,7 +282,7 @@ func (r Resource) Status() string {
 	r.spin.Prefix = fmt.Sprintf("Fetching status %s from %s namespace\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.phase"}
 	if name, status := r.Name.(string); status && name != "" {
-		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.phase"}}
+		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.phase"}
 	}
 	output, ok := r.Command.Run()
 	if ok {
@@ -304,7 +304,7 @@ func (r Resource) StatusReason() string {
 	r.spin.Prefix = fmt.Sprintf("Fetching status reason %s from %s namespace\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.reason"}
 	if name, status := r.Name.(string); status && name != "" {
-		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.reason"}}
+		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.reason"}
 	}
 	output, ok := r.Command.Run()
 	if ok {
