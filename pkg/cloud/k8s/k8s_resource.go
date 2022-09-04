@@ -406,8 +406,9 @@ func (r Resource) saveLogFile(anyName interface{}, filePath string, sinceTime in
 func (r Resource) makeFile(filePath string) (*os.File, error) {
 	path := filepath.Dir(filePath)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		err := os.Mkdir(path, 0644)
-		return nil, err
+		if err := os.Mkdir(path, 0644); err != nil {
+			return nil, err
+		}
 	}
 	return os.Create(filePath)
 }
