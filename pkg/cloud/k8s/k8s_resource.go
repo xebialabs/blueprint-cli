@@ -343,6 +343,8 @@ func (r Resource) WaitForResourceComplex(timeoutMinutes uint, condition string) 
 				"-n", r.Namespace))
 			if err == nil {
 				return nil
+			} else {
+				util.Verbose("Failed waiting for %s to be %s: %s \n", resource, condition, err.Error())
 			}
 		}
 		time.Sleep(time.Second)
@@ -373,6 +375,8 @@ func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
 				"-n", r.Namespace))
 			if err == nil {
 				return nil
+			} else {
+				util.Verbose("Failed waiting for %s to be %s: %s \n", resource, condition, err.Error())
 			}
 		}
 		time.Sleep(time.Second)
