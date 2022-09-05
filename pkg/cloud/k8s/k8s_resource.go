@@ -321,6 +321,36 @@ func (r Resource) StatusReason() string {
 	return output
 }
 
+func (r Resource) WaitForResourceComplex(timeoutMinutes uint, condition string) error {
+
+	resource := r.ResourceName()
+
+	util.Verbose("Waiting for %s to be %s in the namespace %s for %d minutes\n", resource, condition, r.Namespace, timeoutMinutes)
+
+	r.spin.Prefix = fmt.Sprintf("Waiting for %s to be %s...\t", resource, condition)
+	r.spin.Start()
+	defer r.spin.Stop()
+
+	var i int
+	for start := time.Now(); ; {
+		if time.Since(start) > (time.Minute * time.Duration(timeoutMinutes)) {
+			return fmt.Errorf("timeout while waiting for %s to be %s", resource, condition)
+		} else {
+			_, err := osHelper.ProcessCmdResultWithoutLog(*exec.Command("kubectl", "wait",
+				"--for", condition,
+				resource,
+				fmt.Sprintf("--timeout=%ds", timeoutMinutes*60),
+				"-n", r.Namespace))
+			if err == nil {
+				break
+			}
+		}
+		time.Sleep(time.Second)
+		i++
+	}
+	return nil
+}
+
 func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
 
 	resource := r.ResourceName()
