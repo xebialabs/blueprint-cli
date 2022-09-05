@@ -336,7 +336,7 @@ func (r Resource) WaitForResourceComplex(timeoutMinutes uint, condition string) 
 		if time.Since(start) > (time.Minute * time.Duration(timeoutMinutes)) {
 			return fmt.Errorf("timeout while waiting for %s to be %s", resource, condition)
 		} else {
-			_, err := osHelper.ProcessCmdResultWithoutLog(*exec.Command("kubectl", "wait",
+			log, err := osHelper.ProcessCmdResultWithoutLog(*exec.Command("kubectl", "wait",
 				"--for", condition,
 				resource,
 				fmt.Sprintf("--timeout=%ds", timeoutMinutes*60),
@@ -344,7 +344,7 @@ func (r Resource) WaitForResourceComplex(timeoutMinutes uint, condition string) 
 			if err == nil {
 				return nil
 			} else {
-				util.Verbose("Failed waiting for %s to be %s: %s \n", resource, condition, err.Error())
+				util.Verbose("Failed waiting for %s to be %s: %s \n%s\n", resource, condition, err.Error(), log)
 			}
 		}
 		time.Sleep(time.Second)
@@ -368,7 +368,7 @@ func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
 		if time.Since(start) > (time.Minute * time.Duration(timeoutMinutes)) {
 			return fmt.Errorf("timeout while waiting for %s to be %s", resource, condition)
 		} else {
-			_, err := osHelper.ProcessCmdResultWithoutLog(*exec.Command("kubectl", "wait",
+			log, err := osHelper.ProcessCmdResultWithoutLog(*exec.Command("kubectl", "wait",
 				"--for", fmt.Sprintf("condition=%s", condition),
 				resource,
 				fmt.Sprintf("--timeout=%ds", timeoutMinutes*60),
@@ -376,7 +376,7 @@ func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
 			if err == nil {
 				return nil
 			} else {
-				util.Verbose("Failed waiting for %s to be %s: %s \n", resource, condition, err.Error())
+				util.Verbose("Failed waiting for %s to be %s: %s \n%s\n", resource, condition, err.Error(), log)
 			}
 		}
 		time.Sleep(time.Second)
