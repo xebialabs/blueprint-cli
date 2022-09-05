@@ -382,6 +382,10 @@ func (r Resource) saveYamlFile(anyName interface{}, filePath string) error {
 	}
 }
 
+func (r Resource) DescribeCommand() string {
+	return fmt.Sprintf("kubectl describe %s %s -n %s", r.Type, r.Name, r.Namespace)
+}
+
 func (r Resource) SaveDescribeFile(filePath string) error {
 	return r.saveDescribeFile(r.Name, filePath)
 }
@@ -423,6 +427,10 @@ func (r Resource) filename(anyName interface{}, suffix string) string {
 	} else {
 		return fmt.Sprintf("%s_%s%s", r.Type, osHelper.GetDateTime(), suffix)
 	}
+}
+
+func (r Resource) LogsCommand() string {
+	return fmt.Sprintf("kubectl logs %s -n %s -f --all-containers=true", r.ResourceName(), r.Namespace)
 }
 
 func (r Resource) SaveLogFile(filePath string, sinceTime int32) error {
