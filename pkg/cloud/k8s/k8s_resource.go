@@ -342,7 +342,7 @@ func (r Resource) WaitForResourceComplex(timeoutMinutes uint, condition string) 
 				fmt.Sprintf("--timeout=%ds", timeoutMinutes*60),
 				"-n", r.Namespace))
 			if err == nil {
-				break
+				return nil
 			}
 		}
 		time.Sleep(time.Second)
@@ -372,7 +372,7 @@ func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
 				fmt.Sprintf("--timeout=%ds", timeoutMinutes*60),
 				"-n", r.Namespace))
 			if err == nil {
-				break
+				return nil
 			}
 		}
 		time.Sleep(time.Second)
