@@ -329,6 +329,7 @@ func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
 
 	r.spin.Prefix = fmt.Sprintf("Waiting for %s to be %s...\t", resource, condition)
 	r.spin.Start()
+	defer r.spin.Stop()
 
 	var i int
 	for start := time.Now(); ; {
@@ -341,7 +342,6 @@ func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
 				fmt.Sprintf("--timeout=%ds", timeoutMinutes*60),
 				"-n", r.Namespace))
 			if err == nil {
-				util.Info("%s is %s in the namespace %s\n", resource, strings.ToLower(condition), r.Namespace)
 				break
 			}
 		}
