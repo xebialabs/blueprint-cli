@@ -89,6 +89,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 		if doDelete, err := confirm(r.Type, name); doDelete && err == nil {
 			r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, name)
 			r.spin.Start()
+			defer r.spin.Stop()
 
 			if backupPath != "" {
 				filepath := r.Filename(".yaml")
@@ -103,7 +104,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			} else {
 				util.Fatal("\nError while deleting %s\n", r.ResourceName())
 			}
-			r.spin.Stop()
+
 		} else if err != nil {
 			util.Fatal("Error while deleting %s: %s\n", r.ResourceName(), err)
 		} else {
@@ -132,6 +133,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 				if doDelete, err := confirm(r.Type, value); doDelete && err == nil {
 					r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, value)
 					r.spin.Start()
+					defer r.spin.Stop()
 
 					if backupPath != "" {
 						filepath := r.filename(value, ".yaml")
@@ -160,6 +162,8 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 
 func (r Resource) RemoveFinalizers(pattern string) {
 	r.spin.Start()
+	defer r.spin.Stop()
+
 	if name, status := r.Name.(string); status && name != "" {
 		r.Args = []string{"patch", r.Type, name, "-n", r.Namespace, "-p", "{\"metadata\":{\"finalizers\":[]}}", "--type=merge"}
 		r.spin.Prefix = fmt.Sprintf("Deleting finalizers %s/%s...\t", r.Type, name)
@@ -186,7 +190,6 @@ func (r Resource) RemoveFinalizers(pattern string) {
 			}
 		}
 	}
-	r.spin.Stop()
 }
 
 func (r Resource) GetFilteredResource(patterns []string, anyPosition bool) string {
@@ -245,6 +248,8 @@ func (r Resource) GetFilteredResources(patterns []string, anyPosition bool) []st
 
 func (r Resource) GetResources() []string {
 	r.spin.Start()
+	defer r.spin.Stop()
+
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
 	if name, status := r.Name.(string); status && name != "" {
@@ -269,7 +274,6 @@ func (r Resource) GetResources() []string {
 		}
 	}
 
-	r.spin.Stop()
 	return filtered
 }
 
@@ -279,7 +283,10 @@ func (r Resource) ExistResource() bool {
 
 func (r Resource) Status() string {
 	r.spin.Start()
+	defer r.spin.Stop()
+
 	r.spin.Prefix = fmt.Sprintf("Fetching status %s from %s namespace\t", r.Type, r.Namespace)
+
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.phase"}
 	if name, status := r.Name.(string); status && name != "" {
 		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.phase"}
@@ -295,7 +302,6 @@ func (r Resource) Status() string {
 
 	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
 
-	r.spin.Stop()
 	return output
 }
 
