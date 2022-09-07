@@ -122,9 +122,18 @@ func ProcessCmdResult(cmd exec.Cmd) ([]byte, error) {
 	Verbose("\nExecuting command: %s\n", cmd.String())
 	cmdOutput, err := cmd.CombinedOutput()
 	if err != nil {
-		Error("\nError while executing: command: %s\n%s\n", cmd.String(), cmdOutput)
+		return cmdOutput, fmt.Errorf("error while executing: command: %s\n%s", cmd.String(), cmdOutput)
 	}
 	return cmdOutput, err
+}
+
+func ProcessCmdResultWithoutOutput(cmd exec.Cmd) error {
+	Verbose("\nExecuting command: %s\n", cmd.String())
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("error while executing: command: %s\n%s", cmd.String(), err.Error())
+	}
+	return err
 }
 
 func TransformToMap(spec interface{}) []map[interface{}]interface{} {

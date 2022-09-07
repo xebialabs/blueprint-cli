@@ -4,6 +4,7 @@ http://github.com/Masterminds/semver
 http://github.com/Masterminds/sprig
 http://github.com/Netflix/go-expect
 http://github.com/aws/aws-sdk-go
+http://github.com/briandowns/spinner
 http://github.com/dlclark/regexp2
 http://github.com/fatih/color
 http://github.com/fsnotify/fsnotify
