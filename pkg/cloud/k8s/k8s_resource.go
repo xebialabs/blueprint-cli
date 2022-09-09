@@ -100,7 +100,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 
 			if output, ok := r.Run(); ok {
 				output = strings.Replace(output, "\n", "", -1)
-				r.spin.Prefix = output + "\t"
+				util.Verbose(output + "\n")
 			} else {
 				util.Fatal("\nError while deleting %s\n", r.ResourceName())
 			}
@@ -108,7 +108,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 		} else if err != nil {
 			util.Fatal("Error while deleting %s: %s\n", r.ResourceName(), err)
 		} else {
-			util.Info("Skipping delete of the resource %s", r.ResourceName())
+			util.Info("Skipping delete of the resource %s\n", r.ResourceName())
 		}
 	} else {
 		// Delete logic by pattern matching
@@ -147,7 +147,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 					if !ok {
 						util.Fatal("Error while deleting %s/%s\n", r.Type, value)
 					} else {
-						util.Info(output)
+						util.Info(output + "\n")
 					}
 				} else if err != nil {
 					util.Fatal("Error while deleting %s/%s: %s\n", r.Type, value, err)
@@ -169,7 +169,7 @@ func (r Resource) RemoveFinalizers(pattern string) {
 		r.spin.Prefix = fmt.Sprintf("Deleting finalizers %s/%s...\t", r.Type, name)
 		if output, ok := r.Run(); ok {
 			output = strings.Replace(output, "\n", "", -1)
-			r.spin.Prefix = output + "\t"
+			util.Info(output + "\n")
 		} else {
 			util.Fatal("\nError while deleting %s/%s\n", r.Type, name)
 		}
@@ -185,7 +185,7 @@ func (r Resource) RemoveFinalizers(pattern string) {
 				if !ok {
 					util.Fatal("Error while deleting %s/%s\n", r.Type, value)
 				} else {
-					util.Info(output)
+					util.Info(output + "\n")
 				}
 			}
 		}
@@ -254,19 +254,19 @@ func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) []string 
 	r.spin.Start()
 	defer r.spin.Stop()
 
-	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
+	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace...\t", r.Type, r.Namespace)
 	r.Command.Args = append([]string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name"}, appendedAttrs...)
 	if name, status := r.Name.(string); status && name != "" {
 		r.Command.Args = append([]string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name"}, appendedAttrs...)
 	}
 	output, ok := r.Command.Run()
 	if ok {
-		r.spin.Prefix = fmt.Sprintf("Resources of type %s fetched successfully\n", r.Type)
+		util.Info("Resources of type %s fetched successfully\n", r.Type)
 	} else {
 		util.Fatal("Error occurred while fetching resource of type %s\n", r.Type)
 	}
 
-	util.Verbose("GetResources output: %s", output)
+	util.Verbose("GetResources output: %s\n", output)
 
 	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
 	tokens := strings.Split(output, " ")
@@ -289,7 +289,7 @@ func (r Resource) Status() string {
 	r.spin.Start()
 	defer r.spin.Stop()
 
-	r.spin.Prefix = fmt.Sprintf("Fetching status %s from %s namespace\t", r.Type, r.Namespace)
+	r.spin.Prefix = fmt.Sprintf("Fetching status %s from %s namespace...\t", r.Type, r.Namespace)
 
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.phase"}
 	if name, status := r.Name.(string); status && name != "" {
@@ -297,12 +297,12 @@ func (r Resource) Status() string {
 	}
 	output, ok := r.Command.Run()
 	if ok {
-		r.spin.Prefix = fmt.Sprintf("Resources of type %s fetched status successfully\n", r.Type)
+		util.Info("Resources of type %s fetched status successfully\n", r.Type)
 	} else {
 		util.Fatal("Error occurred while fetching resource status of type %s\n", r.Type)
 	}
 
-	util.Verbose("Get status output: %s", output)
+	util.Verbose("Get status output: %s\n", output)
 
 	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
 
@@ -311,19 +311,19 @@ func (r Resource) Status() string {
 
 func (r Resource) StatusReason() string {
 	r.spin.Start()
-	r.spin.Prefix = fmt.Sprintf("Fetching status reason %s from %s namespace\t", r.Type, r.Namespace)
+	r.spin.Prefix = fmt.Sprintf("Fetching status reason %s from %s namespace...\t", r.Type, r.Namespace)
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.reason"}
 	if name, status := r.Name.(string); status && name != "" {
 		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.reason"}
 	}
 	output, ok := r.Command.Run()
 	if ok {
-		r.spin.Prefix = fmt.Sprintf("Resources of type %s fetched status reason successfully\n", r.Type)
+		util.Info("Resources of type %s fetched status reason successfully\n", r.Type)
 	} else {
 		util.Fatal("Error occurred while fetching resource status reason of type %s\n", r.Type)
 	}
 
-	util.Verbose("Get status reason output: %s", output)
+	util.Verbose("Get status reason output: %s\n", output)
 
 	output = strings.TrimSpace(strings.Replace(output, "\n", " ", -1))
 
