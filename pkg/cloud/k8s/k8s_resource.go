@@ -250,7 +250,7 @@ func (r Resource) GetResources() []string {
 	return r.GetResourcesWithCustomAttrs([]string{"--sort-by=metadata.name", "--ignore-not-found=true"})
 }
 
-func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs []string) []string {
+func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) []string {
 	r.spin.Start()
 	defer r.spin.Stop()
 
