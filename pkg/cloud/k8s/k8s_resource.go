@@ -247,13 +247,17 @@ func (r Resource) GetFilteredResources(patterns []string, anyPosition bool) []st
 }
 
 func (r Resource) GetResources() []string {
+	return r.GetResourcesWithCustomAttrs([]string{"--sort-by=metadata.name", "--ignore-not-found=true"})
+}
+
+func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs []string) []string {
 	r.spin.Start()
 	defer r.spin.Stop()
 
 	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace\t", r.Type, r.Namespace)
-	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name"}
+	r.Command.Args = append([]string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name"}, appendedAttrs...)
 	if name, status := r.Name.(string); status && name != "" {
-		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name", "--sort-by=metadata.name", "--ignore-not-found=true"}
+		r.Command.Args = append([]string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name"}, appendedAttrs...)
 	}
 	output, ok := r.Command.Run()
 	if ok {
