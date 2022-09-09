@@ -247,7 +247,7 @@ func (r Resource) GetFilteredResources(patterns []string, anyPosition bool) []st
 }
 
 func (r Resource) GetResources() []string {
-	return r.GetResourcesWithCustomAttrs([]string{"--sort-by=metadata.name", "--ignore-not-found=true"})
+	return r.GetResourcesWithCustomAttrs("--sort-by=metadata.name", "--ignore-not-found=true")
 }
 
 func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) []string {
