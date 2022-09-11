@@ -112,7 +112,11 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 		}
 	} else {
 		// Delete logic by pattern matching
-		tokens := r.GetResources()
+		tokens, err := r.GetResources()
+
+		if err != nil {
+			util.Fatal("Cannot delete resources: %s", err)
+		}
 
 		for _, value := range tokens {
 			found := true
@@ -143,11 +147,12 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 					}
 
 					r.Args = []string{"delete", r.Type, value, "-n", r.Namespace}
-					output, ok := r.Run()
-					if !ok {
-						util.Fatal("Error while deleting %s/%s\n", r.Type, value)
-					} else {
+
+					if output, ok := r.Run(); ok {
+						output = strings.Replace(output, "\n", "", -1)
 						util.Info(output + "\n")
+					} else {
+						util.Fatal("Error while deleting %s/%s\n", r.Type, value)
 					}
 				} else if err != nil {
 					util.Fatal("Error while deleting %s/%s: %s\n", r.Type, value, err)
@@ -175,7 +180,11 @@ func (r Resource) RemoveFinalizers(pattern string) {
 		}
 	} else {
 		// Delete logic by pattern matching
-		tokens := r.GetResources()
+		tokens, err := r.GetResources()
+
+		if err != nil {
+			util.Fatal("Cannot clean finalizers: %s\n", err)
+		}
 
 		for _, value := range tokens {
 			if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
@@ -192,9 +201,12 @@ func (r Resource) RemoveFinalizers(pattern string) {
 	}
 }
 
-func (r Resource) GetFilteredResource(patterns []string, anyPosition bool) string {
+func (r Resource) GetFilteredResource(patterns []string, anyPosition bool) (string, error) {
+	tokens, err := r.GetResources()
 
-	tokens := r.GetResources()
+	if err != nil {
+		return "", err
+	}
 
 	for _, value := range tokens {
 		found := true
@@ -212,16 +224,20 @@ func (r Resource) GetFilteredResource(patterns []string, anyPosition bool) strin
 		}
 		if found {
 			util.Verbose("GetFilteredResource returning %s\n", value)
-			return value
+			return value, nil
 		}
 	}
 
-	return ""
+	return "", nil
 }
 
-func (r Resource) GetFilteredResources(patterns []string, anyPosition bool) []string {
+func (r Resource) GetFilteredResources(patterns []string, anyPosition bool) ([]string, error) {
 	filtered := []string{}
-	tokens := r.GetResources()
+	tokens, err := r.GetResources()
+
+	if err != nil {
+		return nil, err
+	}
 
 	for _, value := range tokens {
 		found := true
@@ -243,14 +259,14 @@ func (r Resource) GetFilteredResources(patterns []string, anyPosition bool) []st
 	}
 
 	util.Verbose("GetFilteredResources returning %s\n", strings.Join(filtered, ","))
-	return filtered
+	return filtered, nil
 }
 
-func (r Resource) GetResources() []string {
+func (r Resource) GetResources() ([]string, error) {
 	return r.GetResourcesWithCustomAttrs("--sort-by=metadata.name", "--ignore-not-found=true")
 }
 
-func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) []string {
+func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) ([]string, error) {
 	r.spin.Start()
 	defer r.spin.Stop()
 
@@ -263,7 +279,7 @@ func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) []string 
 	if ok {
 		util.Info("Resources of type %s fetched successfully\n", r.Type)
 	} else {
-		util.Fatal("Error occurred while fetching resource of type %s\n", r.Type)
+		return nil, fmt.Errorf("error occurred while fetching resource of type %s: %s", r.Type, output)
 	}
 
 	util.Verbose("GetResources output: %s\n", output)
@@ -278,11 +294,16 @@ func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) []string 
 		}
 	}
 
-	return filtered
+	return filtered, nil
 }
 
 func (r Resource) ExistResource() bool {
-	return len(r.GetResources()) > 0
+	if resource, err := r.GetResources(); err != nil {
+		return len(resource) > 0
+	} else {
+		util.Verbose("Cannot check existence of resource %s", err)
+		return false
+	}
 }
 
 func (r Resource) Status() string {
