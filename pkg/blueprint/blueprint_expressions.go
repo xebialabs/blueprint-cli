@@ -178,13 +178,13 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			var resource k8s.Resource
 			if len(args) == 3 {
 				res := resource.CreateResource(namespace, resourceType, args[2])
-				return res.GetResources(), nil
+				return res.GetResources()
 			} else if len(args) == 4 {
 				res := resource.CreateResource(namespace, resourceType, args[2])
-				return res.GetFilteredResources([]string{args[3].(string)}, true), nil
+				return res.GetFilteredResources([]string{args[3].(string)}, true)
 			} else {
 				res := resource.CreateResource(namespace, resourceType, nil)
-				return res.GetResources(), nil
+				return res.GetResources()
 			}
 		},
 		"k8sResource": func(args ...interface{}) (interface{}, error) {
@@ -198,10 +198,10 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			var resource k8s.Resource
 			if len(args) == 4 {
 				res := resource.CreateResource(namespace, resourceType, args[2])
-				return res.GetFilteredResource([]string{args[3].(string)}, true), nil
+				return res.GetFilteredResource([]string{args[3].(string)}, true)
 			} else {
 				res := resource.CreateResource(namespace, resourceType, nil)
-				return res.GetFilteredResource([]string{args[2].(string)}, true), nil
+				return res.GetFilteredResource([]string{args[2].(string)}, true)
 			}
 		},
 		// aws helper functions
