@@ -298,7 +298,7 @@ func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) ([]string
 }
 
 func (r Resource) ExistResource() bool {
-	if resource, err := r.GetResources(); err != nil {
+	if resource, err := r.GetResources(); err == nil {
 		return len(resource) > 0
 	} else {
 		util.Verbose("Cannot check existence of resource %s", err)
