@@ -102,7 +102,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 				output = strings.Replace(output, "\n", "", -1)
 				util.Verbose(output + "\n")
 			} else {
-				util.Fatal("\nError while deleting %s\n", r.ResourceName())
+				util.Error("Error while deleting %s: %s\n", r.ResourceName(), output)
 			}
 
 		} else if err != nil {
@@ -152,7 +152,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 						output = strings.Replace(output, "\n", "", -1)
 						util.Info(output + "\n")
 					} else {
-						util.Fatal("Error while deleting %s/%s\n", r.Type, value)
+						util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
 					}
 				} else if err != nil {
 					util.Fatal("Error while deleting %s/%s: %s\n", r.Type, value, err)
@@ -176,7 +176,7 @@ func (r Resource) RemoveFinalizers(pattern string) {
 			output = strings.Replace(output, "\n", "", -1)
 			util.Info(output + "\n")
 		} else {
-			util.Fatal("\nError while deleting %s/%s\n", r.Type, name)
+			util.Error("\nError while deleting %s/%s: %s\n", r.Type, name, output)
 		}
 	} else {
 		// Delete logic by pattern matching
@@ -192,7 +192,7 @@ func (r Resource) RemoveFinalizers(pattern string) {
 				r.spin.Prefix = fmt.Sprintf("Deleting finalizers %s/%s...\t", r.Type, value)
 				output, ok := r.Run()
 				if !ok {
-					util.Fatal("Error while deleting %s/%s\n", r.Type, value)
+					util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
 				} else {
 					util.Info(output + "\n")
 				}
