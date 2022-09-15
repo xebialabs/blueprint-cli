@@ -167,7 +167,6 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 
 func (r Resource) RemoveFinalizers(pattern string) {
 	
-
 	if name, status := r.Name.(string); status && name != "" {
 		r.Args = []string{"patch", r.Type, name, "-n", r.Namespace, "-p", "{\"metadata\":{\"finalizers\":[]}}", "--type=merge"}
 		r.spin.Prefix = osHelper.Sprintf("Deleting finalizers %s/%s", r.Type, name)
@@ -283,7 +282,8 @@ func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) ([]string
 	}
 	output, ok := r.Command.Run()
 	if ok {
-		defer util.Info("Resources of type %s fetched successfully\n", util.InfoColor(r.Type))
+	  r.spin.Stop()
+		util.Info("Resources of type %s fetched successfully\n", util.InfoColor(r.Type))
 	} else {
 		return nil, fmt.Errorf("error occurred while fetching resource of type %s: %s", r.Type, output)
 	}
