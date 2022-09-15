@@ -106,8 +106,10 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			}
 
 		} else if err != nil {
+		  r.spin.Stop()
 			util.Fatal("Error while deleting %s: %s\n", r.ResourceName(), err)
 		} else {
+		  r.spin.Stop()
 			util.Info("Skipping delete of the resource %s\n", util.InfoColor(r.ResourceName()))
 		}
 	} else {
@@ -150,13 +152,17 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 
 					if output, ok := r.Run(); ok {
 						output = strings.Replace(output, "\n", "", -1)
+						r.spin.Stop()
 						util.Info(output + "\n")
 					} else {
+					  r.spin.Stop()
 						util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
 					}
 				} else if err != nil {
+				  r.spin.Stop()
 					util.Fatal("Error while deleting %s/%s: %s\n", r.Type, value, err)
 				} else {
+				  r.spin.Stop()
 					util.Info("Skipping delete of the resource %s/%s", util.InfoColor(r.Type), util.InfoColor(value))
 				}
 			}
@@ -174,9 +180,11 @@ func (r Resource) RemoveFinalizers(pattern string) {
   	defer r.spin.Stop()
   	
 		if output, ok := r.Run(); ok {
+		  r.spin.Stop()
 			output = strings.Replace(output, "\n", "", -1)
 			util.Info(output + "\n")
 		} else {
+		  r.spin.Stop()
 			util.Error("\nError while deleting %s/%s: %s\n", r.Type, name, output)
 		}
 	} else {
@@ -196,8 +204,10 @@ func (r Resource) RemoveFinalizers(pattern string) {
       	
 				output, ok := r.Run()
 				if !ok {
+				  r.spin.Stop()
 					util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
 				} else {
+				  r.spin.Stop()
 					util.Info(output + "\n")
 				}
 			}
@@ -324,8 +334,10 @@ func (r Resource) Status() string {
 	}
 	output, ok := r.Command.Run()
 	if ok {
+	  r.spin.Stop()
 		util.Info("Resources of type %s fetched status successfully\n", util.InfoColor(r.Type))
 	} else {
+	  r.spin.Stop()
 		util.Fatal("Error occurred while fetching resource status of type %s\n", r.Type)
 	}
 
@@ -348,8 +360,10 @@ func (r Resource) StatusReason() string {
 	}
 	output, ok := r.Command.Run()
 	if ok {
+	  r.spin.Stop()
 		util.Info("Resources of type %s fetched status reason successfully\n", util.InfoColor(r.Type))
 	} else {
+	  r.spin.Stop()
 		util.Fatal("Error occurred while fetching resource status reason of type %s\n", r.Type)
 	}
 
