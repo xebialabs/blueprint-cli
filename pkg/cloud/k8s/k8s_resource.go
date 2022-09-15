@@ -277,7 +277,7 @@ func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) ([]string
 	}
 	output, ok := r.Command.Run()
 	if ok {
-		util.Info("Resources of type %s fetched successfully\n", util.InfoColor(r.Type))
+		defer util.Info("Resources of type %s fetched successfully\n", util.InfoColor(r.Type))
 	} else {
 		return nil, fmt.Errorf("error occurred while fetching resource of type %s: %s", r.Type, output)
 	}
