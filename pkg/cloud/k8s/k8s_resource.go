@@ -166,12 +166,14 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 }
 
 func (r Resource) RemoveFinalizers(pattern string) {
-	r.spin.Start()
-	defer r.spin.Stop()
+	
 
 	if name, status := r.Name.(string); status && name != "" {
 		r.Args = []string{"patch", r.Type, name, "-n", r.Namespace, "-p", "{\"metadata\":{\"finalizers\":[]}}", "--type=merge"}
 		r.spin.Prefix = osHelper.Sprintf("Deleting finalizers %s/%s", r.Type, name)
+		r.spin.Start()
+  	defer r.spin.Stop()
+  	
 		if output, ok := r.Run(); ok {
 			output = strings.Replace(output, "\n", "", -1)
 			util.Info(output + "\n")
@@ -190,6 +192,9 @@ func (r Resource) RemoveFinalizers(pattern string) {
 			if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
 				r.Args = []string{"delete", r.Type, value, "-n", r.Namespace}
 				r.spin.Prefix = osHelper.Sprintf("Deleting finalizers %s/%s", r.Type, value)
+				r.spin.Start()
+      	defer r.spin.Stop()
+      	
 				output, ok := r.Run()
 				if !ok {
 					util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
@@ -267,10 +272,11 @@ func (r Resource) GetResources() ([]string, error) {
 }
 
 func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) ([]string, error) {
-	r.spin.Start()
-	defer r.spin.Stop()
 
 	r.spin.Prefix = osHelper.Sprintf("Fetching %s from %s namespace", r.Type, r.Namespace)
+	r.spin.Start()
+	defer r.spin.Stop()
+	
 	r.Command.Args = append([]string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name"}, appendedAttrs...)
 	if name, status := r.Name.(string); status && name != "" {
 		r.Command.Args = append([]string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name"}, appendedAttrs...)
@@ -307,10 +313,10 @@ func (r Resource) ExistResource() bool {
 }
 
 func (r Resource) Status() string {
-	r.spin.Start()
-	defer r.spin.Stop()
 
 	r.spin.Prefix = osHelper.Sprintf("Fetching status %s from %s namespace", r.Type, r.Namespace)
+	r.spin.Start()
+	defer r.spin.Stop()
 
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.phase"}
 	if name, status := r.Name.(string); status && name != "" {
@@ -331,8 +337,11 @@ func (r Resource) Status() string {
 }
 
 func (r Resource) StatusReason() string {
-	r.spin.Start()
+
 	r.spin.Prefix = osHelper.Sprintf("Fetching status reason %s from %s namespace", r.Type, r.Namespace)
+	r.spin.Start()
+	defer r.spin.Stop()
+	
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.reason"}
 	if name, status := r.Name.(string); status && name != "" {
 		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.reason"}
