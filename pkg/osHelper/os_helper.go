@@ -146,7 +146,7 @@ func LimitStringToConsoleWidth(input string) string {
 		if uint(length) < displayableWidth {
 			return input
 		} else {
-			return input[:displayableWidth]
+			return input[:displayableWidth] + "... "
 		}
 	} else {
 		return input
