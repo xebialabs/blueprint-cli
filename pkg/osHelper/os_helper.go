@@ -141,7 +141,7 @@ func ConsoleWidth() (uint, error) {
 func LimitStringToConsoleWidth(input string) string {
 	if width, err := ConsoleWidth(); err == nil && width > 20 {
 		length := uint(len(input))
-		displayableWidth := width - 5
+		displayableWidth := width - 6
 
 		if uint(length) < displayableWidth {
 			return input
@@ -154,6 +154,6 @@ func LimitStringToConsoleWidth(input string) string {
 }
 
 func Sprintf(format string, a ...interface{}) string {
-	input := fmt.Sprintf(format, a...)
+	input := fmt.Sprintf(format+"... ", a...)
 	return LimitStringToConsoleWidth(input)
 }
