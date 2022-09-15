@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -102,4 +103,57 @@ func ProcessCmdResultWithoutLog(cmd exec.Cmd) ([]byte, error) {
 	util.Verbose("\nExecuting command: %s\n", cmd.String())
 	cmdOutput, err := cmd.CombinedOutput()
 	return cmdOutput, err
+}
+
+func consoleSize() (string, error) {
+	cmd := exec.Command("stty", "size")
+	cmd.Stdin = os.Stdin
+	out, err := cmd.Output()
+	return string(out), err
+}
+
+func consoleOutputParse(input string) (uint, uint, error) {
+	parts := strings.Split(input, " ")
+
+	x, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+	if err != nil {
+		return 0, 0, err
+	}
+
+	y, err := strconv.Atoi(strings.TrimSpace(parts[1]))
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return uint(x), uint(y), nil
+}
+
+func ConsoleWidth() (uint, error) {
+	output, err := consoleSize()
+	if err != nil {
+		return 0, err
+	}
+	_, width, err := consoleOutputParse(output)
+
+	return width, err
+}
+
+func LimitStringToConsoleWidth(input string) string {
+	if width, err := ConsoleWidth(); err == nil && width > 20 {
+		length := uint(len(input))
+		displayableWidth := width - 5
+
+		if uint(length) < displayableWidth {
+			return input
+		} else {
+			return input[:displayableWidth]
+		}
+	} else {
+		return input
+	}
+}
+
+func Sprintf(format string, a ...interface{}) string {
+	input := fmt.Sprintf(format, a...)
+	return LimitStringToConsoleWidth(input)
 }
