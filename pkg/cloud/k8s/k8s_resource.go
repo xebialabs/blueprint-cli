@@ -99,9 +99,12 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			}
 
 			if output, ok := r.Run(); ok {
+				r.spin.Stop()
 				output = strings.Replace(output, "\n", "", -1)
+				util.Info("Deleted %s/%s\n", util.InfoColor(r.Type), util.InfoColor(name))
 				util.Verbose(output + "\n")
 			} else {
+				r.spin.Stop()
 				util.Error("Error while deleting %s: %s\n", r.ResourceName(), output)
 			}
 
@@ -151,9 +154,10 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 					r.Args = []string{"delete", r.Type, value, "-n", r.Namespace}
 
 					if output, ok := r.Run(); ok {
-						output = strings.Replace(output, "\n", "", -1)
 						r.spin.Stop()
-						util.Info(output + "\n")
+						util.Info("Deleted %s/%s\n", util.InfoColor(r.Type), util.InfoColor(name))
+						output = strings.Replace(output, "\n", "", -1)
+						util.Verbose(output + "\n")
 					} else {
 						r.spin.Stop()
 						util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
@@ -180,14 +184,14 @@ func (r Resource) RemoveFinalizers(pattern string) {
 		defer r.spin.Stop()
 
 		if output, ok := r.Run(); ok {
-			r.spin.Stop()
 			output = strings.Replace(output, "\n", "", -1)
-			util.Info(output + "\n")
+			util.Verbose(output + "\n")
 		} else {
 			r.spin.Stop()
 			util.Error("\nError while deleting %s/%s: %s\n", r.Type, name, output)
 		}
 	} else {
+
 		// Delete logic by pattern matching
 		tokens, err := r.GetResources()
 
@@ -202,13 +206,12 @@ func (r Resource) RemoveFinalizers(pattern string) {
 				r.spin.Start()
 				defer r.spin.Stop()
 
-				output, ok := r.Run()
-				if !ok {
-					r.spin.Stop()
-					util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
+				if output, ok := r.Run(); ok {
+					output = strings.Replace(output, "\n", "", -1)
+					util.Verbose(output + "\n")
 				} else {
 					r.spin.Stop()
-					util.Info(output + "\n")
+					util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
 				}
 			}
 		}
@@ -292,8 +295,7 @@ func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) ([]string
 	}
 	output, ok := r.Command.Run()
 	if ok {
-		r.spin.Stop()
-		util.Info("Resources of type %s fetched successfully\n", util.InfoColor(r.Type))
+		util.Verbose("Resources of type %s fetched successfully\n", r.Type)
 	} else {
 		return nil, fmt.Errorf("error occurred while fetching resource of type %s: %s", r.Type, output)
 	}
@@ -334,8 +336,7 @@ func (r Resource) Status() string {
 	}
 	output, ok := r.Command.Run()
 	if ok {
-		r.spin.Stop()
-		util.Info("Resources of type %s fetched status successfully\n", util.InfoColor(r.Type))
+		util.Verbose("Resources of type %s fetched status successfully\n", r.Type)
 	} else {
 		r.spin.Stop()
 		util.Fatal("Error occurred while fetching resource status of type %s\n", r.Type)
@@ -360,8 +361,7 @@ func (r Resource) StatusReason() string {
 	}
 	output, ok := r.Command.Run()
 	if ok {
-		r.spin.Stop()
-		util.Info("Resources of type %s fetched status reason successfully\n", util.InfoColor(r.Type))
+		util.Verbose("Resources of type %s fetched status reason successfully\n", r.Type)
 	} else {
 		r.spin.Stop()
 		util.Fatal("Error occurred while fetching resource status reason of type %s\n", r.Type)
