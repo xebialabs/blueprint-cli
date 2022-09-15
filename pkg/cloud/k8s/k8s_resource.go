@@ -87,7 +87,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 		}
 		r.spin.Stop()
 		if doDelete, err := confirm(r.Type, name); doDelete && err == nil {
-			r.spin.Prefix = osHelper.Sprintf("Deleting %s/%s", r.Type, name)
+			r.spin.Prefix = osHelper.Sprintf("Deleting %s/%s from namespace %s", r.Type, name, r.Namespace)
 			r.spin.Start()
 			defer r.spin.Stop()
 
@@ -101,7 +101,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			if output, ok := r.Run(); ok {
 				r.spin.Stop()
 				output = strings.Replace(output, "\n", "", -1)
-				util.Info("Deleted %s/%s\n", util.InfoColor(r.Type), util.InfoColor(name))
+				util.Info("Deleted %s/%s from namespace %s\n", util.InfoColor(r.Type), util.InfoColor(name), util.InfoColor(r.Namespace))
 				util.Verbose(output + "\n")
 			} else {
 				r.spin.Stop()
@@ -140,7 +140,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			r.spin.Stop()
 			if found {
 				if doDelete, err := confirm(r.Type, value); doDelete && err == nil {
-					r.spin.Prefix = osHelper.Sprintf("Deleting %s/%s", r.Type, value)
+					r.spin.Prefix = osHelper.Sprintf("Deleting %s/%s from namespace %s", r.Type, value, r.Namespace)
 					r.spin.Start()
 					defer r.spin.Stop()
 
@@ -155,7 +155,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 
 					if output, ok := r.Run(); ok {
 						r.spin.Stop()
-						util.Info("Deleted %s/%s\n", util.InfoColor(r.Type), util.InfoColor(name))
+						util.Info("Deleted %s/%s from namespace %s\n", util.InfoColor(r.Type), util.InfoColor(value), util.InfoColor(r.Namespace))
 						output = strings.Replace(output, "\n", "", -1)
 						util.Verbose(output + "\n")
 					} else {
