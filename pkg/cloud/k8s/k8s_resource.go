@@ -87,7 +87,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 		}
 		r.spin.Stop()
 		if doDelete, err := confirm(r.Type, name); doDelete && err == nil {
-			r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, name)
+			r.spin.Prefix = osHelper.Sprintf("Deleting %s/%s from namespace %s", r.Type, name, r.Namespace)
 			r.spin.Start()
 			defer r.spin.Stop()
 
@@ -99,16 +99,21 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			}
 
 			if output, ok := r.Run(); ok {
+				r.spin.Stop()
 				output = strings.Replace(output, "\n", "", -1)
+				util.Info("Deleted %s/%s from namespace %s\n", util.InfoColor(r.Type), util.InfoColor(name), util.InfoColor(r.Namespace))
 				util.Verbose(output + "\n")
 			} else {
+				r.spin.Stop()
 				util.Error("Error while deleting %s: %s\n", r.ResourceName(), output)
 			}
 
 		} else if err != nil {
+			r.spin.Stop()
 			util.Fatal("Error while deleting %s: %s\n", r.ResourceName(), err)
 		} else {
-			util.Info("Skipping delete of the resource %s\n", r.ResourceName())
+			r.spin.Stop()
+			util.Info("Skipping delete of the resource %s\n", util.InfoColor(r.ResourceName()))
 		}
 	} else {
 		// Delete logic by pattern matching
@@ -135,7 +140,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			r.spin.Stop()
 			if found {
 				if doDelete, err := confirm(r.Type, value); doDelete && err == nil {
-					r.spin.Prefix = fmt.Sprintf("Deleting %s/%s...\t", r.Type, value)
+					r.spin.Prefix = osHelper.Sprintf("Deleting %s/%s from namespace %s", r.Type, value, r.Namespace)
 					r.spin.Start()
 					defer r.spin.Stop()
 
@@ -149,15 +154,20 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 					r.Args = []string{"delete", r.Type, value, "-n", r.Namespace}
 
 					if output, ok := r.Run(); ok {
+						r.spin.Stop()
+						util.Info("Deleted %s/%s from namespace %s\n", util.InfoColor(r.Type), util.InfoColor(value), util.InfoColor(r.Namespace))
 						output = strings.Replace(output, "\n", "", -1)
-						util.Info(output + "\n")
+						util.Verbose(output + "\n")
 					} else {
+						r.spin.Stop()
 						util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
 					}
 				} else if err != nil {
+					r.spin.Stop()
 					util.Fatal("Error while deleting %s/%s: %s\n", r.Type, value, err)
 				} else {
-					util.Info("Skipping delete of the resource %s/%s", r.Type, value)
+					r.spin.Stop()
+					util.Info("Skipping delete of the resource %s/%s", util.InfoColor(r.Type), util.InfoColor(value))
 				}
 			}
 		}
@@ -166,19 +176,22 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 }
 
 func (r Resource) RemoveFinalizers(pattern string) {
-	r.spin.Start()
-	defer r.spin.Stop()
 
 	if name, status := r.Name.(string); status && name != "" {
 		r.Args = []string{"patch", r.Type, name, "-n", r.Namespace, "-p", "{\"metadata\":{\"finalizers\":[]}}", "--type=merge"}
-		r.spin.Prefix = fmt.Sprintf("Deleting finalizers %s/%s...\t", r.Type, name)
+		r.spin.Prefix = osHelper.Sprintf("Deleting finalizers %s/%s", r.Type, name)
+		r.spin.Start()
+		defer r.spin.Stop()
+
 		if output, ok := r.Run(); ok {
 			output = strings.Replace(output, "\n", "", -1)
-			util.Info(output + "\n")
+			util.Verbose(output + "\n")
 		} else {
+			r.spin.Stop()
 			util.Error("\nError while deleting %s/%s: %s\n", r.Type, name, output)
 		}
 	} else {
+
 		// Delete logic by pattern matching
 		tokens, err := r.GetResources()
 
@@ -189,12 +202,16 @@ func (r Resource) RemoveFinalizers(pattern string) {
 		for _, value := range tokens {
 			if strings.Contains(value, pattern) && !strings.Contains(value, "/") {
 				r.Args = []string{"delete", r.Type, value, "-n", r.Namespace}
-				r.spin.Prefix = fmt.Sprintf("Deleting finalizers %s/%s...\t", r.Type, value)
-				output, ok := r.Run()
-				if !ok {
-					util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
+				r.spin.Prefix = osHelper.Sprintf("Deleting finalizers %s/%s", r.Type, value)
+				r.spin.Start()
+				defer r.spin.Stop()
+
+				if output, ok := r.Run(); ok {
+					output = strings.Replace(output, "\n", "", -1)
+					util.Verbose(output + "\n")
 				} else {
-					util.Info(output + "\n")
+					r.spin.Stop()
+					util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
 				}
 			}
 		}
@@ -267,17 +284,18 @@ func (r Resource) GetResources() ([]string, error) {
 }
 
 func (r Resource) GetResourcesWithCustomAttrs(appendedAttrs ...string) ([]string, error) {
+
+	r.spin.Prefix = osHelper.Sprintf("Fetching %s from %s namespace", r.Type, r.Namespace)
 	r.spin.Start()
 	defer r.spin.Stop()
 
-	r.spin.Prefix = fmt.Sprintf("Fetching %s from %s namespace...\t", r.Type, r.Namespace)
 	r.Command.Args = append([]string{"get", r.Type, "-n", r.Namespace, "-o", "custom-columns=:metadata.name"}, appendedAttrs...)
 	if name, status := r.Name.(string); status && name != "" {
 		r.Command.Args = append([]string{"get", r.Type, name, "-n", r.Namespace, "-o", "custom-columns=:metadata.name"}, appendedAttrs...)
 	}
 	output, ok := r.Command.Run()
 	if ok {
-		util.Info("Resources of type %s fetched successfully\n", r.Type)
+		util.Verbose("Resources of type %s fetched successfully\n", r.Type)
 	} else {
 		return nil, fmt.Errorf("error occurred while fetching resource of type %s: %s", r.Type, output)
 	}
@@ -307,10 +325,10 @@ func (r Resource) ExistResource() bool {
 }
 
 func (r Resource) Status() string {
+
+	r.spin.Prefix = osHelper.Sprintf("Fetching status %s from %s namespace", r.Type, r.Namespace)
 	r.spin.Start()
 	defer r.spin.Stop()
-
-	r.spin.Prefix = fmt.Sprintf("Fetching status %s from %s namespace...\t", r.Type, r.Namespace)
 
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.phase"}
 	if name, status := r.Name.(string); status && name != "" {
@@ -318,8 +336,9 @@ func (r Resource) Status() string {
 	}
 	output, ok := r.Command.Run()
 	if ok {
-		util.Info("Resources of type %s fetched status successfully\n", r.Type)
+		util.Verbose("Resources of type %s fetched status successfully\n", r.Type)
 	} else {
+		r.spin.Stop()
 		util.Fatal("Error occurred while fetching resource status of type %s\n", r.Type)
 	}
 
@@ -331,16 +350,20 @@ func (r Resource) Status() string {
 }
 
 func (r Resource) StatusReason() string {
+
+	r.spin.Prefix = osHelper.Sprintf("Fetching status reason %s from %s namespace", r.Type, r.Namespace)
 	r.spin.Start()
-	r.spin.Prefix = fmt.Sprintf("Fetching status reason %s from %s namespace...\t", r.Type, r.Namespace)
+	defer r.spin.Stop()
+
 	r.Command.Args = []string{"get", r.Type, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.reason"}
 	if name, status := r.Name.(string); status && name != "" {
 		r.Command.Args = []string{"get", r.Type, name, "-n", r.Namespace, "--no-headers", "-o", "custom-columns=:status.reason"}
 	}
 	output, ok := r.Command.Run()
 	if ok {
-		util.Info("Resources of type %s fetched status reason successfully\n", r.Type)
+		util.Verbose("Resources of type %s fetched status reason successfully\n", r.Type)
 	} else {
+		r.spin.Stop()
 		util.Fatal("Error occurred while fetching resource status reason of type %s\n", r.Type)
 	}
 
@@ -358,7 +381,7 @@ func (r Resource) WaitForResourceComplex(timeoutMinutes uint, condition string) 
 
 	util.Verbose("Waiting for %s to be %s in the namespace %s for %d minutes\n", resource, condition, r.Namespace, timeoutMinutes)
 
-	r.spin.Prefix = fmt.Sprintf("Waiting for %s to be %s...\t", resource, condition)
+	r.spin.Prefix = osHelper.Sprintf("Waiting for %s to be %s", resource, condition)
 	r.spin.Start()
 	defer r.spin.Stop()
 
@@ -390,7 +413,7 @@ func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
 
 	util.Verbose("Waiting for %s to be %s in the namespace %s for %d minutes\n", resource, condition, r.Namespace, timeoutMinutes)
 
-	r.spin.Prefix = fmt.Sprintf("Waiting for %s to be %s...\t", resource, condition)
+	r.spin.Prefix = osHelper.Sprintf("Waiting for %s to be %s", resource, condition)
 	r.spin.Start()
 	defer r.spin.Stop()
 
@@ -422,7 +445,7 @@ func (r Resource) SaveYamlFile(filePath string) error {
 
 func (r Resource) saveYamlFile(anyName interface{}, filePath string) error {
 
-	r.spin.Prefix = fmt.Sprintf("Saving YAML file for %s...\t", r.ResourceName())
+	r.spin.Prefix = osHelper.Sprintf("Saving YAML file for %s", r.ResourceName())
 	r.spin.Start()
 	defer r.spin.Stop()
 
@@ -457,7 +480,7 @@ func (r Resource) SaveDescribeFile(filePath string) error {
 
 func (r Resource) saveDescribeFile(anyName interface{}, filePath string) error {
 
-	r.spin.Prefix = fmt.Sprintf("Saving describe file for %s...\t", r.ResourceName())
+	r.spin.Prefix = osHelper.Sprintf("Saving describe file for %s", r.ResourceName())
 	r.spin.Start()
 	defer r.spin.Stop()
 
@@ -504,7 +527,7 @@ func (r Resource) SaveLogFile(filePath string, sinceTime int32) error {
 
 func (r Resource) saveLogFile(anyName interface{}, filePath string, sinceTime int32) error {
 
-	r.spin.Prefix = fmt.Sprintf("Saving logs file for %s...\t", r.ResourceName())
+	r.spin.Prefix = osHelper.Sprintf("Saving logs file for %s", r.ResourceName())
 	r.spin.Start()
 	defer r.spin.Stop()
 
