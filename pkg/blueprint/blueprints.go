@@ -131,7 +131,7 @@ func InstantiateBlueprint(
 			if err != nil {
 				return nil, nil, err
 			}
-			util.Info("Generating all files and exiting...")
+			util.Info(util.Green("Generating all files and exiting..."))
 		}
 	}
 
