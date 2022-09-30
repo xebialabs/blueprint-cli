@@ -134,7 +134,7 @@ func InstantiateBlueprint(
 
 			isQuiet := util.IsQuiet
 			util.IsQuiet = false
-			util.Info(util.Green("Generating all files and exiting..."))
+			util.Info(util.Green("Generating all files and exiting...\n"))
 			util.IsQuiet = isQuiet
 		}
 	}
