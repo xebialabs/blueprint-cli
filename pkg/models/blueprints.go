@@ -6,7 +6,7 @@ const (
 	BlueprintOutputDir   = "xebialabs"
 	BlueprintFinalPrompt = "Confirm to generate blueprint files?"
 	UpFinalPrompt        = "Do you want to proceed to the deployment with these values?"
-	UpSaveFilesPrompt    = "Do you want to generate all files to reuse them afterwards?"
+	UpSaveFilesPrompt    = "Do you want to generate all files to reuse them in the next runs, and exit afterwards?"
 )
 
 // Function Result definition
