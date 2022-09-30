@@ -127,7 +127,7 @@ func InstantiateBlueprint(
 		}
 
 		if !toContinue {
-			err := survey.AskOne(&survey.Confirm{Message: models.UpSaveFilesPrompt, Default: true}, &toSaveFile, nil, surveyOpts...)
+			err := survey.AskOne(&survey.Confirm{Message: models.UpSaveFilesPrompt, Default: true}, &toSaveFiles, nil, surveyOpts...)
 			if err != nil {
 				return nil, nil, err
 			}
