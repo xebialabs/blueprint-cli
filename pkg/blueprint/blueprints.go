@@ -114,107 +114,125 @@ func InstantiateBlueprint(
 	}
 	util.Verbose("[dataPrep] Prepared data: %#v\n", preparedData)
 
+	// Final prompt from user to start generation process
+	toContinue := true
+	toSaveFiles := true
+
 	// if this is from UP command, ask confirmation for xl-up
 	if params.FromUpCommand && params.PrintSummaryTable && !SkipUpFinalPrompt {
-		// Final prompt from user to start generation process
-		toContinue := false
 
 		err := survey.AskOne(&survey.Confirm{Message: models.UpFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
 		if err != nil {
 			return nil, nil, err
 		}
+
 		if !toContinue {
-			return nil, nil, fmt.Errorf("xl execution cancelled")
-		}
-	}
-
-	createXebiaLabsFolder := !blueprintDoc.Metadata.SuppressXebiaLabsFolder
-
-	// save prepared data to values & secrets files
-	if createXebiaLabsFolder || len(preparedData.Values) != 0 {
-		err = writeConfigToFile(valuesFileHeader, preparedData.Values, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, valuesFile))
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	if createXebiaLabsFolder || len(preparedData.Secrets) != 0 {
-		err = writeConfigToFile(secretsFileHeader, preparedData.Secrets, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, secretsFile))
-		if err != nil {
-			return nil, nil, err
-		}
-		// generate .gitignore file
-		gitignoreData := secretsFile
-		err = writeDataToFile(generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, gitignoreFile), &gitignoreData)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	// execute each template file found
-	for _, config := range blueprintDoc.TemplateConfigs {
-		config.ProcessExpression(preparedData.TemplateData, overrideFns)
-		skipFile, err := shouldSkipFile(config, preparedData.TemplateData)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		if skipFile {
-			util.Verbose("[file] skipping file [%s] since it has writeIf value set or is skipped by composed blueprint\n", config.Path)
-			continue
-		}
-
-		// read template contents
-		util.Verbose("[file] Fetching template file %s from %s\n", config.Path, config.FullPath)
-		templateContent, err := blueprintContext.fetchFileContents(config.FullPath, strings.HasSuffix(config.Path, templateExtension))
-		if err != nil {
-			return nil, nil, err
-		}
-		templateString := string(*templateContent)
-		finalFileName := config.Path
-		if config.RenameTo.Value != "" {
-			finalFileName = config.RenameTo.Value
-			util.Verbose("[file] Renaming template file %s to %s as it is overridden by composed blueprint\n", config.Path, finalFileName)
-		}
-
-		// process the template file (filter based on extension)
-		if strings.HasSuffix(config.Path, templateExtension) {
-			util.Verbose("[file] Processing template file %s\n", config.FullPath)
-
-			// read & process the template
-			tmpl := template.Must(template.New(config.Path).Funcs(getFuncMaps()).Parse(templateString))
-			processedTmpl := &strings.Builder{}
-			err = tmpl.Execute(processedTmpl, preparedData.TemplateData)
+			err := survey.AskOne(&survey.Confirm{Message: models.UpSaveFilesPrompt, Default: true}, &toSaveFiles, nil, surveyOpts...)
 			if err != nil {
 				return nil, nil, err
 			}
 
-			// write the processed template to a file
-			finalTmpl := strings.TrimSpace(processedTmpl.String())
+			isQuiet := util.IsQuiet
+			util.IsQuiet = false
+			util.Info(util.Green("Generating all files and exiting...\n"))
+			util.IsQuiet = isQuiet
+		}
+	}
 
-			err = writeDataToFile(generatedBlueprint, strings.Replace(finalFileName, templateExtension, "", 1), &finalTmpl)
+	if toSaveFiles {
+		createXebiaLabsFolder := !blueprintDoc.Metadata.SuppressXebiaLabsFolder
+
+		// save prepared data to values & secrets files
+		if createXebiaLabsFolder || len(preparedData.Values) != 0 {
+			err = writeConfigToFile(valuesFileHeader, preparedData.Values, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, valuesFile))
 			if err != nil {
 				return nil, nil, err
 			}
-		} else {
-			if funk.ContainsString(ignoredPaths, filepath.Base(filepath.Dir(config.FullPath))) {
-				// skip files under ignored directories
-				util.Verbose("[file] Skipping file %s because path is under ignored list\n", config.FullPath)
-			} else {
-				// handle non-template files - copy as-it-is
-				util.Verbose("[file] Copying file %s\n", config.FullPath)
-				err = writeDataToFile(generatedBlueprint, finalFileName, &templateString)
+		}
+
+		if createXebiaLabsFolder || len(preparedData.Secrets) != 0 {
+			err = writeConfigToFile(secretsFileHeader, preparedData.Secrets, generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, secretsFile))
+			if err != nil {
+				return nil, nil, err
+			}
+			// generate .gitignore file
+			gitignoreData := secretsFile
+			err = writeDataToFile(generatedBlueprint, filepath.Join(generatedBlueprint.OutputDir, gitignoreFile), &gitignoreData)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+
+		// execute each template file found
+		for _, config := range blueprintDoc.TemplateConfigs {
+			config.ProcessExpression(preparedData.TemplateData, overrideFns)
+			skipFile, err := shouldSkipFile(config, preparedData.TemplateData)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if skipFile {
+				util.Verbose("[file] skipping file [%s] since it has writeIf value set or is skipped by composed blueprint\n", config.Path)
+				continue
+			}
+
+			// read template contents
+			util.Verbose("[file] Fetching template file %s from %s\n", config.Path, config.FullPath)
+			templateContent, err := blueprintContext.fetchFileContents(config.FullPath, strings.HasSuffix(config.Path, templateExtension))
+			if err != nil {
+				return nil, nil, err
+			}
+			templateString := string(*templateContent)
+			finalFileName := config.Path
+			if config.RenameTo.Value != "" {
+				finalFileName = config.RenameTo.Value
+				util.Verbose("[file] Renaming template file %s to %s as it is overridden by composed blueprint\n", config.Path, finalFileName)
+			}
+
+			// process the template file (filter based on extension)
+			if strings.HasSuffix(config.Path, templateExtension) {
+				util.Verbose("[file] Processing template file %s\n", config.FullPath)
+
+				// read & process the template
+				tmpl := template.Must(template.New(config.Path).Funcs(getFuncMaps()).Parse(templateString))
+				processedTmpl := &strings.Builder{}
+				err = tmpl.Execute(processedTmpl, preparedData.TemplateData)
 				if err != nil {
 					return nil, nil, err
 				}
+
+				// write the processed template to a file
+				finalTmpl := strings.TrimSpace(processedTmpl.String())
+
+				err = writeDataToFile(generatedBlueprint, strings.Replace(finalFileName, templateExtension, "", 1), &finalTmpl)
+				if err != nil {
+					return nil, nil, err
+				}
+			} else {
+				if funk.ContainsString(ignoredPaths, filepath.Base(filepath.Dir(config.FullPath))) {
+					// skip files under ignored directories
+					util.Verbose("[file] Skipping file %s because path is under ignored list\n", config.FullPath)
+				} else {
+					// handle non-template files - copy as-it-is
+					util.Verbose("[file] Copying file %s\n", config.FullPath)
+					err = writeDataToFile(generatedBlueprint, finalFileName, &templateString)
+					if err != nil {
+						return nil, nil, err
+					}
+				}
 			}
 		}
+		util.Info("Please refer to file 'xebialabs/secrets.xlvals' for the default secrets\n")
+		if blueprintDoc.Metadata.Instructions != "" {
+			util.Info("\n\n%s\n\n", color.GreenString(blueprintDoc.Metadata.Instructions))
+		}
 	}
-	util.Info("Please refer to file 'xebialabs/secrets.xlvals' for the default secrets\n")
-	if blueprintDoc.Metadata.Instructions != "" {
-		util.Info("\n\n%s\n\n", color.GreenString(blueprintDoc.Metadata.Instructions))
+
+	if toContinue {
+		return preparedData, blueprintDoc, nil
+	} else {
+		return nil, nil, fmt.Errorf("xl execution cancelled")
 	}
-	return preparedData, blueprintDoc, nil
 }
 
 func prepareMergedTemplateData(
