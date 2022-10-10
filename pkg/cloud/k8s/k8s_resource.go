@@ -86,7 +86,7 @@ func (r Resource) processDelete(name string) {
 		util.Verbose(output + "\n")
 	} else if strings.Contains(output, "(NotFound)") {
 		r.spin.Stop()
-		util.Info("Deleted %s/%s from namespace %s\n (already deleted)", util.InfoColor(r.Type), util.InfoColor(name), util.InfoColor(r.Namespace))
+		util.Info("Deleted %s/%s from namespace %s (already deleted)\n", util.InfoColor(r.Type), util.InfoColor(name), util.InfoColor(r.Namespace))
 		output = strings.Replace(output, "\n", "", -1)
 		util.Verbose(output + "\n")
 	} else {
