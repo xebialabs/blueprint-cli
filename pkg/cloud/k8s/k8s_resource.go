@@ -190,7 +190,7 @@ func (r Resource) processFinalizersRemove(name string) {
 func (r Resource) RemoveFinalizers(pattern string) {
 
 	if name, status := r.Name.(string); status && name != "" {
-		r.Args = []string{"patch", r.Type, name, "-n", r.Namespace, "-p", "{\"metadata\":{\"finalizers\":[]}}", "--type=merge"}
+		r.Args = []string{"patch", r.Type, name, "-n", r.Namespace, "-p", "'{\"metadata\":{\"finalizers\":[]}}'", "--type=merge"}
 		r.spin.Prefix = osHelper.Sprintf("Deleting finalizers %s/%s", r.Type, name)
 		r.spin.Start()
 		defer r.spin.Stop()
