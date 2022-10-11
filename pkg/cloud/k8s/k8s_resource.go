@@ -178,10 +178,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 }
 
 func (r Resource) processFinalizersRemove(name string) {
-	if output, ok := r.Run(); ok {
-		output = strings.Replace(output, "\n", "", -1)
-		util.Verbose(output + "\n")
-	} else if strings.Contains(output, "(NotFound)") {
+	if output, ok := r.Run(); ok || strings.Contains(output, "(NotFound)") {
 		output = strings.Replace(output, "\n", "", -1)
 		util.Verbose(output + "\n")
 	} else {
