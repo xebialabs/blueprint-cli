@@ -195,9 +195,6 @@ func (r Resource) RemoveFinalizers(pattern string) {
 		r.spin.Prefix = osHelper.Sprintf("Deleting finalizers %s/%s", r.Type, name)
 		r.spin.Start()
 		defer r.spin.Stop()
-        r.spin.Prefix = osHelper.Sprintf("Deleting finalizers Again %s/%s", r.Type, name)
-        r.spin.Start()
-        defer r.spin.Stop()
 
 		r.processFinalizersRemove(name)
 
