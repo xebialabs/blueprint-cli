@@ -78,6 +78,23 @@ func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn, ba
 	r.DeleteFilteredResources([]string{pattern}, false, false, confirm, backupPath)
 }
 
+func (r Resource) processDelete(name string) {
+	if output, ok := r.Run(); ok {
+		r.spin.Stop()
+		util.Info("Deleted %s/%s from namespace %s\n", util.InfoColor(r.Type), util.InfoColor(name), util.InfoColor(r.Namespace))
+		output = strings.Replace(output, "\n", "", -1)
+		util.Verbose(output + "\n")
+	} else if strings.Contains(output, "(NotFound)") {
+		r.spin.Stop()
+		util.Info("Deleted %s/%s from namespace %s (already deleted)\n", util.InfoColor(r.Type), util.InfoColor(name), util.InfoColor(r.Namespace))
+		output = strings.Replace(output, "\n", "", -1)
+		util.Verbose(output + "\n")
+	} else {
+		r.spin.Stop()
+		util.Error("Error while deleting %s: %s\n", r.ResourceName(), output)
+	}
+}
+
 func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, confirm confirmFn, backupPath string) {
 	if name, status := r.Name.(string); status && name != "" {
 		if force {
@@ -98,15 +115,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 				}
 			}
 
-			if output, ok := r.Run(); ok {
-				r.spin.Stop()
-				output = strings.Replace(output, "\n", "", -1)
-				util.Info("Deleted %s/%s from namespace %s\n", util.InfoColor(r.Type), util.InfoColor(name), util.InfoColor(r.Namespace))
-				util.Verbose(output + "\n")
-			} else {
-				r.spin.Stop()
-				util.Error("Error while deleting %s: %s\n", r.ResourceName(), output)
-			}
+			r.processDelete(name)
 
 		} else if err != nil {
 			r.spin.Stop()
@@ -153,15 +162,8 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 
 					r.Args = []string{"delete", r.Type, value, "-n", r.Namespace}
 
-					if output, ok := r.Run(); ok {
-						r.spin.Stop()
-						util.Info("Deleted %s/%s from namespace %s\n", util.InfoColor(r.Type), util.InfoColor(value), util.InfoColor(r.Namespace))
-						output = strings.Replace(output, "\n", "", -1)
-						util.Verbose(output + "\n")
-					} else {
-						r.spin.Stop()
-						util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
-					}
+					r.processDelete(value)
+
 				} else if err != nil {
 					r.spin.Stop()
 					util.Fatal("Error while deleting %s/%s: %s\n", r.Type, value, err)
@@ -175,6 +177,16 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 	r.spin.Stop()
 }
 
+func (r Resource) processFinalizersRemove(name string) {
+	if output, ok := r.Run(); ok || strings.Contains(output, "(NotFound)") {
+		output = strings.Replace(output, "\n", "", -1)
+		util.Verbose(output + "\n")
+	} else {
+		r.spin.Stop()
+		util.Error("\nError while deleting %s/%s: %s\n", r.Type, name, output)
+	}
+}
+
 func (r Resource) RemoveFinalizers(pattern string) {
 
 	if name, status := r.Name.(string); status && name != "" {
@@ -183,13 +195,8 @@ func (r Resource) RemoveFinalizers(pattern string) {
 		r.spin.Start()
 		defer r.spin.Stop()
 
-		if output, ok := r.Run(); ok {
-			output = strings.Replace(output, "\n", "", -1)
-			util.Verbose(output + "\n")
-		} else {
-			r.spin.Stop()
-			util.Error("\nError while deleting %s/%s: %s\n", r.Type, name, output)
-		}
+		r.processFinalizersRemove(name)
+
 	} else {
 
 		// Delete logic by pattern matching
@@ -206,13 +213,7 @@ func (r Resource) RemoveFinalizers(pattern string) {
 				r.spin.Start()
 				defer r.spin.Stop()
 
-				if output, ok := r.Run(); ok {
-					output = strings.Replace(output, "\n", "", -1)
-					util.Verbose(output + "\n")
-				} else {
-					r.spin.Stop()
-					util.Error("Error while deleting %s/%s: %s\n", r.Type, value, output)
-				}
+				r.processFinalizersRemove(value)
 			}
 		}
 	}
