@@ -99,9 +99,9 @@ func (r Resource) processDelete(name string) {
 func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, wait bool, confirm confirmFn, backupPath string) {
 	if name, status := r.Name.(string); status && name != "" {
 		if force {
-			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "wait=" + strconv.FormatBool(wait), "--force"}
+			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "--wait=" + strconv.FormatBool(wait), "--force"}
 		} else {
-			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "wait=" + strconv.FormatBool(wait)}
+			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "--wait=" + strconv.FormatBool(wait)}
 		}
 		r.spin.Stop()
 		if doDelete, err := confirm(r.Type, name); doDelete && err == nil {
