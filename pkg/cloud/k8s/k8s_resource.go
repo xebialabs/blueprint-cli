@@ -5,7 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
+    "strconv"
+    "strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -70,12 +71,12 @@ func (r Resource) CreateResource(namespace, resourceType string, resourceName Re
 
 type confirmFn func(string, string) (bool, error)
 
-func (r Resource) DeleteResource(pattern string, confirm confirmFn, backupPath string) {
-	r.DeleteFilteredResources([]string{pattern}, true, false, confirm, backupPath)
+func (r Resource) DeleteResource(pattern string, confirm confirmFn, backupPath string, wait bool) {
+	r.DeleteFilteredResources([]string{pattern}, true, false, wait,  confirm, backupPath)
 }
 
-func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn, backupPath string) {
-	r.DeleteFilteredResources([]string{pattern}, false, false, confirm, backupPath)
+func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn, backupPath string, wait bool) {
+	r.DeleteFilteredResources([]string{pattern}, false, false, wait, confirm, backupPath)
 }
 
 func (r Resource) processDelete(name string) {
@@ -95,12 +96,12 @@ func (r Resource) processDelete(name string) {
 	}
 }
 
-func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, confirm confirmFn, backupPath string) {
+func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, wait bool, confirm confirmFn, backupPath string) {
 	if name, status := r.Name.(string); status && name != "" {
 		if force {
-			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "--force"}
+			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "--wait=" + strconv.FormatBool(wait), "--force"}
 		} else {
-			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace}
+			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "--wait=" + strconv.FormatBool(wait)}
 		}
 		r.spin.Stop()
 		if doDelete, err := confirm(r.Type, name); doDelete && err == nil {
