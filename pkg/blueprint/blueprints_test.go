@@ -10,12 +10,12 @@ import (
 	"strings"
 	"testing"
 
+	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/xebialabs/blueprint-cli/pkg/models"
 	"github.com/xebialabs/blueprint-cli/pkg/util"
-	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 // auxiliary functions

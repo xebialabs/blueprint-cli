@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/thoas/go-funk"
-	"gopkg.in/AlecAivazis/survey.v1"
 
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"

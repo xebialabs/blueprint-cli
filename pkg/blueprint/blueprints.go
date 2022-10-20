@@ -15,8 +15,8 @@ import (
 	"github.com/xebialabs/blueprint-cli/pkg/models"
 	"github.com/xebialabs/blueprint-cli/pkg/util"
 
+	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/Masterminds/sprig"
-	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 // SkipFinalPrompt is used in tests to skip the confirmation prompt

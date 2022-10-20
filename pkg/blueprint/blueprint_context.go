@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/xebialabs/yaml"
 
-	"gopkg.in/AlecAivazis/survey.v1"
+	"github.com/AlecAivazis/survey/v2"
 
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/bitbucket"
