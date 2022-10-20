@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-    "strconv"
-    "strings"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -72,7 +72,7 @@ func (r Resource) CreateResource(namespace, resourceType string, resourceName Re
 type confirmFn func(string, string) (bool, error)
 
 func (r Resource) DeleteResource(pattern string, confirm confirmFn, backupPath string, wait bool) {
-	r.DeleteFilteredResources([]string{pattern}, true, false, wait,  confirm, backupPath)
+	r.DeleteFilteredResources([]string{pattern}, true, false, wait, confirm, backupPath)
 }
 
 func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn, backupPath string, wait bool) {

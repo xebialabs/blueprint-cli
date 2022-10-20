@@ -121,7 +121,9 @@ func InstantiateBlueprint(
 	// if this is from UP command, ask confirmation for xl-up
 	if params.FromUpCommand && params.PrintSummaryTable && !SkipUpFinalPrompt {
 
-		err := survey.AskOne(&survey.Confirm{Message: models.UpFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
+		// err := survey.AskOne(&survey.Confirm{Message: models.UpFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
+		err := survey.AskOne(&survey.Confirm{Message: models.UpFinalPrompt, Default: true}, &toContinue, surveyOpts...)
+
 		if err != nil {
 			return nil, nil, err
 		}
@@ -309,7 +311,9 @@ func prepareMergedTemplateData(
 	if !SkipFinalPrompt {
 		// Final prompt from user to start generation process
 		toContinue := false
-		err := survey.AskOne(&survey.Confirm{Message: models.BlueprintFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
+		// err := survey.AskOne(&survey.Confirm{Message: models.BlueprintFinalPrompt, Default: true}, &toContinue, nil, surveyOpts...)
+		err := survey.AskOne(&survey.Confirm{Message: models.BlueprintFinalPrompt, Default: true}, &toContinue, surveyOpts...)
+
 		if err != nil {
 			return nil, nil, err
 		}

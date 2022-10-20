@@ -344,7 +344,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	defaultValStr := fmt.Sprintf("%v", defaultVal)
 
 	// get validate expression
-	validateExpr, err := variable.GetValidateExpr()
+	// validateExpr, err := variable.GetValidateExpr()
 	if err != nil {
 		return nil, fmt.Errorf("error getting validation expression: %s", err.Error())
 	}
@@ -358,7 +358,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, variable.AllowEmpty.Bool, parameters, overrideFns),
+			// validatePrompt(variable.Name.Value, validateExpr, variable.AllowEmpty.Bool, parameters, overrideFns),
 			surveyOpts...,
 		)
 	case TypeSecret:
@@ -372,7 +372,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, true, parameters, overrideFns),
+			// validatePrompt(variable.Name.Value, validateExpr, true, parameters, overrideFns),
 			surveyOpts...,
 		)
 
@@ -392,7 +392,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:          variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
+			// validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 		// if user bypassed question, replace with default value
@@ -409,7 +409,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&filePath,
-			validateFilePath(variable.Name.Value, validateExpr, false, parameters, overrideFns),
+			// validateFilePath(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 		filePath = strings.TrimSpace(filePath)
@@ -431,7 +431,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:     variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
+			// validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 		answer = findLabelValueFromOptions(answer, variable.Options)
@@ -444,7 +444,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&confirm,
-			validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
+			// validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 		if err != nil {

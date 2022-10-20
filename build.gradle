@@ -154,7 +154,7 @@ task uploadLinuxToS3(type: AmazonS3FileUploadTask) {
 
 task removeLicenseFolder {
     doLast {
-        runCmd("rm", "-f", "licenses/licences.md")
+        delete "licenses/licences.md"
     }
 }
 
