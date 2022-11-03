@@ -288,7 +288,6 @@ func (blueprintContext *BlueprintContext) askUserToChooseBlueprint(blueprints ma
 				Default: blueprintKeys[0],
 			},
 			&blueprintTemplate,
-			// survey.Required,
 			surveyOpts...,
 		)
 	}

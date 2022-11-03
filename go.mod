@@ -47,7 +47,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
 	//added back
 	google.golang.org/appengine v1.6.7 // indirect
-	// gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
@@ -55,5 +54,3 @@ require (
 	k8s.io/utils v0.0.0-20210305010621-2afb4311ab10 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.1 // indirect
 )
-
-// replace gopkg.in/AlecAivazis/survey.v1 v1.8.8 => github.com/vpugar-digital/survey v1.8.8-with-escape-fix-3
