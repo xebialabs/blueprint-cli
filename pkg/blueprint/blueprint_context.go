@@ -281,6 +281,7 @@ func (blueprintContext *BlueprintContext) askUserToChooseBlueprint(blueprints ma
 		}
 		sort.Strings(blueprintKeys)
 
+		surveyOpts = append(surveyOpts, survey.WithValidator(survey.Required))
 		_ = survey.AskOne(
 			&survey.Select{
 				Message: "Choose a blueprint:",

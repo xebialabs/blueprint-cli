@@ -112,7 +112,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			if backupPath != "" {
 				filepath := r.Filename(".yaml")
 				if err = r.SaveYamlFile(filepath); err != nil {
-					util.Fatal("Error while deleting %s\n", r.ResourceName())
+					util.Fatal("Error while deleting %s: %s\n", r.ResourceName(), err.Error())
 				}
 			}
 
@@ -157,7 +157,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 					if backupPath != "" {
 						filepath := r.filename(value, ".yaml")
 						if err = r.saveYamlFile(value, filepath); err != nil {
-							util.Fatal("Error while deleting %s/%s\n", r.Type, value)
+							util.Fatal("Error while deleting %s/%s: %s\n", r.Type, value, err.Error())
 						}
 					}
 
