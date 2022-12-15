@@ -44,7 +44,7 @@ http://golang.org/x/oauth2
 http://golang.org/x/sys
 http://golang.org/x/term
 http://google.golang.org/appengine
-http://gopkg.in/AlecAivazis/survey.v1
+http://github.com/AlecAivazis/survey/v2
 http://gopkg.in/ini.v1
 http://gopkg.in/yaml.v2
 http://gopkg.in/yaml.v3

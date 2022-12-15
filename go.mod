@@ -3,11 +3,11 @@ module github.com/xebialabs/blueprint-cli
 go 1.16
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/Netflix/go-expect v0.0.0-20210429232723-e923ed2d1db5 // indirect
 	github.com/aws/aws-sdk-go v1.38.35
 	github.com/briandowns/spinner v1.12.0
 	github.com/dlclark/regexp2 v1.4.0
@@ -20,7 +20,6 @@ require (
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
-	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
 	github.com/huandu/xstrings v1.3.2
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/jarcoal/httpmock v1.0.8
@@ -46,10 +45,8 @@ require (
 	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf // indirect
 	golang.org/x/net v0.0.0-20210505214959-0714010a04ed
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
-	golang.org/x/sys v0.0.0-20210507014357-30e306a8bba5 // indirect
-	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect
+	//added back
 	google.golang.org/appengine v1.6.7 // indirect
-	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
@@ -57,5 +54,3 @@ require (
 	k8s.io/utils v0.0.0-20210305010621-2afb4311ab10 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.1 // indirect
 )
-
-replace gopkg.in/AlecAivazis/survey.v1 v1.8.8 => github.com/vpugar-digital/survey v1.8.8-with-escape-fix-3

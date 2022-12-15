@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-    "strconv"
-    "strings"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -72,7 +72,7 @@ func (r Resource) CreateResource(namespace, resourceType string, resourceName Re
 type confirmFn func(string, string) (bool, error)
 
 func (r Resource) DeleteResource(pattern string, confirm confirmFn, backupPath string, wait bool) {
-	r.DeleteFilteredResources([]string{pattern}, true, false, wait,  confirm, backupPath)
+	r.DeleteFilteredResources([]string{pattern}, true, false, wait, confirm, backupPath)
 }
 
 func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn, backupPath string, wait bool) {
@@ -112,7 +112,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 			if backupPath != "" {
 				filepath := r.Filename(".yaml")
 				if err = r.SaveYamlFile(filepath); err != nil {
-					util.Fatal("Error while deleting %s\n", r.ResourceName())
+					util.Fatal("Error while deleting %s: %s\n", r.ResourceName(), err.Error())
 				}
 			}
 
@@ -157,7 +157,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force 
 					if backupPath != "" {
 						filepath := r.filename(value, ".yaml")
 						if err = r.saveYamlFile(value, filepath); err != nil {
-							util.Fatal("Error while deleting %s/%s\n", r.Type, value)
+							util.Fatal("Error while deleting %s/%s: %s\n", r.Type, value, err.Error())
 						}
 					}
 

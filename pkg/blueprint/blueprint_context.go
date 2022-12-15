@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/xebialabs/yaml"
 
-	"gopkg.in/AlecAivazis/survey.v1"
+	"github.com/AlecAivazis/survey/v2"
 
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository/bitbucket"
@@ -281,6 +281,7 @@ func (blueprintContext *BlueprintContext) askUserToChooseBlueprint(blueprints ma
 		}
 		sort.Strings(blueprintKeys)
 
+		surveyOpts = append(surveyOpts, survey.WithValidator(survey.Required))
 		_ = survey.AskOne(
 			&survey.Select{
 				Message: "Choose a blueprint:",
@@ -288,7 +289,6 @@ func (blueprintContext *BlueprintContext) askUserToChooseBlueprint(blueprints ma
 				Default: blueprintKeys[0],
 			},
 			&blueprintTemplate,
-			survey.Required,
 			surveyOpts...,
 		)
 	}

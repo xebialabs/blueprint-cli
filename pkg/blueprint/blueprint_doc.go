@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/thoas/go-funk"
-	"gopkg.in/AlecAivazis/survey.v1"
 
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"
@@ -351,6 +351,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 
 	switch variable.Type.Value {
 	case TypeInput:
+		surveyOpts = append(surveyOpts, survey.WithValidator(validatePrompt(variable.Name.Value, validateExpr, variable.AllowEmpty.Bool, parameters, overrideFns)))
 		err = survey.AskOne(
 			&survey.Input{
 				Message: prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the value of %s?", variable.Name.Value)),
@@ -358,7 +359,6 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, variable.AllowEmpty.Bool, parameters, overrideFns),
 			surveyOpts...,
 		)
 	case TypeSecret:
@@ -366,13 +366,13 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		if defaultVal != "" {
 			questionMsg += fmt.Sprintf(" (%s)", defaultVal)
 		}
+		surveyOpts = append(surveyOpts, survey.WithValidator(validatePrompt(variable.Name.Value, validateExpr, true, parameters, overrideFns)))
 		err = survey.AskOne(
 			&survey.Password{
 				Message: questionMsg,
 				Help:    variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, true, parameters, overrideFns),
 			surveyOpts...,
 		)
 
@@ -383,6 +383,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		}
 	case TypeEditor, TypeSecretEditor:
 		questionMsg := prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the value of %s?", variable.Name.Value))
+		surveyOpts = append(surveyOpts, survey.WithValidator(validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns)))
 		err = survey.AskOne(
 			&survey.Editor{
 				Message:       questionMsg,
@@ -392,7 +393,6 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:          variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 		// if user bypassed question, replace with default value
@@ -402,6 +402,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		}
 	case TypeFile, TypeSecretFile:
 		var filePath string
+		surveyOpts = append(surveyOpts, survey.WithValidator(validateFilePath(variable.Name.Value, validateExpr, false, parameters, overrideFns)))
 		err = survey.AskOne(
 			&survey.Input{
 				Message: prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("What is the file path (relative/absolute) for %s?", variable.Name.Value)),
@@ -409,7 +410,6 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&filePath,
-			validateFilePath(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 		filePath = strings.TrimSpace(filePath)
@@ -422,6 +422,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		answer = string(data)
 	case TypeSelect:
 		options := variable.GetOptions(parameters, true, overrideFns)
+		surveyOpts = append(surveyOpts, survey.WithValidator(validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns)))
 		err = survey.AskOne(
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("Select value for %s?", variable.Name.Value)),
@@ -431,12 +432,12 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:     variable.GetHelpText(),
 			},
 			&answer,
-			validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 		answer = findLabelValueFromOptions(answer, variable.Options)
 	case TypeConfirm:
 		var confirm bool
+		surveyOpts = append(surveyOpts, survey.WithValidator(validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns)))
 		err = survey.AskOne(
 			&survey.Confirm{
 				Message: prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("%s?", variable.Name.Value)),
@@ -444,7 +445,6 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 				Help:    variable.GetHelpText(),
 			},
 			&confirm,
-			validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns),
 			surveyOpts...,
 		)
 		if err != nil {
