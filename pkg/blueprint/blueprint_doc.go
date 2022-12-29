@@ -227,16 +227,18 @@ func getOptionTextWithLabel(option VarField) string {
 }
 
 func getDefaultTextWithLabel(defVal string, options []VarField) string {
-	if options != nil && len(options) > 0 {
-		if defVal == "" {
+    if options != nil && len(options) > 0 {
+		if defVal == "" { // when no default is set in blueprints, return first option text as default
 			return getOptionTextWithLabel(options[0])
-		}
-		for _, o := range options {
-			if o.Value == defVal {
-				return getOptionTextWithLabel(o)
-			}
+		} else { // when default set in blueprint matches with one of the options, try to return option text with label
+			for _, o := range options {
+				if o.Value == defVal {
+					return getOptionTextWithLabel(o)
+				}
 		}
 	}
+	// return default value itself, when default value set in blueprints dosent match any options
+	return defVal
 	return defVal
 }
 
