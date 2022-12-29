@@ -1,20 +1,20 @@
 package blueprint
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"reflect"
-	"regexp"
-	"strconv"
-	"strings"
+    "fmt"
+    "io/ioutil"
+    "os"
+    "path/filepath"
+    "reflect"
+    "regexp"
+    "strconv"
+    "strings"
 
-	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
-	"github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"
-	"github.com/xebialabs/blueprint-cli/pkg/models"
-	"github.com/xebialabs/blueprint-cli/pkg/util"
-	"github.com/xebialabs/yaml"
+    "github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
+    "github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"
+    "github.com/xebialabs/blueprint-cli/pkg/models"
+    "github.com/xebialabs/blueprint-cli/pkg/util"
+    "github.com/xebialabs/yaml"
 )
 
 // Constants
