@@ -22,6 +22,7 @@ debug
 
 .idea/
 *.iml
+.DS_Store
 
 .vscode/
 .project
