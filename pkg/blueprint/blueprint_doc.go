@@ -235,10 +235,10 @@ func getDefaultTextWithLabel(defVal string, options []VarField) string {
 				if o.Value == defVal {
 					return getOptionTextWithLabel(o)
 				}
+            }
 		}
 	}
 	// return default value itself, when default value set in blueprints dosent match any options
-	return defVal
 	return defVal
 }
 
