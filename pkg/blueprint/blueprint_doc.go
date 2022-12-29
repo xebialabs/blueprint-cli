@@ -10,9 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlecAivazis/survey/v2"
-	"github.com/thoas/go-funk"
-
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/blueprint-cli/pkg/models"
@@ -227,9 +224,14 @@ func getOptionTextWithLabel(option VarField) string {
 }
 
 func getDefaultTextWithLabel(defVal string, options []VarField) string {
-	for _, o := range options {
-		if o.Value == defVal {
-			return getOptionTextWithLabel(o)
+	if options != nil && len(options) > 0 {
+		if defVal == "" {
+			return getOptionTextWithLabel(options[0])
+		}
+		for _, o := range options {
+			if o.Value == defVal {
+				return getOptionTextWithLabel(o)
+			}
 		}
 	}
 	return defVal
