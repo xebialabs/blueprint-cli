@@ -9,7 +9,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/aws/aws-sdk-go v1.38.35
-	github.com/briandowns/spinner v1.12.0
+	github.com/briandowns/spinner v1.20.0
 	github.com/dlclark/regexp2 v1.4.0
 	github.com/fatih/color v1.10.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
