@@ -226,16 +226,16 @@ func getOptionTextWithLabel(option VarField) string {
 	return optionText
 }
 
-func getDefaultTextWithLabel(defVal string, options []VarField) string {
-    if options != nil && len(options) > 0 {
+func getDefaultTextWithLabel(defVal string, optionValues []string) string {
+	if optionValues != nil && len(optionValues) > 0 {
 		if defVal == "" { // when no default is set in blueprints, return first option text as default
-			return getOptionTextWithLabel(options[0])
+			return optionValues[0]
 		} else { // when default set in blueprint matches with one of the options, try to return option text with label
-			for _, o := range options {
-				if o.Value == defVal {
-					return getOptionTextWithLabel(o)
+			for _, optionValue := range optionValues {
+				if optionValue == defVal {
+					return optionValue
 				}
-            }
+			}
 		}
 	}
 	// return default value itself, when default value set in blueprints dosent match any options
@@ -434,7 +434,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("Select value for %s?", variable.Name.Value)),
 				Options:  options,
-				Default:  getDefaultTextWithLabel(defaultValStr, variable.Options),
+				Default:  getDefaultTextWithLabel(defaultValStr, options),
 				PageSize: 10,
 				Help:     variable.GetHelpText(),
 			},
