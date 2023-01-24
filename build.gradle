@@ -71,7 +71,7 @@ publishing {
 }
 
 golang {
-    goVersion = '1.16'
+    goVersion = '1.19'
     packagePath = 'github.com/xebialabs/blueprint-cli' // go import path of project to be built, NOT local file system path!
 }
 
