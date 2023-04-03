@@ -189,7 +189,9 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabe
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Value, opts)
 			options = append(options, opts...)
 		case tagExpressionV1, tagExpressionV2:
+			fmt.Println("In GetOptions()", "In case", tagExpressionV2, "..calling ProcessCustomExpression()")
 			opts, err := ProcessCustomExpression(option.Value, parameters, overrideFns)
+			fmt.Println("In GetOptions(): options are ", opts)
 			if err != nil {
 				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
 				return options
@@ -436,7 +438,9 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 		}
 		answer = string(data)
 	case TypeSelect:
+		fmt.Println("GetUserInput(): happens from here")
 		options := variable.GetOptions(parameters, true, overrideFns)
+		fmt.Println("GetUserInput(): options: ", options)
 		surveyOpts = append(surveyOpts, survey.WithValidator(validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns)))
 		err = survey.AskOne(
 			&survey.Select{
@@ -714,13 +718,17 @@ func validatePrompt(varName string, validateExpr string, allowEmpty bool, parame
 		switch valType := val.(type) {
 		case string:
 			value = strings.TrimSpace(valType)
+			fmt.Println("In validatePrompt(), case string")
 		default:
 			value = val
+			fmt.Println("In validatePrompt(), case actual value=val")
 		}
 		// if empty value is not allowed, check for any value
 		if !allowEmpty {
+			fmt.Println("In validatePrompt(), empty value not allowed")
 			err := survey.Required(value)
 			if err != nil {
+				fmt.Println("In validatePrompt(), Required a value, not empty", err)
 				return err
 			}
 		}
