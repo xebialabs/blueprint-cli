@@ -265,6 +265,7 @@ func (variable *Variable) GetValidateExpr() (string, error) {
 }
 
 func validateField(validateExpr string, variable *Variable, parameters map[string]interface{}, value interface{}, overrideFns ExpressionOverrideFn) error {
+	fmt.Println("In validateField()")
 	if validateExpr != "" {
 		allowEmpty := false
 		if IsSecretType(variable.Type.Value) || variable.AllowEmpty.Bool {
@@ -272,6 +273,7 @@ func validateField(validateExpr string, variable *Variable, parameters map[strin
 		}
 		validationErr := validatePrompt(variable.Name.Value, validateExpr, allowEmpty, parameters, overrideFns)(value)
 		if validationErr != nil {
+			fmt.Println("validateField(): Encountered validation error")
 			return fmt.Errorf("validation error for answer value [%v] for variable [%s]: %s", value, variable.Name.Value, validationErr.Error())
 		}
 	}
@@ -308,6 +310,12 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		return answerBool, nil
 	case TypeSelect:
 		// check if answer is one of the options, error if not
+		fmt.Println("type selection - Validating Selection:")
+		err := validateField(validateExpr, variable, parameters, value, overrideFns)
+		if err != nil {
+			fmt.Println("validation error: {", "variable:", variable.Name.Tag, ", ", "validate:", validateExpr, "}")
+			return "", err
+		}
 		options := variable.GetOptions(parameters, false, overrideFns)
 		answerStr := fmt.Sprintf("%v", value)
 		if !funk.Contains(options, answerStr) {
@@ -700,6 +708,7 @@ func validateFiles(configs *[]TemplateConfig) error {
 }
 
 func validatePrompt(varName string, validateExpr string, allowEmpty bool, parameters map[string]interface{}, overrideFns ExpressionOverrideFn) func(val interface{}) error {
+	fmt.Println(fmt.Printf("In validatePrompt(%s, %s, %t, %s, overrideFns", varName, validateExpr, allowEmpty, fmt.Sprintf("%v", parameters)))
 	return func(val interface{}) error {
 		var value interface{}
 		switch valType := val.(type) {
@@ -717,6 +726,7 @@ func validatePrompt(varName string, validateExpr string, allowEmpty bool, parame
 		}
 
 		// run validation function
+		fmt.Println(fmt.Printf("validatePrompt(): run validation function"))
 		if validateExpr != "" {
 			// add this value to the map of parameters for expression
 			if varName != "" {
