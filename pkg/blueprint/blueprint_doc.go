@@ -442,7 +442,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 			surveyOpts...,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error with options for field %s: %s", variable.Name.Value, err.Error())
+			return nil, fmt.Errorf("error rendering the question '%s', for the field %s: %s", variable.Prompt.Value, variable.Name.Value, err.Error())
 		}
 		answer = findLabelValueFromOptions(answer, variable.Options)
 	case TypeConfirm:
