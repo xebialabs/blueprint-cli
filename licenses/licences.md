@@ -22,7 +22,6 @@ http://golang.org/x/net
 http://golang.org/x/oauth2
 http://gopkg.in/yaml.v2
 http://k8s.io/client-go
-http://github.com/kr/text
 http://github.com/niemeyer/pretty
 http://github.com/pelletier/go-toml/v2
 http://gopkg.in/check.v1
@@ -44,7 +43,6 @@ http://github.com/imdario/mergo
 http://github.com/inconshreveable/mousetrap
 http://github.com/jmespath/go-jmespath
 http://github.com/json-iterator/go
-http://github.com/k0kubun/pp
 http://github.com/kballard/go-shellquote
 http://github.com/mattn/go-colorable
 http://github.com/mattn/go-isatty
@@ -54,7 +52,6 @@ http://github.com/mitchellh/mapstructure
 http://github.com/mitchellh/reflectwalk
 http://github.com/modern-go/concurrent
 http://github.com/modern-go/reflect2
-http://github.com/pelletier/go-toml
 http://github.com/pmezard/go-difflib
 http://github.com/spf13/afero
 http://github.com/spf13/cast
