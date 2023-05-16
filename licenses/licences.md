@@ -24,6 +24,7 @@ http://gopkg.in/yaml.v2
 http://k8s.io/client-go
 http://github.com/kr/text
 http://github.com/niemeyer/pretty
+http://github.com/pelletier/go-toml/v2
 http://gopkg.in/check.v1
 http://sigs.k8s.io/json
 http://github.com/Masterminds/goutils
