@@ -1430,36 +1430,36 @@ func Test_getDefaultTextWithLabel(t *testing.T) {
 	tests := []struct {
 		name    string
 		defVal  string
-		options []VarField
+		options []string
 		want    string
 	}{
 		{
 			"should return default value with label",
 			"hiya",
-			[]VarField{
-				VarField{Value: "yoyo"},
-				VarField{Value: "hiya", Label: "Hooya"},
-				VarField{Value: "someFun()", Tag: "!expr"},
+			[]string{
+				"yoyo",
+				"hiya",
+				"someFun()",
 			},
-			"hiya [Hooya]",
+			"hiya",
 		},
 		{
 			"should return default value without label",
 			"yoyo",
-			[]VarField{
-				VarField{Value: "yoyo"},
-				VarField{Value: "hiya", Label: "Hooya"},
-				VarField{Value: "someFun()", Tag: "!expr"},
+			[]string{
+				"yoyo",
+				"hiya",
+				"someFun()",
 			},
 			"yoyo",
 		},
 		{
 			"should return default value given when not found in options",
 			"yaya",
-			[]VarField{
-				VarField{Value: "yoyo"},
-				VarField{Value: "hiya", Label: "Hooya"},
-				VarField{Value: "someFun()", Tag: "!expr"},
+			[]string{
+				"yoyo",
+				"hiya",
+				"someFun()",
 			},
 			"yaya",
 		},
