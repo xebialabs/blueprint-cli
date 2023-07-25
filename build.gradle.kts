@@ -1,4 +1,6 @@
 import jp.classmethod.aws.gradle.s3.AmazonS3FileUploadTask
+import org.apache.commons.lang.SystemUtils.*
+import org.jetbrains.kotlin.de.undercouch.gradle.tasks.download.Download
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.io.ByteArrayOutputStream
@@ -73,6 +75,9 @@ allprojects {
     }
 }
 
+var goInitialBinary = "go"
+val os = detectOs()
+val arch = detectHostArch()
 val goVersion = "1.19"
 val packagePath = "github.com/xebialabs/blueprint-cli"
 val goRootPath = "${project.rootDir}/.gogradle"
@@ -87,26 +92,77 @@ val environmentRun = mapOf(
     "GOPATH" to goPath,
 )
 
-data class Target(val os: String, val arch: String, val releaseExt: String, val ext: String = "", val upxSupported: Boolean = true) {
+enum class Os {
+    DARWIN {
+        override fun toString(): String = "darwin"
+    },
+    LINUX {
+        override fun toString(): String = "linux"
+    },
+    WINDOWS {
+        override fun packaging(): String = "zip"
+        override fun toString(): String = "windows"
+    };
+    open fun packaging(): String = "tar.gz"
+    fun toStringCamelCase(): String = toString().replaceFirstChar { it.uppercaseChar() }
+}
 
-    fun toStringCamelCase(): String = "${os.replaceFirstChar { it.uppercaseChar() }}${arch.replaceFirstChar { it.uppercaseChar() }}"
+enum class Arch {
+    AMD64 {
+        override fun toString(): String = "amd64"
+    },
+    ARM64 {
+        override fun toString(): String = "arm64"
+    };
 
+    fun toStringCamelCase(): String = toString().replaceFirstChar { it.uppercaseChar() }
+}
+
+data class Target(val os: Os, val arch: Arch, val releaseExt: String, val ext: String = "", val upxSupported: Boolean = true) {
+    fun toStringCamelCase(): String = "${os.toStringCamelCase()}${arch.toStringCamelCase()}"
     override fun toString(): String = "$os-$arch"
-
 }
 
 val targetPlatform = listOf(
-    Target("darwin", "amd64", "bin", upxSupported = false), // upxSupported - removed because of Segmentation errors on the MacOS Ventura
-    Target("darwin", "arm64", "bin", upxSupported = false),
-    Target("linux", "amd64", "bin"),
-    Target("windows", "amd64", "exe", ".exe"),
+    Target(Os.DARWIN, Arch.AMD64, "bin", upxSupported = false), // upxSupported - removed because of Segmentation errors on the MacOS Ventura
+    Target(Os.DARWIN, Arch.ARM64, "bin", upxSupported = false),
+    Target(Os.LINUX, Arch.AMD64, "bin"),
+    Target(Os.WINDOWS, Arch.AMD64, "exe", ".exe"),
 )
 
 tasks {
 
+    register<Download>("downloadGo") {
+        group = "go"
+        src("https://go.dev/dl/go$goVersion.$os-$arch.${os.packaging()}")
+        dest(File(goPath, "go.tar.gz"))
+    }
+
+    register<Copy>("unpackGoPackage") {
+        group = "go"
+        dependsOn("downloadGo")
+        if (os.packaging() == "tar.gz") {
+            from(tarTree(File(goPath, "go.${os.packaging()}")))
+        } else {
+            from(zipTree(File(goPath, "go.${os.packaging()}")))
+        }
+        into(goPath)
+    }
+
     register("goPrepare") {
         group = "go"
-        dependsOn("dumpVersion")
+        if (project.hasGolangInstalled()) {
+            project.logger.lifecycle("Using initial go version from host")
+            dependsOn("dumpVersion")
+        } else {
+            goInitialBinary = "$goPath/go/bin/go"
+            if (File(goInitialBinary).canExecute() && project.hasGolangInstalled()) {
+                project.logger.lifecycle("Using existing initial go version from project")
+            } else {
+                project.logger.lifecycle("Installing initial go version in project")
+                dependsOn("dumpVersion", "unpackGoPackage")
+            }
+        }
         doLast {
             exec {
                 commandLine(
@@ -115,7 +171,7 @@ tasks {
             }
             exec {
                 commandLine(
-                    "go", "install", "golang.org/dl/go${goVersion}@latest"
+                    goInitialBinary, "install", "golang.org/dl/go${goVersion}@latest"
                 )
                 environment(environmentRun)
             }
@@ -483,4 +539,45 @@ fun cleanVersions(key: String): String {
         cleanVersions.add(it.trim())
     }
     return cleanVersions.joinToString(",")
+}
+
+fun Project.hasGolangInstalled(): Boolean {
+    val result = exec {
+        commandLine(
+            goInitialBinary, "version"
+        )
+        this.isIgnoreExitValue = true
+        this.workingDir = project.rootDir
+    }
+    return result.exitValue == 0
+}
+
+fun detectOs(): Os {
+
+    val osDetectionMap = mapOf(
+        Pair(Os.LINUX, IS_OS_LINUX),
+        Pair(Os.WINDOWS, IS_OS_WINDOWS),
+        Pair(Os.DARWIN, IS_OS_MAC_OSX),
+    )
+
+    return osDetectionMap
+        .filter { it.value }
+        .firstNotNullOfOrNull { it.key } ?: throw IllegalStateException("Unrecognized os")
+}
+
+fun detectHostArch(): Arch {
+
+    val archDetectionMap = mapOf(
+        Pair("x86_64", Arch.AMD64),
+        Pair("x64", Arch.AMD64),
+        Pair("amd64", Arch.AMD64),
+        Pair("aarch64", Arch.ARM64),
+        Pair("arm64", Arch.ARM64),
+    )
+
+    val arch: String = System.getProperty("os.arch")
+    if (archDetectionMap.containsKey(arch)) {
+        return archDetectionMap[arch]!!
+    }
+    throw IllegalStateException("Unrecognized architecture: $arch")
 }
