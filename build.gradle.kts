@@ -164,11 +164,8 @@ tasks {
             }
         }
         doLast {
-            exec {
-                commandLine(
-                    "mkdir", "-p", goPath
-                )
-            }
+            mkdir("$goPath")
+
             exec {
                 commandLine(
                     goInitialBinary, "install", "golang.org/dl/go${goVersion}@latest"
