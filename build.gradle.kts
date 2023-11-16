@@ -78,7 +78,7 @@ allprojects {
 var goInitialBinary = "go"
 val os = detectOs()
 val arch = detectHostArch()
-val goVersion = "1.19"
+val goVersion = "1.21.4"
 val packagePath = "github.com/xebialabs/blueprint-cli"
 val goRootPath = "${project.rootDir}/.gogradle"
 val goPath = "${goRootPath}/project_gopath"
