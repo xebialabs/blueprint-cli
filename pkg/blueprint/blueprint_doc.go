@@ -309,7 +309,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 	case TypeSelect:
 		// check if answer is one of the options, error if not
 		options := variable.GetOptions(parameters, false, overrideFns)
-		util.Verbose("Options \n%+v\n", options)
+		util.Verbose("Select options verify for %s: \n%+v\n", variable.Name, options)
 		answerStr := fmt.Sprintf("%v", value)
 		if !funk.Contains(options, answerStr) {
 			return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Value)
@@ -431,12 +431,13 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	case TypeSelect:
 		options := variable.GetOptions(parameters, true, overrideFns)
 		surveyOpts = append(surveyOpts, survey.WithValidator(validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns)))
-		util.Verbose("[select] Reading file contents from path: \n options: %v\n surveyOpts: %v\n", options, surveyOpts)
+		defaultValue := getDefaultTextWithLabel(defaultValStr, options)
+		util.Verbose("Select options prompt for %s with default %s: \n%+v\n", variable.Name, defaultValue, options)
 		err = survey.AskOne(
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("Select value for %s?", variable.Name.Value)),
 				Options:  options,
-				Default:  getDefaultTextWithLabel(defaultValStr, options),
+				Default:  defaultValue,
 				PageSize: 10,
 				Help:     variable.GetHelpText(),
 			},
