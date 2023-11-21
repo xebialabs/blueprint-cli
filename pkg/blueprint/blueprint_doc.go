@@ -431,6 +431,7 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	case TypeSelect:
 		options := variable.GetOptions(parameters, true, overrideFns)
 		surveyOpts = append(surveyOpts, survey.WithValidator(validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns)))
+		util.Verbose("[select] Reading file contents from path: \n options: %v\n surveyOpts: %v\n", options, surveyOpts)
 		err = survey.AskOne(
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("Select value for %s?", variable.Name.Value)),

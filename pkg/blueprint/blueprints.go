@@ -380,11 +380,11 @@ func getBlueprintDefaults(
 	overrideDefaults map[string]string,
 	blueprintContext *BlueprintContext,
 ) (map[string]string, error) {
-	util.Verbose("[cmd] Parsing Blueprint defaults from %s\n", templatePath)
+	util.Verbose("[defaults] Parsing Blueprint defaults from file %s\n", templatePath)
 
 	contents, err := blueprintContext.fetchFileContents(path.Join(templatePath, defaultFile), false)
 	if err != nil {
-		util.Verbose("[cmd] Using Blueprint defaults skipped - no %s file\n", path.Join(templatePath, defaultFile))
+		util.Verbose("[defaults] Using Blueprint defaults file skipped - no %s file\n", path.Join(templatePath, defaultFile))
 		return overrideDefaults, nil
 	}
 
@@ -399,7 +399,7 @@ func getBlueprintDefaults(
 		overrideDefaultsFromFile[providedKey] = providedValue
 	}
 
-	util.Verbose("[cmd] Using Blueprint defaults \n%+v\n", overrideDefaultsFromFile)
+	util.Verbose("[defaults] Using Blueprint defaults \n%+v\n", overrideDefaultsFromFile)
 
 	return overrideDefaultsFromFile, nil
 }
