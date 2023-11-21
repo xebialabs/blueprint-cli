@@ -30,13 +30,17 @@ http://github.com/gobuffalo/packr/v2
 http://github.com/joho/godotenv
 http://github.com/karrick/godirwalk
 http://github.com/konsorten/go-windows-terminal-sequences
-http://github.com/niemeyer/pretty
 http://github.com/pelletier/go-toml/v2
 http://github.com/rogpeppe/go-internal
+http://github.com/sagikazarmark/locafero
+http://github.com/sagikazarmark/slog-shim
 http://github.com/sirupsen/logrus
+http://github.com/sourcegraph/conc
 http://github.com/wlbr/templify
+http://go.uber.org/atomic
+http://go.uber.org/multierr
+http://golang.org/x/exp
 http://golang.org/x/sync
-http://gopkg.in/check.v1
 http://sigs.k8s.io/json
 http://github.com/Masterminds/goutils
 http://github.com/Masterminds/semver
@@ -67,7 +71,6 @@ http://github.com/modern-go/reflect2
 http://github.com/pmezard/go-difflib
 http://github.com/spf13/afero
 http://github.com/spf13/cast
-http://github.com/spf13/jwalterweatherman
 http://github.com/subosito/gotenv
 http://golang.org/x/crypto
 http://golang.org/x/sys
