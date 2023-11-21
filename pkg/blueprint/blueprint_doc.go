@@ -309,7 +309,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 	case TypeSelect:
 		// check if answer is one of the options, error if not
 		options := variable.GetOptions(parameters, false, overrideFns)
-		util.Verbose("Options %s", options)
+		util.Verbose("Options \n%+v\n", options)
 		answerStr := fmt.Sprintf("%v", value)
 		if !funk.Contains(options, answerStr) {
 			return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Value)

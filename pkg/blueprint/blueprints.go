@@ -399,7 +399,7 @@ func getBlueprintDefaults(
 		overrideDefaultsFromFile[providedKey] = providedValue
 	}
 
-	util.Verbose("[cmd] Using Blueprint defaults %s\n", overrideDefaultsFromFile)
+	util.Verbose("[cmd] Using Blueprint defaults \n%+v\n", overrideDefaultsFromFile)
 
 	return overrideDefaultsFromFile, nil
 }
