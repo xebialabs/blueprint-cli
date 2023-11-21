@@ -226,14 +226,21 @@ func getOptionTextWithLabel(option VarField) string {
 	return optionText
 }
 
-func getDefaultTextWithLabel(defVal string, optionValues []VarField) string {
+func getDefaultTextWithLabel(defVal string, optionValues []VarField, options []string) string {
 	if optionValues != nil && len(optionValues) > 0 {
 		if defVal == "" { // when no default is set in blueprints, return first option text as default
-			return getOptionTextWithLabel(optionValues[0])
+			return options[0]
 		} else { // when default set in blueprint matches with one of the options, try to return option text with label
-			for _, optionValue := range optionValues {
-				if optionValue.Value == defVal {
-					return getOptionTextWithLabel(optionValues[0])
+			for optionPos, optionValue := range optionValues {
+				switch optionValue.Tag {
+				case tagFnV1, tagExpressionV1, tagExpressionV2:
+					if options[optionPos] == defVal {
+						return getOptionTextWithLabel(optionValues[0])
+					}
+				default:
+					if optionValue.Value == defVal {
+						return getOptionTextWithLabel(optionValues[0])
+					}
 				}
 			}
 		}
@@ -431,8 +438,8 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	case TypeSelect:
 		options := variable.GetOptions(parameters, true, overrideFns)
 		surveyOpts = append(surveyOpts, survey.WithValidator(validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns)))
-		defaultValue := getDefaultTextWithLabel(defaultValStr, variable.Options)
-		util.Verbose("Select options prompt for %s with default value '%s' \n%+v\n", variable.Name.Value, defaultValue, options)
+		defaultValue := getDefaultTextWithLabel(defaultValStr, variable.Options, options)
+		util.Verbose("[input] Select options prompt for %s with default value '%s' \n%+v\n", variable.Name.Value, defaultValue, options)
 		err = survey.AskOne(
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("Select value for %s?", variable.Name.Value)),
