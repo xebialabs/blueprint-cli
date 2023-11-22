@@ -30,13 +30,25 @@ require (
 )
 
 require (
+	github.com/gobuffalo/envy v1.7.0 // indirect
+	github.com/gobuffalo/logger v1.0.0 // indirect
+	github.com/gobuffalo/packd v0.3.0 // indirect
+	github.com/gobuffalo/packr v1.30.1 // indirect
+	github.com/gobuffalo/packr/v2 v2.5.1 // indirect
+	github.com/joho/godotenv v1.3.0 // indirect
+	github.com/karrick/godirwalk v1.10.12 // indirect
+	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
+	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/sagikazarmark/locafero v0.3.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
+	github.com/sirupsen/logrus v1.4.2 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
+	github.com/wlbr/templify v0.0.0-20210816202250-7b8044ca19e9 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
+	golang.org/x/sync v0.3.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 )
 

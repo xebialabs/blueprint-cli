@@ -235,11 +235,11 @@ func getDefaultTextWithLabel(defVal string, optionValues []VarField, options []s
 				switch optionValue.Tag {
 				case tagFnV1, tagExpressionV1, tagExpressionV2:
 					if options[optionPos] == defVal {
-						return getOptionTextWithLabel(optionValues[0])
+						return options[optionPos]
 					}
 				default:
 					if optionValue.Value == defVal {
-						return getOptionTextWithLabel(optionValues[0])
+						return getOptionTextWithLabel(optionValue)
 					}
 				}
 			}
@@ -316,7 +316,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 	case TypeSelect:
 		// check if answer is one of the options, error if not
 		options := variable.GetOptions(parameters, false, overrideFns)
-		util.Verbose("[input] Select options verify for %s: \n%+v\n", variable.Name, options)
+		util.Verbose("[input] Select options verify for %s: \n%+v\n", variable.Name.Value, options)
 		answerStr := fmt.Sprintf("%v", value)
 		if !funk.Contains(options, answerStr) {
 			return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Value)

@@ -36,7 +36,7 @@ const (
 	secretsFile          = "secrets.xlvals"
 	secretsFileHeader    = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
 	gitignoreFile        = ".gitignore"
-	overrideDefaultsFile = "override_defaults.yaml"
+	overrideDefaultsFile = "override-defaults.yaml"
 )
 
 var ignoredPaths = []string{"__test__"}
