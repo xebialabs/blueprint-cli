@@ -316,7 +316,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 	case TypeSelect:
 		// check if answer is one of the options, error if not
 		options := variable.GetOptions(parameters, false, overrideFns)
-		util.Verbose("Select options verify for %s: \n%+v\n", variable.Name, options)
+		util.Verbose("[input] Select options verify for %s: \n%+v\n", variable.Name, options)
 		answerStr := fmt.Sprintf("%v", value)
 		if !funk.Contains(options, answerStr) {
 			return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Value)
@@ -330,7 +330,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		}
 		// read file contents
 		filePath := value.(string)
-		util.Verbose("[inp: %s\n", filePath)
+		util.Verbose("[input] File path %s\n", filePath)
 		data, err := ioutil.ReadFile(filePath)
 		if err != nil {
 			return "", fmt.Errorf("error reading input file [%s]: %s", filePath, err.Error())
