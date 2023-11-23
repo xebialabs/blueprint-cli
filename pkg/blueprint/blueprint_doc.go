@@ -226,14 +226,21 @@ func getOptionTextWithLabel(option VarField) string {
 	return optionText
 }
 
-func getDefaultTextWithLabel(defVal string, optionValues []string) string {
+func getDefaultTextWithLabel(defVal string, optionValues []VarField, options []string) string {
 	if optionValues != nil && len(optionValues) > 0 {
 		if defVal == "" { // when no default is set in blueprints, return first option text as default
-			return optionValues[0]
+			return options[0]
 		} else { // when default set in blueprint matches with one of the options, try to return option text with label
-			for _, optionValue := range optionValues {
-				if optionValue == defVal {
-					return optionValue
+			for optionPos, optionValue := range optionValues {
+				switch optionValue.Tag {
+				case tagFnV1, tagExpressionV1, tagExpressionV2:
+					if options[optionPos] == defVal {
+						return options[optionPos]
+					}
+				default:
+					if optionValue.Value == defVal {
+						return getOptionTextWithLabel(optionValue)
+					}
 				}
 			}
 		}
@@ -309,6 +316,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 	case TypeSelect:
 		// check if answer is one of the options, error if not
 		options := variable.GetOptions(parameters, false, overrideFns)
+		util.Verbose("[input] Select options verify for %s: \n%+v\n", variable.Name.Value, options)
 		answerStr := fmt.Sprintf("%v", value)
 		if !funk.Contains(options, answerStr) {
 			return "", fmt.Errorf("answer [%s] is not one of the available options %v for variable [%s]", answerStr, options, variable.Name.Value)
@@ -322,7 +330,7 @@ func (variable *Variable) VerifyVariableValue(value interface{}, parameters map[
 		}
 		// read file contents
 		filePath := value.(string)
-		util.Verbose("[inp: %s\n", filePath)
+		util.Verbose("[input] File path %s\n", filePath)
 		data, err := ioutil.ReadFile(filePath)
 		if err != nil {
 			return "", fmt.Errorf("error reading input file [%s]: %s", filePath, err.Error())
@@ -430,11 +438,13 @@ func (variable *Variable) GetUserInput(defaultVal interface{}, parameters map[st
 	case TypeSelect:
 		options := variable.GetOptions(parameters, true, overrideFns)
 		surveyOpts = append(surveyOpts, survey.WithValidator(validatePrompt(variable.Name.Value, validateExpr, false, parameters, overrideFns)))
+		defaultValue := getDefaultTextWithLabel(defaultValStr, variable.Options, options)
+		util.Verbose("[input] Select options prompt for %s with default value '%s' \n%+v\n", variable.Name.Value, defaultValue, options)
 		err = survey.AskOne(
 			&survey.Select{
 				Message:  prepareQuestionText(variable.Prompt.Value, fmt.Sprintf("Select value for %s?", variable.Name.Value)),
 				Options:  options,
-				Default:  getDefaultTextWithLabel(defaultValStr, options),
+				Default:  defaultValue,
 				PageSize: 10,
 				Help:     variable.GetHelpText(),
 			},

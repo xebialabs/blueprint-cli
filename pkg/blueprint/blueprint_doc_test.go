@@ -1428,30 +1428,77 @@ func Test_findLabelValueFromOptions(t *testing.T) {
 
 func Test_getDefaultTextWithLabel(t *testing.T) {
 	tests := []struct {
-		name    string
-		defVal  string
-		options []string
-		want    string
+		name         string
+		defVal       string
+		options      []string
+		fieldOptions []VarField
+		want         string
 	}{
 		{
 			"should return default value with label",
 			"hiya",
 			[]string{
-				"yoyo",
-				"hiya",
+				"yoyo [Yoyo]",
+				"hiya [Hiya]",
 				"someFun()",
 			},
-			"hiya",
+			[]VarField{
+				{
+					Label:      "Yoyo",
+					Value:      "yoyo",
+					Bool:       false,
+					Tag:        "",
+					InvertBool: false,
+				},
+				{
+					Label:      "Hiya",
+					Value:      "hiya",
+					Bool:       false,
+					Tag:        "",
+					InvertBool: false,
+				},
+				{
+					Label:      "someFun()",
+					Value:      "someFun()",
+					Bool:       false,
+					Tag:        "!expr",
+					InvertBool: false,
+				},
+			},
+			"hiya [Hiya]",
 		},
 		{
 			"should return default value without label",
-			"yoyo",
+			"hiya",
 			[]string{
 				"yoyo",
 				"hiya",
 				"someFun()",
 			},
-			"yoyo",
+			[]VarField{
+				{
+					Label:      "Yoyo",
+					Value:      "yoyo",
+					Bool:       false,
+					Tag:        "!expr",
+					InvertBool: false,
+				},
+				{
+					Label:      "Hiya",
+					Value:      "hiya",
+					Bool:       false,
+					Tag:        "!expr",
+					InvertBool: false,
+				},
+				{
+					Label:      "someFun()",
+					Value:      "someFun()",
+					Bool:       false,
+					Tag:        "!expr",
+					InvertBool: false,
+				},
+			},
+			"hiya",
 		},
 		{
 			"should return default value given when not found in options",
@@ -1461,12 +1508,35 @@ func Test_getDefaultTextWithLabel(t *testing.T) {
 				"hiya",
 				"someFun()",
 			},
+			[]VarField{
+				{
+					Label:      "Yoyo",
+					Value:      "yoyo",
+					Bool:       false,
+					Tag:        "",
+					InvertBool: false,
+				},
+				{
+					Label:      "Hiya",
+					Value:      "hiya",
+					Bool:       false,
+					Tag:        "",
+					InvertBool: false,
+				},
+				{
+					Label:      "someFun()",
+					Value:      "someFun()",
+					Bool:       false,
+					Tag:        "!expr",
+					InvertBool: false,
+				},
+			},
 			"yaya",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getDefaultTextWithLabel(tt.defVal, tt.options); got != tt.want {
+			if got := getDefaultTextWithLabel(tt.defVal, tt.fieldOptions, tt.options); got != tt.want {
 				t.Errorf("getDefaultTextWithLabel() = %v, want %v", got, tt.want)
 			}
 		})

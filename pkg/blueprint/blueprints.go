@@ -2,6 +2,8 @@ package blueprint
 
 import (
 	"fmt"
+	"github.com/xebialabs/yaml"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -29,11 +31,12 @@ var SkipUpFinalPrompt = false
 var SkipUserInput = false
 
 const (
-	valuesFile        = "values.xlvals"
-	valuesFileHeader  = "# This file includes all non-secret values, you can add variables here and then refer them with '!value' tag in YAML files"
-	secretsFile       = "secrets.xlvals"
-	secretsFileHeader = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
-	gitignoreFile     = ".gitignore"
+	valuesFile           = "values.xlvals"
+	valuesFileHeader     = "# This file includes all non-secret values, you can add variables here and then refer them with '!value' tag in YAML files"
+	secretsFile          = "secrets.xlvals"
+	secretsFileHeader    = "# This file includes all secret values, and will be excluded from GIT. You can add new values and/or edit them and then refer to them using '!value' YAML tag"
+	gitignoreFile        = ".gitignore"
+	overrideDefaultsFile = "override-defaults.yaml"
 )
 
 var ignoredPaths = []string{"__test__"}
@@ -106,6 +109,11 @@ func InstantiateBlueprint(
 		if err != nil {
 			return nil, nil, err
 		}
+	}
+
+	params.OverrideDefaults, err = getBlueprintDefaults(params.TemplatePath, overrideDefaultsFile, params.OverrideDefaults, blueprintContext)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	preparedData, blueprintDoc, err := prepareMergedTemplateData(blueprintContext, blueprints, params, overrideFns, surveyOpts...)
@@ -364,6 +372,36 @@ func getBlueprintConfig(
 		return nil, nil, err
 	}
 	return blueprintDocs, masterBlueprintDoc, nil
+}
+
+func getBlueprintDefaults(
+	templatePath string,
+	defaultFile string,
+	overrideDefaults map[string]string,
+	blueprintContext *BlueprintContext,
+) (map[string]string, error) {
+	util.Verbose("[defaults] Parsing Blueprint defaults from file %s\n", templatePath)
+
+	contents, err := blueprintContext.fetchFileContents(path.Join(templatePath, defaultFile), false)
+	if err != nil {
+		util.Verbose("[defaults] Using Blueprint defaults file skipped - no %s file\n", path.Join(templatePath, defaultFile))
+		return overrideDefaults, nil
+	}
+
+	// parse answers file
+	overrideDefaultsFromFile := make(map[string]string)
+	err = yaml.Unmarshal(*contents, overrideDefaultsFromFile)
+	if err != nil {
+		return nil, err
+	}
+
+	for providedKey, providedValue := range overrideDefaults {
+		overrideDefaultsFromFile[providedKey] = providedValue
+	}
+
+	util.Verbose("[defaults] Using Blueprint defaults \n%+v\n", overrideDefaultsFromFile)
+
+	return overrideDefaultsFromFile, nil
 }
 
 func composeBlueprints(
