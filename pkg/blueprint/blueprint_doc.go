@@ -538,7 +538,7 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 				variable.Default.Bool = boolVal
 			}
 			// remove the variable from answers if this is coming from UP command so that question will be asked in the upgrade flow
-			if params.FromUpCommand {
+			if params.FromUpCommand && len(params.OverrideDefaults) == 0 {
 				delete(answerMap, variable.Name.Value)
 			}
 		} else {
