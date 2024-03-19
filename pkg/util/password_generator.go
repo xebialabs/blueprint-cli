@@ -3,6 +3,7 @@ package util
 import (
 	"crypto/rand"
 	"math/big"
+	"unicode"
 )
 
 const (
@@ -12,11 +13,21 @@ const (
 
 func GeneratePassword(len int) string {
 	password := ""
+
 	if len > 0 {
-		for i := 1; i <= len; i++ {
+		if len > 1 {
+			for ok := true; ok; ok = !hasNumeric(password) {
+				password = ""
+
+				for i := 1; i <= len; i++ {
+					password += randomElement()
+				}
+			}
+		} else {
 			password += randomElement()
 		}
 	}
+
 	return password
 }
 
@@ -28,4 +39,13 @@ func randomElement() string {
 	}
 
 	return string(PasswordChar[n.Int64()])
+}
+
+func hasNumeric(s string) bool {
+	for _, r := range s {
+		if unicode.IsNumber(r) {
+			return true
+		}
+	}
+	return false
 }
