@@ -78,7 +78,7 @@ allprojects {
 var goInitialBinary = "go"
 val os = detectOs()
 val arch = detectHostArch()
-val goVersion = "1.21.4"
+val goVersion = "1.21.8"
 val packagePath = "github.com/xebialabs/blueprint-cli"
 val goRootPath = "${project.rootDir}/.gogradle"
 val goPath = "${goRootPath}/project_gopath"
@@ -351,6 +351,25 @@ tasks {
         dependsOn(
             *targetPlatform.map { "upx${it.toStringCamelCase()}" }.toTypedArray()
         )
+    }
+
+    register("goUpdate") {
+        group = "go"
+        dependsOn("goPrepare")
+        doLast {
+            exec {
+                commandLine(
+                    goCommand, "get", "-u", "...",
+                )
+                environment(environmentRun)
+            }
+            exec {
+                commandLine(
+                    goCommand, "mod", "tidy",
+                )
+                environment(environmentRun)
+            }
+        }
     }
 
     register("removeLicenseFolder") {
