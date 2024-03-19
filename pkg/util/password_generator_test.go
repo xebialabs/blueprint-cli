@@ -18,4 +18,15 @@ func TestIsPasswordGeneration(t *testing.T) {
 		assert.Equal(t, "", GeneratePassword(-100))
 	})
 
+	t.Run("should check for numerics if length is above 1", func(t *testing.T) {
+		assert.Equal(t, hasNumeric(GeneratePassword(2)), true)
+		assert.Equal(t, hasNumeric(GeneratePassword(8)), true)
+	})
+
+	t.Run("should recognize numerics in a string", func(t *testing.T) {
+		assert.Equal(t, hasNumeric("Aa"), false)
+		assert.Equal(t, hasNumeric("1A"), true)
+		assert.Equal(t, hasNumeric("A1"), true)
+	})
+
 }
