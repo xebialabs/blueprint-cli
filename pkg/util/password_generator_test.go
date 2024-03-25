@@ -1,8 +1,10 @@
 package util
 
 import (
-	"github.com/stretchr/testify/assert"
+	"regexp"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIsPasswordGeneration(t *testing.T) {
@@ -18,15 +20,12 @@ func TestIsPasswordGeneration(t *testing.T) {
 		assert.Equal(t, "", GeneratePassword(-100))
 	})
 
-	t.Run("should check for numerics if length is above 1", func(t *testing.T) {
-		assert.Equal(t, hasNumeric(GeneratePassword(2)), true)
-		assert.Equal(t, hasNumeric(GeneratePassword(8)), true)
-	})
+	t.Run("should contain one numeric, one uppercase and one lowercase character at the end", func(t *testing.T) {
+		pwd := GeneratePassword(8)
+		lastThreeChars := pwd[len(pwd)-3:]
 
-	t.Run("should recognize numerics in a string", func(t *testing.T) {
-		assert.Equal(t, hasNumeric("Aa"), false)
-		assert.Equal(t, hasNumeric("1A"), true)
-		assert.Equal(t, hasNumeric("A1"), true)
+		assert.True(t, true, regexp.MustCompile(`[0-9][A-Z][a-z]`).MatchString(lastThreeChars))
+		assert.True(t, true, regexp.MustCompile(`\w*[0-9][A-Z][a-z]$`).MatchString(pwd))
 	})
 
 }

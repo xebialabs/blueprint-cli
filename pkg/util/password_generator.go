@@ -3,49 +3,34 @@ package util
 import (
 	"crypto/rand"
 	"math/big"
-	"unicode"
 )
 
 const (
-	PasswordChar = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	Length       = len(PasswordChar)
+	lowercaseCharset = "abcdefghijklmnopqrstuvwxyz"
+	uppercaseCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	numericCharset   = "0123456789"
+	completeCharset  = lowercaseCharset + uppercaseCharset + numericCharset
 )
+
+var charsets = [...]string{lowercaseCharset, uppercaseCharset, numericCharset}
 
 func GeneratePassword(len int) string {
 	password := ""
-
-	if len > 0 {
-		if len > 1 {
-			for ok := true; ok; ok = !hasNumeric(password) {
-				password = ""
-
-				for i := 1; i <= len; i++ {
-					password += randomElement()
-				}
-			}
-		} else {
-			password += randomElement()
-		}
+	for ; len > 3; len-- {
+		password += randomElement(completeCharset)
 	}
-
+	for ; len > 0; len-- {
+		password += randomElement(charsets[len-1])
+	}
 	return password
 }
 
-func randomElement() string {
-	n, err := rand.Int(rand.Reader, big.NewInt(int64(Length)))
+func randomElement(charset string) string {
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
 
 	if err != nil {
 		Fatal("Error generating random password")
 	}
 
-	return string(PasswordChar[n.Int64()])
-}
-
-func hasNumeric(s string) bool {
-	for _, r := range s {
-		if unicode.IsNumber(r) {
-			return true
-		}
-	}
-	return false
+	return string(charset[n.Int64()])
 }
