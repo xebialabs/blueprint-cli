@@ -719,7 +719,7 @@ func validatePrompt(varName string, validateExpr string, allowEmpty bool, parame
 		case string:
 			value = strings.TrimSpace(valType)
 		default:
-			value = val
+			value = fmt.Sprint(val)
 		}
 		// if empty value is not allowed, check for any value
 		if !allowEmpty {
