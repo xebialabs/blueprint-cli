@@ -721,8 +721,12 @@ func validatePrompt(varName string, validateExpr string, allowEmpty bool, parame
 			value = strings.TrimSpace(valType)
 		case core.OptionAnswer:
 			value = val.(core.OptionAnswer).Value
+			beforeLabel, _, found := strings.Cut(value.(string), "[")
+			if found {
+				value = strings.TrimSpace(beforeLabel)
+			}
 		default:
-			value = fmt.Sprint(val)
+			value = val
 		}
 		// if empty value is not allowed, check for any value
 		if !allowEmpty {
