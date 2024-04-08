@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/thoas/go-funk"
 
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
@@ -718,6 +719,12 @@ func validatePrompt(varName string, validateExpr string, allowEmpty bool, parame
 		switch valType := val.(type) {
 		case string:
 			value = strings.TrimSpace(valType)
+		case core.OptionAnswer:
+			value = val.(core.OptionAnswer).Value
+			beforeLabel, _, found := strings.Cut(value.(string), "[")
+			if found {
+				value = strings.TrimSpace(beforeLabel)
+			}
 		default:
 			value = val
 		}
