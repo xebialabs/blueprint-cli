@@ -231,8 +231,9 @@ func getDefaultTextWithLabel(defVal string, options []string) string {
 		if defVal == "" { // when no default is set in blueprints, return first option text as default
 			return options[0]
 		} else { // when default value set in blueprint matches with one of the options(simple option string or value [label] string), return option text
+			labelBegin := " ["
 			for _, optionString := range options {
-				if strings.HasPrefix(optionString, defVal) {
+				if strings.HasPrefix(optionString, defVal+labelBegin) {
 					return optionString
 				}
 			}
