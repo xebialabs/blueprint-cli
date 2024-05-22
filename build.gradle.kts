@@ -39,7 +39,7 @@ plugins {
 group = "com.xebialabs.xlclient"
 project.defaultTasks = listOf("build")
 
-val releasedVersion = System.getenv()["RELEASE_EXPLICIT"] ?: "24.1.0-${
+val releasedVersion = System.getenv()["RELEASE_EXPLICIT"] ?: "24.3.0-${
     LocalDateTime.now().format(DateTimeFormatter.ofPattern("Mdd.Hmm"))
 }"
 project.extra.set("releasedVersion", releasedVersion)
