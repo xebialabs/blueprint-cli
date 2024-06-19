@@ -576,7 +576,7 @@ func (r Resource) ResourceName() string {
 	return resource
 }
 
-func (r Resource) SaveConfigYamlFile(filePath string, appendedAttrs ...string) error {
+func (r Resource) SaveKubeConfigYamlFile(filePath string, appendedAttrs ...string) error {
 
 	r.spin.Prefix = osHelper.Sprintf("Saving YAML file for %s", r.Type)
 	r.spin.Start()
@@ -598,17 +598,4 @@ func (r Resource) SaveConfigYamlFile(filePath string, appendedAttrs ...string) e
 	} else {
 		return fmt.Errorf("error occurred while fetching resource %s: %s", r.Type, output)
 	}
-}
-
-func (r Resource) SaveStringToFile(filePath string, selectedPlatform string) error {
-	outfile, err := r.makeFile(filePath)
-	if err != nil {
-		return fmt.Errorf("error occurred while creating resource %s file %s: %s", r.Type, filePath, err.Error())
-	}
-	_, err = outfile.WriteString("selectedPlatform: " + selectedPlatform)
-	if err != nil {
-		return fmt.Errorf("error occurred while writing resource %s file %s: %s", r.Type, filePath, err.Error())
-	}
-	outfile.Close()
-	return nil
 }
