@@ -578,15 +578,29 @@ func (r Resource) ResourceName() string {
 
 func (r Resource) SaveKubeConfigYamlFile(filePath string, appendedAttrs ...string) error {
 
-	r.spin.Prefix = osHelper.Sprintf("Saving YAML file for %s", r.Type)
+	cmd := []string{r.Type, "view", "--minify"}
+	err := r.SaveCommandYamlFile(filePath, cmd, appendedAttrs...)
+	return err
+}
+
+func (r Resource) SaveKubeVersionYamlFile(filePath string, appendedAttrs ...string) error {
+
+	cmd := []string{"version", "--short"}
+	err := r.SaveCommandYamlFile(filePath, cmd, appendedAttrs...)
+	return err
+}
+
+func (r Resource) SaveCommandYamlFile(filePath string, cmd []string, appendedAttrs ...string) error {
+
+	r.spin.Prefix = osHelper.Sprintf("Saving YAML file for command %s", cmd)
 	r.spin.Start()
 	defer r.spin.Stop()
 
-	r.Command.Args = append([]string{r.Type, "view", "--minify"}, appendedAttrs...)
+	r.Command.Args = append(cmd, appendedAttrs...)
 
 	outfile, err := r.makeFile(filePath)
 	if err != nil {
-		return fmt.Errorf("error occurred while creating resource %s file %s: %s", r.Type, filePath, err.Error())
+		return fmt.Errorf("error occurred while creating file %s: %s", filePath, err.Error())
 	}
 	defer outfile.Close()
 	r.Command.StdOut = outfile
@@ -596,6 +610,6 @@ func (r Resource) SaveKubeConfigYamlFile(filePath string, appendedAttrs ...strin
 	if ok {
 		return nil
 	} else {
-		return fmt.Errorf("error occurred while fetching resource %s: %s", r.Type, output)
+		return fmt.Errorf("error occurred while fetching output for %s: %s", cmd, output)
 	}
 }
