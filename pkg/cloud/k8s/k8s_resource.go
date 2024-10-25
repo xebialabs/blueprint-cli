@@ -71,12 +71,12 @@ func (r Resource) CreateResource(namespace, resourceType string, resourceName Re
 
 type confirmFn func(string, string) (bool, error)
 
-func (r Resource) DeleteResource(pattern string, confirm confirmFn, backupPath string, wait bool) {
-	r.DeleteFilteredResources([]string{pattern}, true, false, wait, confirm, backupPath)
+func (r Resource) DeleteResource(pattern string, confirm confirmFn, backupPath string, force bool, wait bool, gracePeriod int) {
+	r.DeleteFilteredResources([]string{pattern}, true, force, wait, gracePeriod, confirm, backupPath)
 }
 
-func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn, backupPath string, wait bool) {
-	r.DeleteFilteredResources([]string{pattern}, false, false, wait, confirm, backupPath)
+func (r Resource) DeleteResourceStartsWith(pattern string, confirm confirmFn, backupPath string, force bool, wait bool, gracePeriod int) {
+	r.DeleteFilteredResources([]string{pattern}, false, force, wait, gracePeriod, confirm, backupPath)
 }
 
 func (r Resource) processDelete(name string) {
@@ -96,10 +96,12 @@ func (r Resource) processDelete(name string) {
 	}
 }
 
-func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force bool, wait bool, confirm confirmFn, backupPath string) {
+func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force, wait bool, gracePeriod int, confirm confirmFn, backupPath string) {
 	if name, status := r.Name.(string); status && name != "" {
 		if force {
 			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "--wait=" + strconv.FormatBool(wait), "--force"}
+		} else if gracePeriod > 0 {
+			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "--wait=" + strconv.FormatBool(wait), "--grace-period=" + strconv.Itoa(gracePeriod)}
 		} else {
 			r.Args = []string{"delete", r.Type, name, "-n", r.Namespace, "--wait=" + strconv.FormatBool(wait)}
 		}
