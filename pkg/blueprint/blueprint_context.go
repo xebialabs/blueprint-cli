@@ -137,29 +137,61 @@ func SetRootFlags(rootFlags *pflag.FlagSet) {
 	viper.BindPFlag(ViperKeyBlueprintCurrentRepository, rootFlags.Lookup(FlagBlueprintCurrentRepository))
 }
 
-func ConstructLocalBlueprintContext(localRepoPath string) (*BlueprintContext, error) {
+func ConstructLocalBlueprintContext(repoPath string) (*BlueprintContext, error) {
 	var definedRepos []*repository.BlueprintRepository
 	var localRepo repository.BlueprintRepository
 	var err error
 
-	if !util.PathExists(localRepoPath, true) {
-		return nil, fmt.Errorf("error: provided development local repository directory [%s] is not valid", localRepoPath)
-	}
+	if util.PathExists(repoPath, true) {
+		// it is local directory
+		localRepo, err = local.NewLocalBlueprintRepository(map[string]string{
+			"type": models.ProviderLocal,
+			"name": "cmd-arg",
+			"path": repoPath,
+		})
+		if err != nil {
+			return nil, err
+		}
+		definedRepos = append(definedRepos, &localRepo)
 
-	localRepo, err = local.NewLocalBlueprintRepository(map[string]string{
-		"type": models.ProviderLocal,
-		"name": "cmd-arg",
-		"path": localRepoPath,
-	})
-	if err != nil {
-		return nil, err
-	}
-	definedRepos = append(definedRepos, &localRepo)
+		return &BlueprintContext{
+			ActiveRepo:   &localRepo,
+			DefinedRepos: definedRepos,
+		}, nil
+	} else if util.FileExists(repoPath) {
+		// it is local zip file
+		localRepo, err = zip.NewCustomZipBlueprintRepository(map[string]string{
+			"type": models.ProviderZip,
+			"name": "cmd-arg",
+			"path": repoPath,
+		})
+		if err != nil {
+			return nil, err
+		}
+		definedRepos = append(definedRepos, &localRepo)
 
-	return &BlueprintContext{
-		ActiveRepo:   &localRepo,
-		DefinedRepos: definedRepos,
-	}, nil
+		return &BlueprintContext{
+			ActiveRepo:   &localRepo,
+			DefinedRepos: definedRepos,
+		}, nil
+	} else if util.URLExists(repoPath) {
+		// it is remote zip file
+		localRepo, err = zip.NewCustomZipBlueprintRepository(map[string]string{
+			"type": models.ProviderZip,
+			"name": "cmd-arg",
+			"path": repoPath,
+		})
+		if err != nil {
+			return nil, err
+		}
+		definedRepos = append(definedRepos, &localRepo)
+
+		return &BlueprintContext{
+			ActiveRepo:   &localRepo,
+			DefinedRepos: definedRepos,
+		}, nil
+	}
+	return nil, fmt.Errorf("error: provided local repository directory [%s] is not valid", repoPath)
 }
 
 func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*BlueprintContext, error) {
@@ -208,7 +240,7 @@ func ConstructBlueprintContext(v *viper.Viper, configPath, CLIVersion string) (*
 		case models.ProviderGitLab:
 			repo, err = gitlab.NewGitLabBlueprintRepository(repoDefinition)
 		case models.ProviderZip:
-			repo, err = zip.NewZipBlueprintRepository(repoDefinition, CLIVersion)
+			repo, err = zip.NewDefaultZipBlueprintRepository(repoDefinition, CLIVersion)
 		default:
 			return nil, fmt.Errorf("no blueprint provider implementation found for %s", repoProvider)
 		}

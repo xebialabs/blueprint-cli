@@ -1,10 +1,10 @@
-import jp.classmethod.aws.gradle.s3.AmazonS3FileUploadTask
+import com.fuseanalytics.gradle.s3.S3Upload
 import org.apache.commons.lang.SystemUtils.*
 import org.jetbrains.kotlin.de.undercouch.gradle.tasks.download.Download
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 buildscript {
@@ -30,16 +30,16 @@ buildscript {
 plugins {
     kotlin("jvm") version "1.8.10"
 
-    id("jp.classmethod.aws") version "0.41"
+    id("com.fuseanalytics.gradle.s3") version "1.2.6"
     id("org.sonarqube") version "4.3.0.3225"
-//    id("nebula.release") version (properties["nebulaReleasePluginVersion"] as String)
+    id("nebula.release") version (properties["nebulaReleasePluginVersion"] as String)
     id("maven-publish")
 }
 
 group = "com.xebialabs.xlclient"
 project.defaultTasks = listOf("build")
 
-val releasedVersion = System.getenv()["RELEASE_EXPLICIT"] ?: "24.3.0-${
+val releasedVersion = System.getenv()["RELEASE_EXPLICIT"] ?: "25.1.0-${
     LocalDateTime.now().format(DateTimeFormatter.ofPattern("Mdd.Hmm"))
 }"
 project.extra.set("releasedVersion", releasedVersion)
@@ -78,7 +78,7 @@ allprojects {
 var goInitialBinary = "go"
 val os = detectOs()
 val arch = detectHostArch()
-val goVersion = "1.21.8"
+val goVersion = "1.23.3"
 val packagePath = "github.com/xebialabs/blueprint-cli"
 val goRootPath = "${project.rootDir}/.gogradle"
 val goPath = "${goRootPath}/project_gopath"
@@ -127,6 +127,7 @@ val targetPlatform = listOf(
     Target(Os.DARWIN, Arch.AMD64, "bin", upxSupported = false), // upxSupported - removed because of Segmentation errors on the MacOS Ventura
     Target(Os.DARWIN, Arch.ARM64, "bin", upxSupported = false),
     Target(Os.LINUX, Arch.AMD64, "bin"),
+    Target(Os.LINUX, Arch.ARM64, "bin"),
     Target(Os.WINDOWS, Arch.AMD64, "exe", ".exe"),
 )
 
@@ -135,7 +136,7 @@ tasks {
     register<Download>("downloadGo") {
         group = "go"
         src("https://go.dev/dl/go$goVersion.$os-$arch.${os.packaging()}")
-        dest(File(goPath, "go.tar.gz"))
+        dest(File(goPath, "go.${os.packaging()}"))
     }
 
     register<Copy>("unpackGoPackage") {
@@ -431,11 +432,11 @@ tasks {
     }
 
     targetPlatform.forEach { target ->
-        register<AmazonS3FileUploadTask>("upload${target.toStringCamelCase()}ToS3") {
+        register<S3Upload>("upload${target.toStringCamelCase()}ToS3") {
             group = "release-dist"
-            setFile(file("${project.buildDir}/$target/$binaryName${target.ext}"))
-            setBucketName(bucketName)
-            setKey("bin/${project.version}/${target}/$artifactName${target.ext}")
+            bucket = bucketName
+            key = "bin/${project.version}/${target}/$binaryName${target.ext}"
+            file = "${project.buildDir}/$target/$binaryName${target.ext}"
         }
     }
 
@@ -519,10 +520,6 @@ publishing {
             }
         }
     }
-}
-
-aws {
-    profileName = "default"
 }
 
 sonarqube {
