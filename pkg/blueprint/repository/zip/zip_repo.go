@@ -205,7 +205,7 @@ func readHttpZipContent(zipLocation string, CLIVersion string) string {
 
 func readDirectHttpZipContent(zipLocation string) string {
     if strings.Index(zipLocation, "http") == 0 {
-        util.Verbose("Downloading operator zip %s to %s\n", zipLocation, ZipRepo)
+        util.Verbose("Downloading kube blueprints zip %s to %s\n", zipLocation, ZipRepo)
         client := http.Client{
             CheckRedirect: func(r *http.Request, via []*http.Request) error {
                 r.URL.Opaque = r.URL.Path
@@ -214,7 +214,7 @@ func readDirectHttpZipContent(zipLocation string) string {
         }
         resp, err := client.Get(zipLocation)
         if err != nil {
-            util.Fatal("Cannot download operator zip file [%s]: %s\n", zipLocation, err)
+            util.Fatal("Cannot download kube blueprints zip file [%s]: %s\n", zipLocation, err)
         }
         defer resp.Body.Close()
         if resp.StatusCode == http.StatusOK {
@@ -222,18 +222,18 @@ func readDirectHttpZipContent(zipLocation string) string {
             zipPath := filepath.FromSlash(ZipRepo + "/" + zipPathSegments[len(zipPathSegments)-1])
             out, err := os.Create(zipPath)
             if err != nil {
-                util.Fatal("Cannot create operator zip file [%s] on filesystem: %s\n", zipPath, err)
+                util.Fatal("Cannot create kube blueprints zip file [%s] on filesystem: %s\n", zipPath, err)
             }
             defer out.Close()
 
             if size, err := io.Copy(out, resp.Body); err != nil {
-                util.Fatal("Cannot save operator zip file [%s] on filesystem: %s\n", zipPath, err)
+                util.Fatal("Cannot save kube blueprints zip file [%s] on filesystem: %s\n", zipPath, err)
             } else {
-                util.Verbose("Downloaded a operator zip %s with size %d\n", zipPath, size)
+                util.Verbose("Downloaded a kube blueprints zip %s with size %d\n", zipPath, size)
             }
             return zipPath
         } else {
-            util.Fatal("Cannot download operator zip file [%s]: status response %s\n", zipLocation, resp.Status)
+            util.Fatal("Cannot download kube blueprints zip file [%s]: status response %s\n", zipLocation, resp.Status)
         }
     }
     return zipLocation
