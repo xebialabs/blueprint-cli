@@ -58,9 +58,6 @@ http://github.com/json-iterator/go
 http://github.com/karrick/godirwalk
 http://github.com/kballard/go-shellquote
 http://github.com/konsorten/go-windows-terminal-sequences
-http://github.com/markbates/errx
-http://github.com/markbates/oncer
-http://github.com/markbates/safe
 http://github.com/mattn/go-colorable
 http://github.com/mattn/go-isatty
 http://github.com/mgutz/ansi

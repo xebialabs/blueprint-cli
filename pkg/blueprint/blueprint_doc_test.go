@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -130,7 +131,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Default: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
 		defaultVal := v.GetDefaultVal()
-		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
+		regionsList, _ := aws.GetAvailableAWSRegionsForService(context.TODO(), "ecs")
 		sort.Strings(regionsList)
 		assert.Equal(t, regionsList[0], defaultVal)
 	})
@@ -196,7 +197,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
 		val := v.GetValueFieldVal()
-		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
+		regionsList, _ := aws.GetAvailableAWSRegionsForService(context.TODO(), "ecs")
 		sort.Strings(regionsList)
 		assert.Equal(t, regionsList[0], val)
 	})
