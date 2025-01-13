@@ -692,20 +692,20 @@ func Test_processCustomExpression(t *testing.T) {
 			nil,
 			false,
 		},
-		//{
-		//	"should return string result for proper awsCredentials expression",
-		//	false,
-		//	args{
-		//		"regex('^(true|false|1|0)$', awsCredentials('AccessKeyID'))",
-		//		map[string]interface{}{},
-		//		nil,
-		//	},
-		//	nil,
-		//	func(result interface{}) bool {
-		//		return result != ""
-		//	},
-		//	false,
-		//},
+		{
+			"should return string result for proper awsCredentials expression",
+			false,
+			args{
+				"regex('^(true|false|1|0)$', awsCredentials('AccessKeyID'))",
+				map[string]interface{}{},
+				nil,
+			},
+			nil,
+			func(result interface{}) bool {
+				return result != ""
+			},
+			false,
+		},
 		{
 			"should error when no aws service specified for awsRegions expression",
 			false,
@@ -718,39 +718,39 @@ func Test_processCustomExpression(t *testing.T) {
 			nil,
 			true,
 		},
-		//{
-		//	"should return list of ECS regions for awsRegions expression",
-		//	false,
-		//	args{
-		//		"awsRegions('ecs')",
-		//		map[string]interface{}{},
-		//		nil,
-		//	},
-		//	nil,
-		//	func(result interface{}) bool {
-		//		switch result.(type) {
-		//		case []string:
-		//			if len(result.([]string)) > 0 {
-		//				return true
-		//			}
-		//		}
-		//
-		//		return false
-		//	},
-		//	false,
-		//},
-		//{
-		//	"should return first ECS region for awsRegions expression",
-		//	false,
-		//	args{
-		//		"regex('[a-zA-Z0-9-]+', awsRegions('ecs', 0))",
-		//		map[string]interface{}{},
-		//		nil,
-		//	},
-		//	true,
-		//	nil,
-		//	false,
-		//},
+		{
+			"should return list of ECS regions for awsRegions expression",
+			false,
+			args{
+				"awsRegions('ecs')",
+				map[string]interface{}{},
+				nil,
+			},
+			nil,
+			func(result interface{}) bool {
+				switch result.(type) {
+				case []string:
+					if len(result.([]string)) > 0 {
+						return true
+					}
+				}
+
+				return false
+			},
+			false,
+		},
+		{
+			"should return first ECS region for awsRegions expression",
+			false,
+			args{
+				"regex('[a-zA-Z0-9-]+', awsRegions('ecs', 0))",
+				map[string]interface{}{},
+				nil,
+			},
+			true,
+			nil,
+			false,
+		},
 		{
 			"should error on invalid index for ECS regions list for awsRegions expression",
 			false,
