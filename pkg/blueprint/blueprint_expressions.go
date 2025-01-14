@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"context"
 	b64 "encoding/base64"
 	"fmt"
 	"math"
@@ -206,6 +207,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 		},
 		// aws helper functions
 		"awsCredentials": func(args ...interface{}) (interface{}, error) {
+			ctx := context.Background()
 			if len(args) != 1 {
 				return nil, fmt.Errorf("invalid number of arguments for expression function 'awsCredentials', expecting 1 got %d", len(args))
 			}
@@ -214,7 +216,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			if !funk.Contains([]string{"IsAvailable", "AccessKeyID", "SecretAccessKey", "ProviderName", "SessionToken"}, attr) {
 				return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'awsCredentials'", attr)
 			}
-			creds, err := aws.GetAWSCredentialsFromSystem()
+			creds, err := aws.GetAWSCredentialsFromSystem(ctx)
 			if err != nil {
 				if strings.Contains(err.Error(), "NoCredentialProviders: no valid providers in chain") {
 					if attr == "IsAvailable" {
@@ -229,9 +231,10 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 				return creds.AccessKeyID != "", nil
 			}
 
-			return aws.GetAWSCredentialsField(&creds, attr), nil
+			return aws.GetAWSCredentialsField(creds, attr)
 		},
 		"awsRegions": func(args ...interface{}) (interface{}, error) {
+			ctx := context.Background()
 			if len(args) == 0 || len(args) > 2 {
 				return nil, fmt.Errorf("invalid number of arguments for expression function 'awsRegions', expecting between 1 and 2 got %d", len(args))
 			}
@@ -249,7 +252,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 				}
 			}
 
-			regions, err := aws.GetAvailableAWSRegionsForService(serviceName)
+			regions, err := aws.GetAvailableAWSRegionsForService(ctx, serviceName)
 			if err != nil {
 				return nil, fmt.Errorf("error when executing expression function 'awsRegions', %s", err.Error())
 			}

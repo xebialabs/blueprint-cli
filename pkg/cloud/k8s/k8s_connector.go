@@ -1,17 +1,19 @@
 package k8s
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
-	"os"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
+	//"github.com/aws/aws-sdk-go-v2/aws/session"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/xebialabs/blueprint-cli/pkg/util"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -58,24 +60,19 @@ type getCallerIdentityWrapper struct {
 	} `json:"GetCallerIdentityResponse"`
 }
 
-func connectToEKS(answerMap map[string]string) (*restclient.Config, error) {
+func connectToEKS(ctx context.Context, answerMap map[string]string) (*restclient.Config, error) {
 	fmt.Println("Connecting to EKS")
 	clusterID := getClusterIDFromClusterName(answerMap)
 
-	var sess *session.Session
-	var err error
+	var appCreds aws.CredentialsProvider
 	var ssoCredentials, _ = GetRequiredPropertyFromMap("UseAWSSsoCredentials", answerMap)
-	if util.MapContainsKeyWithVal(answerMap, "AWSAccessKey") && ssoCredentials == "false" {
-		var region string
 
-		if util.MapContainsKeyWithVal(answerMap, "AWSRegion") {
-			region, err = GetRequiredPropertyFromMap("AWSRegion", answerMap)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			region = "eu-west-1"
-		}
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to load AWS configuration: %w", err)
+	}
+
+	if util.MapContainsKeyWithVal(answerMap, "AWSAccessKey") && ssoCredentials == "false" {
 		AWSAccessKey, err := GetRequiredPropertyFromMap("AWSAccessKey", answerMap)
 		if err != nil {
 			return nil, err
@@ -84,30 +81,32 @@ func connectToEKS(answerMap map[string]string) (*restclient.Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		sess, err = session.NewSession(&aws.Config{
-			Region:      aws.String(region),
-			Credentials: credentials.NewStaticCredentials(AWSAccessKey, AWSAccessSecret, ""),
-		})
+		appCreds = aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(AWSAccessKey, AWSAccessSecret, ""))
 	} else {
-		sess, err = session.NewSessionWithOptions(session.Options{
-			AssumeRoleTokenProvider: stdinStderrTokenProvider,
-			SharedConfigState:       session.SharedConfigEnable,
+		AWSRoleArn, err := GetRequiredPropertyFromMap("AWSRoleArn", answerMap)
+		if err != nil {
+			return nil, err
+		}
+		AWSTokenSerialNumber, err := GetRequiredPropertyFromMap("AWSTokenSerialNumber", answerMap)
+		if err != nil {
+			return nil, err
+		}
+		// Create the credentials from AssumeRoleProvider to assume the role
+		// referenced by the "myRoleARN" ARN using the MFA token code provided.
+		appCreds = stscreds.NewAssumeRoleProvider(sts.NewFromConfig(cfg), AWSRoleArn, func(o *stscreds.AssumeRoleOptions) {
+			o.SerialNumber = aws.String(AWSTokenSerialNumber)
+			o.TokenProvider = stscreds.StdinTokenProvider
 		})
 	}
 
-	if err != nil {
-		return nil, fmt.Errorf("could not create session: %v", err)
-	}
+	stsAPI := sts.NewPresignClient(sts.NewFromConfig(cfg, func(o *sts.Options) {
+		o.Credentials = appCreds
+	}))
 
-	stsAPI := sts.New(sess)
+	request, _ := stsAPI.PresignGetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	request.SignedHeader.Add(clusterIDHeader, clusterID)
 
-	request, _ := stsAPI.GetCallerIdentityRequest(&sts.GetCallerIdentityInput{})
-	request.HTTPRequest.Header.Add(clusterIDHeader, clusterID)
-
-	presignedURLString, err := request.Presign(requestPresignParam)
-	if err != nil {
-		return nil, fmt.Errorf("Cannot parse the request %s", err)
-	}
+	presignedURLString := request.URL
 
 	tokenExpiration := time.Now().Local().Add(presignedURLExpiration - 1*time.Minute)
 	t := Token{v1Prefix + base64.RawURLEncoding.EncodeToString([]byte(presignedURLString)), tokenExpiration}
@@ -129,7 +128,7 @@ func connectToEKS(answerMap map[string]string) (*restclient.Config, error) {
 // GetK8sConfiguration gets the Kubernetes connection configuration
 func GetK8sConfiguration(answerMap map[string]string) (*restclient.Config, error) {
 	if answerMap["K8sSetup"] == "AwsEKS" {
-		return connectToEKS(answerMap)
+		return connectToEKS(context.Background(), answerMap)
 	}
 
 	return connectToK8s(answerMap)
@@ -188,13 +187,6 @@ func connectToK8s(answerMap map[string]string) (*restclient.Config, error) {
 	config.TLSClientConfig.Insecure = true
 
 	return config, nil
-}
-
-func stdinStderrTokenProvider() (string, error) {
-	var v string
-	fmt.Fprint(os.Stderr, "Assume Role MFA token code: ")
-	_, err := fmt.Scanln(&v)
-	return v, err
 }
 
 func DecodeBase64(data string) ([]byte, error) {

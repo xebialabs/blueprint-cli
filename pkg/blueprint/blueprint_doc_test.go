@@ -1,7 +1,9 @@
 package blueprint
 
 import (
+	"context"
 	"fmt"
+	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -10,7 +12,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
 )
 
 var SampleKubeConfig = `apiVersion: v1
@@ -123,6 +124,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		assert.Equal(t, "", defaultVal)
 	})
 
+	// this needs auth
 	t.Run("should return function output on valid function tag in default field", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
@@ -130,7 +132,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 			Default: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
 		defaultVal := v.GetDefaultVal()
-		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
+		regionsList, _ := aws.GetAvailableAWSRegionsForService(context.TODO(), "ecs")
 		sort.Strings(regionsList)
 		assert.Equal(t, regionsList[0], defaultVal)
 	})
@@ -196,7 +198,7 @@ func TestGetValueFieldVal(t *testing.T) {
 			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
 		}
 		val := v.GetValueFieldVal()
-		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
+		regionsList, _ := aws.GetAvailableAWSRegionsForService(context.TODO(), "ecs")
 		sort.Strings(regionsList)
 		assert.Equal(t, regionsList[0], val)
 	})

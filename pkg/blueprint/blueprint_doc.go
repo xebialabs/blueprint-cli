@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -886,7 +887,7 @@ func ProcessCustomFunction(fnStr string) ([]string, error) {
 			// call related function with params
 			switch domain {
 			case FnAWS:
-				awsResult, err := aws.CallAWSFuncByName(module, params...)
+				awsResult, err := aws.CallAWSFuncByName(context.TODO(), module, params...)
 				if err != nil {
 					return nil, err
 				}
