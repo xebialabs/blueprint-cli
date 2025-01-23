@@ -123,6 +123,7 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		assert.Equal(t, "", defaultVal)
 	})
 
+	// this needs auth
 	t.Run("should return function output on valid function tag in default field", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
