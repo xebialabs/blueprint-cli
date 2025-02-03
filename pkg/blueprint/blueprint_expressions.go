@@ -206,6 +206,9 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 		},
 		// aws helper functions
 		"awsCredentials": func(args ...interface{}) (interface{}, error) {
+
+			util.Info("Using AWS-SDK is deprecated and will be removed in the future versions. Consider not using this method in future.")
+
 			if len(args) != 1 {
 				return nil, fmt.Errorf("invalid number of arguments for expression function 'awsCredentials', expecting 1 got %d", len(args))
 			}
@@ -232,6 +235,9 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			return aws.GetAWSCredentialsField(&creds, attr), nil
 		},
 		"awsRegions": func(args ...interface{}) (interface{}, error) {
+
+			util.Info("Using AWS-SDK is deprecated and will be removed in the future versions. Consider not using this method in future.")
+
 			if len(args) == 0 || len(args) > 2 {
 				return nil, fmt.Errorf("invalid number of arguments for expression function 'awsRegions', expecting between 1 and 2 got %d", len(args))
 			}

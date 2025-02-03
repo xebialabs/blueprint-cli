@@ -26,6 +26,9 @@ type AWSFnResult struct {
 }
 
 func (result *AWSFnResult) GetResult(module string, attr string, index int) ([]string, error) {
+
+	util.Info("Using AWS-SDK is deprecated and will be removed in the future versions. Consider not using this method in future.")
+
 	switch module {
 	case Credentials:
 		if attr == "" {
