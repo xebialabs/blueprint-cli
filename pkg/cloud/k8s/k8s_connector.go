@@ -59,7 +59,8 @@ type getCallerIdentityWrapper struct {
 }
 
 func connectToEKS(answerMap map[string]string) (*restclient.Config, error) {
-	fmt.Println("Connecting to EKS")
+	util.Info("Using AWS-SDK is deprecated and will be removed in the future versions. Consider not using this method in future.")
+	util.Info("Connecting to EKS")
 	clusterID := getClusterIDFromClusterName(answerMap)
 
 	var sess *session.Session
