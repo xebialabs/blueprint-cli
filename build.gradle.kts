@@ -1,3 +1,11 @@
+import com.fuseanalytics.gradle.s3.S3Upload
+import org.apache.commons.lang.SystemUtils.*
+import java.io.ByteArrayOutputStream
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.*
+import de.undercouch.gradle.tasks.download.Download
 
 buildscript {
     repositories {
@@ -29,21 +37,14 @@ plugins {
     id("de.undercouch.download") version "5.6.0"
 }
 
-import com.fuseanalytics.gradle.s3.S3Upload
-import org.apache.commons.lang.SystemUtils.*
-import java.io.ByteArrayOutputStream
-import java.text.SimpleDateFormat
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.*
-import de.undercouch.gradle.tasks.download.Download
-
 group = "com.xebialabs.xlclient"
 project.defaultTasks = listOf("build")
 
-val releasedVersion = System.getenv()["RELEASE_EXPLICIT"] ?: "25.1.0-${
-    LocalDateTime.now().format(DateTimeFormatter.ofPattern("Mdd.Hmm"))
-}"
+val languageLevel = properties["languageLevel"]
+val goVersion = properties["goVersion"]
+
+val releasedVersion = System.getenv()["RELEASE_EXPLICIT"] ?:
+    "${project.version}-${LocalDateTime.now().format(DateTimeFormatter.ofPattern("Mdd.Hmm"))}"
 project.extra.set("releasedVersion", releasedVersion)
 
 dependencies {
@@ -53,8 +54,8 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.toVersion(languageLevel)
+    targetCompatibility = JavaVersion.toVersion(languageLevel)
     withSourcesJar()
     withJavadocJar()
 }
@@ -80,7 +81,6 @@ allprojects {
 var goInitialBinary = "go"
 val os = detectOs()
 val arch = detectHostArch()
-val goVersion = "1.23.4"
 val packagePath = "github.com/xebialabs/blueprint-cli"
 val goRootPath = "${project.rootDir}/.gogradle"
 val goPath = "${goRootPath}/project_gopath"
@@ -439,6 +439,7 @@ tasks {
             bucket = bucketName
             key = "bin/${project.version}/${target}/$binaryName${target.ext}"
             file = "${project.buildDir}/$target/$binaryName${target.ext}"
+            overwrite = true
         }
     }
 
