@@ -14,7 +14,6 @@ import (
 	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/thoas/go-funk"
 
-	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/blueprint-cli/pkg/models"
 	"github.com/xebialabs/blueprint-cli/pkg/util"
@@ -23,7 +22,6 @@ import (
 
 // Constants
 const (
-	FnAWS = "aws"
 	FnK8S = "k8s"
 	FnOs  = "os"
 
@@ -885,15 +883,6 @@ func ProcessCustomFunction(fnStr string) ([]string, error) {
 
 			// call related function with params
 			switch domain {
-			case FnAWS:
-
-				util.Info("Using AWS-SDK is deprecated and will be removed in the future versions. Consider not using this method in future.")
-
-				awsResult, err := aws.CallAWSFuncByName(module, params...)
-				if err != nil {
-					return nil, err
-				}
-				return awsResult.GetResult(module, attr, index)
 			case FnK8S:
 				k8sResult, err := k8s.CallK8SFuncByName(module, params...)
 				if err != nil {

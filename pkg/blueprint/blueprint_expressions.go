@@ -14,7 +14,6 @@ import (
 	"github.com/Knetic/govaluate"
 	"github.com/dlclark/regexp2"
 	"github.com/thoas/go-funk"
-	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/blueprint-cli/pkg/osHelper"
 	"github.com/xebialabs/blueprint-cli/pkg/util"
@@ -203,70 +202,6 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 				res := resource.CreateResource(namespace, resourceType, nil)
 				return res.GetFilteredResource([]string{args[2].(string)}, true)
 			}
-		},
-		// aws helper functions
-		"awsCredentials": func(args ...interface{}) (interface{}, error) {
-
-			util.Info("Using AWS-SDK is deprecated and will be removed in the future versions. Consider not using this method in future.")
-
-			if len(args) != 1 {
-				return nil, fmt.Errorf("invalid number of arguments for expression function 'awsCredentials', expecting 1 got %d", len(args))
-			}
-			// possible attributes: [IsAvailable, AccessKeyID, SecretAccessKey, ProviderName]
-			attr := fmt.Sprintf("%v", args[0])
-			if !funk.Contains([]string{"IsAvailable", "AccessKeyID", "SecretAccessKey", "ProviderName", "SessionToken"}, attr) {
-				return nil, fmt.Errorf("attribute '%s' is not valid for expression function 'awsCredentials'", attr)
-			}
-			creds, err := aws.GetAWSCredentialsFromSystem()
-			if err != nil {
-				if strings.Contains(err.Error(), "NoCredentialProviders: no valid providers in chain") {
-					if attr == "IsAvailable" {
-						return false, nil
-					}
-					return nil, nil
-				}
-				return nil, fmt.Errorf("error when executing expression function 'awsCredentials', %s", err.Error())
-			}
-
-			if attr == "IsAvailable" {
-				return creds.AccessKeyID != "", nil
-			}
-
-			return aws.GetAWSCredentialsField(&creds, attr), nil
-		},
-		"awsRegions": func(args ...interface{}) (interface{}, error) {
-
-			util.Info("Using AWS-SDK is deprecated and will be removed in the future versions. Consider not using this method in future.")
-
-			if len(args) == 0 || len(args) > 2 {
-				return nil, fmt.Errorf("invalid number of arguments for expression function 'awsRegions', expecting between 1 and 2 got %d", len(args))
-			}
-
-			// attributes:
-			// - 0: AWS service name
-			// - 1: Index of the result list [optional]
-			serviceName := fmt.Sprintf("%v", args[0])
-			i := -1
-			var err error
-			if len(args) == 2 {
-				i, err = strconv.Atoi(fmt.Sprintf("%v", args[1]))
-				if err != nil {
-					return nil, fmt.Errorf("second argument for expression function 'awsRegions' should be a number")
-				}
-			}
-
-			regions, err := aws.GetAvailableAWSRegionsForService(serviceName)
-			if err != nil {
-				return nil, fmt.Errorf("error when executing expression function 'awsRegions', %s", err.Error())
-			}
-
-			if i >= len(regions) {
-				return nil, fmt.Errorf("index %d doesn't exist in the result of expression function 'awsRegions'", i)
-			}
-			if i >= 0 {
-				return regions[i], nil
-			}
-			return regions, nil
 		},
 
 		// k8s helper functions
