@@ -248,32 +248,6 @@ spec:
     promptIf: !expr "Service == 'GKE' || Service == 'EKS' || Service == 'AKS'"
     default: !expr "k8sConfig('ClusterServer')"
 
-  # AWS specific variables
-  - name: UseAWSCredentialsFromSystem
-    prompt: Do you want to use AWS credentials from your ~/.aws/credentials file?
-    type: Confirm
-    promptIf: !expr "Provider == 'AWS' && awsCredentials('IsAvailable')"
-
-  - name: AWSAccessKey
-    type: SecretInput
-    prompt: What is the AWS Access Key ID?
-    promptIf: !expr "Provider == 'AWS' && !UseAWSCredentialsFromSystem"
-    default: !expr "awsCredentials('AccessKeyID')"
-
-  - name: AWSAccessSecret
-    prompt: What is the AWS Secret Access Key?
-    type: SecretInput
-    promptIf: !expr "Provider == 'AWS' && !UseAWSCredentialsFromSystem"
-    default: !expr "awsCredentials('SecretAccessKey')"
-
-  - name: AWSRegion
-    type: Select
-    prompt: "Select the AWS region:"
-    promptIf: !expr "Provider == 'AWS'"
-    options:
-      - !expr "awsRegions('ecs')"
-    default: !expr "awsRegions('ecs', 0)"
-
   files:
   - path: xld-k8s-infrastructure.yml
     writeIf: !expr "Service == 'GKE' || Service == 'EKS' || Service == 'AKS'"

@@ -5,12 +5,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xebialabs/blueprint-cli/pkg/cloud/aws"
 )
 
 var SampleKubeConfig = `apiVersion: v1
@@ -113,29 +111,6 @@ func TestGetVariableDefaultVal(t *testing.T) {
 		assert.Equal(t, "default_val", defaultVal)
 	})
 
-	t.Run("should return empty string when invalid function tag in default field", func(t *testing.T) {
-		v := Variable{
-			Name:    VarField{Value: "test"},
-			Type:    VarField{Value: TypeInput},
-			Default: VarField{Value: "aws.regs", Tag: tagFnV1},
-		}
-		defaultVal := v.GetDefaultVal()
-		assert.Equal(t, "", defaultVal)
-	})
-
-	// this needs auth
-	t.Run("should return function output on valid function tag in default field", func(t *testing.T) {
-		v := Variable{
-			Name:    VarField{Value: "test"},
-			Type:    VarField{Value: TypeInput},
-			Default: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
-		}
-		defaultVal := v.GetDefaultVal()
-		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
-		sort.Strings(regionsList)
-		assert.Equal(t, regionsList[0], defaultVal)
-	})
-
 	t.Run("should return empty string when expression tag return nil", func(t *testing.T) {
 		v := Variable{
 			Name:    VarField{Value: "test"},
@@ -178,28 +153,6 @@ func TestGetValueFieldVal(t *testing.T) {
 		}
 		val := v.GetValueFieldVal()
 		assert.Equal(t, "testing", val)
-	})
-
-	t.Run("should return empty on invalid function tag in value field", func(t *testing.T) {
-		v := Variable{
-			Name:  VarField{Value: "test"},
-			Type:  VarField{Value: TypeInput},
-			Value: VarField{Value: "aws.regs", Tag: tagFnV1},
-		}
-		val := v.GetValueFieldVal()
-		assert.Equal(t, "", val)
-	})
-
-	t.Run("should return function output on valid function tag in value field", func(t *testing.T) {
-		v := Variable{
-			Name:  VarField{Value: "test"},
-			Type:  VarField{Value: TypeInput},
-			Value: VarField{Value: "aws.regions(ecs)[0]", Tag: tagFnV1},
-		}
-		val := v.GetValueFieldVal()
-		regionsList, _ := aws.GetAvailableAWSRegionsForService("ecs")
-		sort.Strings(regionsList)
-		assert.Equal(t, regionsList[0], val)
 	})
 
 	t.Run("should return empty on invalid expression tag in value field", func(t *testing.T) {
@@ -267,26 +220,6 @@ func TestGetOptions(t *testing.T) {
 		values := v.GetOptions(dummyData, false, nil)
 		assert.Len(t, values, 3)
 		assert.Equal(t, []string{"aVal", "bVal", "cVal"}, values)
-	})
-
-	t.Run("should return generated values for fn options tag", func(t *testing.T) {
-		v := Variable{
-			Name:    VarField{Value: "test"},
-			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "aws.regions(ecs)", Tag: tagFnV1}},
-		}
-		values := v.GetOptions(dummyData, true, nil)
-		assert.True(t, len(values) > 1)
-	})
-
-	t.Run("should return empty slice on invalid function tag for options", func(t *testing.T) {
-		v := Variable{
-			Name:    VarField{Value: "test"},
-			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "aws.regs", Tag: tagFnV1}},
-		}
-		out := v.GetOptions(dummyData, true, nil)
-		require.Equal(t, []string{}, out)
 	})
 
 	t.Run("should return generated values for expression options tag", func(t *testing.T) {
@@ -371,16 +304,6 @@ func TestGetOptions(t *testing.T) {
 		}, true, nil)
 		assert.Equal(t, []string{}, values)
 	})
-
-	t.Run("should return empty slice on invalid expression tag for options", func(t *testing.T) {
-		v := Variable{
-			Name:    VarField{Value: "test"},
-			Type:    VarField{Value: TypeSelect},
-			Options: []VarField{{Value: "aws.regs()", Tag: tagExpressionV2}},
-		}
-		out := v.GetOptions(dummyData, true, nil)
-		assert.Equal(t, []string{}, out)
-	})
 }
 
 func TestSkipQuestionOnCondition(t *testing.T) {
@@ -456,55 +379,6 @@ func TestSkipQuestionOnCondition(t *testing.T) {
 			DependsOn: VarField{Value: "confirm"},
 		}
 		assert.False(t, skipQuestionOnCondition(&variables[1], variables[1].DependsOn.Value, variables[0].Value.Bool, NewPreparedData(), "", variables[1].DependsOn.InvertBool))
-	})
-}
-func TestProcessCustomFunction_AWS(t *testing.T) {
-	// Generic
-	t.Run("should error on empty function string", func(t *testing.T) {
-		_, err := ProcessCustomFunction("")
-		require.NotNil(t, err)
-		assert.Contains(t, err.Error(), "invalid syntax in function reference:")
-	})
-	t.Run("should error on invalid function string", func(t *testing.T) {
-		_, err := ProcessCustomFunction("aws.regions.0")
-		require.NotNil(t, err)
-		assert.Equal(t, "invalid syntax in function reference: aws.regions.0", err.Error())
-	})
-	t.Run("should error on unknown function domain", func(t *testing.T) {
-		_, err := ProcessCustomFunction("test.module()")
-		require.NotNil(t, err)
-		assert.Equal(t, "unknown function type: test", err.Error())
-	})
-
-	//AWS
-	t.Run("should error on unknown AWS module", func(t *testing.T) {
-		_, err := ProcessCustomFunction("aws.test()")
-		require.NotNil(t, err)
-		assert.Equal(t, "test is not a valid AWS module", err.Error())
-	})
-	t.Run("should error on missing service parameter for aws.regions function", func(t *testing.T) {
-		_, err := ProcessCustomFunction("aws.regions()")
-		require.NotNil(t, err)
-		assert.Equal(t, "service name parameter is required for AWS regions function", err.Error())
-	})
-	t.Run("should return list of AWS ECS regions", func(t *testing.T) {
-		regions, err := ProcessCustomFunction("aws.regions(ecs)")
-		require.Nil(t, err)
-		require.NotNil(t, regions)
-		assert.NotEmpty(t, regions)
-	})
-	t.Run("should error on no attribute defined on AWS credentials", func(t *testing.T) {
-		_, err := ProcessCustomFunction("aws.credentials()")
-		require.NotNil(t, err)
-		assert.Equal(t, "requested credentials attribute is not set", err.Error())
-	})
-	t.Run("should return AWS credentials", func(t *testing.T) {
-		vals, err := ProcessCustomFunction("aws.credentials().AccessKeyID")
-		require.Nil(t, err)
-		require.NotNil(t, vals)
-		require.Len(t, vals, 1)
-		accessKey := vals[0]
-		require.NotNil(t, accessKey)
 	})
 }
 
