@@ -60,13 +60,6 @@ spec:
     prompt: Test Prompt
     saveInXlvals: true
     default: supersecret
-  - name: AWSRegion
-    type: Select
-    prompt: Test Prompt
-    options:
-      - !expr "awsRegions('ecs')"
-    default: eu-central-1
-    saveInXlvals: true
   - name: DiskSize
     type: Input
     prompt: Test Prompt

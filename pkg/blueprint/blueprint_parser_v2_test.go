@@ -44,7 +44,6 @@ func getValidTestBlueprintMetadata(templatePath string, blueprintRepository Blue
              type: Select
              prompt: select region
              options:
-             - !expr "awsRegions('ecs')"
              - b
              - label: test
                value: testVal
@@ -319,7 +318,6 @@ func TestParseTemplateMetadataV2(t *testing.T) {
 			Type:   VarField{Value: TypeSelect},
 			Prompt: VarField{Value: "select region"},
 			Options: []VarField{
-				{Value: "awsRegions('ecs')", Tag: tagExpressionV2},
 				{Value: "b"},
 				{Value: "testVal", Label: "test"},
 			},
@@ -826,9 +824,9 @@ func TestParseFileV2(t *testing.T) {
 		{
 			"parse a file declaration with path and dependsOn as !expr tag function",
 			&FileV2{
-				Path: "test.yaml", WriteIf: yaml.CustomTag{Tag: tagExpressionV2, Value: "awsCredentials('IsAvailable')"},
+				Path: "test.yaml", WriteIf: yaml.CustomTag{Tag: tagExpressionV2, Value: "k8sConfig('IsAvailable')"},
 			},
-			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "awsCredentials('IsAvailable')", Tag: tagExpressionV2}},
+			TemplateConfig{Path: "test.yaml", DependsOn: VarField{Value: "k8sConfig('IsAvailable')", Tag: tagExpressionV2}},
 			nil,
 		},
 		{
@@ -869,7 +867,7 @@ func TestParseDependsOnValue(t *testing.T) {
 			Name:      VarField{Value: "test"},
 			Label:     VarField{Value: "test"},
 			Type:      VarField{Value: TypeInput},
-			DependsOn: VarField{Value: "aws.credentials().IsAvailable", Tag: tagFnV1},
+			DependsOn: VarField{Value: "k8s.config().IsAvailable", Tag: tagFnV1},
 		}
 		_, err := ParseDependsOnValue(v.DependsOn, dummyData)
 		require.Nil(t, err)
