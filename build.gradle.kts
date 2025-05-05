@@ -1,11 +1,11 @@
 import com.fuseanalytics.gradle.s3.S3Upload
 import org.apache.commons.lang.SystemUtils.*
-import org.jetbrains.kotlin.de.undercouch.gradle.tasks.download.Download
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import de.undercouch.gradle.tasks.download.Download
 
 buildscript {
     repositories {
@@ -28,20 +28,23 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "1.8.10"
+    kotlin("jvm") version "2.1.20"
 
     id("com.fuseanalytics.gradle.s3") version "1.2.6"
     id("org.sonarqube") version "4.3.0.3225"
     id("nebula.release") version (properties["nebulaReleasePluginVersion"] as String)
     id("maven-publish")
+    id("de.undercouch.download") version "5.6.0"
 }
 
 group = "com.xebialabs.xlclient"
 project.defaultTasks = listOf("build")
 
-val releasedVersion = System.getenv()["RELEASE_EXPLICIT"] ?: "25.3.0-${
-    LocalDateTime.now().format(DateTimeFormatter.ofPattern("Mdd.Hmm"))
-}"
+val languageLevel = properties["languageLevel"]
+val goVersion = properties["goVersion"]
+
+val releasedVersion = System.getenv()["RELEASE_EXPLICIT"] ?:
+    "${project.version}-${LocalDateTime.now().format(DateTimeFormatter.ofPattern("Mdd.Hmm"))}"
 project.extra.set("releasedVersion", releasedVersion)
 
 dependencies {
@@ -51,8 +54,8 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.toVersion(languageLevel)
+    targetCompatibility = JavaVersion.toVersion(languageLevel)
     withSourcesJar()
     withJavadocJar()
 }
@@ -78,7 +81,6 @@ allprojects {
 var goInitialBinary = "go"
 val os = detectOs()
 val arch = detectHostArch()
-val goVersion = "1.23.4"
 val packagePath = "github.com/xebialabs/blueprint-cli"
 val goRootPath = "${project.rootDir}/.gogradle"
 val goPath = "${goRootPath}/project_gopath"
@@ -437,6 +439,7 @@ tasks {
             bucket = bucketName
             key = "bin/${project.version}/${target}/$binaryName${target.ext}"
             file = "${project.buildDir}/$target/$binaryName${target.ext}"
+            overwrite = true
         }
     }
 
