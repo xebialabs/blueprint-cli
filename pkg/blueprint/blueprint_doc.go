@@ -200,17 +200,15 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabe
 				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Value, val)
 				if len(val) == 0 {
 					util.Info("Empty response while processing !expr [%s]. Please update the value for [%s] manually. %s\n", option.Value, variable.Name.Value, "Empty array returned.")
-				} else {
-					options = append(options, val...)
 				}
+				options = append(options, val...)
 			case []interface{}:
 				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Value, val)
 				if len(val) == 0 {
 					util.Info("Empty response while processing !expr [%s]. Please update the value for [%s] manually. %s\n", option.Value, variable.Name.Value, "Empty array returned.")
-				} else {
-					for _, option := range val {
-						options = append(options, fmt.Sprint(option))
-					}
+				}
+				for _, option := range val {
+					options = append(options, fmt.Sprint(option))
 				}
 			default:
 				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s\n", option.Value, variable.Name.Value, "Return type should be a string array.")
