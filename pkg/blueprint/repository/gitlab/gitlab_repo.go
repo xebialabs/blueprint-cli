@@ -6,7 +6,7 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 
 	"github.com/xebialabs/blueprint-cli/pkg/blueprint/repository"
 	"github.com/xebialabs/blueprint-cli/pkg/models"
@@ -102,15 +102,18 @@ func (repo *GitLabBlueprintRepository) ListBlueprintsFromRepo() (map[string]*mod
 		return nil, nil, err
 	}
 	sha := branch.Commit.ID
+	recursive := new(bool)
+	*recursive = true
 
 	lto := &gitlab.ListTreeOptions{
 		ListOptions: gitlab.ListOptions{
 			PerPage: 100,
 			Page:    1,
 		},
-		Ref:       gitlab.String(sha),
-		Recursive: gitlab.Bool(true),
+		Ref:       &sha,
+		Recursive: new(bool),
 	}
+	*lto.Recursive = true
 
 	// Get GIT tree
 	var tree []*gitlab.TreeNode
@@ -176,7 +179,7 @@ func (repo *GitLabBlueprintRepository) GetFileContents(filePath string) (*[]byte
 	sha := branch.Commit.ID
 
 	rfo := &gitlab.GetRawFileOptions{
-		Ref: gitlab.String(sha),
+		Ref: &sha,
 	}
 
 	contentBytes, _, err := repo.Client.RepositoryFiles.GetRawFile(fmt.Sprintf("%s/%s", repo.Owner, repo.RepoName), filePath, rfo, nil)
