@@ -233,26 +233,29 @@ func getOptionTextWithLabel(option VarField) string {
 	return optionText
 }
 
-func getDefaultTextWithLabel(defVal string, optionValues []VarField, options []string) string {
-	if len(optionValues) > 0 && len(options) > 0 {
+func getMatchingOptionTextWithLabelIfPresent(optionValue string, options []VarField) string {
+	for _, option := range options {
+		if option.Label != "" && option.Value == optionValue {
+			return getOptionTextWithLabel(option)
+		}
+	}
+	return optionValue
+}
+
+func getDefaultTextWithLabel(defVal string, optionVars []VarField, options []string) string {
+	if len(optionVars) > 0 && len(options) > 0 {
 		if defVal == "" { // when no default is set in blueprints, return first option text as default
 			return options[0]
-		} else { // when default set in blueprint matches with one of the options, try to return option text with label
-			for optionPos, optionValue := range optionValues {
-				switch optionValue.Tag {
-				case tagFnV1, tagExpressionV1, tagExpressionV2:
-					if options[optionPos] == defVal {
-						return options[optionPos]
-					}
-				default:
-					if optionValue.Value == defVal {
-						return getOptionTextWithLabel(optionValue)
-					}
+		} else { // when default value set in blueprint, return default value/optiontext if it matches any of options[]
+			defValWithOptionalLabel := getMatchingOptionTextWithLabelIfPresent(defVal, optionVars)
+			for _, optionText := range options {
+				if optionText == defValWithOptionalLabel {
+					return defValWithOptionalLabel
 				}
 			}
 		}
 	}
-	// return default value itself, when default value set in blueprints dosent match any options
+	// return default value itself, when options do not match or no options present
 	return defVal
 }
 
