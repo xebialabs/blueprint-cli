@@ -236,11 +236,9 @@ func getOptionTextWithLabel(option VarField) string {
 }
 
 func getMatchingOptionTextWithLabelIfPresent(optionValue string, options []VarField) string {
-	if len(options) > 0 {
-		for _, option := range options {
-			if option.Label != "" && option.Value == optionValue {
-				return getOptionTextWithLabel(option)
-			}
+	for _, option := range options {
+		if option.Label != "" && option.Value == optionValue {
+			return getOptionTextWithLabel(option)
 		}
 	}
 	return optionValue
