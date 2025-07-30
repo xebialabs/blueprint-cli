@@ -184,7 +184,7 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabe
 		case tagFnV1:
 			opts, err := ProcessCustomFunction(option.Value)
 			if err != nil {
-				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
+				util.Info("Error while processing !fn [%s]. Please update the value for [%s] manually. %s\n", option.Value, variable.Name.Value, err.Error())
 				return options
 			}
 			util.Verbose("[fn] Processed value of function [%s] is: %s\n", option.Value, opts)
@@ -192,20 +192,26 @@ func (variable *Variable) GetOptions(parameters map[string]interface{}, withLabe
 		case tagExpressionV1, tagExpressionV2:
 			opts, err := ProcessCustomExpression(option.Value, parameters, overrideFns)
 			if err != nil {
-				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, err.Error())
+				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s\n", option.Value, variable.Name.Value, err.Error())
 				return options
 			}
 			switch val := opts.(type) {
 			case []string:
 				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Value, val)
+				if len(val) == 0 {
+					util.Info("Empty response while processing !expr [%s]. Please update the value for [%s] manually. %s\n", option.Value, variable.Name.Value, "Empty array returned.")
+				}
 				options = append(options, val...)
 			case []interface{}:
 				util.Verbose("[expression] Processed value of expression [%s] is: %v\n", option.Value, val)
+				if len(val) == 0 {
+					util.Info("Empty response while processing !expr [%s]. Please update the value for [%s] manually. %s\n", option.Value, variable.Name.Value, "Empty array returned.")
+				}
 				for _, option := range val {
 					options = append(options, fmt.Sprint(option))
 				}
 			default:
-				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s", option.Value, variable.Name.Value, "Return type should be a string array")
+				util.Info("Error while processing !expr [%s]. Please update the value for [%s] manually. %s\n", option.Value, variable.Name.Value, "Return type should be a string array.")
 				return options
 			}
 		default:
@@ -227,26 +233,29 @@ func getOptionTextWithLabel(option VarField) string {
 	return optionText
 }
 
-func getDefaultTextWithLabel(defVal string, optionValues []VarField, options []string) string {
-	if optionValues != nil && len(optionValues) > 0 {
+func getMatchingOptionTextWithLabelIfPresent(optionValue string, options []VarField) string {
+	for _, option := range options {
+		if option.Label != "" && option.Value == optionValue {
+			return getOptionTextWithLabel(option)
+		}
+	}
+	return optionValue
+}
+
+func getDefaultTextWithLabel(defVal string, optionVars []VarField, options []string) string {
+	if len(optionVars) > 0 && len(options) > 0 {
 		if defVal == "" { // when no default is set in blueprints, return first option text as default
 			return options[0]
-		} else { // when default set in blueprint matches with one of the options, try to return option text with label
-			for optionPos, optionValue := range optionValues {
-				switch optionValue.Tag {
-				case tagFnV1, tagExpressionV1, tagExpressionV2:
-					if options[optionPos] == defVal {
-						return options[optionPos]
-					}
-				default:
-					if optionValue.Value == defVal {
-						return getOptionTextWithLabel(optionValue)
-					}
+		} else { // when default value set in blueprint, return default value/optiontext if it matches any of options[]
+			defValWithOptionalLabel := getMatchingOptionTextWithLabelIfPresent(defVal, optionVars)
+			for _, optionText := range options {
+				if optionText == defValWithOptionalLabel {
+					return defValWithOptionalLabel
 				}
 			}
 		}
 	}
-	// return default value itself, when default value set in blueprints dosent match any options
+	// return default value itself, when options do not match or no options present
 	return defVal
 }
 

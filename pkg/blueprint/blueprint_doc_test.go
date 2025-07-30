@@ -1459,7 +1459,7 @@ func Test_getDefaultTextWithLabel(t *testing.T) {
 					InvertBool: false,
 				},
 				{
-					Label:      "someFun()",
+					Label:      "",
 					Value:      "someFun()",
 					Bool:       false,
 					Tag:        "!expr",
@@ -1478,21 +1478,39 @@ func Test_getDefaultTextWithLabel(t *testing.T) {
 			},
 			[]VarField{
 				{
-					Label:      "Yoyo",
+					Label:      "",
 					Value:      "yoyo",
 					Bool:       false,
-					Tag:        "!expr",
+					Tag:        "",
 					InvertBool: false,
 				},
 				{
-					Label:      "Hiya",
+					Label:      "",
 					Value:      "hiya",
+					Bool:       false,
+					Tag:        "",
+					InvertBool: false,
+				},
+				{
+					Label:      "",
+					Value:      "someFun()",
 					Bool:       false,
 					Tag:        "!expr",
 					InvertBool: false,
 				},
+			},
+			"hiya",
+		},
+		{
+			"should return default value without label(options evaluated from func & default is one of them)",
+			"hiya",
+			[]string{
+				"yoyo",
+				"hiya",
+			},
+			[]VarField{
 				{
-					Label:      "someFun()",
+					Label:      "",
 					Value:      "someFun()",
 					Bool:       false,
 					Tag:        "!expr",
@@ -1533,6 +1551,70 @@ func Test_getDefaultTextWithLabel(t *testing.T) {
 				},
 			},
 			"yaya",
+		},
+		{
+			"should return the first option as default if no default value given",
+			"",
+			[]string{
+				"yoyo [Yoyo]",
+				"hiya [Hiya]",
+				"someResult1",
+				"someResult2",
+			},
+			[]VarField{
+				{
+					Label:      "Yoyo",
+					Value:      "yoyo",
+					Bool:       false,
+					Tag:        "",
+					InvertBool: false,
+				},
+				{
+					Label:      "Hiya",
+					Value:      "hiya",
+					Bool:       false,
+					Tag:        "",
+					InvertBool: false,
+				},
+				{
+					Label:      "someFun()",
+					Value:      "someFun()",
+					Bool:       false,
+					Tag:        "!expr",
+					InvertBool: false,
+				},
+			},
+			"yoyo [Yoyo]",
+		},
+		{
+			"should return empty default value if no default value given and no options present",
+			"",
+			[]string{},
+			[]VarField{
+				{
+					Label:      "",
+					Value:      "someFun()",
+					Bool:       false,
+					Tag:        "!expr",
+					InvertBool: false,
+				},
+			},
+			"",
+		},
+		{
+			"should return default value if no options present",
+			"hiya",
+			[]string{},
+			[]VarField{
+				{
+					Label:      "",
+					Value:      "someFun()",
+					Bool:       false,
+					Tag:        "!expr",
+					InvertBool: false,
+				},
+			},
+			"hiya",
 		},
 	}
 	for _, tt := range tests {
