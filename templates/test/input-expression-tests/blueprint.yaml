@@ -39,34 +39,4 @@ spec:
     default: "defaultVal"
     saveInXlvals: true
 
-  # AWS specific variables
-  - name: UseAWSCredentialsFromSystem
-    prompt: Do you want to use AWS credentials from your ~/.aws/credentials file?
-    type: Confirm
-    value: !expr "awsCredentials('IsAvailable')"
-    default: true
-    saveInXlvals: true
-
-  - name: AWSAccessKey
-    type: SecretInput
-    prompt: What is the AWS Access Key ID?
-    value: !expr "awsCredentials('AccessKeyID')"
-    default: "defaultVal"
-    saveInXlvals: true
-
-  - name: AWSAccessSecret
-    prompt: What is the AWS Secret Access Key?
-    type: SecretInput
-    value: !expr "awsCredentials('SecretAccessKey')"
-    default: "defaultVal"
-    saveInXlvals: true
-
-  - name: AWSRegion
-    type: Select
-    prompt: "Select the AWS region:"
-    options:
-      - !expr "awsRegions('ecs')"
-    value: !expr "awsRegions('ecs', 0)"
-    default: "defaultVal"
-    saveInXlvals: true
 
