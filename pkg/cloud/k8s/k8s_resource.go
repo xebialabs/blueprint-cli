@@ -84,12 +84,12 @@ func (r Resource) processDelete(name string) {
 		r.spin.Stop()
 		util.Info("Deleted %s/%s from namespace %s\n", util.InfoColor(r.Type), util.InfoColor(name), util.InfoColor(r.Namespace))
 		output = strings.Replace(output, "\n", "", -1)
-		util.Verbose(output + "\n")
+		util.Verbose("%s\n", output)
 	} else if strings.Contains(output, "(NotFound)") {
 		r.spin.Stop()
 		util.Info("Deleted %s/%s from namespace %s (already deleted)\n", util.InfoColor(r.Type), util.InfoColor(name), util.InfoColor(r.Namespace))
 		output = strings.Replace(output, "\n", "", -1)
-		util.Verbose(output + "\n")
+		util.Verbose("%s\n", output)
 	} else {
 		r.spin.Stop()
 		util.Error("Error while deleting %s: %s\n", r.ResourceName(), output)
@@ -183,7 +183,7 @@ func (r Resource) DeleteFilteredResources(patterns []string, anyPosition, force,
 func (r Resource) processFinalizersRemove(name string) {
 	if output, ok := r.Run(); ok || strings.Contains(output, "(NotFound)") {
 		output = strings.Replace(output, "\n", "", -1)
-		util.Verbose(output + "\n")
+		util.Verbose("%s\n", output)
 	} else {
 		r.spin.Stop()
 		util.Error("\nError while deleting %s/%s: %s\n", r.Type, name, output)

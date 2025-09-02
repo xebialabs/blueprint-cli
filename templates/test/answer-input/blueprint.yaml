@@ -46,13 +46,6 @@ spec:
     type: Input
     prompt: Test Prompt
     saveInXlvals: true
-  - name: AWSRegion
-    type: Select
-    prompt: Test Prompt
-    options:
-      - !expr "awsRegions('ecs')"
-    default: !expr "awsRegions('ecs', 0)"
-    saveInXlvals: true
   - name: DiskSize
     type: Input
     prompt: Test Prompt
