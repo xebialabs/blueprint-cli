@@ -475,7 +475,7 @@ func (r Resource) saveYamlFile(anyName interface{}, filePath string) error {
 }
 
 func (r Resource) DescribeCommand() string {
-	return fmt.Sprintf("kubectl describe %s %s -n %s", r.Type, r.Name, r.Namespace)
+	return fmt.Sprintf("kubectl describe %s -n %s", r.ResourceName(), r.Namespace)
 }
 
 func (r Resource) SaveDescribeFile(filePath string) error {
