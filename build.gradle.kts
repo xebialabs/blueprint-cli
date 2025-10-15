@@ -40,7 +40,7 @@ plugins {
 group = "com.xebialabs.xlclient"
 project.defaultTasks = listOf("build")
 
-val languageLevel = properties["languageLevel"]
+val languageLevel = properties["languageLevel"] as String
 val goVersion = properties["goVersion"]
 
 val releasedVersion = System.getenv()["RELEASE_EXPLICIT"] ?:
@@ -167,18 +167,19 @@ tasks {
             }
         }
         doLast {
-            exec {
+            val execOps = objects.newInstance<ExecOperations>()
+            execOps.exec {
                 commandLine(
                     "mkdir", "-p", goPath
                 )
             }
-            exec {
+            execOps.exec {
                 commandLine(
                     goInitialBinary, "install", "golang.org/dl/go${goVersion}@latest"
                 )
                 environment(environmentRun)
             }
-            exec {
+            execOps.exec {
                 commandLine(
                     goCommand, "download"
                 )
@@ -205,13 +206,14 @@ tasks {
         group = "go"
         dependsOn("goPrepare")
         doLast {
-            exec {
+            val execOps = objects.newInstance<ExecOperations>()
+            execOps.exec {
                 commandLine(
                     goCommand, "get", "github.com/wlbr/templify"
                 )
                 environment(environmentRun)
             }
-            exec {
+            execOps.exec {
                 commandLine(
                     goCommand, "install", "github.com/wlbr/templify"
                 )
@@ -224,13 +226,14 @@ tasks {
         group = "go"
         dependsOn("goPrepare")
         doLast {
-            exec {
+            val execOps = objects.newInstance<ExecOperations>()
+            execOps.exec {
                 commandLine(
                     goCommand, "get", "github.com/gobuffalo/packr/packr"
                 )
                 environment(environmentRun)
             }
-            exec {
+            execOps.exec {
                 commandLine(
                     goCommand, "install", "github.com/gobuffalo/packr/packr"
                 )
@@ -245,6 +248,7 @@ tasks {
             group = "go"
             dependsOn("goPrepare", "installTemplify", "installPackr", "updateLicenses", "goFmt")
 
+            val execOps = objects.newInstance<ExecOperations>()
             doLast {
                 val gitCommit = execWithOutput {
                     commandLine("git", "rev-parse", "HEAD")
@@ -301,7 +305,7 @@ tasks {
                     params.add("-w")
                 }
 
-                exec {
+                execOps.exec {
                     commandLine(
                         *params.toTypedArray(),
                         "-o", "./build/${target}/$binaryName${target.ext}",
@@ -326,7 +330,8 @@ tasks {
         group = "go"
         dependsOn("goPrepare")
         doLast {
-            exec {
+            val execOps = objects.newInstance<ExecOperations>()
+            execOps.exec {
                 commandLine(
                     goCommand, "fmt", "$mainPath/main.go",
                 )
@@ -339,10 +344,11 @@ tasks {
         register("upx${target.toStringCamelCase()}") {
             group = "go"
             dependsOn("goBuild${target.toStringCamelCase()}")
+            val execOps = objects.newInstance<ExecOperations>()
             doLast {
-                exec {
+                execOps.exec {
                     commandLine(
-                        "upx", "${project.buildDir}/$target/$binaryName${target.ext}"
+                        "upx", "${layout.buildDirectory.get().asFile}/$target/$binaryName${target.ext}"
                     )
                 }
             }
@@ -359,14 +365,15 @@ tasks {
     register("goUpdate") {
         group = "go"
         dependsOn("goPrepare")
+        val execOps = objects.newInstance<ExecOperations>()
         doLast {
-            exec {
+            execOps.exec {
                 commandLine(
                     goCommand, "get", "-u", "...",
                 )
                 environment(environmentRun)
             }
-            exec {
+            execOps.exec {
                 commandLine(
                     goCommand, "mod", "tidy",
                 )
@@ -413,8 +420,9 @@ tasks {
     register("goTest") {
         group = "go"
         dependsOn("goPrepare")
+        val execOps = objects.newInstance<ExecOperations>()
         doLast {
-            exec {
+            execOps.exec {
                 commandLine(
                     goCommand, "test", "./..."
                 )
@@ -438,7 +446,7 @@ tasks {
             group = "release-dist"
             bucket = bucketName
             key = "bin/${project.version}/${target}/$binaryName${target.ext}"
-            file = "${project.buildDir}/$target/$binaryName${target.ext}"
+            file = "${layout.buildDirectory.get().asFile}/$target/$binaryName${target.ext}"
             overwrite = true
         }
     }
@@ -471,8 +479,8 @@ tasks {
     register("dumpVersion") {
         group = "release"
         doLast {
-            file(buildDir).mkdirs()
-            file("$buildDir/version.dump").writeText("version=${releasedVersion}")
+            layout.buildDirectory.get().asFile.mkdirs()
+            file("${layout.buildDirectory.get().asFile}/version.dump").writeText("version=${releasedVersion}")
         }
     }
 }
@@ -498,7 +506,7 @@ publishing {
     publications {
         register(artifactName, MavenPublication::class) {
             targetPlatform.forEach { target ->
-                artifact("${buildDir}/$target/$binaryName${target.ext}") {
+                artifact("${layout.buildDirectory.get().asFile}/$target/$binaryName${target.ext}") {
                     artifactId = artifactName
                     classifier = target.toString()
                     extension = target.releaseExt
@@ -536,7 +544,8 @@ sonarqube {
 }
 
 fun Project.execWithOutput(spec: ExecSpec.() -> Unit) = ByteArrayOutputStream().use { outputStream ->
-    exec {
+    val execOps = objects.newInstance<ExecOperations>()
+    execOps.exec {
         this.spec()
         this.workingDir = project.rootDir
         this.standardOutput = outputStream
@@ -561,7 +570,8 @@ fun cleanVersions(key: String): String {
 }
 
 fun Project.hasGolangInstalled(): Boolean {
-    val result = exec {
+    val execOps = objects.newInstance<ExecOperations>()
+    val result = execOps.exec {
         commandLine(
             goInitialBinary, "version"
         )
