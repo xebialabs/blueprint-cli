@@ -1,3 +1,4 @@
+import com.fuseanalytics.gradle.s3.S3Upload
 import org.apache.commons.lang.SystemUtils.*
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
@@ -29,6 +30,7 @@ buildscript {
 plugins {
     kotlin("jvm") version "2.2.0"
 
+    id("com.fuseanalytics.gradle.s3") version "1.2.6"
     id("org.sonarqube") version "7.0.0.6105"
     id("nebula.release") version (properties["nebulaReleasePluginVersion"] as String)
     id("maven-publish")
@@ -292,7 +294,7 @@ tasks {
                     ) +
                     ldFlag("BuildVersion", gitVersionShort) +
                     ldFlag("BuildGitCommit", gitCommit) +
-                    ldFlag("BuildDate", date)
+                    ldFlag("BuildDate", date) +
                     ldFlag("BinaryName", binaryName)
                 project.logger.lifecycle("LDFlags: ${ldflags}")
                 params.add(ldflags)
@@ -444,20 +446,12 @@ tasks {
     }
 
     targetPlatform.forEach { target ->
-        register("upload${target.toStringCamelCase()}ToS3") {
+        register<S3Upload>("upload${target.toStringCamelCase()}ToS3") {
             group = "release-dist"
-            val injected = objects.newInstance<InjectedExecOps>()
-            doLast {
-                val sourceFile = "${layout.buildDirectory.get().asFile}/$target/$binaryName${target.ext}"
-                val s3Path = "s3://$bucketName/bin/${project.version}/${target}/$binaryName${target.ext}"
-
-                injected.execOps.exec {
-                    commandLine("aws", "s3", "cp", sourceFile, s3Path)
-                    workingDir = project.rootDir
-                }
-                
-                logger.lifecycle("Uploaded $sourceFile to S3: $s3Path")
-            }
+            bucket = bucketName
+            key = "bin/${project.version}/${target}/$binaryName${target.ext}"
+            file = "${layout.buildDirectory.get().asFile}/$target/$binaryName${target.ext}"
+            overwrite = true
         }
     }
 
