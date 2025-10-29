@@ -31,7 +31,7 @@ plugins {
     kotlin("jvm") version "2.2.0"
 
     id("com.fuseanalytics.gradle.s3") version "1.2.6"
-    id("org.sonarqube") version "7.0.0.6105"
+    id("org.sonarqube") version "7.0.1.6134"
     id("nebula.release") version (properties["nebulaReleasePluginVersion"] as String)
     id("maven-publish")
     id("de.undercouch.download") version "5.6.0"
