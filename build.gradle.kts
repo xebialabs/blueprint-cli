@@ -28,10 +28,10 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "2.1.20"
+    kotlin("jvm") version "2.2.0"
 
     id("com.fuseanalytics.gradle.s3") version "1.2.6"
-    id("org.sonarqube") version "4.3.0.3225"
+    id("org.sonarqube") version "6.3.1.5724"
     id("nebula.release") version (properties["nebulaReleasePluginVersion"] as String)
     id("maven-publish")
     id("de.undercouch.download") version "5.6.0"
@@ -40,7 +40,7 @@ plugins {
 group = "com.xebialabs.xlclient"
 project.defaultTasks = listOf("build")
 
-val languageLevel = properties["languageLevel"]
+val languageLevel = properties["languageLevel"] as String
 val goVersion = properties["goVersion"]
 
 val releasedVersion = System.getenv()["RELEASE_EXPLICIT"] ?:
@@ -133,6 +133,10 @@ val targetPlatform = listOf(
     Target(Os.WINDOWS, Arch.AMD64, "exe", ".exe"),
 )
 
+interface InjectedExecOps {
+    @get:Inject val execOps: ExecOperations
+}
+
 tasks {
 
     register<Download>("downloadGo") {
@@ -166,19 +170,20 @@ tasks {
                 dependsOn("dumpVersion", "unpackGoPackage")
             }
         }
+        val injected = objects.newInstance<InjectedExecOps>()
         doLast {
-            exec {
+            injected.execOps.exec {
                 commandLine(
                     "mkdir", "-p", goPath
                 )
             }
-            exec {
+            injected.execOps.exec {
                 commandLine(
                     goInitialBinary, "install", "golang.org/dl/go${goVersion}@latest"
                 )
                 environment(environmentRun)
             }
-            exec {
+            injected.execOps.exec {
                 commandLine(
                     goCommand, "download"
                 )
@@ -204,14 +209,15 @@ tasks {
     register("installTemplify") {
         group = "go"
         dependsOn("goPrepare")
+        val injected = objects.newInstance<InjectedExecOps>()
         doLast {
-            exec {
+            injected.execOps.exec {
                 commandLine(
                     goCommand, "get", "github.com/wlbr/templify"
                 )
                 environment(environmentRun)
             }
-            exec {
+            injected.execOps.exec {
                 commandLine(
                     goCommand, "install", "github.com/wlbr/templify"
                 )
@@ -223,14 +229,15 @@ tasks {
     register("installPackr") {
         group = "go"
         dependsOn("goPrepare")
+        val injected = objects.newInstance<InjectedExecOps>()
         doLast {
-            exec {
+            injected.execOps.exec {
                 commandLine(
                     goCommand, "get", "github.com/gobuffalo/packr/packr"
                 )
                 environment(environmentRun)
             }
-            exec {
+            injected.execOps.exec {
                 commandLine(
                     goCommand, "install", "github.com/gobuffalo/packr/packr"
                 )
@@ -245,6 +252,7 @@ tasks {
             group = "go"
             dependsOn("goPrepare", "installTemplify", "installPackr", "updateLicenses", "goFmt")
 
+            val injected = objects.newInstance<InjectedExecOps>()
             doLast {
                 val gitCommit = execWithOutput {
                     commandLine("git", "rev-parse", "HEAD")
@@ -286,7 +294,7 @@ tasks {
                     ) +
                     ldFlag("BuildVersion", gitVersionShort) +
                     ldFlag("BuildGitCommit", gitCommit) +
-                    ldFlag("BuildDate", date)
+                    ldFlag("BuildDate", date) +
                     ldFlag("BinaryName", binaryName)
                 project.logger.lifecycle("LDFlags: ${ldflags}")
                 params.add(ldflags)
@@ -301,7 +309,7 @@ tasks {
                     params.add("-w")
                 }
 
-                exec {
+                injected.execOps.exec {
                     commandLine(
                         *params.toTypedArray(),
                         "-o", "./build/${target}/$binaryName${target.ext}",
@@ -325,8 +333,9 @@ tasks {
     register("goFmt") {
         group = "go"
         dependsOn("goPrepare")
+        val injected = objects.newInstance<InjectedExecOps>()
         doLast {
-            exec {
+            injected.execOps.exec {
                 commandLine(
                     goCommand, "fmt", "$mainPath/main.go",
                 )
@@ -339,10 +348,11 @@ tasks {
         register("upx${target.toStringCamelCase()}") {
             group = "go"
             dependsOn("goBuild${target.toStringCamelCase()}")
+            val injected = objects.newInstance<InjectedExecOps>()
             doLast {
-                exec {
+                injected.execOps.exec {
                     commandLine(
-                        "upx", "${project.buildDir}/$target/$binaryName${target.ext}"
+                        "upx", "${layout.buildDirectory.get().asFile}/$target/$binaryName${target.ext}"
                     )
                 }
             }
@@ -359,14 +369,15 @@ tasks {
     register("goUpdate") {
         group = "go"
         dependsOn("goPrepare")
+        val injected = objects.newInstance<InjectedExecOps>()
         doLast {
-            exec {
+            injected.execOps.exec {
                 commandLine(
                     goCommand, "get", "-u", "...",
                 )
                 environment(environmentRun)
             }
-            exec {
+            injected.execOps.exec {
                 commandLine(
                     goCommand, "mod", "tidy",
                 )
@@ -382,7 +393,7 @@ tasks {
         }
     }
 
-    task("downloadLicenses") {
+    register("downloadLicenses") {
         group = "license"
         dependsOn("removeLicenseFolder")
         doLast {
@@ -413,8 +424,9 @@ tasks {
     register("goTest") {
         group = "go"
         dependsOn("goPrepare")
+        val injected = objects.newInstance<InjectedExecOps>()
         doLast {
-            exec {
+            injected.execOps.exec {
                 commandLine(
                     goCommand, "test", "./..."
                 )
@@ -438,7 +450,7 @@ tasks {
             group = "release-dist"
             bucket = bucketName
             key = "bin/${project.version}/${target}/$binaryName${target.ext}"
-            file = "${project.buildDir}/$target/$binaryName${target.ext}"
+            file = "${layout.buildDirectory.get().asFile}/$target/$binaryName${target.ext}"
             overwrite = true
         }
     }
@@ -471,8 +483,8 @@ tasks {
     register("dumpVersion") {
         group = "release"
         doLast {
-            file(buildDir).mkdirs()
-            file("$buildDir/version.dump").writeText("version=${releasedVersion}")
+            layout.buildDirectory.get().asFile.mkdirs()
+            file("${layout.buildDirectory.get().asFile}/version.dump").writeText("version=${releasedVersion}")
         }
     }
 }
@@ -498,7 +510,7 @@ publishing {
     publications {
         register(artifactName, MavenPublication::class) {
             targetPlatform.forEach { target ->
-                artifact("${buildDir}/$target/$binaryName${target.ext}") {
+                artifact("${layout.buildDirectory.get().asFile}/$target/$binaryName${target.ext}") {
                     artifactId = artifactName
                     classifier = target.toString()
                     extension = target.releaseExt
@@ -525,18 +537,22 @@ publishing {
     }
 }
 
-sonarqube {
+sonar {
     properties {
         property("sonar.projectKey", "xl-cli")
         property("sonar.projectName", "DevOps.xl-cli")
         property("sonar.sources", "./")
         property("sonar.exclusions", "**/*_test.go,**/vendor/**")
         property("sonar.go.coverage.reportPaths", ".gogradle/reports/coverage/**/*.out")
+        if (System.getProperty("sonar.branch.name") != null) {
+            property("sonar.branch.name", System.getProperty("sonar.branch.name"))
+        }
     }
 }
 
 fun Project.execWithOutput(spec: ExecSpec.() -> Unit) = ByteArrayOutputStream().use { outputStream ->
-    exec {
+    val injected = objects.newInstance<InjectedExecOps>()
+    injected.execOps.exec {
         this.spec()
         this.workingDir = project.rootDir
         this.standardOutput = outputStream
@@ -561,7 +577,8 @@ fun cleanVersions(key: String): String {
 }
 
 fun Project.hasGolangInstalled(): Boolean {
-    val result = exec {
+    val injected = objects.newInstance<InjectedExecOps>()
+    val result = injected.execOps.exec {
         commandLine(
             goInitialBinary, "version"
         )
