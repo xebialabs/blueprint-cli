@@ -31,7 +31,7 @@ plugins {
     kotlin("jvm") version "2.2.0"
 
     id("com.fuseanalytics.gradle.s3") version "1.2.6"
-    id("org.sonarqube") version "7.0.1.6134"
+    id("org.sonarqube") version "6.3.1.5724"
     id("nebula.release") version (properties["nebulaReleasePluginVersion"] as String)
     id("maven-publish")
     id("de.undercouch.download") version "5.6.0"
@@ -537,13 +537,16 @@ publishing {
     }
 }
 
-sonarqube {
+sonar {
     properties {
         property("sonar.projectKey", "xl-cli")
         property("sonar.projectName", "DevOps.xl-cli")
         property("sonar.sources", "./")
         property("sonar.exclusions", "**/*_test.go,**/vendor/**")
         property("sonar.go.coverage.reportPaths", ".gogradle/reports/coverage/**/*.out")
+        if (System.getProperty("sonar.branch.name") != null) {
+            property("sonar.branch.name", System.getProperty("sonar.branch.name"))
+        }
     }
 }
 
