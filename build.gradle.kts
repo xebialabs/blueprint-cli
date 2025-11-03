@@ -202,7 +202,7 @@ tasks {
                 environment(environmentRun)
             }
 
-            project.logger.lifecycle("Using go version $goInstalledVersion from $goPath")
+            logger.lifecycle("Using go version $goInstalledVersion from $goPath")
         }
     }
 
@@ -252,6 +252,15 @@ tasks {
             group = "go"
             dependsOn("goPrepare", "installTemplify", "installPackr", "updateLicenses", "goFmt")
 
+            // Capture project properties at configuration time
+            val isDebugMode = project.hasProperty("debug")
+            val isOptimised = project.hasProperty("optimise")
+
+            val cliVersion = if (project.hasProperty("CliVersion") && project.property("CliVersion") != "")
+                project.property("CliVersion") as String
+            else
+                releasedVersion
+
             val injected = objects.newInstance<InjectedExecOps>()
             doLast {
                 val gitCommit = execWithOutput {
@@ -285,26 +294,20 @@ tasks {
                 )
 
                 val ldflags = "-ldflags=" +
-                    ldFlag(
-                        "CliVersion",
-                        if (project.hasProperty("CliVersion") && project.property("CliVersion") != "")
-                            project.property("CliVersion") as String
-                        else
-                            releasedVersion
-                    ) +
+                    ldFlag("CliVersion", cliVersion) +
                     ldFlag("BuildVersion", gitVersionShort) +
                     ldFlag("BuildGitCommit", gitCommit) +
                     ldFlag("BuildDate", date) +
                     ldFlag("BinaryName", binaryName)
-                project.logger.lifecycle("LDFlags: ${ldflags}")
+                logger.lifecycle("LDFlags: ${ldflags}")
                 params.add(ldflags)
 
-                if (project.hasProperty("debug")) {
+                if (isDebugMode) {
                     params.add("-gcflags")
                     params.add("all=-N -l")
                 }
 
-                if (project.hasProperty("optimise")) {
+                if (isOptimised) {
                     params.add("-s")
                     params.add("-w")
                 }
