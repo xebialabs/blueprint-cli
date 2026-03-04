@@ -561,6 +561,21 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 				return nil, err
 			}
 			if skipQuestionOnCondition(&variable, variable.DependsOn.Value, dependsOnVal, data, defaultVal, variable.DependsOn.InvertBool) {
+				if usingAnswersFile {
+					if util.MapContainsKeyWithVal(answerMap, variable.Name.Value) {
+						answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Value], data.TemplateData, overrideFns)
+						if err != nil {
+							return nil, err
+						}
+
+						if variable.Type.Value == TypeConfirm {
+							blueprintDoc.Variables[i] = variable
+						}
+						// if we have a valid answer, save it and skip user input
+						saveItemToTemplateDataMap(&variable, data, answer)
+						util.Info("[dataPrep] Using answer file to override value [%v] for variable [%s]\n", answer, variable.Name.Value)
+					}
+				}
 				continue
 			}
 		}
