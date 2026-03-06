@@ -587,7 +587,7 @@ func (r Resource) SaveKubeConfigYamlFile(filePath string, appendedAttrs ...strin
 
 func (r Resource) SaveKubeVersionYamlFile(filePath string, appendedAttrs ...string) error {
 
-	cmd := []string{"version", "--short"}
+	cmd := []string{"version"}
 	err := r.SaveCommandYamlFile(filePath, cmd, appendedAttrs...)
 	return err
 }
