@@ -563,9 +563,15 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 			if skipQuestionOnCondition(&variable, variable.DependsOn.Value, dependsOnVal, data, defaultVal, variable.DependsOn.InvertBool) {
 				if usingAnswersFile {
 					if util.MapContainsKeyWithVal(answerMap, variable.Name.Value) {
-						answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Value], data.TemplateData, overrideFns)
-						if err != nil {
-							return nil, err
+						var answer interface{}
+						var err error
+						if variable.Type.Value == TypeSelect {
+							answer = fmt.Sprintf("%v", answerMap[variable.Name.Value])
+						} else {
+							answer, err = variable.VerifyVariableValue(answerMap[variable.Name.Value], data.TemplateData, overrideFns)
+							if err != nil {
+								return nil, err
+							}
 						}
 
 						if variable.Type.Value == TypeConfirm {
