@@ -554,35 +554,21 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 			defaultVal = variable.GetDefaultVal()
 		}
 
-		// skip question based on DependsOn fields, the default value if present is set as value
+		// skip question based on DependsOn fields, the provided answer else the default value if present is set as value
+		isSkippedWithAnswer := false
 		if !util.IsStringEmpty(variable.DependsOn.Value) {
 			dependsOnVal, err := ParseDependsOnValue(variable.DependsOn, data.TemplateData)
 			if err != nil {
 				return nil, err
 			}
 			if skipQuestionOnCondition(&variable, variable.DependsOn.Value, dependsOnVal, data, defaultVal, variable.DependsOn.InvertBool) {
-				if usingAnswersFile {
-					if util.MapContainsKeyWithVal(answerMap, variable.Name.Value) {
-						var answer interface{}
-						var err error
-						if variable.Type.Value == TypeSelect {
-							answer = fmt.Sprintf("%v", answerMap[variable.Name.Value])
-						} else {
-							answer, err = variable.VerifyVariableValue(answerMap[variable.Name.Value], data.TemplateData, overrideFns)
-							if err != nil {
-								return nil, err
-							}
-						}
-
-						if variable.Type.Value == TypeConfirm {
-							blueprintDoc.Variables[i] = variable
-						}
-						// if we have a valid answer, save it and skip user input
-						saveItemToTemplateDataMap(&variable, data, answer)
-						util.Info("[dataPrep] Using answer file to override value [%v] for variable [%s]\n", answer, variable.Name.Value)
-					}
+				// If answer is provided for this variable, fall through to the answers file block below
+				// where provided answer is used as the answer for the variable instead of default value
+				if usingAnswersFile && util.MapContainsKeyWithVal(answerMap, variable.Name.Value) {
+					isSkippedWithAnswer = true
+				} else {
+					continue
 				}
-				continue
 			}
 		}
 		// skip user input if value field is present
@@ -606,9 +592,14 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 		// check answers file for variable value, if exists
 		if usingAnswersFile {
 			if util.MapContainsKeyWithVal(answerMap, variable.Name.Value) {
-				answer, err := variable.VerifyVariableValue(answerMap[variable.Name.Value], data.TemplateData, overrideFns)
-				if err != nil {
-					return nil, err
+				var answer interface{}
+				if isSkippedWithAnswer {
+					answer = answerMap[variable.Name.Value]
+				} else {
+					answer, err = variable.VerifyVariableValue(answerMap[variable.Name.Value], data.TemplateData, overrideFns)
+					if err != nil {
+						return nil, err
+					}
 				}
 
 				if variable.Type.Value == TypeConfirm {
