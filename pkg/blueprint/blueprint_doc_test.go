@@ -1224,6 +1224,28 @@ func TestBlueprintYaml_prepareTemplateData(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"should use answer file value for variable with promptIf: !expr false, overriding its default",
+			BlueprintConfig{
+				Variables: []Variable{
+					{
+						Name:      VarField{Value: "input1"},
+						Label:     VarField{Value: "input1"},
+						Type:      VarField{Value: TypeInput},
+						Default:   VarField{Value: "defaultVal"},
+						DependsOn: VarField{Value: "false", Tag: tagExpressionV2, Bool: false},
+					},
+				},
+			},
+			args{GetTestTemplateDir("answer-input-2.yaml"), false, false, false, nil},
+			&PreparedData{
+				TemplateData: map[string]interface{}{"input1": "ans1"},
+				SummaryData:  map[string]interface{}{"input1": "ans1"},
+				Secrets:      map[string]interface{}{},
+				Values:       map[string]interface{}{},
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
