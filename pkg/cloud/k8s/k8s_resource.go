@@ -400,6 +400,8 @@ func (r Resource) WaitForResourceComplex(timeoutMinutes uint, condition string) 
 				fmt.Sprintf("--timeout=%ds", timeoutMinutes*60),
 				"-n", r.Namespace))
 			if err == nil {
+				elapsed := time.Since(start)
+				util.Info("Resource %s reached condition %s (elapsed: %v)\n", resource, condition, elapsed)
 				return nil
 			} else {
 				util.Verbose("Failed waiting for %s to be %s: %s \n%s\n", resource, condition, err.Error(), log)
@@ -432,6 +434,8 @@ func (r Resource) WaitForResource(timeoutMinutes uint, condition string) error {
 				fmt.Sprintf("--timeout=%ds", timeoutMinutes*60),
 				"-n", r.Namespace))
 			if err == nil {
+				elapsed := time.Since(start)
+				util.Info("Resource %s reached condition %s (elapsed: %v)\n", resource, condition, elapsed)
 				return nil
 			} else {
 				util.Verbose("Failed waiting for %s to be %s: %s \n%s\n", resource, condition, err.Error(), log)
