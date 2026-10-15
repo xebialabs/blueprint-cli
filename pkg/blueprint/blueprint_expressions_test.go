@@ -571,6 +571,90 @@ func Test_processCustomExpression(t *testing.T) {
 			false,
 		},
 		{
+			"should return YAML value for a nested path with yamlPath",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.url')",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: jdbc:postgresql://<xlr-db-host>:5432/<xlr-database-name>\n  username: <xlr-username>\n  password: |-\n    <xlr-password>\nreport:\n  url: jdbc:postgresql://<xlr-report-db-host>:5432/<xlr-report-database-name>",
+				},
+				nil,
+			},
+			"jdbc:postgresql://<xlr-db-host>:5432/<xlr-database-name>",
+			nil,
+			false,
+		},
+		{
+			"should return YAML multiline block value with yamlPath",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.password')",
+				map[string]interface{}{
+					"DbConfig": "main:\n  password: |-\n    <xlr-password>\n",
+				},
+				nil,
+			},
+			"<xlr-password>",
+			nil,
+			false,
+		},
+		{
+			"should error when yamlPath receives invalid YAML",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.url')",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: value\n    broken: true",
+				},
+				nil,
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should error when yamlPath path key is missing",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.missing')",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: value\n",
+				},
+				nil,
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should error when yamlPath traverses a non-map value",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.url.host')",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: jdbc:postgresql://db:5432/test\n",
+				},
+				nil,
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should error when yamlPath has invalid number of arguments",
+			false,
+			args{
+				"yamlPath(DbConfig)",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: value\n",
+				},
+				nil,
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
 			"should return true when a valid unix path is tested with isValidAbsPath",
 			false,
 			args{

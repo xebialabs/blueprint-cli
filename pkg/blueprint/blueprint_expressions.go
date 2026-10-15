@@ -17,6 +17,7 @@ import (
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/blueprint-cli/pkg/osHelper"
 	"github.com/xebialabs/blueprint-cli/pkg/util"
+	"github.com/xebialabs/yaml"
 )
 
 type ExpressionOverrideFn = func(params map[string]interface{}) map[string]govaluate.ExpressionFunction
@@ -166,6 +167,24 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			}
 			return true, nil
 		},
+		"yamlPath": func(args ...interface{}) (interface{}, error) {
+			if len(args) != 2 {
+				return nil, fmt.Errorf("invalid number of arguments for expression function 'yamlPath', expecting 2 got %d", len(args))
+			}
+
+			yamlText := fmt.Sprintf("%v", args[0])
+			path := fmt.Sprintf("%v", args[1])
+			if strings.TrimSpace(path) == "" {
+				return nil, fmt.Errorf("invalid path for expression function 'yamlPath', path cannot be empty")
+			}
+
+			value, err := getValueFromYamlPath(yamlText, path)
+			if err != nil {
+				return nil, err
+			}
+
+			return fmt.Sprintf("%v", value), nil
+		},
 		"k8sResources": func(args ...interface{}) (interface{}, error) {
 			if len(args) > 4 || len(args) < 2 {
 				return nil, fmt.Errorf("invalid number of arguments for expression function 'k8sResource', expecting 2 or 3 got %d", len(args))
@@ -298,6 +317,53 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 	}
 
 	return baseFnMap
+}
+
+func getValueFromYamlPath(yamlText string, path string) (interface{}, error) {
+	var parsed interface{}
+	if err := yaml.Unmarshal([]byte(yamlText), &parsed); err != nil {
+		return nil, fmt.Errorf("invalid YAML content for expression function 'yamlPath', %s", err.Error())
+	}
+
+	parts := strings.Split(path, ".")
+	current := parsed
+
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			return nil, fmt.Errorf("invalid path for expression function 'yamlPath', path contains empty segment")
+		}
+
+		next, found := getMapValueByKey(current, part)
+		if !found {
+			return nil, fmt.Errorf("key '%s' not found while evaluating expression function 'yamlPath' for path '%s'", part, path)
+		}
+
+		current = next
+	}
+
+	return current, nil
+}
+
+func getMapValueByKey(item interface{}, key string) (interface{}, bool) {
+	switch typed := item.(type) {
+	case map[string]interface{}:
+		val, ok := typed[key]
+		return val, ok
+	case map[interface{}]interface{}:
+		val, ok := typed[key]
+		if ok {
+			return val, true
+		}
+		for k, v := range typed {
+			if fmt.Sprintf("%v", k) == key {
+				return v, true
+			}
+		}
+		return nil, false
+	default:
+		return nil, false
+	}
 }
 
 // ProcessCustomExpression evaluates the expressions passed in the blueprint.yaml file using https://github.com/Knetic/govaluate
