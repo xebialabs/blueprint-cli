@@ -169,17 +169,22 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 		},
 		"yamlPath": func(args ...interface{}) (interface{}, error) {
 			if len(args) != 2 {
-				return nil, fmt.Errorf("invalid number of arguments for expression function 'yamlPath', expecting 2 got %d", len(args))
+				err := fmt.Errorf("invalid number of arguments for expression function 'yamlPath', expecting 2 got %d", len(args))
+				util.Verbose("[expression] yamlPath error: %s\n", err.Error())
+				return nil, err
 			}
 
 			yamlText := fmt.Sprintf("%v", args[0])
 			path := fmt.Sprintf("%v", args[1])
 			if strings.TrimSpace(path) == "" {
-				return nil, fmt.Errorf("invalid path for expression function 'yamlPath', path cannot be empty")
+				err := fmt.Errorf("invalid path for expression function 'yamlPath', path cannot be empty")
+				util.Verbose("[expression] yamlPath error: %s\n", err.Error())
+				return nil, err
 			}
 
 			value, err := getValueFromYamlPath(yamlText, path)
 			if err != nil {
+				util.Verbose("[expression] yamlPath error for path '%s': %s\n", path, err.Error())
 				return nil, err
 			}
 
@@ -322,7 +327,9 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 func getValueFromYamlPath(yamlText string, path string) (interface{}, error) {
 	var parsed interface{}
 	if err := yaml.Unmarshal([]byte(yamlText), &parsed); err != nil {
-		return nil, fmt.Errorf("invalid YAML content for expression function 'yamlPath', %s", err.Error())
+		errWrapped := fmt.Errorf("invalid YAML content for expression function 'yamlPath', %s", err.Error())
+		util.Verbose("[expression] yamlPath error: %s\n", errWrapped.Error())
+		return nil, errWrapped
 	}
 
 	parts := strings.Split(path, ".")
@@ -331,12 +338,16 @@ func getValueFromYamlPath(yamlText string, path string) (interface{}, error) {
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
 		if part == "" {
-			return nil, fmt.Errorf("invalid path for expression function 'yamlPath', path contains empty segment")
+			err := fmt.Errorf("invalid path for expression function 'yamlPath', path contains empty segment")
+			util.Verbose("[expression] yamlPath error for path '%s': %s\n", path, err.Error())
+			return nil, err
 		}
 
 		next, found := getMapValueByKey(current, part)
 		if !found {
-			return nil, fmt.Errorf("key '%s' not found while evaluating expression function 'yamlPath' for path '%s'", part, path)
+			err := fmt.Errorf("key '%s' not found while evaluating expression function 'yamlPath' for path '%s'", part, path)
+			util.Verbose("[expression] yamlPath error: %s\n", err.Error())
+			return nil, err
 		}
 
 		current = next
