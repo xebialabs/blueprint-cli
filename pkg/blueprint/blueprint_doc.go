@@ -534,7 +534,11 @@ func (blueprintDoc *BlueprintConfig) prepareTemplateData(params BlueprintParams,
 	for i, variable := range blueprintDoc.Variables {
 		err := variable.ProcessExpression(data.TemplateData, overrideFns)
 		if err != nil {
-			return nil, err
+			if strings.Contains(err.Error(), " for [DependsOn] ") && strings.Contains(err.Error(), "No parameter '") {
+				util.Verbose("[expression] Skipping unresolved dependsOn expression for variable [%s]. %s\n", variable.Name.Value, err.Error())
+			} else {
+				return nil, err
+			}
 		}
 		var defaultVal interface{}
 		// override the default value if its passed and if the param is overridable.
