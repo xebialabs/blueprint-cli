@@ -22,6 +22,19 @@ import (
 
 type ExpressionOverrideFn = func(params map[string]interface{}) map[string]govaluate.ExpressionFunction
 
+var getK8sResourceYaml = func(namespace, resourceType, resourceName string) (string, error) {
+	var resource k8s.Resource
+	res := resource.CreateResource(namespace, resourceType, resourceName)
+
+	res.Command.Args = []string{"get", resourceType, resourceName, "-n", namespace, "-o", "yaml"}
+	output, ok := res.Command.Run()
+	if !ok {
+		return "", fmt.Errorf("error occurred while fetching resource %s/%s from namespace %s: %s", resourceType, resourceName, namespace, output)
+	}
+
+	return output, nil
+}
+
 func regexMatch(pattern, value string) (bool, error) {
 	re, err := regexp2.Compile(pattern, 0)
 	if err != nil {
@@ -226,6 +239,17 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 				res := resource.CreateResource(namespace, resourceType, nil)
 				return res.GetFilteredResource([]string{args[2].(string)}, true)
 			}
+		},
+		"k8sResourceYaml": func(args ...interface{}) (interface{}, error) {
+			if len(args) != 3 {
+				return nil, fmt.Errorf("invalid number of arguments for expression function 'k8sResourceYaml', expecting 3 got %d", len(args))
+			}
+
+			namespace := fmt.Sprintf("%v", args[0])
+			resourceType := fmt.Sprintf("%v", args[1])
+			resourceName := fmt.Sprintf("%v", args[2])
+
+			return getK8sResourceYaml(namespace, resourceType, resourceName)
 		},
 
 		// k8s helper functions

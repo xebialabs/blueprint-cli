@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -1038,6 +1039,68 @@ func Test_processCustomExpression_no_k8s(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_processCustomExpression_k8sResourceYaml(t *testing.T) {
+	originalGetK8sResourceYaml := getK8sResourceYaml
+	defer func() {
+		getK8sResourceYaml = originalGetK8sResourceYaml
+	}()
+
+	t.Run("should return yaml content for k8sResourceYaml", func(t *testing.T) {
+		getK8sResourceYaml = func(namespace, resourceType, resourceName string) (string, error) {
+			if namespace != "digitalai" || resourceType != "digitalaireleases.xlr.digital.ai" || resourceName != "dai-xlr" {
+				return "", fmt.Errorf("unexpected args")
+			}
+			return "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: test\n", nil
+		}
+
+		got, err := ProcessCustomExpression(
+			"k8sResourceYaml(Namespace, CrdName, CrName)",
+			map[string]interface{}{
+				"Namespace": "digitalai",
+				"CrdName":   "digitalaireleases.xlr.digital.ai",
+				"CrName":    "dai-xlr",
+			},
+			nil,
+		)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: test\n", got)
+	})
+
+	t.Run("should fail when k8sResourceYaml has invalid number of arguments", func(t *testing.T) {
+		got, err := ProcessCustomExpression(
+			"k8sResourceYaml(Namespace, CrdName)",
+			map[string]interface{}{
+				"Namespace": "digitalai",
+				"CrdName":   "digitalaireleases.xlr.digital.ai",
+			},
+			nil,
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, got)
+	})
+
+		t.Run("should fail when k8sResourceYaml cannot fetch resource", func(t *testing.T) {
+			getK8sResourceYaml = func(namespace, resourceType, resourceName string) (string, error) {
+				return "", fmt.Errorf("boom")
+			}
+
+		got, err := ProcessCustomExpression(
+			"k8sResourceYaml(Namespace, CrdName, CrName)",
+			map[string]interface{}{
+				"Namespace": "digitalai",
+				"CrdName":   "digitalaireleases.xlr.digital.ai",
+				"CrName":    "dai-xlr",
+			},
+			nil,
+			)
+
+			assert.Error(t, err)
+			assert.Equal(t, "", got)
+		})
 }
 
 func Test_fixValueTypes(t *testing.T) {
