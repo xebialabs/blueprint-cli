@@ -628,6 +628,20 @@ func Test_processCustomExpression(t *testing.T) {
 			true,
 		},
 		{
+			"should return empty string when yamlPath path key is missing and ignoreNotFoundKey is true",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.missing', true)",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: value\n",
+				},
+				nil,
+			},
+			"",
+			nil,
+			false,
+		},
+		{
 			"should error when yamlPath traverses a non-map value",
 			false,
 			args{
@@ -642,10 +656,38 @@ func Test_processCustomExpression(t *testing.T) {
 			true,
 		},
 		{
+			"should return empty string when yamlPath traverses a non-map value and ignoreNotFoundKey is true",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.url.host', true)",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: jdbc:postgresql://db:5432/test\n",
+				},
+				nil,
+			},
+			"",
+			nil,
+			false,
+		},
+		{
 			"should error when yamlPath has invalid number of arguments",
 			false,
 			args{
 				"yamlPath(DbConfig)",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: value\n",
+				},
+				nil,
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should error when yamlPath has invalid type for third argument",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.url', 1)",
 				map[string]interface{}{
 					"DbConfig": "main:\n  url: value\n",
 				},

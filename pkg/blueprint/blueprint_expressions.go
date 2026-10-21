@@ -181,21 +181,43 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			return true, nil
 		},
 		"yamlPath": func(args ...interface{}) (interface{}, error) {
-			if len(args) != 2 {
-				err := fmt.Errorf("invalid number of arguments for expression function 'yamlPath', expecting 2 got %d", len(args))
+			if len(args) < 2 || len(args) > 3 {
+				err := fmt.Errorf("invalid number of arguments for expression function 'yamlPath', expecting 2 or 3 got %d", len(args))
 				util.Verbose("[expression] yamlPath error: %s\n", err.Error())
 				return nil, err
 			}
 
 			yamlText := fmt.Sprintf("%v", args[0])
 			path := fmt.Sprintf("%v", args[1])
+			ignoreNotFoundKey := false
+			if len(args) == 3 {
+				switch v := args[2].(type) {
+				case bool:
+					ignoreNotFoundKey = v
+				case string:
+					if strings.EqualFold(v, "true") {
+						ignoreNotFoundKey = true
+					} else if strings.EqualFold(v, "false") {
+						ignoreNotFoundKey = false
+					} else {
+						err := fmt.Errorf("invalid third argument for expression function 'yamlPath', expecting boolean got %T", args[2])
+						util.Verbose("[expression] yamlPath error: %s\n", err.Error())
+						return nil, err
+					}
+				default:
+					err := fmt.Errorf("invalid third argument for expression function 'yamlPath', expecting boolean got %T", args[2])
+					util.Verbose("[expression] yamlPath error: %s\n", err.Error())
+					return nil, err
+				}
+			}
+
 			if strings.TrimSpace(path) == "" {
 				err := fmt.Errorf("invalid path for expression function 'yamlPath', path cannot be empty")
 				util.Verbose("[expression] yamlPath error: %s\n", err.Error())
 				return nil, err
 			}
 
-			value, err := getValueFromYamlPath(yamlText, path)
+			value, err := getValueFromYamlPath(yamlText, path, ignoreNotFoundKey)
 			if err != nil {
 				util.Verbose("[expression] yamlPath error for path '%s': %s\n", path, err.Error())
 				return nil, err
@@ -348,7 +370,7 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 	return baseFnMap
 }
 
-func getValueFromYamlPath(yamlText string, path string) (interface{}, error) {
+func getValueFromYamlPath(yamlText string, path string, ignoreNotFoundKey bool) (interface{}, error) {
 	var parsed interface{}
 	if err := yaml.Unmarshal([]byte(yamlText), &parsed); err != nil {
 		errWrapped := fmt.Errorf("invalid YAML content for expression function 'yamlPath', %s", err.Error())
@@ -369,6 +391,9 @@ func getValueFromYamlPath(yamlText string, path string) (interface{}, error) {
 
 		next, found := getMapValueByKey(current, part)
 		if !found {
+			if ignoreNotFoundKey {
+				return "", nil
+			}
 			err := fmt.Errorf("key '%s' not found while evaluating expression function 'yamlPath' for path '%s'", part, path)
 			util.Verbose("[expression] yamlPath error: %s\n", err.Error())
 			return nil, err
