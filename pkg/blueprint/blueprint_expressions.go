@@ -17,9 +17,23 @@ import (
 	"github.com/xebialabs/blueprint-cli/pkg/cloud/k8s"
 	"github.com/xebialabs/blueprint-cli/pkg/osHelper"
 	"github.com/xebialabs/blueprint-cli/pkg/util"
+	"github.com/xebialabs/yaml"
 )
 
 type ExpressionOverrideFn = func(params map[string]interface{}) map[string]govaluate.ExpressionFunction
+
+var getK8sResourceYaml = func(namespace, resourceType, resourceName string) (string, error) {
+	var resource k8s.Resource
+	res := resource.CreateResource(namespace, resourceType, resourceName)
+
+	res.Command.Args = []string{"get", resourceType, resourceName, "-n", namespace, "-o", "yaml"}
+	output, ok := res.Command.Run()
+	if !ok {
+		return "", fmt.Errorf("error occurred while fetching resource %s/%s from namespace %s: %s", resourceType, resourceName, namespace, output)
+	}
+
+	return output, nil
+}
 
 func regexMatch(pattern, value string) (bool, error) {
 	re, err := regexp2.Compile(pattern, 0)
@@ -166,6 +180,51 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 			}
 			return true, nil
 		},
+		"yamlPath": func(args ...interface{}) (interface{}, error) {
+			if len(args) < 2 || len(args) > 3 {
+				err := fmt.Errorf("invalid number of arguments for expression function 'yamlPath', expecting 2 or 3 got %d", len(args))
+				util.Verbose("[expression] yamlPath error: %s\n", err.Error())
+				return nil, err
+			}
+
+			yamlText := fmt.Sprintf("%v", args[0])
+			path := fmt.Sprintf("%v", args[1])
+			ignoreNotFoundKey := false
+			if len(args) == 3 {
+				switch v := args[2].(type) {
+				case bool:
+					ignoreNotFoundKey = v
+				case string:
+					if strings.EqualFold(v, "true") {
+						ignoreNotFoundKey = true
+					} else if strings.EqualFold(v, "false") {
+						ignoreNotFoundKey = false
+					} else {
+						err := fmt.Errorf("invalid third argument for expression function 'yamlPath', expecting boolean got %T", args[2])
+						util.Verbose("[expression] yamlPath error: %s\n", err.Error())
+						return nil, err
+					}
+				default:
+					err := fmt.Errorf("invalid third argument for expression function 'yamlPath', expecting boolean got %T", args[2])
+					util.Verbose("[expression] yamlPath error: %s\n", err.Error())
+					return nil, err
+				}
+			}
+
+			if strings.TrimSpace(path) == "" {
+				err := fmt.Errorf("invalid path for expression function 'yamlPath', path cannot be empty")
+				util.Verbose("[expression] yamlPath error: %s\n", err.Error())
+				return nil, err
+			}
+
+			value, err := getValueFromYamlPath(yamlText, path, ignoreNotFoundKey)
+			if err != nil {
+				util.Verbose("[expression] yamlPath error for path '%s': %s\n", path, err.Error())
+				return nil, err
+			}
+
+			return fmt.Sprintf("%v", value), nil
+		},
 		"k8sResources": func(args ...interface{}) (interface{}, error) {
 			if len(args) > 4 || len(args) < 2 {
 				return nil, fmt.Errorf("invalid number of arguments for expression function 'k8sResource', expecting 2 or 3 got %d", len(args))
@@ -202,6 +261,17 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 				res := resource.CreateResource(namespace, resourceType, nil)
 				return res.GetFilteredResource([]string{args[2].(string)}, true)
 			}
+		},
+		"k8sResourceYaml": func(args ...interface{}) (interface{}, error) {
+			if len(args) != 3 {
+				return nil, fmt.Errorf("invalid number of arguments for expression function 'k8sResourceYaml', expecting 3 got %d", len(args))
+			}
+
+			namespace := fmt.Sprintf("%v", args[0])
+			resourceType := fmt.Sprintf("%v", args[1])
+			resourceName := fmt.Sprintf("%v", args[2])
+
+			return getK8sResourceYaml(namespace, resourceType, resourceName)
 		},
 
 		// k8s helper functions
@@ -298,6 +368,62 @@ func getExpressionFunctions(params map[string]interface{}, overrideFnMethods map
 	}
 
 	return baseFnMap
+}
+
+func getValueFromYamlPath(yamlText string, path string, ignoreNotFoundKey bool) (interface{}, error) {
+	var parsed interface{}
+	if err := yaml.Unmarshal([]byte(yamlText), &parsed); err != nil {
+		errWrapped := fmt.Errorf("invalid YAML content for expression function 'yamlPath', %s", err.Error())
+		util.Verbose("[expression] yamlPath error: %s\n", errWrapped.Error())
+		return nil, errWrapped
+	}
+
+	parts := strings.Split(path, ".")
+	current := parsed
+
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			err := fmt.Errorf("invalid path for expression function 'yamlPath', path contains empty segment")
+			util.Verbose("[expression] yamlPath error for path '%s': %s\n", path, err.Error())
+			return nil, err
+		}
+
+		next, found := getMapValueByKey(current, part)
+		if !found {
+			if ignoreNotFoundKey {
+				return "", nil
+			}
+			err := fmt.Errorf("key '%s' not found while evaluating expression function 'yamlPath' for path '%s'", part, path)
+			util.Verbose("[expression] yamlPath error: %s\n", err.Error())
+			return nil, err
+		}
+
+		current = next
+	}
+
+	return current, nil
+}
+
+func getMapValueByKey(item interface{}, key string) (interface{}, bool) {
+	switch typed := item.(type) {
+	case map[string]interface{}:
+		val, ok := typed[key]
+		return val, ok
+	case map[interface{}]interface{}:
+		val, ok := typed[key]
+		if ok {
+			return val, true
+		}
+		for k, v := range typed {
+			if fmt.Sprintf("%v", k) == key {
+				return v, true
+			}
+		}
+		return nil, false
+	default:
+		return nil, false
+	}
 }
 
 // ProcessCustomExpression evaluates the expressions passed in the blueprint.yaml file using https://github.com/Knetic/govaluate

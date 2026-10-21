@@ -1,6 +1,7 @@
 package blueprint
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -571,6 +572,132 @@ func Test_processCustomExpression(t *testing.T) {
 			false,
 		},
 		{
+			"should return YAML value for a nested path with yamlPath",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.url')",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: jdbc:postgresql://<xlr-db-host>:5432/<xlr-database-name>\n  username: <xlr-username>\n  password: |-\n    <xlr-password>\nreport:\n  url: jdbc:postgresql://<xlr-report-db-host>:5432/<xlr-report-database-name>",
+				},
+				nil,
+			},
+			"jdbc:postgresql://<xlr-db-host>:5432/<xlr-database-name>",
+			nil,
+			false,
+		},
+		{
+			"should return YAML multiline block value with yamlPath",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.password')",
+				map[string]interface{}{
+					"DbConfig": "main:\n  password: |-\n    <xlr-password>\n",
+				},
+				nil,
+			},
+			"<xlr-password>",
+			nil,
+			false,
+		},
+		{
+			"should error when yamlPath receives invalid YAML",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.url')",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: value\n    broken: true",
+				},
+				nil,
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should error when yamlPath path key is missing",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.missing')",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: value\n",
+				},
+				nil,
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should return empty string when yamlPath path key is missing and ignoreNotFoundKey is true",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.missing', true)",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: value\n",
+				},
+				nil,
+			},
+			"",
+			nil,
+			false,
+		},
+		{
+			"should error when yamlPath traverses a non-map value",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.url.host')",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: jdbc:postgresql://db:5432/test\n",
+				},
+				nil,
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should return empty string when yamlPath traverses a non-map value and ignoreNotFoundKey is true",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.url.host', true)",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: jdbc:postgresql://db:5432/test\n",
+				},
+				nil,
+			},
+			"",
+			nil,
+			false,
+		},
+		{
+			"should error when yamlPath has invalid number of arguments",
+			false,
+			args{
+				"yamlPath(DbConfig)",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: value\n",
+				},
+				nil,
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"should error when yamlPath has invalid type for third argument",
+			false,
+			args{
+				"yamlPath(DbConfig, 'main.url', 1)",
+				map[string]interface{}{
+					"DbConfig": "main:\n  url: value\n",
+				},
+				nil,
+			},
+			nil,
+			nil,
+			true,
+		},
+		{
 			"should return true when a valid unix path is tested with isValidAbsPath",
 			false,
 			args{
@@ -954,6 +1081,68 @@ func Test_processCustomExpression_no_k8s(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_processCustomExpression_k8sResourceYaml(t *testing.T) {
+	originalGetK8sResourceYaml := getK8sResourceYaml
+	defer func() {
+		getK8sResourceYaml = originalGetK8sResourceYaml
+	}()
+
+	t.Run("should return yaml content for k8sResourceYaml", func(t *testing.T) {
+		getK8sResourceYaml = func(namespace, resourceType, resourceName string) (string, error) {
+			if namespace != "digitalai" || resourceType != "digitalaireleases.xlr.digital.ai" || resourceName != "dai-xlr" {
+				return "", fmt.Errorf("unexpected args")
+			}
+			return "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: test\n", nil
+		}
+
+		got, err := ProcessCustomExpression(
+			"k8sResourceYaml(Namespace, CrdName, CrName)",
+			map[string]interface{}{
+				"Namespace": "digitalai",
+				"CrdName":   "digitalaireleases.xlr.digital.ai",
+				"CrName":    "dai-xlr",
+			},
+			nil,
+		)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: test\n", got)
+	})
+
+	t.Run("should fail when k8sResourceYaml has invalid number of arguments", func(t *testing.T) {
+		got, err := ProcessCustomExpression(
+			"k8sResourceYaml(Namespace, CrdName)",
+			map[string]interface{}{
+				"Namespace": "digitalai",
+				"CrdName":   "digitalaireleases.xlr.digital.ai",
+			},
+			nil,
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, got)
+	})
+
+		t.Run("should fail when k8sResourceYaml cannot fetch resource", func(t *testing.T) {
+			getK8sResourceYaml = func(namespace, resourceType, resourceName string) (string, error) {
+				return "", fmt.Errorf("boom")
+			}
+
+		got, err := ProcessCustomExpression(
+			"k8sResourceYaml(Namespace, CrdName, CrName)",
+			map[string]interface{}{
+				"Namespace": "digitalai",
+				"CrdName":   "digitalaireleases.xlr.digital.ai",
+				"CrName":    "dai-xlr",
+			},
+			nil,
+			)
+
+			assert.Error(t, err)
+			assert.Equal(t, "", got)
+		})
 }
 
 func Test_fixValueTypes(t *testing.T) {
