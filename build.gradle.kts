@@ -28,13 +28,13 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "2.2.0"
+    kotlin("jvm") version "2.4.21"
 
     id("com.fuseanalytics.gradle.s3") version "1.2.6"
-    id("org.sonarqube") version "6.3.1.5724"
+    id("org.sonarqube") version "7.5.0.8588"
     id("nebula.release") version (properties["nebulaReleasePluginVersion"] as String)
     id("maven-publish")
-    id("de.undercouch.download") version "5.6.0"
+    id("de.undercouch.download") version "5.7.0"
 }
 
 group = "com.xebialabs.xlclient"
